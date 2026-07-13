@@ -1,0 +1,60 @@
+package ruiseki.jfmuy.plugins.vanilla.furnace;
+
+import java.awt.Color;
+import java.util.Collections;
+import java.util.List;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.item.ItemStack;
+
+import ruiseki.jfmuy.plugins.vanilla.VanillaRecipeWrapper;
+import ruiseki.jfmuy.util.Translator;
+
+public class SmeltingRecipe extends VanillaRecipeWrapper {
+
+    @Nonnull
+    private final List<List<ItemStack>> input;
+    @Nonnull
+    private final List<ItemStack> outputs;
+
+    @Nullable
+    private final String experienceString;
+
+    public SmeltingRecipe(@Nonnull List<ItemStack> input, @Nonnull ItemStack output, float experience) {
+        this.input = Collections.singletonList(input);
+        this.outputs = Collections.singletonList(output);
+
+        if (experience > 0.0) {
+            experienceString = Translator
+                .translateToLocalFormatted("gui.jfmuy.category.smelting.experience", experience);
+        } else {
+            experienceString = null;
+        }
+    }
+
+    @Nonnull
+    public List<List<ItemStack>> getInputs() {
+        return input;
+    }
+
+    @Nonnull
+    public List<ItemStack> getOutputs() {
+        return outputs;
+    }
+
+    @Override
+    public void drawInfo(@Nonnull Minecraft minecraft, int recipeWidth, int recipeHeight) {
+        if (experienceString != null) {
+            FontRenderer fontRendererObj = minecraft.fontRenderer;
+            fontRendererObj.drawString(
+                experienceString,
+                69 - fontRendererObj.getStringWidth(experienceString) / 2,
+                0,
+                Color.gray.getRGB());
+        }
+    }
+}

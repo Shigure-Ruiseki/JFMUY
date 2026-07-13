@@ -1,57 +1,32 @@
 package ruiseki.jfmuy.api;
 
-import ruiseki.jfmuy.api.ingredients.IModIngredientRegistration;
-import ruiseki.jfmuy.api.recipe.IRecipeCategoryRegistration;
-
 /**
- * The main class to implement to create a JFMUY plugin. Everything communicated between a mod and JFMUY is through this
- * class.
- * IModPlugins must have the {@link JFMUYPlugin} annotation to get loaded by JFMUY.
+ * The main class for a plugin. Everything communicated between a mod and JEI is through this class.
+ * IModPlugins must have the @NEIPlugin annotation to get loaded by JEI.
+ * This class must not import anything that could be missing at runtime (i.e. code from any other mod).
  */
 public interface IModPlugin {
 
     /**
-     * If your item has subtypes that depend on NBT or capabilities, use this to help JEI identify those subtypes
-     * correctly.
-     *
-     * @since JEI 3.12.1
+     * Called when the IJFMUYHelpers is available.
+     * IModPlugins should store IJFMUYHelpers here if they need it.
      */
-    default void registerItemSubtypes(ISubtypeRegistry subtypeRegistry) {
-
-    }
+    void onJFMUYHelpersAvailable(IJFMUYHelpers jfmuyHelpers);
 
     /**
-     * Register special ingredients, beyond the basic ItemStack and FluidStack.
-     *
-     * @since JEI 3.11.0
+     * Called when the IItemRegistry is available, before register.
      */
-    default void registerIngredients(IModIngredientRegistration registry) {
-
-    }
-
-    /**
-     * Register the categories handled by this plugin.
-     * These are registered before recipes so they can be checked for validity.
-     *
-     * @since JEI 4.5.0
-     */
-    default void registerCategories(IRecipeCategoryRegistration registry) {
-
-    }
+    void onItemRegistryAvailable(IItemRegistry itemRegistry);
 
     /**
      * Register this mod plugin with the mod registry.
+     * Called just before the game launches.
+     * Will be called again if config
      */
-    default void register(IModRegistry registry) {
-
-    }
+    void register(IModRegistry registry);
 
     /**
-     * Called when jei's runtime features are available, after all mods have registered.
-     *
-     * @since JEI 2.23.0
+     * Called when the IRecipeRegistry is available, after all mods have registered.
      */
-    default void onRuntimeAvailable(IJFMUYRuntime jeiRuntime) {
-
-    }
+    void onRecipeRegistryAvailable(IRecipeRegistry recipeRegistry);
 }

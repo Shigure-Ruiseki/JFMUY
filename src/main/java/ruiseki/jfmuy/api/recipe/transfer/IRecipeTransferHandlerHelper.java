@@ -2,31 +2,33 @@ package ruiseki.jfmuy.api.recipe.transfer;
 
 import java.util.Collection;
 
+import javax.annotation.Nonnull;
+
 /**
- * Helper functions for implementing an {@link IRecipeTransferHandler}.
- * Get the instance from {@link ruiseki.jfmuy.api.IJFMUYHelpers#recipeTransferHandlerHelper()}.
+ * Helper functions for implementing an IRecipeTransferHandler
  */
 public interface IRecipeTransferHandlerHelper {
 
     /**
-     * Create an error with {@link Type#INTERNAL}.
+     * Create an error with type INTERNAL.
      * It is recommended that you also log a message to the console.
      */
     IRecipeTransferError createInternalError();
 
     /**
-     * Create an error with type {@link Type#USER_FACING} that shows a tooltip.
+     * Create an error with type USER_FACING that shows a tooltip.
      *
      * @param tooltipMessage the message to show on the tooltip for the recipe transfer button.
      */
-    IRecipeTransferError createUserErrorWithTooltip(String tooltipMessage);
+    IRecipeTransferError createUserErrorWithTooltip(@Nonnull String tooltipMessage);
 
     /**
-     * Create an error with type {@link Type#USER_FACING} that shows a tooltip and highlights missing item slots.
+     * Create an error with type USER_FACING that shows a tooltip and highlights missing item slots.
      *
      * @param tooltipMessage   the message to show on the tooltip for the recipe transfer button.
      * @param missingItemSlots the slot indexes for items that are missing. Must not be empty.
-     *                         Slots are indexed according to {@link IGuiItemStackGroup#getGuiIngredients()}.
+     *                         Slots are indexed according to itemStackGroup.getGuiIngredients()
      */
-    IRecipeTransferError createUserErrorForSlots(String tooltipMessage, Collection<Integer> missingItemSlots);
+    IRecipeTransferError createUserErrorForSlots(@Nonnull String tooltipMessage,
+        @Nonnull Collection<Integer> missingItemSlots);
 }

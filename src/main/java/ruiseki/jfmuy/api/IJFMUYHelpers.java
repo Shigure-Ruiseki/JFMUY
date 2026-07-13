@@ -1,36 +1,42 @@
 package ruiseki.jfmuy.api;
 
-import ruiseki.jfmuy.api.ingredients.IIngredientBlacklist;
-import ruiseki.jfmuy.api.recipe.IStackHelper;
-import ruiseki.jfmuy.api.recipe.IVanillaRecipeFactory;
+import javax.annotation.Nonnull;
+
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 
+/**
+ * IJFMUYHelpers provides helpers and tools for addon mods.
+ * Available to IModPlugins
+ */
 public interface IJFMUYHelpers {
 
     /**
      * Helps with the implementation of GUIs.
      */
+    @Nonnull
     IGuiHelper getGuiHelper();
 
     /**
-     * Helps with getting itemStacks from recipes.
+     * Used to stop JEI from displaying a specific item in the item list.
      */
-    IStackHelper getStackHelper();
+    @Nonnull
+    IItemBlacklist getItemBlacklist();
 
-    /*
-     * Used to stop JEI from displaying a specific ingredient in the ingredient list
-     * @since JEI 4.2.1
+    /**
+     * Used to tell JEI to ignore NBT tags when comparing items for recipes.
      */
-    IIngredientBlacklist getIngredientBlacklist();
+    @Nonnull
+    INbtIgnoreList getNbtIgnoreList();
 
     /**
      * Helps with the implementation of Recipe Transfer Handlers
      */
+    @Nonnull
     IRecipeTransferHandlerHelper recipeTransferHandlerHelper();
 
     /**
-     * Allows manual creation of vanilla recipes.
+     * Reload JEI at runtime.
+     * Used by mods that add and remove items or recipes like MineTweaker's /mt reload.
      */
-    IVanillaRecipeFactory getVanillaRecipeFactory();
-
+    void reload();
 }

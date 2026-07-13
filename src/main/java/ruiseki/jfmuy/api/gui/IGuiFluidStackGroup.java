@@ -1,20 +1,21 @@
 package ruiseki.jfmuy.api.gui;
 
+import java.util.Collection;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import net.minecraftforge.fluids.FluidStack;
 
-import org.jetbrains.annotations.Nullable;
-
 /**
- * IGuiFluidStackGroup displays one or more {@link FluidStack} in a gui.
- * <p>
+ * IGuiFluidStackGroup displays FluidStacks in a gui.
+ *
  * If multiple FluidStacks are set, they will be displayed in rotation.
- * <p>
- * Get an instance from {@link IRecipeLayout#getFluidStacks()}.
  */
 public interface IGuiFluidStackGroup extends IGuiIngredientGroup<FluidStack> {
 
     /**
-     * Initialize the fluid at slotIndex.
+     * Sets up the fluid at slotIndex.
      *
      * @param slotIndex    the slot index of this fluid
      * @param input        whether this slot is an input
@@ -31,8 +32,11 @@ public interface IGuiFluidStackGroup extends IGuiIngredientGroup<FluidStack> {
         boolean showCapacity, @Nullable IDrawable overlay);
 
     @Override
-    void set(int slotIndex, @Nullable FluidStack fluidStack);
+    void set(int slotIndex, @Nonnull Collection<FluidStack> fluidStacks);
 
     @Override
-    void addTooltipCallback(ITooltipCallback<FluidStack> tooltipCallback);
+    void set(int slotIndex, @Nonnull FluidStack fluidStack);
+
+    @Override
+    void addTooltipCallback(@Nonnull ITooltipCallback<FluidStack> tooltipCallback);
 }

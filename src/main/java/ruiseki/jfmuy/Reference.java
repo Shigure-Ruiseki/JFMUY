@@ -9,6 +9,10 @@ public class Reference {
 
     public static final String PROXY_COMMON = Tags.MOD_GROUP + ".CommonProxy";
     public static final String PROXY_CLIENT = Tags.MOD_GROUP + ".ClientProxy";
+    public static final String GUI_FACTORY = Tags.MOD_GROUP + ".config.JFMUYModGuiFactory";
 
     public static final String PREFIX_MOD = MOD_ID + ":";
+    public static final String TEXTURE_GUI_PATH = "textures/gui/";
+
+    public static final int MAX_TOOLTIP_WIDTH = 125;
 }

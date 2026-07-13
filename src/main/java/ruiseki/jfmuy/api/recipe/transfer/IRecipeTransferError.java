@@ -1,22 +1,20 @@
 package ruiseki.jfmuy.api.recipe.transfer;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.client.Minecraft;
 
-import ruiseki.jfmuy.api.gui.IRecipeLayout;
+import ruiseki.jfmuy.gui.RecipeLayout;
 
 /**
- * A reason that a recipe transfer couldn't happen.
- * <p>
- * Recipe transfer errors can be created with {@link IRecipeTransferHandlerHelper} or you can implement your own.
- * These errors are returned from
- * {@link IRecipeTransferHandler#transferRecipe(net.minecraft.inventory.Container, IRecipeLayout, net.minecraft.entity.player.EntityPlayer, boolean, boolean)}.
+ * A reason that the recipe transfer couldn't happen. See IRecipeTransferError.Type
  */
 public interface IRecipeTransferError {
 
     enum Type {
         /**
-         * Errors where the Transfer handler is broken or does not work.
-         * These errors will hide the recipe transfer button, and do not display anything to the user.
+         * Errors where the Transfer handler is broken, or does not work, or the server is not present.
+         * These errors will hide the recipe transfer button, but do not display anything to the user.
          */
         INTERNAL,
 
@@ -24,32 +22,11 @@ public interface IRecipeTransferError {
          * Errors that the player can fix. Missing items, inventory full, etc.
          * Something informative will be shown to the player.
          */
-        USER_FACING,
-
-        /**
-         * Errors that still allow the usage of the recipe transfer button.
-         * Hovering over the button will display the error, however the button is active and can be used.
-         * 
-         * @since JEI version 4.16.2
-         */
-        COSMETIC
-
+        USER_FACING
     }
 
     Type getType();
 
-    /**
-     * Return the ARGB color of the additional button highlight for {@link Type#COSMETIC}.
-     * For example, return 0 to disable the colored highlight. Default color is orange.
-     *
-     * @since JEI version 4.16.3
-     */
-    default int getButtonHighlightColor() {
-        return 0x80FFA500;
-    }
-
-    /**
-     * Called on {@link Type#USER_FACING} errors.
-     */
-    void showError(Minecraft minecraft, int mouseX, int mouseY, IRecipeLayout recipeLayout, int recipeX, int recipeY);
+    /** Called on USER_FACING errors */
+    void showError(@Nonnull Minecraft minecraft, int mouseX, int mouseY, @Nonnull RecipeLayout recipeLayout);
 }

@@ -1,101 +1,53 @@
 package ruiseki.jfmuy.api.recipe;
 
-import java.util.Collections;
-import java.util.List;
+import javax.annotation.Nonnull;
 
 import net.minecraft.client.Minecraft;
 
-import org.jetbrains.annotations.Nullable;
-
-import ruiseki.jfmuy.api.IGuiHelper;
-import ruiseki.jfmuy.api.IModRegistry;
 import ruiseki.jfmuy.api.gui.IDrawable;
-import ruiseki.jfmuy.api.gui.IGuiIngredientGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
-import ruiseki.jfmuy.api.gui.ITooltipCallback;
-import ruiseki.jfmuy.api.ingredients.IIngredients;
 
 /**
- * Defines a category of recipe, (i.e. Crafting Table Recipe, Furnace Recipe).
- * Handles setting up the GUI for its recipe category in
- * {@link #setRecipe(IRecipeLayout, IRecipeWrapper, IIngredients)}.
- * Also draws elements that are common to all recipes in the category like the background.
+ * Defines a category of recipe, (i.e. Crafting Table Recipe, Furnace Recipe)
+ * and handles setting up the GUI for its recipe category.
  */
-public interface IRecipeCategory<T extends IRecipeWrapper> {
+public interface IRecipeCategory {
 
     /**
      * Returns a unique ID for this recipe category.
      * Referenced from recipes to identify which recipe category they belong to.
-     *
-     * @see VanillaRecipeCategoryUid for vanilla examples
      */
+    @Nonnull
     String getUid();
 
     /**
      * Returns the localized name for this recipe type.
      * Drawn at the top of the recipe GUI pages for this category.
+     * Called every frame, so make sure to store it in a field.
      */
+    @Nonnull
     String getTitle();
 
     /**
-     * Return the mod name or id associated with this recipe category.
-     * Used for the recipe category tab's tooltip.
-     *
-     * @since JEI 4.5.0
-     */
-    String getModName();
-
-    /**
      * Returns the drawable background for a single recipe in this category.
-     *
-     * The size of the background determines how recipes are laid out by JEI,
-     * make sure it is the right size to contains everything being displayed.
+     * Called multiple times per frame, so make sure to store it in a field.
      */
+    @Nonnull
     IDrawable getBackground();
 
     /**
-     * Optional icon for the category tab.
-     * If no icon is defined here, JEI will use first item registered with
-     * {@link IModRegistry#addRecipeCatalyst(Object, String...)}
-     *
-     * @return icon to draw on the category tab, max size is 16x16 pixels.
+     * Optionally draw anything else that might be necessary, icons or extra slots.
      */
-    @Nullable
-    default IDrawable getIcon() {
-        return null;
-    }
+    void drawExtras(Minecraft minecraft);
 
     /**
-     * Draw any extra elements that might be necessary, icons or extra slots.
-     *
-     * @see IDrawable for a simple class for drawing things.
-     * @see IGuiHelper for useful functions.
+     * Optionally draw animations like progress bars. These animations can be disabled in the config.
      */
-    default void drawExtras(Minecraft minecraft) {
-
-    }
+    void drawAnimations(Minecraft minecraft);
 
     /**
-     * Set the {@link IRecipeLayout} properties from the {@link IRecipeWrapper} and {@link IIngredients}.
-     *
-     * @param recipeLayout  the layout that needs its properties set.
-     * @param recipeWrapper the recipeWrapper, for extra information.
-     * @param ingredients   the ingredients, already set by the recipeWrapper
+     * Set the IRecipeLayout properties from the RecipeWrapper.
      */
-    void setRecipe(IRecipeLayout recipeLayout, T recipeWrapper, IIngredients ingredients);
+    void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull IRecipeWrapper recipeWrapper);
 
-    /**
-     * Get the tooltip for whatever's under the mouse.
-     * ItemStack and fluid tooltips are already handled by JEI, this is for anything else.
-     *
-     * To add to ingredient tooltips, see {@link IGuiIngredientGroup#addTooltipCallback(ITooltipCallback)}
-     * To add tooltips for a recipe wrapper, see {@link IRecipeWrapper#getTooltipStrings(int, int)}
-     *
-     * @param mouseX the X position of the mouse, relative to the recipe.
-     * @param mouseY the Y position of the mouse, relative to the recipe.
-     * @return tooltip strings. If there is no tooltip at this position, return an empty list.
-     */
-    default List<String> getTooltipStrings(int mouseX, int mouseY) {
-        return Collections.emptyList();
-    }
 }

@@ -1,10 +1,10 @@
-package ruiseki.okbase.config;
+package ruiseki.jfmuy.config;
 
 import com.gtnewhorizon.gtnhlib.config.Config;
 import com.gtnewhorizon.gtnhlib.config.ConfigException;
 import com.gtnewhorizon.gtnhlib.config.ConfigurationManager;
 
-import ruiseki.okbase.Reference;
+import ruiseki.jfmuy.Reference;
 
 @Config.LangKey("config.generalConfig")
 @Config(modid = Reference.MOD_ID, configSubDirectory = Reference.MOD_ID, category = "general")

@@ -1,11 +1,11 @@
-package ruiseki.okbase.config;
+package ruiseki.jfmuy.config;
 
 import net.minecraft.client.gui.GuiScreen;
 
 import com.gtnewhorizon.gtnhlib.config.ConfigException;
 import com.gtnewhorizon.gtnhlib.config.SimpleGuiConfig;
 
-import ruiseki.okbase.Reference;
+import ruiseki.jfmuy.Reference;
 
 public class GuiConfig extends SimpleGuiConfig {
 

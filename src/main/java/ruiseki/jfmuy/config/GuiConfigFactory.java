@@ -1,4 +1,4 @@
-package ruiseki.okbase.config;
+package ruiseki.jfmuy.config;
 
 import net.minecraft.client.gui.GuiScreen;
 

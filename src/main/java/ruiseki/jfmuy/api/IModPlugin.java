@@ -3,16 +3,16 @@ package ruiseki.jfmuy.api;
 import ruiseki.jfmuy.api.ingredients.IModIngredientRegistration;
 
 /**
- * The main class to implement to create a JEI plugin. Everything communicated between a mod and JEI is through this
+ * The main class to implement to create a JFMUY plugin. Everything communicated between a mod and JFMUY is through this
  * class.
- * IModPlugins must have the {@link JFMUYPlugin} annotation to get loaded by JEI.
+ * IModPlugins must have the {@link JFMUYPlugin} annotation to get loaded by JFMUY.
  *
  * @see BlankModPlugin
  */
 public interface IModPlugin {
 
     /**
-     * If your item has subtypes that depend on NBT or capabilities, use this to help JEI identify those subtypes
+     * If your item has subtypes that depend on NBT or capabilities, use this to help JFMUY identify those subtypes
      * correctly.
      */
     void registerItemSubtypes(ISubtypeRegistry subtypeRegistry);

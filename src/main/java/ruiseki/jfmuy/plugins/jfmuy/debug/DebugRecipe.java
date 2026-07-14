@@ -80,13 +80,13 @@ public class DebugRecipe extends BlankRecipeWrapper {
     public boolean handleClick(Minecraft minecraft, int mouseX, int mouseY, int mouseButton) {
         if (mouseButton == 0 && button.mousePressed(minecraft, mouseX, mouseY)) {
             if (GuiScreen.isCtrlKeyDown()) {
-                IJFMUYRuntime jeiRuntime = JFMUYInternalPlugin.jfmuyRuntime;
-                if (jeiRuntime != null) {
+                IJFMUYRuntime jfmuyRuntime = JFMUYInternalPlugin.jfmuyRuntime;
+                if (jfmuyRuntime != null) {
                     List<IRecipe> recipeList = CraftingManager.getInstance()
                         .getRecipeList();
                     if (!recipeList.isEmpty()) {
                         IRecipe randomRecipe = recipeList.get(minecraft.theWorld.rand.nextInt(recipeList.size()));
-                        IRecipeRegistry recipeRegistry = jeiRuntime.getRecipeRegistry();
+                        IRecipeRegistry recipeRegistry = jfmuyRuntime.getRecipeRegistry();
                         IRecipeHandler<IRecipe> recipeHandler = recipeRegistry
                             .getRecipeHandler(randomRecipe.getClass());
                         if (recipeHandler != null) {

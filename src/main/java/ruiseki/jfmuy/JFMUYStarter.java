@@ -15,7 +15,6 @@ import ruiseki.jfmuy.gui.ItemListOverlay;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.plugins.vanilla.VanillaPlugin;
 import ruiseki.jfmuy.util.Log;
-import ruiseki.jfmuy.util.ModIdUtil;
 import ruiseki.jfmuy.util.ModRegistry;
 import ruiseki.jfmuy.util.StackHelper;
 
@@ -26,9 +25,9 @@ public class JFMUYStarter {
     private GuiEventHandler guiEventHandler;
 
     public void start(List<IModPlugin> plugins, boolean resourceReload) {
-        long jeiStartTime = System.currentTimeMillis();
+        long jfmuyStartTime = System.currentTimeMillis();
 
-        Log.info("Starting JEI...");
+        Log.info("Starting JFMUY...");
         SubtypeRegistry subtypeRegistry = new SubtypeRegistry();
 
         registerItemSubtypes(plugins, subtypeRegistry);
@@ -40,12 +39,10 @@ public class JFMUYStarter {
         IngredientRegistry ingredientRegistry = registerIngredients(plugins);
         Internal.setIngredientRegistry(ingredientRegistry);
 
-        JFMUYHelpers jeiHelpers = new JFMUYHelpers(ingredientRegistry, stackHelper, subtypeRegistry);
-        Internal.setHelpers(jeiHelpers);
+        JFMUYHelpers jfmuyHelpers = new JFMUYHelpers(ingredientRegistry, stackHelper, subtypeRegistry);
+        Internal.setHelpers(jfmuyHelpers);
 
-        ModIdUtil modIdUtil = Internal.getModIdUtil();
-
-        ModRegistry modRegistry = new ModRegistry(jeiHelpers, ingredientRegistry);
+        ModRegistry modRegistry = new ModRegistry(jfmuyHelpers, ingredientRegistry);
 
         registerPlugins(plugins, modRegistry);
 
@@ -63,27 +60,27 @@ public class JFMUYStarter {
         List<IAdvancedGuiHandler<?>> advancedGuiHandlers = modRegistry.getAdvancedGuiHandlers();
         ItemListOverlay itemListOverlay = new ItemListOverlay(itemFilter, advancedGuiHandlers, ingredientRegistry);
         RecipesGui recipesGui = new RecipesGui(recipeRegistry);
-        JFMUYRuntime jeiRuntime = new JFMUYRuntime(
+        JFMUYRuntime jfmuyRuntime = new JFMUYRuntime(
             recipeRegistry,
             itemListOverlay,
             recipesGui,
             ingredientRegistry,
             advancedGuiHandlers);
-        Internal.setRuntime(jeiRuntime);
+        Internal.setRuntime(jfmuyRuntime);
         Log.info("Built    runtime in {} ms", System.currentTimeMillis() - start_time);
 
         stackHelper.disableUidCache();
 
-        sendRuntime(plugins, jeiRuntime);
+        sendRuntime(plugins, jfmuyRuntime);
 
         if (guiEventHandler != null) {
             MinecraftForge.EVENT_BUS.unregister(guiEventHandler);
         }
-        guiEventHandler = new GuiEventHandler(jeiRuntime);
+        guiEventHandler = new GuiEventHandler(jfmuyRuntime);
         MinecraftForge.EVENT_BUS.register(guiEventHandler);
 
         started = true;
-        Log.info("Finished Starting JEI in {} ms", System.currentTimeMillis() - jeiStartTime);
+        Log.info("Finished Starting JFMUY in {} ms", System.currentTimeMillis() - jfmuyStartTime);
     }
 
     public boolean hasStarted() {
@@ -173,7 +170,7 @@ public class JFMUYStarter {
         ProgressManager.pop(progressBar);
     }
 
-    private static void sendRuntime(List<IModPlugin> plugins, IJFMUYRuntime jeiRuntime) {
+    private static void sendRuntime(List<IModPlugin> plugins, IJFMUYRuntime jfmuyRuntime) {
         ProgressManager.ProgressBar progressBar = ProgressManager.push("Sending Runtime", plugins.size());
         Iterator<IModPlugin> iterator = plugins.iterator();
         while (iterator.hasNext()) {
@@ -187,7 +184,7 @@ public class JFMUYStarter {
                     "Sending runtime to plugin: {} ...",
                     plugin.getClass()
                         .getName());
-                plugin.onRuntimeAvailable(jeiRuntime);
+                plugin.onRuntimeAvailable(jfmuyRuntime);
                 long timeElapsedMs = System.currentTimeMillis() - start_time;
                 if (timeElapsedMs > 100) {
                     Log.warning(

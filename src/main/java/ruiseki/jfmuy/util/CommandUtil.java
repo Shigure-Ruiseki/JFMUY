@@ -43,7 +43,7 @@ public final class CommandUtil {
     }
 
     /**
-     * Fallback for when JEI is not on the server, tries to use the /give command
+     * Fallback for when JFMUY is not on the server, tries to use the /give command
      * Uses the Creative Inventory Action Packet when in creative, which doesn't require the player to be op.
      */
     private static void giveStackVanilla(@Nullable ItemStack itemStack, int amount) {

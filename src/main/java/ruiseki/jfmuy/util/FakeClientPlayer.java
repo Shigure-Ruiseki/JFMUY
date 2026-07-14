@@ -23,7 +23,7 @@ public class FakeClientPlayer extends EntityPlayer {
     }
 
     private FakeClientPlayer() {
-        super(FakeClientWorld.getInstance(), new GameProfile(new UUID(0, 0), "JEI_Fake"));
+        super(FakeClientWorld.getInstance(), new GameProfile(new UUID(0, 0), "JFMUY_Fake"));
     }
 
     @Override

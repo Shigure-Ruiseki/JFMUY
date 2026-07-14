@@ -18,7 +18,7 @@ import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferRegistry;
 
 /**
  * The IRecipeManager offers several functions for retrieving and handling recipes.
- * The IRecipeManager instance is provided in JEIManager.
+ * The IRecipeManager instance is provided in JFMUYManager.
  * Get the instance from {@link IJFMUYRuntime#getRecipeRegistry()}.
  */
 public interface IRecipeRegistry {
@@ -103,7 +103,7 @@ public interface IRecipeRegistry {
 
     /**
      * Add a new smelting recipe while the game is running.
-     * By default, all smelting recipes from {@link FurnaceRecipes#getSmeltingList()} are already added by JEI.
+     * By default, all smelting recipes from {@link FurnaceRecipes#getSmeltingList()} are already added by JFMUY.
      */
     void addSmeltingRecipe(List<ItemStack> inputs, ItemStack output);
 

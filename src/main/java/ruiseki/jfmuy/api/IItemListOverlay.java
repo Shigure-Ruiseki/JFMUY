@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import com.google.common.collect.ImmutableList;
 
 /**
- * The IItemListOverlay is JEI's gui that displays all the items next to an open container gui.
+ * The IItemListOverlay is JFMUY's gui that displays all the items next to an open container gui.
  * Use this interface to get information from and interact with it.
  * Get the instance from {@link IJFMUYRuntime#getItemListOverlay()}.
  */
@@ -33,17 +33,17 @@ public interface IItemListOverlay {
 
     /**
      * @return a list containing all stacks that match the current filter.
-     *         For the list of all ItemStacks known to JEI, see {@link IItemRegistry#getItemList()}.
+     *         For the list of all ItemStacks known to JFMUY, see {@link IItemRegistry#getItemList()}.
      */
     ImmutableList<ItemStack> getFilteredStacks();
 
     /**
-     * @return a list containing all currently visible stacks. If JEI is hidden, the list will be empty.
+     * @return a list containing all currently visible stacks. If JFMUY is hidden, the list will be empty.
      */
     ImmutableList<ItemStack> getVisibleStacks();
 
     /**
-     * Tells JEI which stacks to highlight
+     * Tells JFMUY which stacks to highlight
      */
     void highlightStacks(Collection<ItemStack> stacks);
 }

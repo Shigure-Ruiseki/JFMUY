@@ -29,7 +29,7 @@ public class PacketDeletePlayerItem extends PacketJFMUY {
         buf.writeShort(itemId);
     }
 
-    public static class Handler implements IPacketJeiHandler {
+    public static class Handler implements IPacketJFMUYHandler {
 
         @Override
         public void readPacketData(PacketBuffer buf, EntityPlayer player) throws IOException {

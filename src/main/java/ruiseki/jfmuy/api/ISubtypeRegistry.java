@@ -6,13 +6,13 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 /**
- * Tell JEI how to interpret NBT tags and capabilities when comparing and looking up items.
+ * Tell JFMUY how to interpret NBT tags and capabilities when comparing and looking up items.
  * <p>
- * Some items have subtypes, most of them use meta values for this and JEI handles them by default.
- * If your item has subtypes that depend on NBT or capabilities instead of meta, use this interface so JEI can tell
+ * Some items have subtypes, most of them use meta values for this and JFMUY handles them by default.
+ * If your item has subtypes that depend on NBT or capabilities instead of meta, use this interface so JFMUY can tell
  * those subtypes apart.
  * <p>
- * Note: JEI has built-in support for differentiating items that implement
+ * Note: JFMUY has built-in support for differentiating items that implement
  * {@link ruiseki.okcore.fluid.capability.CapabilityFluidHandler},
  * adding a subtype interpreter here will override that functionality.
  * <p>
@@ -23,7 +23,7 @@ import net.minecraft.item.ItemStack;
 public interface ISubtypeRegistry {
 
     /**
-     * Tells JEI to treat all NBT as relevant to these items' subtypes.
+     * Tells JFMUY to treat all NBT as relevant to these items' subtypes.
      */
     void useNbtForSubtypes(Item... items);
 

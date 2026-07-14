@@ -54,7 +54,7 @@ public class PacketRecipeTransfer extends PacketJFMUY {
         buf.writeBoolean(maxTransfer);
     }
 
-    public static class Handler implements IPacketJeiHandler {
+    public static class Handler implements IPacketJFMUYHandler {
 
         @Override
         public void readPacketData(PacketBuffer buf, EntityPlayer player) throws IOException {

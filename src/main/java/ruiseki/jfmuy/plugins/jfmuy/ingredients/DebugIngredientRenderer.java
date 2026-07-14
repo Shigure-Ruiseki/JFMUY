@@ -21,7 +21,7 @@ public class DebugIngredientRenderer implements IIngredientRenderer<DebugIngredi
     public void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable DebugIngredient ingredient) {
         if (ingredient != null) {
             FontRenderer font = getFontRenderer(minecraft, ingredient);
-            font.drawString("JEI", xPosition, yPosition, Color.RED.getRGB());
+            font.drawString("JFMUY", xPosition, yPosition, Color.RED.getRGB());
             font.drawString("#" + ingredient.getNumber(), xPosition, yPosition + 8, Color.RED.getRGB());
         }
     }

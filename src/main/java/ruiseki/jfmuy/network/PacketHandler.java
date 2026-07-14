@@ -16,7 +16,7 @@ import cpw.mods.fml.common.network.internal.FMLProxyPacket;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import ruiseki.jfmuy.Reference;
-import ruiseki.jfmuy.network.packets.IPacketJeiHandler;
+import ruiseki.jfmuy.network.packets.IPacketJFMUYHandler;
 import ruiseki.jfmuy.network.packets.PacketCheatPermission;
 import ruiseki.jfmuy.network.packets.PacketDeletePlayerItem;
 import ruiseki.jfmuy.network.packets.PacketGiveItemStack;
@@ -42,7 +42,7 @@ public class PacketHandler {
         try {
             byte packetIdOrdinal = packetBuffer.readByte();
             PacketIdServer packetId = PacketIdServer.VALUES[packetIdOrdinal];
-            IPacketJeiHandler packetHandler;
+            IPacketJFMUYHandler packetHandler;
 
             switch (packetId) {
                 case RECIPE_TRANSFER: {
@@ -78,7 +78,7 @@ public class PacketHandler {
         PacketBuffer packetBuffer = new PacketBuffer(event.packet.payload());
         Minecraft minecraft = Minecraft.getMinecraft();
         EntityPlayer player = minecraft.thePlayer;
-        IPacketJeiHandler packetHandler;
+        IPacketJFMUYHandler packetHandler;
 
         try {
             byte packetIdOrdinal = packetBuffer.readByte();
@@ -103,7 +103,7 @@ public class PacketHandler {
         channel.sendTo(packet, player);
     }
 
-    private static void checkThreadAndEnqueue(final IPacketJeiHandler packet, final PacketBuffer packetBuffer,
+    private static void checkThreadAndEnqueue(final IPacketJFMUYHandler packet, final PacketBuffer packetBuffer,
         final EntityPlayer player) {
         try {
             packet.readPacketData(packetBuffer, player);

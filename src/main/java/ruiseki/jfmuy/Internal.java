@@ -42,7 +42,7 @@ public class Internal {
 
     public static JFMUYHelpers getHelpers() {
         if (helpers == null) {
-            throw new IllegalStateException("JeiHelpers has not been created yet.");
+            throw new IllegalStateException("JFMUYHelpers has not been created yet.");
         }
         return helpers;
     }
@@ -57,9 +57,9 @@ public class Internal {
     }
 
     public static void setRuntime(JFMUYRuntime runtime) {
-        JFMUYRuntime jeiRuntime = Internal.runtime;
-        if (jeiRuntime != null) {
-            jeiRuntime.close();
+        JFMUYRuntime jfmuyRuntime = Internal.runtime;
+        if (jfmuyRuntime != null) {
+            jfmuyRuntime.close();
         }
         Internal.runtime = runtime;
     }

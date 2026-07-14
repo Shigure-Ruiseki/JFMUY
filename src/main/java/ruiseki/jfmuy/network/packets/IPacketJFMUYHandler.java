@@ -5,7 +5,7 @@ import java.io.IOException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.PacketBuffer;
 
-public interface IPacketJeiHandler {
+public interface IPacketJFMUYHandler {
 
     void readPacketData(PacketBuffer buf, EntityPlayer player) throws IOException;
 }

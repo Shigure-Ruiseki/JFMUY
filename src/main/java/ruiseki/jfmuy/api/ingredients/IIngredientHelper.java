@@ -7,13 +7,11 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * An ingredient helper allows JEI to get information about ingredients for searching and other purposes.
+ * An ingredient helper allows JFMUY to get information about ingredients for searching and other purposes.
  * An ingredient is anything used in a recipe, like ItemStacks and FluidStacks.
  * <p>
- * If you have a new type of ingredient to add to JEI, you will have to implement this in order to use
+ * If you have a new type of ingredient to add to JFMUY, you will have to implement this in order to use
  * {@link IModIngredientRegistration#register(Class, Collection, IIngredientHelper, IIngredientRenderer)}
- *
- * @since JEI 3.11.0
  */
 public interface IIngredientHelper<V> {
 

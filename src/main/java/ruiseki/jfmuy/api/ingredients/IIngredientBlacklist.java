@@ -5,15 +5,13 @@ import net.minecraftforge.oredict.OreDictionary;
 import ruiseki.jfmuy.api.IJFMUYHelpers;
 
 /**
- * The Ingredient Blacklist allows mods to hide ingredients from JEI's ingredient list.
+ * The Ingredient Blacklist allows mods to hide ingredients from JFMUY's ingredient list.
  * Get the instance from {@link IJFMUYHelpers#getIngredientBlacklist()}.
- *
- * @since JEI 3.14.0
  */
 public interface IIngredientBlacklist {
 
     /**
-     * Stop JEI from displaying a specific ingredient in the ingredient list.
+     * Stop JFMUY from displaying a specific ingredient in the ingredient list.
      * Use {@link OreDictionary#WILDCARD_VALUE} meta for wildcard.
      * Ingredients blacklisted with this API can't be seen in the config or in edit mode.
      */

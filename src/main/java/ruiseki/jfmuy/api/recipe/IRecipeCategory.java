@@ -45,7 +45,7 @@ public interface IRecipeCategory<T extends IRecipeWrapper> {
 
     /**
      * Optional icon for the category tab.
-     * If no icon is defined here, JEI will use first item registered with
+     * If no icon is defined here, JFMUY will use first item registered with
      * {@link IModRegistry#addRecipeCategoryCraftingItem(ItemStack, String...)}
      *
      * @return icon to draw on the category tab, max size is 16x16 pixels.
@@ -68,13 +68,12 @@ public interface IRecipeCategory<T extends IRecipeWrapper> {
      * @param recipeLayout  the layout that needs its properties set.
      * @param recipeWrapper the recipeWrapper, for extra information.
      * @param ingredients   the ingredients, already set by the recipeWrapper
-     * @since JEI 3.11.0
      */
     void setRecipe(IRecipeLayout recipeLayout, T recipeWrapper, IIngredients ingredients);
 
     /**
      * Get the tooltip for whatever's under the mouse.
-     * ItemStack and fluid tooltips are already handled by JEI, this is for anything else.
+     * ItemStack and fluid tooltips are already handled by JFMUY, this is for anything else.
      *
      * To add to ingredient tooltips, see {@link IGuiIngredientGroup#addTooltipCallback(ITooltipCallback)}
      * To add tooltips for a recipe wrapper, see {@link IRecipeWrapper#getTooltipStrings(int, int)}

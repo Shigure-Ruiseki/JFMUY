@@ -24,7 +24,7 @@ public class PacketRequestCheatPermission extends PacketJFMUY {
         // the packet itself is the only data needed
     }
 
-    public static class Handler implements IPacketJeiHandler {
+    public static class Handler implements IPacketJFMUYHandler {
 
         @Override
         public void readPacketData(PacketBuffer buf, EntityPlayer player) {

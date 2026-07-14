@@ -129,7 +129,8 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void restartJFMUY() {
         // Log.warning(
-        // "Restarting JEI. Warning: This feature will be removed soon, please see the JavaDocs for more information.",
+        // "Restarting JFMUY. Warning: This feature will be removed soon, please see the JavaDocs for more
+        // information.",
         // new RuntimeException());
         restartJFMUY(false);
     }

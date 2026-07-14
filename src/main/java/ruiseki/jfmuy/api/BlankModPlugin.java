@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * An {@link IModPlugin} that does nothing, inherit from this to avoid implementing methods you don't need.
- * IModPlugin implementations must have the {@link JFMUYPlugin} annotation to get loaded by JEI.
+ * IModPlugin implementations must have the {@link JFMUYPlugin} annotation to get loaded by JFMUY.
  */
 public abstract class BlankModPlugin implements IModPlugin {
 

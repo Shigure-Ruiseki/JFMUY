@@ -13,13 +13,13 @@ import ruiseki.jfmuy.api.recipe.IRecipeRegistryPlugin;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferRegistry;
 
 /**
- * Entry point for the JEI API, functions for registering recipes are available from here.
+ * Entry point for the JFMUY API, functions for registering recipes are available from here.
  * The IModRegistry instance is passed to your mod plugin in {@link IModPlugin#register(IModRegistry)}.
  */
 public interface IModRegistry {
 
     /**
-     * Get helpers and tools for implementing JEI plugins.
+     * Get helpers and tools for implementing JFMUY plugins.
      */
     IJFMUYHelpers getJFMUYHelpers();
 
@@ -46,14 +46,14 @@ public interface IModRegistry {
     void addRecipes(List recipes);
 
     /**
-     * Add a clickable area on a gui to jump to specific categories of recipes in JEI.
+     * Add a clickable area on a gui to jump to specific categories of recipes in JFMUY.
      *
-     * @param guiContainerClass  the gui class for JEI to detect.
+     * @param guiContainerClass  the gui class for JFMUY to detect.
      * @param xPos               left x position of the clickable area, relative to the left edge of the gui.
      * @param yPos               top y position of the clickable area, relative to the top edge of the gui.
      * @param width              the width of the clickable area.
      * @param height             the height of the clickable area.
-     * @param recipeCategoryUids the recipe categories that JEI should display.
+     * @param recipeCategoryUids the recipe categories that JFMUY should display.
      */
     void addRecipeClickArea(Class<? extends GuiContainer> guiContainerClass, int xPos, int yPos, int width, int height,
         String... recipeCategoryUids);
@@ -68,9 +68,9 @@ public interface IModRegistry {
     void addRecipeCategoryCraftingItem(ItemStack craftingItem, String... recipeCategoryUids);
 
     /**
-     * Add a handler to give JEI extra information about how to layout the item list next to a specific type of
+     * Add a handler to give JFMUY extra information about how to layout the item list next to a specific type of
      * GuiContainer.
-     * Used for guis with tabs on the side that would normally intersect with JEI's item list.
+     * Used for guis with tabs on the side that would normally intersect with JFMUY's item list.
      */
     void addAdvancedGuiHandlers(IAdvancedGuiHandler<?>... advancedGuiHandlers);
 

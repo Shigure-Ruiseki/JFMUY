@@ -32,7 +32,7 @@ import ruiseki.jfmuy.plugins.jfmuy.description.ItemDescriptionRecipe;
 
 public class ModRegistry implements IModRegistry {
 
-    private final IJFMUYHelpers jeiHelpers;
+    private final IJFMUYHelpers jfmuyHelpers;
     private final IIngredientRegistry ingredientRegistry;
     private final List<IRecipeCategory> recipeCategories = new ArrayList<IRecipeCategory>();
     private final List<IRecipeHandler> recipeHandlers = new ArrayList<IRecipeHandler>();
@@ -44,17 +44,17 @@ public class ModRegistry implements IModRegistry {
     private final Multimap<String, ItemStack> craftItemsForCategories = ArrayListMultimap.create();
     private final List<IRecipeRegistryPlugin> recipeRegistryPlugins = new ArrayList<IRecipeRegistryPlugin>();
 
-    public ModRegistry(JFMUYHelpers jeiHelpers, IIngredientRegistry ingredientRegistry) {
-        this.jeiHelpers = jeiHelpers;
+    public ModRegistry(JFMUYHelpers jfmuyHelpers, IIngredientRegistry ingredientRegistry) {
+        this.jfmuyHelpers = jfmuyHelpers;
         this.ingredientRegistry = ingredientRegistry;
         this.recipeTransferRegistry = new RecipeTransferRegistry(
-            jeiHelpers.getStackHelper(),
-            jeiHelpers.recipeTransferHandlerHelper());
+            jfmuyHelpers.getStackHelper(),
+            jfmuyHelpers.recipeTransferHandlerHelper());
     }
 
     @Override
     public IJFMUYHelpers getJFMUYHelpers() {
-        return jeiHelpers;
+        return jfmuyHelpers;
     }
 
     @Override
@@ -183,7 +183,7 @@ public class ModRegistry implements IModRegistry {
             return;
         }
 
-        IGuiHelper guiHelper = jeiHelpers.getGuiHelper();
+        IGuiHelper guiHelper = jfmuyHelpers.getGuiHelper();
         List<ItemDescriptionRecipe> recipes = ItemDescriptionRecipe.create(guiHelper, itemStacks, descriptionKeys);
         this.recipes.addAll(recipes);
     }

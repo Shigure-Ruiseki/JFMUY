@@ -5,7 +5,7 @@ import java.util.List;
 import ruiseki.jfmuy.api.recipe.IFocus;
 
 /**
- * JEI's gui for displaying recipes. Use this interface to open recipes.
+ * JFMUY's gui for displaying recipes. Use this interface to open recipes.
  * Get the instance from {@link IJFMUYRuntime#getRecipesGui()}.
  */
 public interface IRecipesGui {

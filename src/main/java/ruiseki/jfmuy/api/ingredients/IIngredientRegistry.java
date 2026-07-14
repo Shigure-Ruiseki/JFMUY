@@ -10,15 +10,13 @@ import com.google.common.collect.ImmutableList;
 import ruiseki.jfmuy.api.IModRegistry;
 
 /**
- * The IIngredientRegistry is provided by JEI and has some useful functions related to recipe ingredients.
+ * The IIngredientRegistry is provided by JFMUY and has some useful functions related to recipe ingredients.
  * Get the instance from {@link IModRegistry#getIngredientRegistry()}.
- *
- * @since JEI 3.11.0
  */
 public interface IIngredientRegistry {
 
     /**
-     * Returns a list of all the ingredients known to JEI, of the specified class.
+     * Returns a list of all the ingredients known to JFMUY, of the specified class.
      * Calling this with ItemStack.class is equivalent to {@link IItemRegistry#getItemList()}.
      */
     <V> ImmutableList<V> getIngredients(Class<V> ingredientClass);
@@ -60,7 +58,7 @@ public interface IIngredientRegistry {
     ImmutableList<ItemStack> getPotionIngredients();
 
     /**
-     * Add new ingredients to JEI at runtime.
+     * Add new ingredients to JFMUY at runtime.
      * Used by mods that have items created while the game is running, or use the server to define items.
      * Using this method will reload the ingredient list, do not call it unless necessary.
      *

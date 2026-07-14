@@ -33,7 +33,7 @@ public class PacketGiveItemStack extends PacketJFMUY {
         } catch (Exception ignore) {}
     }
 
-    public static class Handler implements IPacketJeiHandler {
+    public static class Handler implements IPacketJFMUYHandler {
 
         @Override
         public void readPacketData(PacketBuffer buf, EntityPlayer player) throws IOException {

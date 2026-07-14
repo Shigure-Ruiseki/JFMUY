@@ -75,8 +75,8 @@ public class DebugRecipeCategory extends BlankRecipeCategory<DebugRecipe> {
                 if (ingredientRegistry != null) {
                     IIngredientHelper<ItemStack> ingredientHelper = ingredientRegistry
                         .getIngredientHelper(stackUnderMouse);
-                    String jeiUid = ingredientHelper.getUniqueId(stackUnderMouse);
-                    minecraft.fontRenderer.drawString(jeiUid, 50, 52, 0);
+                    String jfmuyUid = ingredientHelper.getUniqueId(stackUnderMouse);
+                    minecraft.fontRenderer.drawString(jfmuyUid, 50, 52, 0);
                 }
             }
         }

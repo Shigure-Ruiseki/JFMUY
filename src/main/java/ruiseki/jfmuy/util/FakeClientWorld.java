@@ -47,7 +47,7 @@ public class FakeClientWorld extends World {
     }
 
     private FakeClientWorld() {
-        super(saveHandler, "jei_fake", worldProvider, worldSettings, new Profiler());
+        super(saveHandler, "jfmuy_fake", worldProvider, worldSettings, new Profiler());
 
         this.provider.registerWorld(this);
 

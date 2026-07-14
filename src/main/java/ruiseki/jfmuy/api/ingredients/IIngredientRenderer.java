@@ -9,12 +9,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 
 /**
- * Renders a type of ingredient in JEI's item list and recipes.
+ * Renders a type of ingredient in JFMUY's item list and recipes.
  * <p>
- * If you have a new type of ingredient to add to JEI, you will have to implement this in order to use
+ * If you have a new type of ingredient to add to JFMUY, you will have to implement this in order to use
  * {@link IModIngredientRegistration#register(Class, Collection, IIngredientHelper, IIngredientRenderer)}
- *
- * @since JEI 3.11.0
  */
 public interface IIngredientRenderer<T> {
 
@@ -30,7 +28,7 @@ public interface IIngredientRenderer<T> {
     void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable T ingredient);
 
     /**
-     * Get the tooltip text for this ingredient. JEI renders the tooltip based on this.
+     * Get the tooltip text for this ingredient. JFMUY renders the tooltip based on this.
      *
      * @param minecraft  The minecraft instance.
      * @param ingredient The ingredient to get the tooltip for.
@@ -39,7 +37,7 @@ public interface IIngredientRenderer<T> {
     List<String> getTooltip(Minecraft minecraft, T ingredient);
 
     /**
-     * Get the tooltip font renderer for this ingredient. JEI renders the tooltip based on this.
+     * Get the tooltip font renderer for this ingredient. JFMUY renders the tooltip based on this.
      *
      * @param minecraft  The minecraft instance.
      * @param ingredient The ingredient to get the tooltip for.

@@ -36,7 +36,7 @@ public interface IRecipeLayoutDrawable extends IRecipeLayout {
 
     /**
      * Returns the ingredient currently under the mouse, if there is one.
-     * Can be an ItemStack, FluidStack, or any other ingredient registered with JEI.
+     * Can be an ItemStack, FluidStack, or any other ingredient registered with JFMUY.
      */
     @Nullable
     Object getIngredientUnderMouse(int mouseX, int mouseY);

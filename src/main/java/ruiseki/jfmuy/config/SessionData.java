@@ -24,8 +24,8 @@ public class SessionData {
         return jfmuyOnServer;
     }
 
-    public static void onConnectedToServer(boolean jeiOnServer) {
-        SessionData.jfmuyOnServer = jeiOnServer;
+    public static void onConnectedToServer(boolean jfmuyOnServer) {
+        SessionData.jfmuyOnServer = jfmuyOnServer;
         SessionData.joinedWorld = false;
         SessionData.worldUid = null;
     }

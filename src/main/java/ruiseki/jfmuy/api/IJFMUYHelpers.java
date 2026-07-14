@@ -21,7 +21,7 @@ public interface IJFMUYHelpers {
     IStackHelper getStackHelper();
 
     /**
-     * Used to stop JEI from displaying a specific ingredient in the ingredient list
+     * Used to stop JFMUY from displaying a specific ingredient in the ingredient list
      */
     IIngredientBlacklist getIngredientBlacklist();
 

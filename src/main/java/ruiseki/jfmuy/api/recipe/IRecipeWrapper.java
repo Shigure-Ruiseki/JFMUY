@@ -13,7 +13,7 @@ import ruiseki.jfmuy.api.gui.ITooltipCallback;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
 
 /**
- * A wrapper around a normal recipe with methods that allow JEI can make sense of it.
+ * A wrapper around a normal recipe with methods that allow JFMUY can make sense of it.
  * Plugins implement these to wrap each type of recipe they have.
  * <p>
  * Normal recipes are converted to wrapped recipes by {@link IRecipeHandler#getRecipeWrapper(Object)}.
@@ -25,7 +25,7 @@ public interface IRecipeWrapper {
     /**
      * Gets all the recipe's ingredients by filling out an instance of {@link IIngredients}.
      *
-     * @since JEI 3.11.0
+     * @since JFMUY 3.11.0
      */
     void getIngredients(IIngredients ingredients);
 
@@ -38,13 +38,13 @@ public interface IRecipeWrapper {
      * @param mouseY the Y position of the mouse, relative to the recipe.
      * @see IDrawable for a simple class for drawing things.
      * @see IGuiHelper for useful functions.
-     * @since JEI 2.19.0
+     * @since JFMUY 2.19.0
      */
     void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY);
 
     /**
      * Get the tooltip for whatever's under the mouse.
-     * ItemStack and fluid tooltips are already handled by JEI, this is for anything else.
+     * ItemStack and fluid tooltips are already handled by JFMUY, this is for anything else.
      *
      * To add to ingredient tooltips, see {@link IGuiIngredientGroup#addTooltipCallback(ITooltipCallback)}
      * To add tooltips for a recipe category, see {@link IRecipeCategory#getTooltipStrings(int, int)}

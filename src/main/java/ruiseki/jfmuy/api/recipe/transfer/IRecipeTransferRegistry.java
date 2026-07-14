@@ -6,7 +6,7 @@ import ruiseki.jfmuy.api.IModRegistry;
 import ruiseki.jfmuy.api.IRecipeRegistry;
 
 /**
- * Register recipe transfer handlers here to give JEI the information it needs to transfer recipes into the crafting
+ * Register recipe transfer handlers here to give JFMUY the information it needs to transfer recipes into the crafting
  * area.
  * Get the instance from {@link IModRegistry#getRecipeTransferRegistry()}.
  * <p>
@@ -38,16 +38,12 @@ public interface IRecipeTransferRegistry {
     /**
      * Complete control over recipe transfer.
      * Use this when the container has a non-standard inventory or crafting area.
-     *
-     * @since JEI 3.12.4
      */
     void addRecipeTransferHandler(IRecipeTransferHandler<?> recipeTransferHandler, String recipeCategoryUid);
 
     /**
      * Add a universal handler that can handle any category of recipe.
      * Useful for mods with recipe pattern encoding, for automated recipe systems.
-     *
-     * @since JEI 3.12.4
      */
     void addUniversalRecipeTransferHandler(IRecipeTransferHandler<?> recipeTransferHandler);
 }

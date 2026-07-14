@@ -30,8 +30,8 @@ public class IngredientBaseListFactory {
         long start_time = System.currentTimeMillis();
 
         IIngredientRegistry ingredientRegistry = Internal.getIngredientRegistry();
-        JFMUYHelpers jeiHelpers = Internal.getHelpers();
-        IngredientChecker ingredientChecker = new IngredientChecker(jeiHelpers);
+        JFMUYHelpers jfmuyHelpers = Internal.getHelpers();
+        IngredientChecker ingredientChecker = new IngredientChecker(jfmuyHelpers);
 
         List<IIngredientListElement> ingredientListElements = new LinkedList<>();
 
@@ -127,8 +127,8 @@ public class IngredientBaseListFactory {
 
         private final IngredientBlacklist ingredientBlacklist;
 
-        public IngredientChecker(JFMUYHelpers jeiHelpers) {
-            ingredientBlacklist = jeiHelpers.getIngredientBlacklist();
+        public IngredientChecker(JFMUYHelpers jfmuyHelpers) {
+            ingredientBlacklist = jfmuyHelpers.getIngredientBlacklist();
         }
 
         public <V> boolean isIngredientHidden(V ingredient, IIngredientHelper<V> ingredientHelper) {

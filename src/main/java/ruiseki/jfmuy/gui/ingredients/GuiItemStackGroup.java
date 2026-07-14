@@ -1,22 +1,20 @@
 package ruiseki.jfmuy.gui.ingredients;
 
-import java.util.List;
-
-import javax.annotation.Nonnull;
-
 import net.minecraft.item.ItemStack;
 
-import org.jetbrains.annotations.NotNull;
-
-import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
+import ruiseki.jfmuy.api.recipe.IFocus;
+import ruiseki.jfmuy.plugins.vanilla.ingredients.ItemStackRenderer;
 
-public class GuiItemStackGroup extends GuiIngredientGroup<ItemStack, GuiIngredient<ItemStack>>
-    implements IGuiItemStackGroup {
+public class GuiItemStackGroup extends GuiIngredientGroup<ItemStack> implements IGuiItemStackGroup {
 
     private static final int baseWidth = 16;
     private static final int baseHeight = 16;
-    private static final ItemStackHelper helper = new ItemStackHelper();
+    private static final ItemStackRenderer renderer = new ItemStackRenderer();
+
+    public GuiItemStackGroup(IFocus<ItemStack> focus, int cycleOffset) {
+        super(ItemStack.class, focus, cycleOffset);
+    }
 
     public static int getWidth(int padding) {
         return baseWidth + (2 * padding);
@@ -26,45 +24,12 @@ public class GuiItemStackGroup extends GuiIngredientGroup<ItemStack, GuiIngredie
         return baseHeight + (2 * padding);
     }
 
-    private GuiIngredient<ItemStack> createGuiItemStack(int index, boolean input, int xPosition, int yPosition,
-        int padding) {
-        ItemStackRenderer renderer = new ItemStackRenderer();
-        return new GuiIngredient<>(
-            renderer,
-            helper,
-            index,
-            input,
-            xPosition,
-            yPosition,
-            getWidth(padding),
-            getHeight(padding),
-            padding,
-            itemCycleOffset);
-    }
-
-    @Override
-    public void setFromRecipe(int slotIndex, @Nonnull List ingredients) {
-        set(
-            slotIndex,
-            Internal.getStackHelper()
-                .toItemStackList(ingredients));
-    }
-
-    @Override
-    public void setFromRecipe(int slotIndex, @NotNull Object ingredients) {
-        set(
-            slotIndex,
-            Internal.getStackHelper()
-                .toItemStackList(ingredients));
-    }
-
     @Override
     public void init(int slotIndex, boolean input, int xPosition, int yPosition) {
         init(slotIndex, input, xPosition, yPosition, 1);
     }
 
     public void init(int index, boolean input, int xPosition, int yPosition, int padding) {
-        GuiIngredient<ItemStack> guiIngredient = createGuiItemStack(index, input, xPosition, yPosition, padding);
-        guiIngredients.put(index, guiIngredient);
+        init(index, input, renderer, xPosition, yPosition, getWidth(padding), getHeight(padding), padding, padding);
     }
 }

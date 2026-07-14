@@ -3,11 +3,8 @@ package ruiseki.jfmuy;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemSkull;
 import net.minecraft.item.ItemStack;
 
 import com.google.common.base.Predicate;
@@ -15,37 +12,35 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.Weigher;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multiset;
 
 import ruiseki.jfmuy.config.Config;
-import ruiseki.jfmuy.util.ErrorUtil;
-import ruiseki.jfmuy.util.ItemStackElement;
-import ruiseki.jfmuy.util.Log;
+import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 
 public class ItemFilter {
 
-    /** A cache for fast searches while typing or using backspace. Maps filterText to filteredItemMaps */
-    private final LoadingCache<String, ImmutableList<ItemStackElement>> filteredItemMapsCache;
+    /**
+     * A cache for fast searches while typing or using backspace. Maps filterText to filteredItemMaps
+     */
+    private final LoadingCache<String, ImmutableList<IIngredientListElement>> filteredItemMapsCache = CacheBuilder
+        .newBuilder()
+        .maximumWeight(16)
+        .weigher(new OneWeigher())
+        .concurrencyLevel(1)
+        .build(new ItemFilterCacheLoader());
 
-    public ItemFilter(final IItemRegistry itemRegistry) {
-        filteredItemMapsCache = CacheBuilder.newBuilder()
-            .maximumWeight(16)
-            .weigher(new SearchFilterWeigher())
-            .concurrencyLevel(1)
-            .build(new ItemFilterCacheLoader(itemRegistry));
+    private ImmutableList<IIngredientListElement> baseList;
 
-        // preload the base list
-        filteredItemMapsCache.getUnchecked("");
+    public ItemFilter() {
+        this.baseList = IngredientBaseListFactory.create();
     }
 
-    public void reset() {
+    public void rebuild() {
+        this.baseList = IngredientBaseListFactory.create();
         this.filteredItemMapsCache.invalidateAll();
     }
 
-    @Nonnull
-    public ImmutableList<ItemStackElement> getItemList() {
+    public ImmutableList<IIngredientListElement> getIngredientList() {
         String[] filters = Config.getFilterText()
             .split("\\|");
 
@@ -53,72 +48,55 @@ public class ItemFilter {
             String filter = filters[0];
             return filteredItemMapsCache.getUnchecked(filter);
         } else {
-            ImmutableList.Builder<ItemStackElement> itemList = ImmutableList.builder();
+            ImmutableList.Builder<IIngredientListElement> ingredientList = ImmutableList.builder();
             for (String filter : filters) {
-                List<ItemStackElement> itemStackElements = filteredItemMapsCache.getUnchecked(filter);
-                itemList.addAll(itemStackElements);
+                List<IIngredientListElement> ingredients = filteredItemMapsCache.getUnchecked(filter);
+                ingredientList.addAll(ingredients);
             }
-            return itemList.build();
+            return ingredientList.build();
         }
+    }
+
+    /**
+     * {@link #getItemStacks()} is slow, so cache the previous value in case someone requests it often.
+     */
+    private ImmutableList<ItemStack> itemStacksCached = ImmutableList.of();
+    @Nullable
+    private String filterCached;
+
+    public ImmutableList<ItemStack> getItemStacks() {
+        if (!Config.getFilterText()
+            .equals(filterCached)) {
+            ImmutableList.Builder<ItemStack> filteredStacks = ImmutableList.builder();
+            for (IIngredientListElement element : getIngredientList()) {
+                Object ingredient = element.getIngredient();
+                if (ingredient instanceof ItemStack) {
+                    filteredStacks.add((ItemStack) ingredient);
+                }
+            }
+            itemStacksCached = filteredStacks.build();
+            filterCached = Config.getFilterText();
+        }
+        return itemStacksCached;
     }
 
     public int size() {
-        return getItemList().size();
+        return getIngredientList().size();
     }
 
-    private static ImmutableList<ItemStackElement> createBaseList(IItemRegistry itemRegistry) {
-        ItemStackChecker itemStackChecker = new ItemStackChecker();
+    private static class OneWeigher implements Weigher<String, ImmutableList<IIngredientListElement>> {
 
-        ImmutableList.Builder<ItemStackElement> baseList = ImmutableList.builder();
-        for (ItemStack itemStack : itemRegistry.getItemList()) {
-            if (itemStack == null) {
-                continue;
-            }
-
-            if (itemStackChecker.isItemStackHidden(itemStack)) {
-                continue;
-            }
-
-            ItemStackElement itemStackElement = ItemStackElement.create(itemStack);
-            if (itemStackElement != null) {
-                baseList.add(itemStackElement);
-            }
-        }
-
-        for (Multiset.Entry<Item> brokenItem : itemStackChecker.getBrokenItems()
-            .entrySet()) {
-            int count = brokenItem.getCount();
-            if (count > 1) {
-                Item item = brokenItem.getElement();
-                String modName = Internal.getItemRegistry()
-                    .getModNameForItem(item);
-                Log.error("Couldn't get ItemModel for {} item {}. Suppressed {} similar errors.", modName, item, count);
-            }
-        }
-
-        return baseList.build();
-    }
-
-    private static class SearchFilterWeigher implements Weigher<String, ImmutableList<ItemStackElement>> {
-
-        public int weigh(@Nonnull String key, @Nonnull ImmutableList<ItemStackElement> value) {
-            // The CacheLoader is recursive, so keep the base value in the cache permanently by setting its weight to 0
-            return (key.length() == 0) ? 0 : 1;
+        public int weigh(String key, ImmutableList<IIngredientListElement> value) {
+            return 1;
         }
     }
 
-    private class ItemFilterCacheLoader extends CacheLoader<String, ImmutableList<ItemStackElement>> {
-
-        private final IItemRegistry itemRegistry;
-
-        public ItemFilterCacheLoader(IItemRegistry itemRegistry) {
-            this.itemRegistry = itemRegistry;
-        }
+    private class ItemFilterCacheLoader extends CacheLoader<String, ImmutableList<IIngredientListElement>> {
 
         @Override
-        public ImmutableList<ItemStackElement> load(@Nonnull final String filterText) throws Exception {
+        public ImmutableList<IIngredientListElement> load(final String filterText) throws Exception {
             if (filterText.length() == 0) {
-                return createBaseList(itemRegistry);
+                return baseList;
             }
 
             // Recursive.
@@ -126,97 +104,28 @@ public class ItemFilter {
             // For example, the "", "i", "ir", and "iro" filters contain everything in the "iron" filter and more.
             String prevFilterText = filterText.substring(0, filterText.length() - 1);
 
-            ImmutableList<ItemStackElement> baseItemSet = filteredItemMapsCache.get(prevFilterText);
+            ImmutableList<IIngredientListElement> baseItemSet = filteredItemMapsCache.get(prevFilterText);
 
             FilterPredicate filterPredicate = new FilterPredicate(filterText);
 
-            ImmutableList.Builder<ItemStackElement> itemStackElementsBuilder = ImmutableList.builder();
-            for (ItemStackElement itemStackElement : baseItemSet) {
+            ImmutableList.Builder<IIngredientListElement> builder = ImmutableList.builder();
+            for (IIngredientListElement itemStackElement : baseItemSet) {
                 if (filterPredicate.apply(itemStackElement)) {
-                    itemStackElementsBuilder.add(itemStackElement);
+                    builder.add(itemStackElement);
                 }
             }
-            return itemStackElementsBuilder.build();
+            return builder.build();
         }
     }
 
-    private static class ItemStackChecker {
+    private static class FilterPredicate implements Predicate<IIngredientListElement> {
 
-        private final IItemBlacklist itemBlacklist;
-        private final Multiset<Item> brokenItems = HashMultiset.create();
-
-        public ItemStackChecker() {
-            itemBlacklist = Internal.getHelpers()
-                .getItemBlacklist();
-        }
-
-        public boolean isItemStackHidden(@Nonnull ItemStack itemStack) {
-            if (itemStack == null || itemStack.getItem() == null) {
-                return true;
-            }
-
-            if (isItemHiddenByBlacklist(itemStack)) {
-                return true;
-            }
-
-            Item item = itemStack.getItem();
-            if (brokenItems.contains(item)) {
-                return true;
-            }
-
-            try {
-                item.getIconIndex(itemStack);
-                item.getItemStackDisplayName(itemStack);
-            } catch (RuntimeException | LinkageError e) {
-                String modName = Internal.getItemRegistry()
-                    .getModNameForItem(item);
-                String stackInfo = ErrorUtil.getItemStackInfo(itemStack);
-                Log.error("Couldn't get icon/display name for {} itemStack {}", modName, stackInfo, e);
-                brokenItems.add(item);
-                return true;
-            }
-
-            if (Config.isHideLaggyModelsEnabled()) {
-                if (item instanceof ItemSkull && itemStack.getItemDamage() == 3) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public Multiset<Item> getBrokenItems() {
-            return brokenItems;
-        }
-
-        private boolean isItemHiddenByBlacklist(@Nonnull ItemStack itemStack) {
-            try {
-                if (!itemBlacklist.isItemBlacklisted(itemStack)) {
-                    return false;
-                }
-            } catch (RuntimeException e) {
-                String stackInfo = ErrorUtil.getItemStackInfo(itemStack);
-                Log.error("Could not check blacklist for stack {}", stackInfo, e);
-                return true;
-            }
-
-            if (Config.isEditModeEnabled()) {
-                // edit mode can only change the config blacklist, not things blacklisted through the API
-                return !Config.isItemOnConfigBlacklist(itemStack);
-            }
-
-            return true;
-        }
-    }
-
-    private static class FilterPredicate implements Predicate<ItemStackElement> {
-
-        private final List<String> searchTokens = new ArrayList<>();
-        private final List<String> modNameTokens = new ArrayList<>();
-        private final List<String> tooltipTokens = new ArrayList<>();
-        private final List<String> oreDictTokens = new ArrayList<>();
-        private final List<String> creativeTabTokens = new ArrayList<>();
-        private final List<String> colorTokens = new ArrayList<>();
+        private final List<String> searchTokens = new ArrayList<String>();
+        private final List<String> modNameTokens = new ArrayList<String>();
+        private final List<String> tooltipTokens = new ArrayList<String>();
+        private final List<String> oreDictTokens = new ArrayList<String>();
+        private final List<String> creativeTabTokens = new ArrayList<String>();
+        private final List<String> colorTokens = new ArrayList<String>();
 
         public FilterPredicate(String filterText) {
             String[] tokens = filterText.split(" ");
@@ -250,32 +159,13 @@ public class ItemFilter {
         }
 
         @Override
-        public boolean apply(@Nullable ItemStackElement input) {
-            if (input == null) {
-                return false;
-            }
-
-            if (!stringContainsTokens(input.getModNameString(), modNameTokens)) {
-                return false;
-            }
-
-            if (!stringContainsTokens(input.getTooltipString(), tooltipTokens)) {
-                return false;
-            }
-
-            if (!stringContainsTokens(input.getOreDictString(), oreDictTokens)) {
-                return false;
-            }
-
-            if (!stringContainsTokens(input.getCreativeTabsString(), creativeTabTokens)) {
-                return false;
-            }
-
-            if (!stringContainsTokens(input.getColorString(), colorTokens)) {
-                return false;
-            }
-
-            return stringContainsTokens(input.getSearchString(), searchTokens);
+        public boolean apply(@Nullable IIngredientListElement input) {
+            return input != null && stringContainsTokens(input.getModNameString(), modNameTokens)
+                && stringContainsTokens(input.getTooltipString(), tooltipTokens)
+                && stringContainsTokens(input.getOreDictString(), oreDictTokens)
+                && stringContainsTokens(input.getCreativeTabsString(), creativeTabTokens)
+                && stringContainsTokens(input.getColorString(), colorTokens)
+                && stringContainsTokens(input.getSearchString(), searchTokens);
         }
 
         private static boolean stringContainsTokens(String comparisonString, List<String> tokens) {

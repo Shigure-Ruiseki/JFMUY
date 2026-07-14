@@ -1,25 +1,27 @@
 package ruiseki.jfmuy.transfer;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.annotation.Nullable;
 
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import ruiseki.jfmuy.util.Log;
+import ruiseki.jfmuy.util.Translator;
 
 public class RecipeTransferHandlerHelper implements IRecipeTransferHandlerHelper {
 
     @Override
     public IRecipeTransferError createInternalError() {
-        return RecipeTransferErrorInternal.instance;
+        return RecipeTransferErrorInternal.INSTANCE;
     }
 
     @Override
     public IRecipeTransferError createUserErrorWithTooltip(@Nullable String tooltipMessage) {
         if (tooltipMessage == null) {
             Log.error("Null tooltipMessage", new NullPointerException());
-            return RecipeTransferErrorInternal.instance;
+            tooltipMessage = Translator.translateToLocal("jfmuy.tooltip.error.recipe.transfer.unknown");
         }
         return new RecipeTransferErrorTooltip(tooltipMessage);
     }
@@ -29,15 +31,13 @@ public class RecipeTransferHandlerHelper implements IRecipeTransferHandlerHelper
         @Nullable Collection<Integer> missingItemSlots) {
         if (tooltipMessage == null) {
             Log.error("Null tooltipMessage", new NullPointerException());
-            return RecipeTransferErrorInternal.instance;
+            tooltipMessage = Translator.translateToLocal("jfmuy.tooltip.error.recipe.transfer.unknown");
         }
         if (missingItemSlots == null) {
             Log.error("Null missingItemSlots", new NullPointerException());
-            return RecipeTransferErrorInternal.instance;
-        }
-        if (missingItemSlots.isEmpty()) {
+            missingItemSlots = Collections.emptyList();
+        } else if (missingItemSlots.isEmpty()) {
             Log.error("Empty missingItemSlots", new IllegalArgumentException());
-            return RecipeTransferErrorInternal.instance;
         }
 
         return new RecipeTransferErrorSlots(tooltipMessage, missingItemSlots);

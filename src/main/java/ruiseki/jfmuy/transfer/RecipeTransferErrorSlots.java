@@ -4,14 +4,12 @@ import java.awt.Color;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 
-import ruiseki.jfmuy.gui.RecipeLayout;
-import ruiseki.jfmuy.gui.ingredients.GuiIngredient;
-import ruiseki.jfmuy.gui.ingredients.GuiItemStackGroup;
+import ruiseki.jfmuy.api.gui.IGuiIngredient;
+import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
+import ruiseki.jfmuy.api.gui.IRecipeLayout;
 
 public class RecipeTransferErrorSlots extends RecipeTransferErrorTooltip {
 
@@ -24,14 +22,15 @@ public class RecipeTransferErrorSlots extends RecipeTransferErrorTooltip {
     }
 
     @Override
-    public void showError(@Nonnull Minecraft minecraft, int mouseX, int mouseY, @Nonnull RecipeLayout recipeLayout) {
-        super.showError(minecraft, mouseX, mouseY, recipeLayout);
-
-        GuiItemStackGroup itemStackGroup = recipeLayout.getItemStacks();
-        Map<Integer, GuiIngredient<ItemStack>> ingredients = itemStackGroup.getGuiIngredients();
+    public void showError(Minecraft minecraft, int mouseX, int mouseY, IRecipeLayout recipeLayout, int recipeX,
+        int recipeY) {
+        IGuiItemStackGroup itemStackGroup = recipeLayout.getItemStacks();
+        Map<Integer, ? extends IGuiIngredient<ItemStack>> ingredients = itemStackGroup.getGuiIngredients();
         for (Integer slotIndex : slots) {
-            GuiIngredient<ItemStack> ingredient = ingredients.get(slotIndex);
-            ingredient.drawHighlight(minecraft, highlightColor, recipeLayout.getPosX(), recipeLayout.getPosY());
+            IGuiIngredient<ItemStack> ingredient = ingredients.get(slotIndex);
+            ingredient.drawHighlight(minecraft, highlightColor, recipeX, recipeY);
         }
+
+        super.showError(minecraft, mouseX, mouseY, recipeLayout, recipeX, recipeY);
     }
 }

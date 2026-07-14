@@ -1,20 +1,23 @@
 package ruiseki.jfmuy.transfer;
 
-import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.EnumChatFormatting;
 
+import ruiseki.jfmuy.Reference;
+import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
-import ruiseki.jfmuy.gui.RecipeLayout;
 import ruiseki.jfmuy.gui.TooltipRenderer;
 
 public class RecipeTransferErrorTooltip implements IRecipeTransferError {
 
-    @Nonnull
-    private final String message;
+    private final List<String> message = new ArrayList<>();
 
-    public RecipeTransferErrorTooltip(@Nonnull String message) {
-        this.message = message;
+    public RecipeTransferErrorTooltip(String message) {
+        this.message.add(Reference.RECIPE_TRANSFER_TOOLTIP);
+        this.message.add(EnumChatFormatting.RED + message);
     }
 
     @Override
@@ -23,7 +26,8 @@ public class RecipeTransferErrorTooltip implements IRecipeTransferError {
     }
 
     @Override
-    public void showError(@Nonnull Minecraft minecraft, int mouseX, int mouseY, @Nonnull RecipeLayout recipeLayout) {
+    public void showError(Minecraft minecraft, int mouseX, int mouseY, IRecipeLayout recipeLayout, int recipeX,
+        int recipeY) {
         TooltipRenderer.drawHoveringText(minecraft, message, mouseX, mouseY);
     }
 }

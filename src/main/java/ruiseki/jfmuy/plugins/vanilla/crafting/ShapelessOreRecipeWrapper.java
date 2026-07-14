@@ -1,22 +1,24 @@
 package ruiseki.jfmuy.plugins.vanilla.crafting;
 
-import java.util.Collections;
 import java.util.List;
-
-import javax.annotation.Nonnull;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
 
-import ruiseki.jfmuy.api.IGuiHelper;
+import ruiseki.jfmuy.api.IJFMUYHelpers;
+import ruiseki.jfmuy.api.ingredients.IIngredients;
+import ruiseki.jfmuy.api.recipe.IStackHelper;
+import ruiseki.jfmuy.util.BrokenCraftingRecipeException;
+import ruiseki.jfmuy.util.ErrorUtil;
 
 public class ShapelessOreRecipeWrapper extends AbstractShapelessRecipeWrapper {
 
-    @Nonnull
+    private final IJFMUYHelpers jfmuyHelpers;
     private final ShapelessOreRecipe recipe;
 
-    public ShapelessOreRecipeWrapper(@Nonnull IGuiHelper guiHelper, @Nonnull ShapelessOreRecipe recipe) {
-        super(guiHelper);
+    public ShapelessOreRecipeWrapper(IJFMUYHelpers jfmuyHelpers, ShapelessOreRecipe recipe) {
+        super(jfmuyHelpers.getGuiHelper());
+        this.jfmuyHelpers = jfmuyHelpers;
         this.recipe = recipe;
         for (Object input : this.recipe.getInput()) {
             if (input instanceof ItemStack) {
@@ -28,15 +30,21 @@ public class ShapelessOreRecipeWrapper extends AbstractShapelessRecipeWrapper {
         }
     }
 
-    @Nonnull
     @Override
-    public List getInputs() {
-        return recipe.getInput();
-    }
+    public void getIngredients(IIngredients ingredients) {
+        IStackHelper stackHelper = jfmuyHelpers.getStackHelper();
+        ItemStack recipeOutput = recipe.getRecipeOutput();
 
-    @Nonnull
-    @Override
-    public List<ItemStack> getOutputs() {
-        return Collections.singletonList(recipe.getRecipeOutput());
+        try {
+            List<List<ItemStack>> inputs = stackHelper.expandRecipeItemStackInputs(recipe.getInput());
+            ingredients.setInputLists(ItemStack.class, inputs);
+
+            if (recipeOutput != null) {
+                ingredients.setOutput(ItemStack.class, recipeOutput);
+            }
+        } catch (RuntimeException e) {
+            String info = ErrorUtil.getInfoFromBrokenCraftingRecipe(recipe, recipe.getInput(), recipeOutput);
+            throw new BrokenCraftingRecipeException(info, e);
+        }
     }
 }

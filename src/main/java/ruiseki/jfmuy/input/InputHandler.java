@@ -3,60 +3,60 @@ package ruiseki.jfmuy.input;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiRepair;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.JFMUYRuntime;
 import ruiseki.jfmuy.RecipeRegistry;
+import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
+import ruiseki.jfmuy.api.recipe.IFocus;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.KeyBindings;
 import ruiseki.jfmuy.gui.Focus;
-import ruiseki.jfmuy.gui.ItemListOverlay;
-import ruiseki.jfmuy.gui.RecipeClickableArea;
-import ruiseki.jfmuy.gui.RecipesGui;
-import ruiseki.jfmuy.util.Commands;
+import ruiseki.jfmuy.gui.ItemListOverlayInternal;
+import ruiseki.jfmuy.gui.recipes.RecipeClickableArea;
+import ruiseki.jfmuy.gui.recipes.RecipesGui;
+import ruiseki.jfmuy.util.CommandUtil;
 import ruiseki.jfmuy.util.MouseHelper;
+import ruiseki.jfmuy.util.ReflectionUtil;
 
 public class InputHandler {
 
-    @Nonnull
+    private final RecipeRegistry recipeRegistry;
+    private final IIngredientRegistry ingredientRegistry;
     private final RecipesGui recipesGui;
-    @Nonnull
-    private final ItemListOverlay itemListOverlay;
-    @Nonnull
-    private MouseHelper mouseHelper;
-    @Nonnull
-    private final List<IShowsRecipeFocuses> showsRecipeFocuses = new ArrayList<>();
+    @Nullable
+    private final ItemListOverlayInternal itemListOverlayInternal;
+    private final MouseHelper mouseHelper;
+    private final List<IShowsRecipeFocuses> showsRecipeFocuses = new ArrayList<IShowsRecipeFocuses>();
 
     private boolean clickHandled = false;
 
-    public InputHandler(@Nonnull RecipesGui recipesGui, @Nonnull ItemListOverlay itemListOverlay) {
-        this.recipesGui = recipesGui;
-        this.itemListOverlay = itemListOverlay;
+    public InputHandler(JFMUYRuntime runtime, @Nullable ItemListOverlayInternal itemListOverlayInternal) {
+        this.recipeRegistry = runtime.getRecipeRegistry();
+        this.ingredientRegistry = runtime.getIngredientRegistry();
+        this.recipesGui = runtime.getRecipesGui();
+        this.itemListOverlayInternal = itemListOverlayInternal;
 
         this.mouseHelper = new MouseHelper();
 
         showsRecipeFocuses.add(recipesGui);
-        showsRecipeFocuses.add(itemListOverlay);
+        if (itemListOverlayInternal != null) {
+            showsRecipeFocuses.add(itemListOverlayInternal);
+        }
         showsRecipeFocuses.add(new GuiContainerWrapper());
     }
 
-    public void onScreenResized() {
-        this.mouseHelper = new MouseHelper();
-    }
-
-    public boolean handleMouseEvent(@Nonnull GuiScreen guiScreen, int mouseX, int mouseY) {
+    public boolean handleMouseEvent(GuiScreen guiScreen, int mouseX, int mouseY) {
         boolean cancelEvent = false;
         if (Mouse.getEventButton() > -1) {
             if (Mouse.getEventButtonState()) {
@@ -75,23 +75,22 @@ public class InputHandler {
     }
 
     private boolean handleMouseScroll(int dWheel, int mouseX, int mouseY) {
-        return itemListOverlay.handleMouseScrolled(mouseX, mouseY, dWheel);
+        return itemListOverlayInternal != null && itemListOverlayInternal.handleMouseScrolled(mouseX, mouseY, dWheel);
     }
 
-    private boolean handleMouseClick(@Nonnull GuiScreen guiScreen, int mouseButton, int mouseX, int mouseY) {
-        if (itemListOverlay.handleMouseClicked(mouseX, mouseY, mouseButton)) {
+    private boolean handleMouseClick(GuiScreen guiScreen, int mouseButton, int mouseX, int mouseY) {
+        if (itemListOverlayInternal != null
+            && itemListOverlayInternal.handleMouseClicked(mouseX, mouseY, mouseButton)) {
             return true;
         }
 
-        Focus focus = getFocusUnderMouseForClick(mouseX, mouseY);
-        if (focus != null && handleMouseClickedFocus(mouseButton, focus)) {
+        IClickedIngredient<?> clicked = getFocusUnderMouseForClick(mouseX, mouseY);
+        if (clicked != null && handleMouseClickedFocus(mouseButton, clicked)) {
             return true;
         }
 
         if (guiScreen instanceof GuiContainer) {
             GuiContainer guiContainer = (GuiContainer) guiScreen;
-            RecipeRegistry recipeRegistry = Internal.getRuntime()
-                .getRecipeRegistry();
             RecipeClickableArea clickableArea = recipeRegistry
                 .getRecipeClickableArea(guiContainer, mouseX - guiContainer.guiLeft, mouseY - guiContainer.guiTop);
             if (clickableArea != null) {
@@ -104,12 +103,12 @@ public class InputHandler {
     }
 
     @Nullable
-    private Focus getFocusUnderMouseForClick(int mouseX, int mouseY) {
+    private IClickedIngredient<?> getFocusUnderMouseForClick(int mouseX, int mouseY) {
         for (IShowsRecipeFocuses gui : showsRecipeFocuses) {
             if (gui.canSetFocusWithMouse()) {
-                Focus focus = gui.getFocusUnderMouse(mouseX, mouseY);
-                if (focus != null) {
-                    return focus;
+                IClickedIngredient<?> clicked = gui.getIngredientUnderMouse(mouseX, mouseY);
+                if (clicked != null) {
+                    return clicked;
                 }
             }
         }
@@ -117,61 +116,57 @@ public class InputHandler {
     }
 
     @Nullable
-    private Focus getFocusUnderMouseForKey(int mouseX, int mouseY) {
+    private IClickedIngredient<?> getIngredientUnderMouseForKey(int mouseX, int mouseY) {
         for (IShowsRecipeFocuses gui : showsRecipeFocuses) {
-            Focus focus = gui.getFocusUnderMouse(mouseX, mouseY);
-            if (focus != null) {
-                return focus;
+            IClickedIngredient<?> clicked = gui.getIngredientUnderMouse(mouseX, mouseY);
+            if (clicked != null) {
+                return clicked;
             }
         }
         return null;
     }
 
-    private boolean handleMouseClickedFocus(int mouseButton, @Nonnull Focus focus) {
+    private boolean handleMouseClickedFocus(int mouseButton, IClickedIngredient<?> clicked) {
         if (Config.isEditModeEnabled()) {
-            if (handleClickEditStack(mouseButton, focus)) {
+            if (handleClickEdit(mouseButton, clicked.getValue())) {
                 return true;
             }
         }
 
-        if (Config.isCheatItemsEnabled() && focus.getStack() != null && focus.allowsCheating()) {
-            if (mouseButton == 0) {
-                Commands.giveFullStack(focus.getStack());
-                return true;
-            } else if (mouseButton == 1) {
-                Commands.giveOneFromStack(focus.getStack());
+        if (Config.isCheatItemsEnabled() && clicked.allowsCheating() && !recipesGui.isOpen()) {
+            Object focusValue = clicked.getValue();
+            if (focusValue instanceof ItemStack) {
+                ItemStack itemStack = (ItemStack) focusValue;
+                CommandUtil.giveStack(itemStack, mouseButton);
                 return true;
             }
         }
 
         if (mouseButton == 0) {
-            recipesGui.showRecipes(focus);
+            IFocus focus = new Focus<Object>(IFocus.Mode.OUTPUT, clicked.getValue());
+            recipesGui.show(focus);
             return true;
         } else if (mouseButton == 1) {
-            recipesGui.showUses(focus);
+            IFocus focus = new Focus<Object>(IFocus.Mode.INPUT, clicked.getValue());
+            recipesGui.show(focus);
             return true;
         }
 
         return false;
     }
 
-    private boolean handleClickEditStack(int mouseButton, @Nonnull Focus focus) {
-        ItemStack itemStack = focus.getStack();
-        if (itemStack == null) {
-            return false;
-        }
-
-        Config.ItemBlacklistType blacklistType = null;
+    private <V> boolean handleClickEdit(int mouseButton, V ingredient) {
+        Config.IngredientBlacklistType blacklistType = null;
         if (GuiScreen.isCtrlKeyDown()) {
             if (GuiScreen.isShiftKeyDown()) {
                 if (mouseButton == 0) {
-                    blacklistType = Config.ItemBlacklistType.MOD_ID;
+                    blacklistType = Config.IngredientBlacklistType.MOD_ID;
                 }
             } else {
                 if (mouseButton == 0) {
-                    blacklistType = Config.ItemBlacklistType.ITEM;
+                    blacklistType = Config.IngredientBlacklistType.ITEM;
                 } else if (mouseButton == 1) {
-                    blacklistType = Config.ItemBlacklistType.WILDCARD;
+                    blacklistType = Config.IngredientBlacklistType.WILDCARD;
                 }
             }
         }
@@ -180,10 +175,12 @@ public class InputHandler {
             return false;
         }
 
-        if (Config.isItemOnConfigBlacklist(focus.getStack(), blacklistType)) {
-            Config.removeItemFromConfigBlacklist(focus.getStack(), blacklistType);
+        IIngredientHelper<V> ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
+
+        if (Config.isIngredientOnConfigBlacklist(ingredient, blacklistType, ingredientHelper)) {
+            Config.removeIngredientFromConfigBlacklist(ingredient, blacklistType, ingredientHelper);
         } else {
-            Config.addItemToConfigBlacklist(focus.getStack(), blacklistType);
+            Config.addIngredientToConfigBlacklist(ingredient, blacklistType, ingredientHelper);
         }
         return true;
     }
@@ -192,48 +189,50 @@ public class InputHandler {
         char typedChar = Keyboard.getEventCharacter();
         int eventKey = Keyboard.getEventKey();
 
-        if ((eventKey == 0 && typedChar >= 32) || Keyboard.getEventKeyState()) {
-            return handleKeyDown(typedChar, eventKey);
-        }
-        return false;
+        return ((eventKey == 0 && typedChar >= 32) || Keyboard.getEventKeyState())
+            && handleKeyDown(typedChar, eventKey);
     }
 
     private boolean handleKeyDown(char typedChar, int eventKey) {
-        if (itemListOverlay.isOpen() && itemListOverlay.hasKeyboardFocus()) {
+        if (itemListOverlayInternal != null && itemListOverlayInternal.hasKeyboardFocus()) {
             if (isInventoryCloseKey(eventKey) || isEnterKey(eventKey)) {
-                itemListOverlay.setKeyboardFocus(false);
+                itemListOverlayInternal.setKeyboardFocus(false);
                 return true;
-            } else if (itemListOverlay.onKeyPressed(typedChar, eventKey)) {
+            } else if (itemListOverlayInternal.onKeyPressed(typedChar, eventKey)) {
                 return true;
             }
         }
 
-        if (eventKey == KeyBindings.toggleOverlay.getKeyCode()) {
+        if (KeyBindings.toggleOverlay.getKeyCode() == eventKey) {
             Config.toggleOverlayEnabled();
             return false;
         }
 
-        if (itemListOverlay.isOpen() && KeyBindings.focusSearch.getKeyCode() == eventKey) {
-            itemListOverlay.setKeyboardFocus(true);
-            return true;
+        if (itemListOverlayInternal != null) {
+            if (KeyBindings.toggleCheatMode.getKeyCode() == eventKey) {
+                Config.toggleCheatItemsEnabled();
+                return true;
+            }
+
+            if (KeyBindings.focusSearch.getKeyCode() == eventKey) {
+                itemListOverlayInternal.setKeyboardFocus(true);
+                return true;
+            }
         }
 
         if (!isContainerTextFieldFocused()) {
-            if (eventKey == KeyBindings.showRecipe.getKeyCode()) {
-                Focus focus = getFocusUnderMouseForKey(mouseHelper.getX(), mouseHelper.getY());
-                if (focus != null) {
-                    recipesGui.showRecipes(focus);
-                    return true;
-                }
-            } else if (eventKey == KeyBindings.showUses.getKeyCode()) {
-                Focus focus = getFocusUnderMouseForKey(mouseHelper.getX(), mouseHelper.getY());
-                if (focus != null) {
-                    recipesGui.showUses(focus);
+            final boolean showRecipe = KeyBindings.showRecipe.getKeyCode() == eventKey;
+            final boolean showUses = KeyBindings.showUses.getKeyCode() == eventKey;
+            if (showRecipe || showUses) {
+                IClickedIngredient<?> clicked = getIngredientUnderMouseForKey(mouseHelper.getX(), mouseHelper.getY());
+                if (clicked != null) {
+                    IFocus.Mode mode = showRecipe ? IFocus.Mode.OUTPUT : IFocus.Mode.INPUT;
+                    recipesGui.show(new Focus<Object>(mode, clicked.getValue()));
                     return true;
                 }
             }
 
-            if (itemListOverlay.isOpen() && itemListOverlay.onKeyPressed(typedChar, eventKey)) {
+            if (itemListOverlayInternal != null && itemListOverlayInternal.onKeyPressed(typedChar, eventKey)) {
                 return true;
             }
         }
@@ -243,19 +242,15 @@ public class InputHandler {
 
     private boolean isContainerTextFieldFocused() {
         GuiScreen gui = Minecraft.getMinecraft().currentScreen;
-        GuiTextField textField = null;
-
-        if (gui instanceof GuiContainerCreative) {
-            textField = ((GuiContainerCreative) gui).searchField;
-        } else if (gui instanceof GuiRepair) {
-            textField = ((GuiRepair) gui).field_147091_w;
+        if (gui == null) {
+            return false;
         }
-
+        GuiTextField textField = ReflectionUtil.getFieldWithClass(gui, GuiTextField.class);
         return textField != null && textField.getVisible() && textField.isEnabled && textField.isFocused();
     }
 
     public static boolean isInventoryToggleKey(int keyCode) {
-        return keyCode == Minecraft.getMinecraft().gameSettings.keyBindInventory.getKeyCode();
+        return Minecraft.getMinecraft().gameSettings.keyBindInventory.getKeyCode() == keyCode;
     }
 
     public static boolean isInventoryCloseKey(int keyCode) {

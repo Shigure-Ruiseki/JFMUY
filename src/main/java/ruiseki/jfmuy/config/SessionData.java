@@ -5,12 +5,15 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.server.MinecraftServer;
 
+import org.jetbrains.annotations.Nullable;
+
 import cpw.mods.fml.client.FMLClientHandler;
 
 public class SessionData {
 
     private static boolean jfmuyOnServer = false;
-    private static boolean jfmuyStarted = false;
+    private static boolean joinedWorld = false;
+    @Nullable
     private static String worldUid = null;
 
     private SessionData() {
@@ -21,9 +24,9 @@ public class SessionData {
         return jfmuyOnServer;
     }
 
-    public static void onConnectedToServer(boolean jfmuyOnServer) {
-        SessionData.jfmuyOnServer = jfmuyOnServer;
-        SessionData.jfmuyStarted = false;
+    public static void onConnectedToServer(boolean jeiOnServer) {
+        SessionData.jfmuyOnServer = jeiOnServer;
+        SessionData.joinedWorld = false;
         SessionData.worldUid = null;
     }
 
@@ -54,11 +57,11 @@ public class SessionData {
         return worldUid;
     }
 
-    public static boolean isJfmuyStarted() {
-        return jfmuyStarted;
+    public static boolean hasJoinedWorld() {
+        return joinedWorld;
     }
 
-    public static void setJFMUYStarted() {
-        SessionData.jfmuyStarted = true;
+    public static void setJoinedWorld() {
+        SessionData.joinedWorld = true;
     }
 }

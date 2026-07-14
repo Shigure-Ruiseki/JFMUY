@@ -1,13 +1,24 @@
 package ruiseki.jfmuy.api.recipe;
 
+import java.util.Collections;
+import java.util.List;
+
 import net.minecraft.client.Minecraft;
 
-import ruiseki.jfmuy.api.gui.IRecipeLayout;
+import org.jetbrains.annotations.Nullable;
+
+import ruiseki.jfmuy.api.gui.IDrawable;
 
 /**
  * An {@link IRecipeCategory} that does nothing, inherit from this to avoid implementing methods you don't need.
  */
 public abstract class BlankRecipeCategory<T extends IRecipeWrapper> implements IRecipeCategory<T> {
+
+    @Nullable
+    @Override
+    public IDrawable getIcon() {
+        return null;
+    }
 
     @Override
     public void drawExtras(Minecraft minecraft) {
@@ -15,13 +26,7 @@ public abstract class BlankRecipeCategory<T extends IRecipeWrapper> implements I
     }
 
     @Override
-    public void drawAnimations(Minecraft minecraft) {
-
-    }
-
-    @Override
-    @Deprecated
-    public void setRecipe(IRecipeLayout recipeLayout, T recipeWrapper) {
-
+    public List<String> getTooltipStrings(int mouseX, int mouseY) {
+        return Collections.emptyList();
     }
 }

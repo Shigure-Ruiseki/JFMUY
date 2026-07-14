@@ -1,7 +1,5 @@
 package ruiseki.jfmuy.gui;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 
@@ -10,7 +8,6 @@ import ruiseki.jfmuy.api.gui.IDrawableStatic;
 
 public class DrawableResource implements IDrawableStatic {
 
-    @Nonnull
     private final ResourceLocation resourceLocation;
     private final int u;
     private final int v;
@@ -21,12 +18,12 @@ public class DrawableResource implements IDrawableStatic {
     private final int paddingLeft;
     private final int paddingRight;
 
-    public DrawableResource(@Nonnull ResourceLocation resourceLocation, int u, int v, int width, int height) {
+    public DrawableResource(ResourceLocation resourceLocation, int u, int v, int width, int height) {
         this(resourceLocation, u, v, width, height, 0, 0, 0, 0);
     }
 
-    public DrawableResource(@Nonnull ResourceLocation resourceLocation, int u, int v, int width, int height,
-        int paddingTop, int paddingBottom, int paddingLeft, int paddingRight) {
+    public DrawableResource(ResourceLocation resourceLocation, int u, int v, int width, int height, int paddingTop,
+        int paddingBottom, int paddingLeft, int paddingRight) {
         this.resourceLocation = resourceLocation;
 
         this.u = u;
@@ -51,17 +48,17 @@ public class DrawableResource implements IDrawableStatic {
     }
 
     @Override
-    public void draw(@Nonnull Minecraft minecraft) {
+    public void draw(Minecraft minecraft) {
         draw(minecraft, 0, 0);
     }
 
     @Override
-    public void draw(@Nonnull Minecraft minecraft, int xOffset, int yOffset) {
+    public void draw(Minecraft minecraft, int xOffset, int yOffset) {
         draw(minecraft, xOffset, yOffset, 0, 0, 0, 0);
     }
 
     @Override
-    public void draw(@Nonnull Minecraft minecraft, int xOffset, int yOffset, int maskTop, int maskBottom, int maskLeft,
+    public void draw(Minecraft minecraft, int xOffset, int yOffset, int maskTop, int maskBottom, int maskLeft,
         int maskRight) {
         minecraft.getTextureManager()
             .bindTexture(this.resourceLocation);

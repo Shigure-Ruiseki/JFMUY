@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.IModRegistry;
 import ruiseki.jfmuy.api.gui.IDrawable;
-import ruiseki.jfmuy.api.gui.IDrawableAnimated;
 import ruiseki.jfmuy.api.gui.IGuiIngredientGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.gui.ITooltipCallback;
@@ -62,26 +61,6 @@ public interface IRecipeCategory<T extends IRecipeWrapper> {
      * @see IGuiHelper for useful functions.
      */
     void drawExtras(Minecraft minecraft);
-
-    /**
-     * Draw any animations like progress bars or flashy effects.
-     * Essentially the same as {@link #drawExtras(Minecraft)} but these can be disabled in the config.
-     *
-     * @see IDrawableAnimated for a simple class for drawing animated things.
-     * @see IGuiHelper for useful functions.
-     * @deprecated since 3.13.1. Move animations into {@link #drawExtras(Minecraft)},
-     *             these are being combined because nobody uses the config option to disable animations.
-     */
-    @Deprecated
-    void drawAnimations(Minecraft minecraft);
-
-    /**
-     * Set the {@link IRecipeLayout} properties from the {@link IRecipeWrapper}.
-     *
-     * @deprecated since JEI 3.11.0. use {@link #setRecipe(IRecipeLayout, IRecipeWrapper, IIngredients)}
-     */
-    @Deprecated
-    void setRecipe(IRecipeLayout recipeLayout, T recipeWrapper);
 
     /**
      * Set the {@link IRecipeLayout} properties from the {@link IRecipeWrapper} and {@link IIngredients}.

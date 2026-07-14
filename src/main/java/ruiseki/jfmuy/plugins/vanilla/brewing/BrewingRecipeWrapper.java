@@ -12,15 +12,17 @@ import org.jetbrains.annotations.NotNull;
 
 import com.google.common.base.Objects;
 
-import ruiseki.jfmuy.plugins.vanilla.VanillaRecipeWrapper;
+import ruiseki.jfmuy.api.ingredients.IIngredients;
+import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
 import ruiseki.jfmuy.util.Translator;
 
-public class BrewingRecipeWrapper extends VanillaRecipeWrapper {
+public class BrewingRecipeWrapper extends BlankRecipeWrapper {
 
     private final List<ItemStack> ingredients;
     private final ItemStack potionInput;
     private final ItemStack potionOutput;
-    private final List inputs;
+    // Đổi kiểu dữ liệu rõ ràng thay vì dùng Raw Type nguyên bản để tránh lỗi ép kiểu bậy
+    private final List<List<ItemStack>> inputs;
     private final int brewingSteps;
     private final int hashCode;
 
@@ -36,11 +38,12 @@ public class BrewingRecipeWrapper extends VanillaRecipeWrapper {
         this.potionOutput = potionOutput;
         this.brewingSteps = brewingSteps;
 
+        // SỬA TẠI ĐÂY: Bọc từng potionInput đơn lẻ thành Collections.singletonList()
         this.inputs = new ArrayList<>();
-        this.inputs.add(potionInput);
-        this.inputs.add(potionInput);
-        this.inputs.add(potionInput);
-        this.inputs.add(ingredients);
+        this.inputs.add(Collections.singletonList(potionInput));
+        this.inputs.add(Collections.singletonList(potionInput));
+        this.inputs.add(Collections.singletonList(potionInput));
+        this.inputs.add(ingredients); // Thằng này bản thân nó đã là List rồi nên giữ nguyên
 
         ItemStack firstIngredient = ingredients.get(0);
 
@@ -52,11 +55,15 @@ public class BrewingRecipeWrapper extends VanillaRecipeWrapper {
     }
 
     @Override
-    public List getInputs() {
+    public void getIngredients(IIngredients ingredients) {
+        ingredients.setInputLists(ItemStack.class, inputs);
+        ingredients.setOutput(ItemStack.class, potionOutput);
+    }
+
+    public List<List<ItemStack>> getInputs() {
         return inputs;
     }
 
-    @Override
     public List<ItemStack> getOutputs() {
         return Collections.singletonList(potionOutput);
     }

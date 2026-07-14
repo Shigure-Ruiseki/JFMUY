@@ -7,26 +7,35 @@ import java.util.Set;
 
 import net.minecraft.item.ItemStack;
 
-import org.jetbrains.annotations.NotNull;
-
-import ruiseki.jfmuy.Internal;
-
 public class UniqueItemStackListBuilder {
 
-    private final List<ItemStack> itemStacks = new ArrayList<>();
-    private final Set<String> itemStackUids = new HashSet<>();
+    private final StackHelper stackHelper;
+    private final List<ItemStack> ingredients = new ArrayList<ItemStack>();
+    private final Set<String> ingredientUids = new HashSet<String>();
 
-    public void add(@NotNull ItemStack itemStack) {
-        String uid = Internal.getStackHelper()
-            .getUniqueIdentifierForStack(itemStack, StackHelper.UidMode.NORMAL);
-        if (!itemStackUids.contains(uid)) {
-            itemStackUids.add(uid);
-            itemStacks.add(itemStack);
+    public UniqueItemStackListBuilder(StackHelper stackHelper) {
+        this.stackHelper = stackHelper;
+    }
+
+    public void add(ItemStack itemStack) {
+        try {
+            String uid = stackHelper.getUniqueIdentifierForStack(itemStack);
+            if (!ingredientUids.contains(uid)) {
+                ingredientUids.add(uid);
+                ingredients.add(itemStack);
+            }
+        } catch (RuntimeException e) {
+            String info = ErrorUtil.getItemStackInfo(itemStack);
+            Log.error("Failed to get unique identifier for stack {}", info);
+            ingredients.add(itemStack);
+        } catch (LinkageError e) {
+            String info = ErrorUtil.getItemStackInfo(itemStack);
+            Log.error("Failed to get unique identifier for stack {}", info);
+            ingredients.add(itemStack);
         }
     }
 
-    @NotNull
     public List<ItemStack> build() {
-        return itemStacks;
+        return ingredients;
     }
 }

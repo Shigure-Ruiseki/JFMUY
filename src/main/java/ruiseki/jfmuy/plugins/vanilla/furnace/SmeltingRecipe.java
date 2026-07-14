@@ -4,51 +4,51 @@ import java.awt.Color;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.FurnaceRecipes;
 
-import ruiseki.jfmuy.plugins.vanilla.VanillaRecipeWrapper;
+import ruiseki.jfmuy.api.ingredients.IIngredients;
+import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
 import ruiseki.jfmuy.util.Translator;
 
-public class SmeltingRecipe extends VanillaRecipeWrapper {
+public class SmeltingRecipe extends BlankRecipeWrapper {
 
-    @Nonnull
-    private final List<List<ItemStack>> input;
-    @Nonnull
-    private final List<ItemStack> outputs;
+    private final List<List<ItemStack>> inputs;
+    private final ItemStack output;
 
-    @Nullable
-    private final String experienceString;
-
-    public SmeltingRecipe(@Nonnull List<ItemStack> input, @Nonnull ItemStack output, float experience) {
-        this.input = Collections.singletonList(input);
-        this.outputs = Collections.singletonList(output);
-
-        if (experience > 0.0) {
-            experienceString = Translator
-                .translateToLocalFormatted("gui.jfmuy.category.smelting.experience", experience);
-        } else {
-            experienceString = null;
-        }
-    }
-
-    @Nonnull
-    public List<List<ItemStack>> getInputs() {
-        return input;
-    }
-
-    @Nonnull
-    public List<ItemStack> getOutputs() {
-        return outputs;
+    public SmeltingRecipe(List<ItemStack> inputs, ItemStack output) {
+        this.inputs = Collections.singletonList(inputs);
+        this.output = output;
     }
 
     @Override
-    public void drawInfo(@Nonnull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
-        if (experienceString != null) {
+    public void getIngredients(IIngredients ingredients) {
+        ingredients.setInputLists(ItemStack.class, inputs);
+        ingredients.setOutput(ItemStack.class, output);
+    }
+
+    public List<List<ItemStack>> getInputs() {
+        return inputs;
+    }
+
+    public List<ItemStack> getOutputs() {
+        return Collections.singletonList(output);
+    }
+
+    @Override
+    public void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
+        FurnaceRecipes furnaceRecipes = FurnaceRecipes.smelting();
+        float experience;
+        try {
+            experience = furnaceRecipes.func_151398_b(output);
+        } catch (RuntimeException ignored) {
+            experience = 0;
+        }
+        if (experience > 0) {
+            String experienceString = Translator
+                .translateToLocalFormatted("gui.jfmuy.category.smelting.experience", experience);
             FontRenderer fontRendererObj = minecraft.fontRenderer;
             int stringWidth = fontRendererObj.getStringWidth(experienceString);
             fontRendererObj.drawString(experienceString, recipeWidth - stringWidth, 0, Color.gray.getRGB());

@@ -1,7 +1,5 @@
 package ruiseki.jfmuy.plugins.vanilla.furnace;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.util.ResourceLocation;
 
 import ruiseki.jfmuy.api.IGuiHelper;
@@ -17,9 +15,7 @@ public abstract class FurnaceRecipeCategory<T extends IRecipeWrapper> extends Bl
     protected static final int outputSlot = 2;
 
     protected final ResourceLocation backgroundLocation;
-    @Nonnull
     protected final IDrawableAnimated flame;
-    @Nonnull
     protected final IDrawableAnimated arrow;
 
     public FurnaceRecipeCategory(IGuiHelper guiHelper) {

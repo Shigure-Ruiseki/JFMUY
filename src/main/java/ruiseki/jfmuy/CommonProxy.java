@@ -1,21 +1,28 @@
 package ruiseki.jfmuy;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraftforge.common.util.FakePlayer;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.network.FMLEventChannel;
+import cpw.mods.fml.common.network.NetworkRegistry;
+import ruiseki.jfmuy.network.PacketHandler;
 import ruiseki.jfmuy.network.packets.PacketJFMUY;
 import ruiseki.jfmuy.util.Log;
 
 public class CommonProxy {
 
-    public void preInit(@NotNull FMLPreInitializationEvent event) {
+    @Nullable
+    private FMLEventChannel channel;
 
+    public void preInit(@NotNull FMLPreInitializationEvent event) {
+        PacketHandler packetHandler = new PacketHandler();
+        channel = NetworkRegistry.INSTANCE.newEventDrivenChannel(PacketHandler.CHANNEL_ID);
+        channel.register(packetHandler);
     }
 
     public void init(@NotNull FMLInitializationEvent event) {
@@ -30,21 +37,13 @@ public class CommonProxy {
 
     }
 
-    public void resetItemFilter() {
-
-    }
-
     public void sendPacketToServer(PacketJFMUY packet) {
         Log.error("Tried to send packet to the server from the server: {}", packet);
     }
 
-    public void sendPacketToPlayer(PacketJFMUY packet, EntityPlayer entityplayer) {
-        if (!(entityplayer instanceof EntityPlayerMP) || (entityplayer instanceof FakePlayer)) {
-            return;
+    public void sendPacketToClient(PacketJFMUY packet, EntityPlayerMP player) {
+        if (channel != null) {
+            channel.sendTo(packet.getPacket(), player);
         }
-
-        EntityPlayerMP player = (EntityPlayerMP) entityplayer;
-        JFMUY.getPacketHandler()
-            .sendPacket(packet.getPacket(), player);
     }
 }

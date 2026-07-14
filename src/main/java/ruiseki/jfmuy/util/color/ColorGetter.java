@@ -59,7 +59,6 @@ public class ColorGetter {
         if (item == null) {
             return Collections.emptyList();
         } else if (item instanceof ItemBlock) {
-            // Trong 1.7.10 sử dụng Block.getBlockFromItem để lấy Block an toàn
             final Block block = Block.getBlockFromItem(item);
             if (block == null) {
                 return Collections.emptyList();
@@ -72,10 +71,8 @@ public class ColorGetter {
 
     @NotNull
     private static List<Color> getColors(@NotNull ItemStack itemStack, @NotNull Item item, int colorCount) {
-        // Lấy màu render gốc của Item (ví dụ: các lớp potion hoặc da nhuộm màu)
         final int renderColor = item.getColorFromItemStack(itemStack, 0);
 
-        // Lấy IIcon của item trong 1.7.10
         final IIcon icon = item.getIconIndex(itemStack);
         final TextureAtlasSprite textureAtlasSprite = getTextureAtlasSprite(icon);
         if (textureAtlasSprite == null) {
@@ -86,13 +83,10 @@ public class ColorGetter {
 
     @NotNull
     private static List<Color> getColors(@NotNull ItemStack itemStack, @NotNull Block block, int colorCount) {
-        // Trong 1.7.10 sử dụng getItemDamage() thay cho getMetadata()
         final int meta = itemStack.getItemDamage();
 
-        // Lấy màu render của Block ở dạng Item trong hòm đồ (không có World/Coords)
         final int renderColor = block.getRenderColor(meta);
 
-        // Lấy IIcon của block (mặc định lấy mặt phía bắc/side 2 để nhận diện màu đặc trưng)
         final IIcon icon = block.getIcon(2, meta);
         final TextureAtlasSprite textureAtlasSprite = getTextureAtlasSprite(icon);
         if (textureAtlasSprite == null) {
@@ -102,7 +96,7 @@ public class ColorGetter {
     }
 
     @NotNull
-    private static List<Color> getColors(@NotNull TextureAtlasSprite textureAtlasSprite, int renderColor,
+    public static List<Color> getColors(@NotNull TextureAtlasSprite textureAtlasSprite, int renderColor,
         int colorCount) {
         final BufferedImage bufferedImage = getBufferedImage(textureAtlasSprite);
         if (bufferedImage == null) {
@@ -162,9 +156,7 @@ public class ColorGetter {
 
     @Nullable
     private static TextureAtlasSprite getTextureAtlasSprite(IIcon icon) {
-        if (icon instanceof TextureAtlasSprite) {
-            TextureAtlasSprite sprite = (TextureAtlasSprite) icon;
-            // Kiểm tra xem icon có phải là "missingno" (texture lỗi màu tím đen) hay không
+        if (icon instanceof TextureAtlasSprite sprite) {
             if ("missingno".equals(sprite.getIconName())) {
                 return null;
             }

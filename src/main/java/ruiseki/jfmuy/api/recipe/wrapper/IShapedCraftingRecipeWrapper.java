@@ -9,7 +9,7 @@ import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
  * <p>
  * For shapeless recipes, just use {@link IRecipeWrapper}.
  */
-public interface IShapedCraftingRecipeWrapper extends ICustomCraftingRecipeWrapper {
+public interface IShapedCraftingRecipeWrapper extends IRecipeWrapper {
 
     int getWidth();
 

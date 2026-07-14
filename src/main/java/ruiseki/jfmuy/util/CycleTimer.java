@@ -4,6 +4,8 @@ import java.util.List;
 
 import net.minecraft.client.gui.GuiScreen;
 
+import org.jetbrains.annotations.Nullable;
+
 public class CycleTimer {
 
     /* the amount of time in ms to display one thing before cycling to the next one */
@@ -18,6 +20,7 @@ public class CycleTimer {
         this.drawTime = time;
     }
 
+    @Nullable
     public <T> T getCycledItem(List<T> list) {
         if (list.isEmpty()) {
             return null;

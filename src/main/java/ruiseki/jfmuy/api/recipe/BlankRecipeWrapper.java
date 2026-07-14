@@ -6,6 +6,8 @@ import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 
+import ruiseki.jfmuy.api.ingredients.IIngredients;
+
 /**
  * An {@link IRecipeWrapper} that does nothing, inherit from this to avoid implementing methods you don't need.
  */
@@ -17,7 +19,7 @@ public abstract class BlankRecipeWrapper implements IRecipeWrapper {
     }
 
     @Override
-    public void drawAnimations(Minecraft minecraft, int recipeWidth, int recipeHeight) {
+    public void getIngredients(IIngredients ingredients) {
 
     }
 

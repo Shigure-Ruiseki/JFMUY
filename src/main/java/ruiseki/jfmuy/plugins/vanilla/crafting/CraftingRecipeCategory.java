@@ -1,7 +1,8 @@
 package ruiseki.jfmuy.plugins.vanilla.crafting;
 
-import javax.annotation.Nonnull;
+import java.util.List;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 import ruiseki.jfmuy.api.IGuiHelper;
@@ -9,11 +10,15 @@ import ruiseki.jfmuy.api.gui.ICraftingGridHelper;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
+import ruiseki.jfmuy.api.ingredients.IIngredients;
 import ruiseki.jfmuy.api.recipe.BlankRecipeCategory;
+import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
+import ruiseki.jfmuy.api.recipe.wrapper.ICustomCraftingRecipeWrapper;
+import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
 import ruiseki.jfmuy.util.Translator;
 
-public class CraftingRecipeCategory extends BlankRecipeCategory<ICraftingRecipeWrapper> {
+public class CraftingRecipeCategory extends BlankRecipeCategory<IRecipeWrapper> {
 
     private static final int craftOutputSlot = 0;
     private static final int craftInputSlot1 = 1;
@@ -21,11 +26,8 @@ public class CraftingRecipeCategory extends BlankRecipeCategory<ICraftingRecipeW
     public static final int width = 116;
     public static final int height = 54;
 
-    @Nonnull
     private final IDrawable background;
-    @Nonnull
     private final String localizedName;
-    @Nonnull
     private final ICraftingGridHelper craftingGridHelper;
 
     public CraftingRecipeCategory(IGuiHelper guiHelper) {
@@ -36,25 +38,22 @@ public class CraftingRecipeCategory extends BlankRecipeCategory<ICraftingRecipeW
     }
 
     @Override
-    @Nonnull
     public String getUid() {
         return VanillaRecipeCategoryUid.CRAFTING;
     }
 
-    @Nonnull
     @Override
     public String getTitle() {
         return localizedName;
     }
 
     @Override
-    @Nonnull
     public IDrawable getBackground() {
         return background;
     }
 
     @Override
-    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull ICraftingRecipeWrapper recipeWrapper) {
+    public void setRecipe(IRecipeLayout recipeLayout, IRecipeWrapper recipeWrapper, IIngredients ingredients) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
         guiItemStacks.init(craftOutputSlot, false, 94, 18);
@@ -66,14 +65,19 @@ public class CraftingRecipeCategory extends BlankRecipeCategory<ICraftingRecipeW
             }
         }
 
-        if (recipeWrapper instanceof IShapedCraftingRecipeWrapper) {
-            IShapedCraftingRecipeWrapper wrapper = (IShapedCraftingRecipeWrapper) recipeWrapper;
-            craftingGridHelper.setInput(guiItemStacks, wrapper.getInputs(), wrapper.getWidth(), wrapper.getHeight());
-            craftingGridHelper.setOutput(guiItemStacks, wrapper.getOutputs());
-        } else {
-            craftingGridHelper.setInput(guiItemStacks, recipeWrapper.getInputs());
-            craftingGridHelper.setOutput(guiItemStacks, recipeWrapper.getOutputs());
+        if (recipeWrapper instanceof ICustomCraftingRecipeWrapper customWrapper) {
+            customWrapper.setRecipe(recipeLayout, ingredients);
+            return;
         }
-    }
 
+        List<List<ItemStack>> inputs = ingredients.getInputs(ItemStack.class);
+        List<ItemStack> outputs = ingredients.getOutputs(ItemStack.class);
+
+        if (recipeWrapper instanceof IShapedCraftingRecipeWrapper wrapper) {
+            craftingGridHelper.setInputStacks(guiItemStacks, inputs, wrapper.getWidth(), wrapper.getHeight());
+        } else {
+            craftingGridHelper.setInputStacks(guiItemStacks, inputs);
+        }
+        guiItemStacks.set(craftOutputSlot, outputs.getFirst());
+    }
 }

@@ -1,592 +1,71 @@
 package ruiseki.jfmuy.gui;
 
-import java.awt.Color;
-import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
+import java.util.Set;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ChatAllowedCharacters;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.ResourceLocation;
-
-import org.lwjgl.opengl.GL11;
 
 import com.google.common.collect.ImmutableList;
 
-import cpw.mods.fml.client.config.GuiButtonExt;
-import cpw.mods.fml.client.config.HoverChecker;
-import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.ItemFilter;
-import ruiseki.jfmuy.JFMUY;
-import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.IItemListOverlay;
 import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
-import ruiseki.jfmuy.api.gui.IDrawable;
+import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.config.Config;
-import ruiseki.jfmuy.config.JFMUYModConfigGui;
-import ruiseki.jfmuy.gui.ingredients.GuiItemStackFast;
-import ruiseki.jfmuy.gui.ingredients.GuiItemStackFastList;
-import ruiseki.jfmuy.gui.ingredients.GuiItemStackGroup;
-import ruiseki.jfmuy.input.GuiTextFieldFilter;
-import ruiseki.jfmuy.input.ICloseable;
-import ruiseki.jfmuy.input.IKeyable;
-import ruiseki.jfmuy.input.IMouseHandler;
-import ruiseki.jfmuy.input.IShowsRecipeFocuses;
-import ruiseki.jfmuy.network.packets.PacketDeletePlayerItem;
-import ruiseki.jfmuy.network.packets.PacketJFMUY;
-import ruiseki.jfmuy.util.ItemStackElement;
 import ruiseki.jfmuy.util.Log;
-import ruiseki.jfmuy.util.MathUtil;
-import ruiseki.jfmuy.util.Translator;
 
-public class ItemListOverlay implements IItemListOverlay, IShowsRecipeFocuses, IMouseHandler, IKeyable, ICloseable {
+public class ItemListOverlay implements IItemListOverlay {
 
-    private static final int borderPadding = 2;
-    private static final int searchHeight = 16;
-    private static final int buttonSize = 20;
-    private static final String nextLabel = ">";
-    private static final String backLabel = "<";
-
-    private static final int itemStackPadding = 1;
-    private static final int itemStackWidth = GuiItemStackGroup.getWidth(itemStackPadding);
-    private static final int itemStackHeight = GuiItemStackGroup.getHeight(itemStackPadding);
-    private static int firstItemIndex = 0;
-
-    @Nonnull
     private final ItemFilter itemFilter;
-    @Nonnull
     private final List<IAdvancedGuiHandler<?>> advancedGuiHandlers;
+    private final IIngredientRegistry ingredientRegistry;
+    private final Set<ItemStack> highlightedStacks = new HashSet<>();
 
-    private final GuiItemStackFastList guiItemStacks = new GuiItemStackFastList();
-    private GuiButton nextButton;
-    private GuiButton backButton;
-    private GuiButton configButton;
-    private IDrawable configButtonIcon;
-    private IDrawable configButtonCheatIcon;
-    private HoverChecker configButtonHoverChecker;
-    private GuiTextFieldFilter searchField;
-
-    private String pageNumDisplayString;
-    private int pageNumDisplayX;
-    private int pageNumDisplayY;
-
-    private GuiItemStackFast hovered = null;
-
-    // properties of the gui we're beside
     @Nullable
-    private GuiProperties guiProperties;
-    @Nullable
-    private List<Rectangle> guiAreas;
-    @Nonnull
-    private List<IAdvancedGuiHandler<?>> activeAdvancedGuiHandlers = Collections.emptyList();
+    private ItemListOverlayInternal internal;
 
-    private boolean open = false;
-
-    public ItemListOverlay(@Nonnull ItemFilter itemFilter, @Nonnull List<IAdvancedGuiHandler<?>> advancedGuiHandlers) {
+    public ItemListOverlay(ItemFilter itemFilter, List<IAdvancedGuiHandler<?>> advancedGuiHandlers,
+        IIngredientRegistry ingredientRegistry) {
         this.itemFilter = itemFilter;
         this.advancedGuiHandlers = advancedGuiHandlers;
+        this.ingredientRegistry = ingredientRegistry;
     }
 
-    public void initGui(@Nonnull GuiScreen guiScreen) {
-        GuiProperties guiProperties = GuiProperties.create(guiScreen);
-        if (guiProperties == null) {
-            return;
-        }
+    @Nullable
+    public ItemListOverlayInternal create(GuiScreen guiScreen) {
+        close();
 
-        this.guiProperties = guiProperties;
-        this.activeAdvancedGuiHandlers = getActiveAdvancedGuiHandlers(guiScreen);
-        if (!activeAdvancedGuiHandlers.isEmpty() && guiScreen instanceof GuiContainer) {
-            GuiContainer guiContainer = (GuiContainer) guiScreen;
-            guiAreas = getGuiAreas(guiContainer);
-        } else {
-            guiAreas = null;
-        }
-
-        final int columns = getColumns();
-        if (columns < 4) {
-            close();
-            return;
-        }
-
-        final int rows = getRows();
-        final int xSize = columns * itemStackWidth;
-        final int xEmptySpace = guiProperties.getScreenWidth() - guiProperties.getGuiLeft()
-            - guiProperties.getGuiXSize()
-            - xSize;
-
-        final int leftEdge = guiProperties.getGuiLeft() + guiProperties.getGuiXSize() + (xEmptySpace / 2);
-        final int rightEdge = leftEdge + xSize;
-
-        final int yItemButtonSpace = getItemButtonYSpace();
-        final int itemButtonsHeight = rows * itemStackHeight;
-
-        final int buttonStartY = buttonSize + (2 * borderPadding) + (yItemButtonSpace - itemButtonsHeight) / 2;
-        createItemButtons(guiItemStacks, guiAreas, leftEdge, buttonStartY, columns, rows);
-
-        nextButton = new GuiButtonExt(0, rightEdge - buttonSize, borderPadding, buttonSize, buttonSize, nextLabel);
-        backButton = new GuiButtonExt(1, leftEdge, borderPadding, buttonSize, buttonSize, backLabel);
-
-        int configButtonX = rightEdge - buttonSize + 1;
-        int configButtonY = guiProperties.getScreenHeight() - buttonSize - borderPadding;
-        configButton = new GuiButtonExt(2, configButtonX, configButtonY, buttonSize, buttonSize, null);
-        ResourceLocation configButtonIconLocation = new ResourceLocation(
-            Reference.MOD_ID,
-            Reference.TEXTURE_GUI_PATH + "recipeBackground.png");
-        GuiHelper guiHelper = Internal.getHelpers()
-            .getGuiHelper();
-        configButtonIcon = guiHelper.createDrawable(configButtonIconLocation, 0, 166, 16, 16);
-        configButtonCheatIcon = guiHelper.createDrawable(configButtonIconLocation, 16, 166, 16, 16);
-        configButtonHoverChecker = new HoverChecker(configButton, 0);
-
-        int searchFieldY = guiProperties.getScreenHeight() - searchHeight - borderPadding - 2;
-        int searchFieldWidth = rightEdge - leftEdge - buttonSize - 1;
-        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-        searchField = new GuiTextFieldFilter(0, fontRenderer, leftEdge, searchFieldY, searchFieldWidth, searchHeight);
-        setKeyboardFocus(false);
-        searchField.setItemFilter(itemFilter);
-
-        updateLayout();
-
-        open();
-    }
-
-    @Nonnull
-    private List<IAdvancedGuiHandler<?>> getActiveAdvancedGuiHandlers(@Nonnull GuiScreen guiScreen) {
-        List<IAdvancedGuiHandler<?>> activeAdvancedGuiHandler = new ArrayList<>();
-        if (guiScreen instanceof GuiContainer) {
-            GuiContainer guiContainer = (GuiContainer) guiScreen;
-            for (IAdvancedGuiHandler<?> advancedGuiHandler : advancedGuiHandlers) {
-                if (advancedGuiHandler.getGuiContainerClass()
-                    .isAssignableFrom(guiContainer.getClass())) {
-                    activeAdvancedGuiHandler.add(advancedGuiHandler);
+        if (Config.isOverlayEnabled()) {
+            GuiProperties guiProperties = GuiProperties.create(guiScreen);
+            if (guiProperties != null) {
+                final int columns = ItemListOverlayInternal.getColumns(guiProperties);
+                if (columns >= 4) {
+                    internal = new ItemListOverlayInternal(this, ingredientRegistry, guiScreen, guiProperties);
+                    return internal;
                 }
             }
         }
-        return activeAdvancedGuiHandler;
-    }
 
-    private List<Rectangle> getGuiAreas(GuiContainer guiContainer) {
-        List<Rectangle> guiAreas = new ArrayList<>();
-        for (IAdvancedGuiHandler<?> advancedGuiHandler : activeAdvancedGuiHandlers) {
-            List<Rectangle> guiExtraAreas = getGuiAreas(guiContainer, advancedGuiHandler);
-            if (guiExtraAreas != null) {
-                guiAreas.addAll(guiExtraAreas);
-            }
-        }
-        return guiAreas;
-    }
-
-    private <T extends GuiContainer> List<Rectangle> getGuiAreas(GuiContainer guiContainer,
-        IAdvancedGuiHandler<T> advancedGuiHandler) {
-        if (advancedGuiHandler.getGuiContainerClass()
-            .isAssignableFrom(guiContainer.getClass())) {
-            T guiT = advancedGuiHandler.getGuiContainerClass()
-                .cast(guiContainer);
-            return advancedGuiHandler.getGuiExtraAreas(guiT);
-        }
         return null;
     }
 
-    public void updateGui(@Nonnull GuiScreen guiScreen) {
-        if (this.guiProperties == null) {
-            initGui(guiScreen);
-        } else {
-            GuiProperties guiProperties = GuiProperties.create(guiScreen);
-            if (guiProperties == null) {
-                return;
-            }
-            if (!this.guiProperties.equals(guiProperties)) {
-                initGui(guiScreen);
-            } else if (!activeAdvancedGuiHandlers.isEmpty() && guiScreen instanceof GuiContainer) {
-                GuiContainer guiContainer = (GuiContainer) guiScreen;
-                List<Rectangle> guiAreas = getGuiAreas(guiContainer);
-                if (!Objects.equals(this.guiAreas, guiAreas)) {
-                    initGui(guiContainer);
-                }
-            }
-        }
-    }
-
-    private static void createItemButtons(@Nonnull GuiItemStackFastList guiItemStacks,
-        @Nullable List<Rectangle> guiAreas, final int xStart, final int yStart, final int columnCount,
-        final int rowCount) {
-        guiItemStacks.clear();
-
-        for (int row = 0; row < rowCount; row++) {
-            int y = yStart + (row * itemStackHeight);
-            for (int column = 0; column < columnCount; column++) {
-                int x = xStart + (column * itemStackWidth);
-                GuiItemStackFast guiItemStackFast = new GuiItemStackFast(x, y, itemStackPadding);
-                if (guiAreas != null) {
-                    Rectangle stackArea = guiItemStackFast.getArea();
-                    if (intersects(guiAreas, stackArea)) {
-                        continue;
-                    }
-                }
-                guiItemStacks.add(guiItemStackFast);
-            }
-        }
-    }
-
-    private static boolean intersects(List<Rectangle> areas, Rectangle comparisonArea) {
-        for (Rectangle area : areas) {
-            if (area.intersects(comparisonArea)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void updateLayout() {
-        ImmutableList<ItemStackElement> itemList = itemFilter.getItemList();
-        guiItemStacks.set(firstItemIndex, itemList);
-
-        FontRenderer fontRendererObj = Minecraft.getMinecraft().fontRenderer;
-
-        pageNumDisplayString = (getPageNum() + 1) + "/" + getPageCount();
-        int pageDisplayWidth = fontRendererObj.getStringWidth(pageNumDisplayString);
-        pageNumDisplayX = ((backButton.xPosition + backButton.width) + nextButton.xPosition) / 2
-            - (pageDisplayWidth / 2);
-        pageNumDisplayY = backButton.yPosition + Math.round((backButton.height - fontRendererObj.FONT_HEIGHT) / 2.0f);
-
-        searchField.update();
-    }
-
-    private void nextPage() {
-        final int itemsCount = itemFilter.size();
-        if (itemsCount == 0) {
-            firstItemIndex = 0;
-            return;
-        }
-
-        firstItemIndex += guiItemStacks.size();
-        if (firstItemIndex >= itemsCount) {
-            firstItemIndex = 0;
-        }
-        updateLayout();
-    }
-
-    private void previousPage() {
-        final int itemsPerPage = guiItemStacks.size();
-        if (itemsPerPage == 0) {
-            firstItemIndex = 0;
-            return;
-        }
-        final int itemsCount = itemFilter.size();
-
-        int pageNum = firstItemIndex / itemsPerPage;
-        if (pageNum == 0) {
-            pageNum = itemsCount / itemsPerPage;
-        } else {
-            pageNum--;
-        }
-
-        firstItemIndex = itemsPerPage * pageNum;
-        if (firstItemIndex > 0 && firstItemIndex == itemsCount) {
-            pageNum--;
-            firstItemIndex = itemsPerPage * pageNum;
-        }
-        updateLayout();
-    }
-
-    public void drawScreen(@Nonnull Minecraft minecraft, int mouseX, int mouseY) {
-        if (!isOpen()) {
-            return;
-        }
-
-        GL11.glDisable(GL11.GL_LIGHTING);
-
-        minecraft.fontRenderer
-            .drawStringWithShadow(pageNumDisplayString, pageNumDisplayX, pageNumDisplayY, Color.white.getRGB());
-
-        searchField.drawTextBox();
-
-        nextButton.drawButton(minecraft, mouseX, mouseY);
-        backButton.drawButton(minecraft, mouseX, mouseY);
-        configButton.drawButton(minecraft, mouseX, mouseY);
-
-        IDrawable icon = Config.isCheatItemsEnabled() ? configButtonCheatIcon : configButtonIcon;
-        icon.draw(minecraft, configButton.xPosition + 2, configButton.yPosition + 2);
-
-        GL11.glDisable(GL11.GL_BLEND);
-
-        if (shouldShowDeleteItemTooltip(minecraft)) {
-            hovered = guiItemStacks.render(minecraft, false, mouseX, mouseY);
-        } else {
-            boolean mouseOver = isMouseOver(mouseX, mouseY);
-            hovered = guiItemStacks.render(minecraft, mouseOver, mouseX, mouseY);
-        }
-
-        if (hovered != null) {
-            RenderHelper.enableGUIStandardItemLighting();
-            hovered.drawHovered(minecraft);
-            RenderHelper.disableStandardItemLighting();
-        }
-
-        GL11.glEnable(GL11.GL_ALPHA_TEST);
-    }
-
-    private boolean shouldShowDeleteItemTooltip(Minecraft minecraft) {
-        if (Config.isDeleteItemsInCheatModeActive()) {
-            EntityPlayer player = minecraft.thePlayer;
-            if (player.inventory.getItemStack() != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void drawTooltips(@Nonnull Minecraft minecraft, int mouseX, int mouseY) {
-        if (!isOpen()) {
-            return;
-        }
-
-        boolean mouseOver = isMouseOver(mouseX, mouseY);
-        if (mouseOver && shouldShowDeleteItemTooltip(minecraft)) {
-            String deleteItem = Translator.translateToLocal("jfmuy.tooltip.delete.item");
-            TooltipRenderer.drawHoveringText(minecraft, deleteItem, mouseX, mouseY);
-        }
-
-        if (hovered != null) {
-            hovered.drawTooltip(minecraft, mouseX, mouseY);
-        }
-
-        if (configButtonHoverChecker.checkHover(mouseX, mouseY)) {
-            String configString = Translator.translateToLocal("jfmuy.tooltip.config");
-            if (Config.isCheatItemsEnabled()) {
-                List<String> tooltip = Arrays.asList(
-                    configString,
-                    EnumChatFormatting.RED + Translator.translateToLocal("jfmuy.tooltip.cheat.mode"));
-                TooltipRenderer.drawHoveringText(minecraft, tooltip, mouseX, mouseY);
-            } else {
-                TooltipRenderer.drawHoveringText(minecraft, configString, mouseX, mouseY);
-            }
-        }
-    }
-
-    public void handleTick() {
-        if (searchField != null) {
-            searchField.updateCursorCounter();
-        }
-    }
-
-    @Override
-    public boolean isMouseOver(int mouseX, int mouseY) {
-        if (guiProperties == null || !isOpen() || (mouseX < guiProperties.getGuiLeft() + guiProperties.getGuiXSize())) {
-            return false;
-        }
-
-        if (guiAreas != null) {
-            for (Rectangle guiArea : guiAreas) {
-                if (guiArea.contains(mouseX, mouseY)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    @Override
     @Nullable
-    public Focus getFocusUnderMouse(int mouseX, int mouseY) {
-        if (!isMouseOver(mouseX, mouseY)) {
-            return null;
-        }
-
-        Focus focus = guiItemStacks.getFocusUnderMouse(mouseX, mouseY);
-        if (focus != null) {
-            setKeyboardFocus(false);
-            focus.setAllowsCheating();
-        }
-        return focus;
-    }
-
-    @Override
-    public boolean canSetFocusWithMouse() {
-        return true;
-    }
-
-    @Override
-    public boolean handleMouseClicked(int mouseX, int mouseY, int mouseButton) {
-        if (!isMouseOver(mouseX, mouseY)) {
-            setKeyboardFocus(false);
-            return false;
-        }
-
-        if (Config.isDeleteItemsInCheatModeActive()) {
-            Minecraft minecraft = Minecraft.getMinecraft();
-            EntityPlayerSP player = minecraft.thePlayer;
-            ItemStack itemStack = player.inventory.getItemStack();
-            if (itemStack != null) {
-                player.inventory.setItemStack(null);
-                PacketJFMUY packet = new PacketDeletePlayerItem(itemStack);
-                JFMUY.getProxy()
-                    .sendPacketToServer(packet);
-                return true;
-            }
-        }
-
-        boolean buttonClicked = handleMouseClickedButtons(mouseX, mouseY);
-        if (buttonClicked) {
-            setKeyboardFocus(false);
-            return true;
-        }
-
-        return handleMouseClickedSearch(mouseX, mouseY, mouseButton);
-    }
-
-    @Override
-    public boolean handleMouseScrolled(int mouseX, int mouseY, int scrollDelta) {
-        if (!isMouseOver(mouseX, mouseY)) {
-            return false;
-        }
-        if (scrollDelta < 0) {
-            nextPage();
-            return true;
-        } else if (scrollDelta > 0) {
-            previousPage();
-            return true;
-        }
-        return false;
-    }
-
-    private boolean handleMouseClickedButtons(int mouseX, int mouseY) {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        if (nextButton.mousePressed(minecraft, mouseX, mouseY)) {
-            nextPage();
-            nextButton.func_146113_a(minecraft.getSoundHandler());
-            return true;
-        } else if (backButton.mousePressed(minecraft, mouseX, mouseY)) {
-            previousPage();
-            backButton.func_146113_a(minecraft.getSoundHandler());
-            return true;
-        } else if (configButton.mousePressed(minecraft, mouseX, mouseY)) {
-            close();
-            configButton.func_146113_a(minecraft.getSoundHandler());
-            GuiScreen configScreen = new JFMUYModConfigGui(minecraft.currentScreen);
-            minecraft.displayGuiScreen(configScreen);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean handleMouseClickedSearch(int mouseX, int mouseY, int mouseButton) {
-        boolean searchClicked = searchField.isMouseOver(mouseX, mouseY);
-        setKeyboardFocus(searchClicked);
-        if (searchClicked && searchField.handleMouseClicked(mouseX, mouseY, mouseButton)) {
-            updateLayout();
-        }
-        return searchClicked;
-    }
-
-    @Override
-    public boolean hasKeyboardFocus() {
-        return searchField != null && searchField.isFocused();
-    }
-
-    @Override
-    public void setKeyboardFocus(boolean keyboardFocus) {
-        if (searchField != null) {
-            searchField.setFocused(keyboardFocus);
-        }
-    }
-
-    @Override
-    public boolean onKeyPressed(char typedChar, int keyCode) {
-        if (hasKeyboardFocus()) {
-            boolean changed = searchField.textboxKeyTyped(typedChar, keyCode);
-            if (changed) {
-                firstItemIndex = 0;
-                updateLayout();
-            }
-            return changed || ChatAllowedCharacters.isAllowedCharacter(typedChar);
-        }
-        return false;
-    }
-
-    private int getItemButtonXSpace() {
-        if (guiProperties == null) {
-            return 0;
-        }
-        return guiProperties.getScreenWidth()
-            - (guiProperties.getGuiLeft() + guiProperties.getGuiXSize() + (2 * borderPadding));
-    }
-
-    private int getItemButtonYSpace() {
-        if (guiProperties == null) {
-            return 0;
-        }
-        return guiProperties.getScreenHeight() - (buttonSize + searchHeight + 2 + (4 * borderPadding));
-    }
-
-    private int getColumns() {
-        return getItemButtonXSpace() / itemStackWidth;
-    }
-
-    private int getRows() {
-        return getItemButtonYSpace() / itemStackHeight;
-    }
-
-    private int getPageCount() {
-        final int itemCount = itemFilter.size();
-        final int stacksPerPage = guiItemStacks.size();
-        if (stacksPerPage == 0) {
-            return 1;
-        }
-        int pageCount = MathUtil.divideCeil(itemCount, stacksPerPage);
-        pageCount = Math.max(1, pageCount);
-        return pageCount;
-    }
-
-    private int getPageNum() {
-        final int stacksPerPage = guiItemStacks.size();
-        if (stacksPerPage == 0) {
-            return 1;
-        }
-        return firstItemIndex / stacksPerPage;
-    }
-
-    public void open() {
-        open = true;
-        setKeyboardFocus(false);
-    }
-
-    @Override
-    public void close() {
-        open = false;
-        setKeyboardFocus(false);
-        Config.saveFilterText();
-    }
-
-    @Override
-    public boolean isOpen() {
-        return open && Config.isOverlayEnabled();
+    public ItemListOverlayInternal getInternal() {
+        return internal;
     }
 
     @Nullable
     @Override
     public ItemStack getStackUnderMouse() {
-        if (hovered == null) {
-            return null;
-        } else {
-            return hovered.getItemStack();
+        if (internal != null) {
+            return internal.getStackUnderMouse();
         }
+        return null;
     }
 
     @Override
@@ -598,15 +77,64 @@ public class ItemListOverlay implements IItemListOverlay, IShowsRecipeFocuses, I
 
         Config.setFilterText(filterText);
 
-        if (searchField != null) {
-            searchField.setText(filterText);
-            updateLayout();
+        if (internal != null) {
+            internal.setFilterText(filterText);
         }
     }
 
-    @Nonnull
+    public void rebuildItemFilter() {
+        ItemFilter itemFilter = getItemFilter();
+        itemFilter.rebuild();
+        ItemListOverlayInternal.setToFirstPage();
+        if (internal != null) {
+            internal.updateLayout();
+        }
+    }
+
     @Override
     public String getFilterText() {
         return Config.getFilterText();
+    }
+
+    @Override
+    public ImmutableList<ItemStack> getVisibleStacks() {
+        if (internal == null) {
+            return ImmutableList.of();
+        }
+        return internal.getVisibleStacks();
+    }
+
+    @Override
+    public ImmutableList<ItemStack> getFilteredStacks() {
+        return itemFilter.getItemStacks();
+    }
+
+    @Override
+    public void highlightStacks(Collection<ItemStack> stacks) {
+        highlightedStacks.clear();
+        highlightedStacks.addAll(stacks);
+    }
+
+    public Set<ItemStack> getHighlightedStacks() {
+        return highlightedStacks;
+    }
+
+    public ItemFilter getItemFilter() {
+        return itemFilter;
+    }
+
+    public List<IAdvancedGuiHandler<?>> getAdvancedGuiHandlers() {
+        return advancedGuiHandlers;
+    }
+
+    public boolean isOpen() {
+        return internal != null;
+    }
+
+    public void close() {
+        if (internal != null) {
+            internal.close();
+        }
+        internal = null;
     }
 }

@@ -1,7 +1,5 @@
 package ruiseki.jfmuy.plugins.vanilla.crafting;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ShapelessRecipes;
 
@@ -14,35 +12,31 @@ import ruiseki.jfmuy.util.Log;
 
 public class ShapelessRecipesHandler implements IRecipeHandler<ShapelessRecipes> {
 
-    @Nonnull
     private final IGuiHelper guiHelper;
 
-    public ShapelessRecipesHandler(@Nonnull IGuiHelper guiHelper) {
+    public ShapelessRecipesHandler(IGuiHelper guiHelper) {
         this.guiHelper = guiHelper;
     }
 
     @Override
-    @Nonnull
     public Class<ShapelessRecipes> getRecipeClass() {
         return ShapelessRecipes.class;
     }
 
-    @Nonnull
     @Override
-    public String getRecipeCategoryUid(@Nonnull ShapelessRecipes recipe) {
+    public String getRecipeCategoryUid(ShapelessRecipes recipe) {
         return VanillaRecipeCategoryUid.CRAFTING;
     }
 
     @Override
-    @Nonnull
-    public IRecipeWrapper getRecipeWrapper(@Nonnull ShapelessRecipes recipe) {
+    public IRecipeWrapper getRecipeWrapper(ShapelessRecipes recipe) {
         return new ShapelessRecipesWrapper(guiHelper, recipe);
     }
 
     @Override
-    public boolean isRecipeValid(@Nonnull ShapelessRecipes recipe) {
+    public boolean isRecipeValid(ShapelessRecipes recipe) {
         if (recipe.getRecipeOutput() == null) {
-            String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+            String recipeInfo = ErrorUtil.getInfoFromRecipe(recipe, this);
             Log.error("Recipe has no output. {}", recipeInfo);
             return false;
         }
@@ -51,13 +45,13 @@ public class ShapelessRecipesHandler implements IRecipeHandler<ShapelessRecipes>
             if (input instanceof ItemStack) {
                 inputCount++;
             } else {
-                String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+                String recipeInfo = ErrorUtil.getInfoFromRecipe(recipe, this);
                 Log.error("Recipe has an input that is not an ItemStack. {}", recipeInfo);
                 return false;
             }
         }
         if (inputCount > 9) {
-            String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+            String recipeInfo = ErrorUtil.getInfoFromRecipe(recipe, this);
             Log.error("Recipe has too many inputs. {}", recipeInfo);
             return false;
         }

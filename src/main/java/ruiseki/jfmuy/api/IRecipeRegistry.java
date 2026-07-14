@@ -1,5 +1,6 @@
 package ruiseki.jfmuy.api;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -20,11 +21,15 @@ public interface IRecipeRegistry {
 
     /** Returns the IRecipeHandler associated with the recipeClass or null if there is none */
     @Nullable
-    IRecipeHandler getRecipeHandler(@Nonnull Class recipeClass);
+    <T> IRecipeHandler<T> getRecipeHandler(@Nonnull Class<? extends T> recipeClass);
+
+    /** Returns an unmodifiable list of all Recipe Categories */
+    @Nonnull
+    List<IRecipeCategory> getRecipeCategories();
 
     /** Returns an unmodifiable list of Recipe Categories */
     @Nonnull
-    List<IRecipeCategory> getRecipeCategories();
+    List<IRecipeCategory> getRecipeCategories(@Nonnull List<String> recipeCategoryUids);
 
     /** Returns an unmodifiable list of Recipe Categories that have the ItemStack as an input */
     @Nonnull
@@ -63,10 +68,16 @@ public interface IRecipeRegistry {
     List<Object> getRecipes(@Nonnull IRecipeCategory recipeCategory);
 
     /**
+     * Returns an unmodifiable collection of ItemStacks that can craft recipes from recipeCategory.
+     * These are registered with {@link IModRegistry#addRecipeCategoryCraftingItem(ItemStack, String...)}.
+     */
+    @Nonnull
+    Collection<ItemStack> getCraftingItems(@Nonnull IRecipeCategory recipeCategory);
+
+    /**
      * Add a new recipe while the game is running.
      * This is only for things like gated recipes becoming available, like the ones in Thaumcraft.
-     * Use your IRecipeHandler.isValid to determine which recipes are hidden, and when a recipe becomes valid you can
-     * add it here.
+     * Use your IRecipeHandler.isValid to determine which recipes are hidden, and when a recipe becomes valid you can add it here.
      * (note that IRecipeHandler.isValid must be true when the recipe is added here for it to work)
      */
     void addRecipe(@Nonnull Object recipe);

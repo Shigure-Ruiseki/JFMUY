@@ -1,6 +1,6 @@
 package ruiseki.jfmuy.api.recipe;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An IRecipeHandler provides information about one Recipe Class.
@@ -8,17 +8,19 @@ import javax.annotation.Nonnull;
 public interface IRecipeHandler<T> {
 
     /** Returns the class of the Recipe handled by this IRecipeHandler. */
-    @Nonnull
+    @NotNull
     Class<T> getRecipeClass();
 
-    /** Returns this recipe's category unique id. */
-    @Nonnull
-    String getRecipeCategoryUid();
+    /**
+     * Returns this recipe's unique category id.
+     */
+    @NotNull
+    String getRecipeCategoryUid(@NotNull T recipe);
 
     /** Returns a recipe wrapper for the given recipe. */
-    @Nonnull
-    IRecipeWrapper getRecipeWrapper(@Nonnull T recipe);
+    @NotNull
+    IRecipeWrapper getRecipeWrapper(@NotNull T recipe);
 
     /** Returns true if a recipe is valid and can be used. */
-    boolean isRecipeValid(@Nonnull T recipe);
+    boolean isRecipeValid(@NotNull T recipe);
 }

@@ -8,9 +8,10 @@ import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fluids.FluidStack;
+import org.jetbrains.annotations.NotNull;
+
 
 public abstract class BlankRecipeWrapper implements IRecipeWrapper {
-
     @Override
     public List getInputs() {
         return Collections.emptyList();
@@ -27,17 +28,18 @@ public abstract class BlankRecipeWrapper implements IRecipeWrapper {
     }
 
     @Override
+    @NotNull
     public List<FluidStack> getFluidOutputs() {
         return Collections.emptyList();
     }
 
     @Override
-    public void drawInfo(@Nonnull Minecraft minecraft, int recipeWidth, int recipeHeight) {
+    public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
 
     }
 
     @Override
-    public void drawAnimations(@Nonnull Minecraft minecraft, int recipeWidth, int recipeHeight) {
+    public void drawAnimations(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight) {
 
     }
 
@@ -45,5 +47,10 @@ public abstract class BlankRecipeWrapper implements IRecipeWrapper {
     @Override
     public List<String> getTooltipStrings(int mouseX, int mouseY) {
         return null;
+    }
+
+    @Override
+    public boolean handleClick(@NotNull Minecraft minecraft, int mouseX, int mouseY, int mouseButton) {
+        return false;
     }
 }

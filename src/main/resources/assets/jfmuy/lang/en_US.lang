@@ -14,7 +14,7 @@ jfmuy.tooltip.error.recipe.transfer.no.server=The server must have Nearly Enough
 jfmuy.tooltip.error.recipe.transfer.too.large.player.inventory=Recipe is too large to craft in the 2x2 player crafting grid.
 
 # Error Messages
-jfmuy.chat.error.command.too.long=NEI must be on the server to handle this Chat Command, it is too long for Minecraft to send.
+jfmuy.chat.error.command.too.long=JFMUY must be on the server to handle this Chat Command, it is too long for Minecraft to send.
 
 # Key Bindings
 key.jfmuy.toggleOverlay=Toggle Item List Overlay (Ctrl + )
@@ -28,7 +28,7 @@ config.jfmuy.valid=Valid
 config.jfmuy.title=%MODNAME Config
 
 config.jfmuy.mode=Mode
-config.jfmuy.mode.comment=Change the mode that NEI is operating in.
+config.jfmuy.mode.comment=Change the mode that JFMUY is operating in.
 config.jfmuy.mode.cheatItemsEnabled=Item Cheating
 config.jfmuy.mode.cheatItemsEnabled.comment=/give items instead of showing the recipe.
 config.jfmuy.mode.editEnabled=Item List Edit Mode
@@ -45,7 +45,7 @@ config.jfmuy.search.atPrefixRequiredForModName=Use @ for Mod Name
 config.jfmuy.search.atPrefixRequiredForModName.comment=Require "@ModName" to search by mod name instead of "ModName".
 
 config.jfmuy.advanced=Advanced
-config.jfmuy.advanced.comment=Advanced config options to change the way NEI functions.
+config.jfmuy.advanced.comment=Advanced config options to change the way JFMUY functions.
 config.jfmuy.advanced.nbtKeyIgnoreList=NBT Key Ignore List
 config.jfmuy.advanced.nbtKeyIgnoreList.comment=List of NBT Keys that should be ignored when retrieving recipes.
 config.jfmuy.advanced.itemBlacklist=Item Blacklist
@@ -53,15 +53,15 @@ config.jfmuy.advanced.itemBlacklist.comment=List of items that should not be dis
 config.jfmuy.advanced.hideMissingModelsEnabled=Hide Missing Item Models
 config.jfmuy.advanced.hideMissingModelsEnabled.comment=Items with missing models will be hidden from the item list.
 config.jfmuy.advanced.debugModeEnabled=Debug Mode
-config.jfmuy.advanced.debugModeEnabled.comment=Adds random things to help with NEI development.
+config.jfmuy.advanced.debugModeEnabled.comment=Adds random things to help with JFMUY development.
 config.jfmuy.advanced.deleteItemsInCheatModeEnabled=Delete Items in Cheat Mode
-config.jfmuy.advanced.deleteItemsInCheatModeEnabled.comment=In cheat mode, drag an ItemStack over the item list and click to delete it. (requires NEI on server)
+config.jfmuy.advanced.deleteItemsInCheatModeEnabled.comment=In cheat mode, drag an ItemStack over the item list and click to delete it. (requires JFMUY on server)
 
 config.jfmuy.addons=Addons
-config.jfmuy.addons.comment=Category for NEI addon config options.
+config.jfmuy.addons.comment=Category for JFMUY addon config options.
 
 # Edit Mode
-gui.jfmuy.editMode.description=NEI Item List Edit Mode:
+gui.jfmuy.editMode.description=JFMUY Item List Edit Mode:
 gui.jfmuy.editMode.description.hide=Ctrl-click to hide.
 gui.jfmuy.editMode.description.show=Hidden. Ctrl-click to show.
 gui.jfmuy.editMode.description.hide.wild=Ctrl-right-click to hide with wildcard.

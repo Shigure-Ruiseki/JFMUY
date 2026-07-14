@@ -8,17 +8,17 @@ import net.minecraft.inventory.Slot;
 
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferInfo;
 
-public class BasicRecipeTransferInfo implements IRecipeTransferInfo {
+public class BasicRecipeTransferInfo<C extends Container> implements IRecipeTransferInfo<C> {
 
-    private final Class<? extends Container> containerClass;
+    private final Class<C> containerClass;
     private final String recipeCategoryUid;
     private final int recipeSlotStart;
     private final int recipeSlotCount;
     private final int inventorySlotStart;
     private final int inventorySlotCount;
 
-    public BasicRecipeTransferInfo(Class<? extends Container> containerClass, String recipeCategoryUid,
-        int recipeSlotStart, int recipeSlotCount, int inventorySlotStart, int inventorySlotCount) {
+    public BasicRecipeTransferInfo(Class<C> containerClass, String recipeCategoryUid, int recipeSlotStart,
+        int recipeSlotCount, int inventorySlotStart, int inventorySlotCount) {
         this.containerClass = containerClass;
         this.recipeCategoryUid = recipeCategoryUid;
         this.recipeSlotStart = recipeSlotStart;
@@ -28,7 +28,7 @@ public class BasicRecipeTransferInfo implements IRecipeTransferInfo {
     }
 
     @Override
-    public Class<? extends Container> getContainerClass() {
+    public Class<C> getContainerClass() {
         return containerClass;
     }
 
@@ -38,8 +38,8 @@ public class BasicRecipeTransferInfo implements IRecipeTransferInfo {
     }
 
     @Override
-    public List<Slot> getRecipeSlots(Container container) {
-        List<Slot> slots = new ArrayList<>();
+    public List<Slot> getRecipeSlots(C container) {
+        List<Slot> slots = new ArrayList<Slot>();
         for (int i = recipeSlotStart; i < recipeSlotStart + recipeSlotCount; i++) {
             Slot slot = container.getSlot(i);
             slots.add(slot);
@@ -48,8 +48,8 @@ public class BasicRecipeTransferInfo implements IRecipeTransferInfo {
     }
 
     @Override
-    public List<Slot> getInventorySlots(Container container) {
-        List<Slot> slots = new ArrayList<>();
+    public List<Slot> getInventorySlots(C container) {
+        List<Slot> slots = new ArrayList<Slot>();
         for (int i = inventorySlotStart; i < inventorySlotStart + inventorySlotCount; i++) {
             Slot slot = container.getSlot(i);
             slots.add(slot);

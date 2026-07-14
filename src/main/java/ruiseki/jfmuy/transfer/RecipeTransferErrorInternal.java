@@ -1,15 +1,13 @@
 package ruiseki.jfmuy.transfer;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.client.Minecraft;
 
+import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
-import ruiseki.jfmuy.gui.RecipeLayout;
 
 public class RecipeTransferErrorInternal implements IRecipeTransferError {
 
-    public static final RecipeTransferErrorInternal instance = new RecipeTransferErrorInternal();
+    public static final RecipeTransferErrorInternal INSTANCE = new RecipeTransferErrorInternal();
 
     private RecipeTransferErrorInternal() {
 
@@ -21,7 +19,8 @@ public class RecipeTransferErrorInternal implements IRecipeTransferError {
     }
 
     @Override
-    public void showError(@Nonnull Minecraft minecraft, int mouseX, int mouseY, @Nonnull RecipeLayout recipeLayout) {
+    public void showError(Minecraft minecraft, int mouseX, int mouseY, IRecipeLayout recipeLayout, int recipeX,
+        int recipeY) {
 
     }
 }

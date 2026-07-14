@@ -1,21 +1,18 @@
 package ruiseki.jfmuy.plugins.vanilla.crafting;
 
-import java.util.Collections;
-import java.util.List;
-
-import javax.annotation.Nonnull;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ShapelessRecipes;
 
 import ruiseki.jfmuy.api.IGuiHelper;
+import ruiseki.jfmuy.api.ingredients.IIngredients;
+import ruiseki.jfmuy.util.BrokenCraftingRecipeException;
+import ruiseki.jfmuy.util.ErrorUtil;
 
 public class ShapelessRecipesWrapper extends AbstractShapelessRecipeWrapper {
 
-    @Nonnull
     private final ShapelessRecipes recipe;
 
-    public ShapelessRecipesWrapper(@Nonnull IGuiHelper guiHelper, @Nonnull ShapelessRecipes recipe) {
+    public ShapelessRecipesWrapper(IGuiHelper guiHelper, ShapelessRecipes recipe) {
         super(guiHelper);
         this.recipe = recipe;
         for (Object input : this.recipe.recipeItems) {
@@ -28,15 +25,18 @@ public class ShapelessRecipesWrapper extends AbstractShapelessRecipeWrapper {
         }
     }
 
-    @Nonnull
     @Override
-    public List<ItemStack> getInputs() {
-        return recipe.recipeItems;
-    }
+    public void getIngredients(IIngredients ingredients) {
+        ItemStack recipeOutput = recipe.getRecipeOutput();
 
-    @Nonnull
-    @Override
-    public List<ItemStack> getOutputs() {
-        return Collections.singletonList(recipe.getRecipeOutput());
+        try {
+            ingredients.setInputs(ItemStack.class, recipe.recipeItems);
+            if (recipeOutput != null) {
+                ingredients.setOutput(ItemStack.class, recipeOutput);
+            }
+        } catch (RuntimeException e) {
+            String info = ErrorUtil.getInfoFromBrokenCraftingRecipe(recipe, recipe.recipeItems, recipeOutput);
+            throw new BrokenCraftingRecipeException(info, e);
+        }
     }
 }

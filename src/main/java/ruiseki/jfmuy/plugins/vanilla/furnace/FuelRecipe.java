@@ -1,37 +1,44 @@
 package ruiseki.jfmuy.plugins.vanilla.furnace;
 
 import java.awt.Color;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
-import org.jetbrains.annotations.NotNull;
-
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawableAnimated;
 import ruiseki.jfmuy.api.gui.IDrawableStatic;
-import ruiseki.jfmuy.plugins.vanilla.VanillaRecipeWrapper;
+import ruiseki.jfmuy.api.ingredients.IIngredients;
+import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
 import ruiseki.jfmuy.util.Translator;
 
-public class FuelRecipe extends VanillaRecipeWrapper {
+public class FuelRecipe extends BlankRecipeWrapper {
 
-    @Nonnull
     private final List<List<ItemStack>> inputs;
-    @Nonnull
+    private final String smeltCountString;
     private final String burnTimeString;
-    @Nonnull
     private final IDrawableAnimated flame;
 
-    public FuelRecipe(@Nonnull IGuiHelper guiHelper, @Nonnull Collection<ItemStack> input, int burnTime) {
-        List<ItemStack> inputList = new ArrayList<>(input);
+    public FuelRecipe(IGuiHelper guiHelper, Collection<ItemStack> input, int burnTime) {
+        List<ItemStack> inputList = new ArrayList<ItemStack>(input);
         this.inputs = Collections.singletonList(inputList);
+
+        if (burnTime == 200) {
+            this.smeltCountString = Translator.translateToLocal("gui.jfmuy.category.fuel.smeltCount.single");
+        } else {
+            NumberFormat numberInstance = NumberFormat.getNumberInstance();
+            numberInstance.setMaximumFractionDigits(2);
+            String smeltCount = numberInstance.format(burnTime / 200f);
+            this.smeltCountString = Translator
+                .translateToLocalFormatted("gui.jfmuy.category.fuel.smeltCount", smeltCount);
+        }
+
         this.burnTimeString = Translator.translateToLocalFormatted("gui.jfmuy.category.fuel.burnTime", burnTime);
 
         ResourceLocation furnaceBackgroundLocation = new ResourceLocation(
@@ -42,19 +49,19 @@ public class FuelRecipe extends VanillaRecipeWrapper {
             .createAnimatedDrawable(flameDrawable, burnTime, IDrawableAnimated.StartDirection.TOP, true);
     }
 
-    @Nonnull
     @Override
+    public void getIngredients(IIngredients ingredients) {
+        ingredients.setInputLists(ItemStack.class, inputs);
+    }
+
     public List<List<ItemStack>> getInputs() {
         return inputs;
     }
 
     @Override
-    public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
-        minecraft.fontRenderer.drawString(burnTimeString, 24, 12, Color.gray.getRGB());
-    }
-
-    @Override
-    public void drawAnimations(@Nonnull Minecraft minecraft, int recipeWidth, int recipeHeight) {
+    public void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
         flame.draw(minecraft, 2, 0);
+        minecraft.fontRenderer.drawString(smeltCountString, 24, 8, Color.gray.getRGB());
+        minecraft.fontRenderer.drawString(burnTimeString, 24, 18, Color.gray.getRGB());
     }
 }

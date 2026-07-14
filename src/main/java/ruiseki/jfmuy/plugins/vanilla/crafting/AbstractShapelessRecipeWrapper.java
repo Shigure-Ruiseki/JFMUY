@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -15,16 +16,18 @@ import cpw.mods.fml.client.config.HoverChecker;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawable;
-import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
-import ruiseki.jfmuy.plugins.vanilla.VanillaRecipeWrapper;
+import ruiseki.jfmuy.api.gui.IRecipeLayout;
+import ruiseki.jfmuy.api.ingredients.IIngredients;
+import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
+import ruiseki.jfmuy.api.recipe.wrapper.ICustomCraftingRecipeWrapper;
+import ruiseki.jfmuy.util.Ingredients;
 import ruiseki.jfmuy.util.Translator;
 
-public abstract class AbstractShapelessRecipeWrapper extends VanillaRecipeWrapper implements ICraftingRecipeWrapper {
+public abstract class AbstractShapelessRecipeWrapper extends BlankRecipeWrapper
+    implements ICustomCraftingRecipeWrapper {
 
     private static final double shapelessIconScale = 0.5;
-    @Nonnull
     private final IDrawable shapelessIcon;
-    @Nonnull
     private final HoverChecker shapelessIconHoverChecker;
 
     public AbstractShapelessRecipeWrapper(IGuiHelper guiHelper) {
@@ -64,7 +67,17 @@ public abstract class AbstractShapelessRecipeWrapper extends VanillaRecipeWrappe
         return super.getTooltipStrings(mouseX, mouseY);
     }
 
+    @Override
+    public void setRecipe(IRecipeLayout recipeLayout, IIngredients ingredients) {
+        recipeLayout.getItemStacks()
+            .set(ingredients);
+    }
+
     private boolean hasMultipleIngredients() {
-        return getInputs().size() > 1;
+        Ingredients ingredients = new Ingredients();
+        this.getIngredients(ingredients);
+
+        List<List<ItemStack>> inputs = ingredients.getInputs(ItemStack.class);
+        return inputs != null && inputs.size() > 1;
     }
 }

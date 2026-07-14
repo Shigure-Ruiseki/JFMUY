@@ -3,13 +3,10 @@ package ruiseki.jfmuy;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.api.ISubtypeRegistry;
@@ -17,17 +14,17 @@ import ruiseki.jfmuy.util.Log;
 
 public class SubtypeRegistry implements ISubtypeRegistry {
 
-    private final Map<Item, ISubtypeInterpreter> interpreters = new HashMap<>();
+    private final Map<Item, ISubtypeInterpreter> interpreters = new HashMap<Item, ISubtypeInterpreter>();
 
     @Override
-    public void useNbtForSubtypes(@NotNull Item... items) {
+    public void useNbtForSubtypes(Item... items) {
         for (Item item : items) {
-            registerNbtInterpreter(item, AllNbt.INSTANCE);
+            registerSubtypeInterpreter(item, AllNbt.INSTANCE);
         }
     }
 
     @Override
-    public void registerNbtInterpreter(@Nullable Item item, @Nullable ISubtypeInterpreter interpreter) {
+    public void registerSubtypeInterpreter(@Nullable Item item, @Nullable ISubtypeInterpreter interpreter) {
         if (item == null) {
             Log.error("Null item", new NullPointerException());
             return;
@@ -75,9 +72,9 @@ public class SubtypeRegistry implements ISubtypeRegistry {
 
         @Nullable
         @Override
-        public String getSubtypeInfo(@Nonnull ItemStack itemStack) {
+        public String getSubtypeInfo(ItemStack itemStack) {
             NBTTagCompound nbtTagCompound = itemStack.getTagCompound();
-            if (nbtTagCompound == null) {
+            if (nbtTagCompound == null || nbtTagCompound.hasNoTags()) {
                 return null;
             }
             return nbtTagCompound.toString();

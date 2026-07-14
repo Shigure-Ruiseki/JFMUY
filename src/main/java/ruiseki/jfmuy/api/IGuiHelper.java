@@ -1,7 +1,5 @@
 package ruiseki.jfmuy.api;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.util.ResourceLocation;
 
 import ruiseki.jfmuy.api.gui.ICraftingGridHelper;
@@ -11,14 +9,13 @@ import ruiseki.jfmuy.api.gui.ITickTimer;
 
 /**
  * Helps with the implementation of GUIs.
+ * Get the instance from {@link IJFMUYHelpers#getGuiHelper()}.
  */
 public interface IGuiHelper {
 
-    @Nonnull
-    IDrawableStatic createDrawable(@Nonnull ResourceLocation resourceLocation, int u, int v, int width, int height);
+    IDrawableStatic createDrawable(ResourceLocation resourceLocation, int u, int v, int width, int height);
 
-    @Nonnull
-    IDrawableStatic createDrawable(@Nonnull ResourceLocation resourceLocation, int u, int v, int width, int height,
+    IDrawableStatic createDrawable(ResourceLocation resourceLocation, int u, int v, int width, int height,
         int paddingTop, int paddingBottom, int paddingLeft, int paddingRight);
 
     /**
@@ -29,27 +26,23 @@ public interface IGuiHelper {
      * @param startDirection the direction that the animation starts drawing the texture
      * @param inverted       when inverted is true, the texture will start fully drawn and be hidden over time
      */
-    @Nonnull
-    IDrawableAnimated createAnimatedDrawable(@Nonnull IDrawableStatic drawable, int ticksPerCycle,
-        @Nonnull IDrawableAnimated.StartDirection startDirection, boolean inverted);
+    IDrawableAnimated createAnimatedDrawable(IDrawableStatic drawable, int ticksPerCycle,
+        IDrawableAnimated.StartDirection startDirection, boolean inverted);
 
     /**
      * Returns a slot drawable for drawing extra slots on guis
      */
-    @Nonnull
     IDrawableStatic getSlotDrawable();
 
     /**
      * Returns a blank drawable for using as a blank recipe background.
      */
-    @Nonnull
     IDrawableStatic createBlankDrawable(int width, int height);
 
     /**
      * Create a crafting grid helper.
      * Helps set crafting-grid-style GuiItemStackGroup.
      */
-    @Nonnull
     ICraftingGridHelper createCraftingGridHelper(int craftInputSlot1, int craftOutputSlot);
 
     /**
@@ -59,6 +52,5 @@ public interface IGuiHelper {
      * @param maxValue      the number to count up to before starting over at 0
      * @param countDown     if true, the tick timer will count backwards from maxValue
      */
-    @Nonnull
     ITickTimer createTickTimer(int ticksPerCycle, int maxValue, boolean countDown);
 }

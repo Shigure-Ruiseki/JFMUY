@@ -2,6 +2,7 @@ package ruiseki.jfmuy.config;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Locale;
 
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -50,17 +51,16 @@ public class LocalizedConfiguration extends Configuration {
         String comment = Translator.translateToLocal(commentKey);
 
         Property prop = get(category, name, defaultValue);
-        prop.setValidValues(validValues);
         prop.setLanguageKey(langKey);
-        prop.comment = comment + " ["
+        prop.comment = (comment + " ["
             + defaultLocalized
             + ": "
             + defaultValue
             + "] ["
             + validLocalized
             + ": "
-            + Arrays.toString(prop.getValidValues())
-            + ']';
+            + Arrays.toString(validValues)
+            + ']');
         return prop.getString();
     }
 
@@ -73,25 +73,27 @@ public class LocalizedConfiguration extends Configuration {
         String[] validValues = new String[validEnumValues.length];
         for (int i = 0; i < validEnumValues.length; i++) {
             T enumValue = validEnumValues[i];
-            validValues[i] = enumValue.name();
+            validValues[i] = enumValue.name()
+                .toLowerCase(Locale.ENGLISH);
         }
 
         prop.setValidValues(validValues);
         prop.setLanguageKey(langKey);
-        prop.comment = comment + " ["
+        prop.comment = (comment + "\n["
             + defaultLocalized
             + ": "
-            + defaultValue
-            + "] ["
+            + defaultValue.name()
+                .toLowerCase(Locale.ENGLISH)
+            + "]\n["
             + validLocalized
             + ": "
             + Arrays.toString(prop.getValidValues())
-            + ']';
+            + ']');
         String stringValue = prop.getString();
 
         T enumValue = defaultValue;
         for (int i = 0; i < validValues.length; i++) {
-            if (stringValue.equals(validValues[i])) {
+            if (stringValue.equalsIgnoreCase(validValues[i])) {
                 enumValue = validEnumValues[i];
             }
         }
@@ -106,7 +108,7 @@ public class LocalizedConfiguration extends Configuration {
 
         Property prop = get(category, name, defaultValue);
         prop.setLanguageKey(langKey);
-        prop.comment = comment + " [" + defaultLocalized + ": " + Arrays.toString(defaultValue) + ']';
+        prop.comment = (comment + " [" + defaultLocalized + ": " + Arrays.toString(defaultValue) + ']');
         return prop.getStringList();
     }
 
@@ -118,7 +120,7 @@ public class LocalizedConfiguration extends Configuration {
         Property prop = get(category, name, defaultValue);
         prop.setLanguageKey(langKey);
         prop.setValidValues(validValues);
-        prop.comment = comment + " ["
+        prop.comment = (comment + " ["
             + defaultLocalized
             + ": "
             + Arrays.toString(defaultValue)
@@ -126,7 +128,7 @@ public class LocalizedConfiguration extends Configuration {
             + validLocalized
             + ": "
             + Arrays.toString(prop.getValidValues())
-            + ']';
+            + ']');
         return prop.getStringList();
     }
 

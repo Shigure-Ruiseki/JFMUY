@@ -2,6 +2,7 @@ package ruiseki.jfmuy.network;
 
 import java.io.IOException;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.NetHandlerPlayServer;
@@ -12,11 +13,15 @@ import cpw.mods.fml.common.network.FMLEventChannel;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.internal.FMLProxyPacket;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import ruiseki.jfmuy.Reference;
+import ruiseki.jfmuy.network.packets.IPacketJeiHandler;
+import ruiseki.jfmuy.network.packets.PacketCheatPermission;
 import ruiseki.jfmuy.network.packets.PacketDeletePlayerItem;
 import ruiseki.jfmuy.network.packets.PacketGiveItemStack;
-import ruiseki.jfmuy.network.packets.PacketJFMUY;
 import ruiseki.jfmuy.network.packets.PacketRecipeTransfer;
+import ruiseki.jfmuy.network.packets.PacketRequestCheatPermission;
 import ruiseki.jfmuy.util.Log;
 
 public class PacketHandler {
@@ -37,19 +42,23 @@ public class PacketHandler {
         try {
             byte packetIdOrdinal = packetBuffer.readByte();
             PacketIdServer packetId = PacketIdServer.VALUES[packetIdOrdinal];
-            PacketJFMUY packet;
+            IPacketJeiHandler packetHandler;
 
             switch (packetId) {
                 case RECIPE_TRANSFER: {
-                    packet = new PacketRecipeTransfer();
+                    packetHandler = new PacketRecipeTransfer.Handler();
                     break;
                 }
                 case DELETE_ITEM: {
-                    packet = new PacketDeletePlayerItem();
+                    packetHandler = new PacketDeletePlayerItem.Handler();
                     break;
                 }
                 case GIVE_BIG: {
-                    packet = new PacketGiveItemStack();
+                    packetHandler = new PacketGiveItemStack.Handler();
+                    break;
+                }
+                case CHEAT_PERMISSION_REQUEST: {
+                    packetHandler = new PacketRequestCheatPermission.Handler();
                     break;
                 }
                 default: {
@@ -57,39 +66,44 @@ public class PacketHandler {
                 }
             }
 
-            checkThreadAndEnqueue(packet, packetBuffer, player);
+            checkThreadAndEnqueue(packetHandler, packetBuffer, player);
         } catch (RuntimeException ex) {
             Log.error("Packet error", ex);
         }
     }
 
-    /*
-     * @SubscribeEvent
-     * public void onPacket(FMLNetworkEvent.ClientCustomPacketEvent event) {
-     * PacketBuffer packetBuffer = new PacketBuffer(event.packet.payload());
-     * Minecraft minecraft = Minecraft.getMinecraft();
-     * EntityPlayer player = minecraft.thePlayer;
-     * PacketJFMUY packet;
-     * try {
-     * byte packetIdOrdinal = packetBuffer.readByte();
-     * PacketIdClient packetId = PacketIdClient.VALUES[packetIdOrdinal];
-     * switch (packetId) {
-     * default: {
-     * return;
-     * }
-     * }
-     * checkThreadAndEnqueue(packet, packetBuffer, player, minecraft);
-     * } catch (Exception ex) {
-     * ex.printStackTrace();
-     * }
-     * }
-     */
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    public void onPacket(FMLNetworkEvent.ClientCustomPacketEvent event) {
+        PacketBuffer packetBuffer = new PacketBuffer(event.packet.payload());
+        Minecraft minecraft = Minecraft.getMinecraft();
+        EntityPlayer player = minecraft.thePlayer;
+        IPacketJeiHandler packetHandler;
+
+        try {
+            byte packetIdOrdinal = packetBuffer.readByte();
+            PacketIdClient packetId = PacketIdClient.VALUES[packetIdOrdinal];
+            switch (packetId) {
+                case CHEAT_PERMISSION: {
+                    packetHandler = new PacketCheatPermission.Handler();
+                    break;
+                }
+                default: {
+                    return;
+                }
+            }
+
+            checkThreadAndEnqueue(packetHandler, packetBuffer, player);
+        } catch (Exception ex) {
+            Log.error("Packet error", ex);
+        }
+    }
 
     public void sendPacket(FMLProxyPacket packet, EntityPlayerMP player) {
         channel.sendTo(packet, player);
     }
 
-    private static void checkThreadAndEnqueue(final PacketJFMUY packet, final PacketBuffer packetBuffer,
+    private static void checkThreadAndEnqueue(final IPacketJeiHandler packet, final PacketBuffer packetBuffer,
         final EntityPlayer player) {
         try {
             packet.readPacketData(packetBuffer, player);

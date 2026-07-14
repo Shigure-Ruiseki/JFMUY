@@ -1,57 +1,84 @@
 package ruiseki.jfmuy;
 
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import ruiseki.jfmuy.util.ModIdUtil;
 import ruiseki.jfmuy.util.StackHelper;
 import ruiseki.jfmuy.util.color.ColorNamer;
 
 /** For JFMUY internal use only, these are normally accessed from the API. */
 public class Internal {
 
-    @NotNull
-    private static JFMUYHelpers helpers = new JFMUYHelpers();
+    private static final ModIdUtil modIdUtil = new ModIdUtil();
+    @Nullable
+    private static StackHelper stackHelper;
+    @Nullable
+    private static JFMUYHelpers helpers;
+    @Nullable
     private static JFMUYRuntime runtime;
-    private static ItemRegistry itemRegistry;
+    @Nullable
+    private static IngredientRegistry ingredientRegistry;
+    @Nullable
     private static ColorNamer colorNamer;
 
     private Internal() {
 
     }
 
-    @NotNull
+    public static StackHelper getStackHelper() {
+        if (stackHelper == null) {
+            throw new IllegalStateException("StackHelper has not been created yet.");
+        }
+        return stackHelper;
+    }
+
+    public static void setStackHelper(StackHelper stackHelper) {
+        Internal.stackHelper = stackHelper;
+    }
+
+    public static ModIdUtil getModIdUtil() {
+        return modIdUtil;
+    }
+
     public static JFMUYHelpers getHelpers() {
+        if (helpers == null) {
+            throw new IllegalStateException("JeiHelpers has not been created yet.");
+        }
         return helpers;
     }
 
-    public static void setHelpers(@NotNull JFMUYHelpers helpers) {
+    public static void setHelpers(JFMUYHelpers helpers) {
         Internal.helpers = helpers;
     }
 
-    @NotNull
-    public static StackHelper getStackHelper() {
-        return helpers.getStackHelper();
-    }
-
+    @Nullable
     public static JFMUYRuntime getRuntime() {
         return runtime;
     }
 
     public static void setRuntime(JFMUYRuntime runtime) {
-        if (Internal.runtime != null) {
-            Internal.runtime.close();
+        JFMUYRuntime jeiRuntime = Internal.runtime;
+        if (jeiRuntime != null) {
+            jeiRuntime.close();
         }
         Internal.runtime = runtime;
     }
 
-    public static ItemRegistry getItemRegistry() {
-        return itemRegistry;
+    public static IngredientRegistry getIngredientRegistry() {
+        if (ingredientRegistry == null) {
+            throw new IllegalStateException("Ingredient Registry has not been created yet.");
+        }
+        return ingredientRegistry;
     }
 
-    public static void setItemRegistry(ItemRegistry itemRegistry) {
-        Internal.itemRegistry = itemRegistry;
+    public static void setIngredientRegistry(@Nullable IngredientRegistry ingredientRegistry) {
+        Internal.ingredientRegistry = ingredientRegistry;
     }
 
     public static ColorNamer getColorNamer() {
+        if (colorNamer == null) {
+            throw new IllegalStateException("Color Namer has not been created yet.");
+        }
         return colorNamer;
     }
 

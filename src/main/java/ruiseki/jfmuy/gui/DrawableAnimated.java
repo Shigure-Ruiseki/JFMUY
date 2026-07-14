@@ -1,7 +1,5 @@
 package ruiseki.jfmuy.gui;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.client.Minecraft;
 
 import ruiseki.jfmuy.api.gui.IDrawableAnimated;
@@ -31,12 +29,12 @@ public class DrawableAnimated implements IDrawableAnimated {
     }
 
     @Override
-    public void draw(@Nonnull Minecraft minecraft) {
+    public void draw(Minecraft minecraft) {
         draw(minecraft, 0, 0);
     }
 
     @Override
-    public void draw(@Nonnull Minecraft minecraft, int xOffset, int yOffset) {
+    public void draw(Minecraft minecraft, int xOffset, int yOffset) {
         int maskLeft = 0;
         int maskRight = 0;
         int maskTop = 0;

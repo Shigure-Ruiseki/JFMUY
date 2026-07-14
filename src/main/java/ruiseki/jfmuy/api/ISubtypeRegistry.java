@@ -1,47 +1,57 @@
 package ruiseki.jfmuy.api;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 /**
- * Tell JFMUY how to interpret NBT tags and capabilities when comparing and looking up items.
- * Some items have subtypes, most of them use meta values for this and JFMUY handles them by default.
- * If your item has subtypes that depend on NBT or capabilities instead or meta, use this interface so JFMUY can tell
+ * Tell JEI how to interpret NBT tags and capabilities when comparing and looking up items.
+ * <p>
+ * Some items have subtypes, most of them use meta values for this and JEI handles them by default.
+ * If your item has subtypes that depend on NBT or capabilities instead of meta, use this interface so JEI can tell
  * those subtypes apart.
- * Get the instance from {@link IJFMUYHelpers#getSubtypeRegistry()}
+ * <p>
+ * Note: JEI has built-in support for differentiating items that implement
+ * {@link ruiseki.okcore.fluid.capability.CapabilityFluidHandler},
+ * adding a subtype interpreter here will override that functionality.
+ * <p>
+ * Get the instance by implementing {@link IModPlugin#registerItemSubtypes(ISubtypeRegistry)}.
+ *
+ * @since 3.6.4
  */
 public interface ISubtypeRegistry {
 
     /**
-     * Tells JFMUY to treat all NBT as relevant to these items' subtypes.
+     * Tells JEI to treat all NBT as relevant to these items' subtypes.
      */
-    void useNbtForSubtypes(@Nonnull Item... items);
+    void useNbtForSubtypes(Item... items);
 
     /**
      * Add an interpreter to compare item subtypes.
+     * This interpreter should account for meta, nbt, and anything else that's relevant to differentiating the item's
+     * subtypes.
      *
      * @param item        the item that has subtypes.
      * @param interpreter the interpreter for the item.
      */
-    void registerNbtInterpreter(@Nonnull Item item, @Nonnull ISubtypeInterpreter interpreter);
+    void registerSubtypeInterpreter(Item item, ISubtypeInterpreter interpreter);
 
     /**
      * Get the data from an itemStack that is relevant to comparing and telling subtypes apart.
-     * Returns null if the itemStack has information used for subtypes.
+     * Returns null if the itemStack has no information used for subtypes.
      */
     @Nullable
-    String getSubtypeInfo(@Nonnull ItemStack itemStack);
+    String getSubtypeInfo(ItemStack itemStack);
 
     interface ISubtypeInterpreter {
 
         /**
          * Get the data from an itemStack that is relevant to telling subtypes apart.
+         * This should account for meta, nbt, and anything else that's relevant.
          * Returns null if there is no data used for subtypes.
          */
         @Nullable
-        String getSubtypeInfo(@Nonnull ItemStack itemStack);
+        String getSubtypeInfo(ItemStack itemStack);
     }
 }

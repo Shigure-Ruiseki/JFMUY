@@ -12,31 +12,29 @@ import org.lwjgl.input.Keyboard;
 import cpw.mods.fml.client.config.HoverChecker;
 import ruiseki.jfmuy.ItemFilter;
 import ruiseki.jfmuy.config.Config;
-import ruiseki.jfmuy.util.ItemStackElement;
+import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 
 public class GuiTextFieldFilter extends GuiTextField {
 
     private static final int MAX_HISTORY = 100;
     private static final int maxSearchLength = 128;
+    private static final List<String> history = new LinkedList<String>();
 
-    private final List<String> history = new LinkedList<>();
     private final HoverChecker hoverChecker;
-    private ItemFilter itemFilter;
+    private final ItemFilter itemFilter;
     private boolean previousKeyboardRepeatEnabled;
 
-    public GuiTextFieldFilter(int componentId, FontRenderer fontRenderer, int x, int y, int width, int height) {
+    public GuiTextFieldFilter(int componentId, FontRenderer fontRenderer, int x, int y, int width, int height,
+        ItemFilter itemFilter) {
         super(fontRenderer, x, y, width, height);
         setMaxStringLength(maxSearchLength);
         this.hoverChecker = new HoverChecker(y, y + height, x, x + width, 0);
-    }
-
-    public void setItemFilter(ItemFilter itemFilter) {
         this.itemFilter = itemFilter;
         setText(Config.getFilterText());
     }
 
     public void update() {
-        List<ItemStackElement> itemList = itemFilter.getItemList();
+        List<IIngredientListElement> itemList = itemFilter.getIngredientList();
         if (itemList.size() == 0) {
             setTextColor(Color.red.getRGB());
         } else {
@@ -80,7 +78,7 @@ public class GuiTextFieldFilter extends GuiTextField {
                 saveHistory();
             }
         }
-        return handled && Config.setFilterText(getText());
+        return handled;
     }
 
     public boolean isMouseOver(int mouseX, int mouseY) {
@@ -110,9 +108,7 @@ public class GuiTextFieldFilter extends GuiTextField {
                 Keyboard.enableRepeatEvents(previousKeyboardRepeatEnabled);
             }
 
-            if (!keyboardFocus) {
-                saveHistory();
-            }
+            saveHistory();
         }
     }
 

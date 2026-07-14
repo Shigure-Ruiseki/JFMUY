@@ -44,7 +44,7 @@ dependencies {
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:Hodgepodge:2.7.171:dev") { transitive = false }
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:BetterCrashes:1.4.5-GTNH:dev")
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:ServerUtilities:2.4.1:dev")
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:Baubles-Expanded:2.2.19-GTNH:dev')
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:Baubles-Expanded:2.2.19-GTNH:dev') { transitive = false }
 
     compileOnly('org.jetbrains:annotations:26.1.0')
     compileOnly("org.projectlombok:lombok:1.18.46")

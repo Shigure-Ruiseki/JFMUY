@@ -7,26 +7,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraftforge.oredict.OreDictionary;
 
 import ruiseki.jfmuy.api.IGuiHelper;
-import ruiseki.jfmuy.api.IItemRegistry;
 import ruiseki.jfmuy.api.IJFMUYHelpers;
+import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.recipe.IStackHelper;
 
 public class FuelRecipeMaker {
 
-    @Nonnull
-    public static List<FuelRecipe> getFuelRecipes(@Nonnull IItemRegistry itemRegistry, @Nonnull IJFMUYHelpers helpers) {
+    public static List<FuelRecipe> getFuelRecipes(IIngredientRegistry ingredientRegistry, IJFMUYHelpers helpers) {
         IGuiHelper guiHelper = helpers.getGuiHelper();
         IStackHelper stackHelper = helpers.getStackHelper();
-        List<ItemStack> fuelStacks = itemRegistry.getFuels();
-        Set<String> oreDictNames = new HashSet<>();
-        List<FuelRecipe> fuelRecipes = new ArrayList<>(fuelStacks.size());
+        List<ItemStack> fuelStacks = ingredientRegistry.getFuels();
+        Set<String> oreDictNames = new HashSet<String>();
+        List<FuelRecipe> fuelRecipes = new ArrayList<FuelRecipe>(fuelStacks.size());
         for (ItemStack fuelStack : fuelStacks) {
             if (fuelStack == null) {
                 continue;

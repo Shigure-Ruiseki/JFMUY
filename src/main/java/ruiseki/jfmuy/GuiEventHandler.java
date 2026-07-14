@@ -3,6 +3,7 @@ package ruiseki.jfmuy;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -12,9 +13,11 @@ import org.lwjgl.input.Mouse;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import ruiseki.jfmuy.config.OverlayToggleEvent;
 import ruiseki.jfmuy.gui.ItemListOverlay;
-import ruiseki.jfmuy.gui.RecipesGui;
+import ruiseki.jfmuy.gui.ItemListOverlayInternal;
 import ruiseki.jfmuy.gui.TooltipRenderer;
+import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.input.InputHandler;
 import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.event.input.KeyboardInputEvent;
@@ -24,41 +27,40 @@ public class GuiEventHandler {
 
     @Nonnull
     private static final String showRecipesText = Translator.translateToLocal("jfmuy.tooltip.show.recipes");
+    private final JFMUYRuntime runtime;
     @Nullable
     private InputHandler inputHandler;
     @Nullable
     private GuiContainer previousGui = null;
 
+    public GuiEventHandler(JFMUYRuntime runtime) {
+        this.runtime = runtime;
+    }
+
     @SubscribeEvent
-    public void onGuiInit(@Nonnull GuiScreenEvent.InitGuiEvent.Post event) {
-        JFMUYRuntime runtime = Internal.getRuntime();
-        if (runtime == null) {
-            return;
-        }
-        ItemListOverlay itemListOverlay = runtime.getItemListOverlay();
+    public void onOverlayToggle(OverlayToggleEvent event) {
+        GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
+        onNewScreen(currentScreen);
+    }
 
+    @SubscribeEvent
+    public void onGuiInit(GuiScreenEvent.InitGuiEvent.Post event) {
         GuiScreen gui = event.gui;
-        if (gui instanceof GuiContainer) {
-            GuiContainer guiContainer = (GuiContainer) gui;
-            itemListOverlay.initGui(guiContainer);
+        onNewScreen(gui);
+    }
 
-            RecipesGui recipesGui = new RecipesGui();
-            inputHandler = new InputHandler(recipesGui, itemListOverlay);
-        } else if (gui instanceof RecipesGui) {
-            if (inputHandler != null) {
-                inputHandler.onScreenResized();
-            }
+    private void onNewScreen(@Nullable GuiScreen screen) {
+        if (screen instanceof GuiContainer || screen instanceof RecipesGui) {
+            ItemListOverlay itemListOverlay = runtime.getItemListOverlay();
+            ItemListOverlayInternal itemListOverlayInternal = itemListOverlay.create(screen);
+            inputHandler = new InputHandler(runtime, itemListOverlayInternal);
         } else {
             inputHandler = null;
         }
     }
 
     @SubscribeEvent
-    public void onGuiOpen(@Nonnull GuiOpenEvent event) {
-        JFMUYRuntime runtime = Internal.getRuntime();
-        if (runtime == null) {
-            return;
-        }
+    public void onGuiOpen(GuiOpenEvent event) {
         ItemListOverlay itemListOverlay = runtime.getItemListOverlay();
 
         GuiScreen gui = event.gui;
@@ -73,36 +75,34 @@ public class GuiEventHandler {
         } else if (!(gui instanceof RecipesGui)) {
             if (itemListOverlay.isOpen()) {
                 itemListOverlay.close();
+                inputHandler = null;
             }
         }
     }
 
     @SubscribeEvent
     public void onDrawBackgroundEventPost(@Nonnull GuiScreenEvent.DrawScreenEvent.Post event) {
-        JFMUYRuntime runtime = Internal.getRuntime();
-        if (runtime == null) {
-            return;
-        }
-
         ItemListOverlay itemListOverlay = runtime.getItemListOverlay();
-        if (itemListOverlay.isOpen()) {
+        ItemListOverlayInternal itemListOverlayInternal = itemListOverlay.getInternal();
+        if (itemListOverlayInternal != null) {
             GuiScreen gui = event.gui;
-            itemListOverlay.updateGui(gui);
-            itemListOverlay.drawScreen(gui.mc, event.mouseX, event.mouseY);
+            if (itemListOverlayInternal.hasScreenChanged(gui)) {
+                itemListOverlayInternal = itemListOverlay.create(gui);
+                inputHandler = new InputHandler(runtime, itemListOverlayInternal);
+            }
+
+            if (itemListOverlayInternal != null) {
+                itemListOverlayInternal.drawScreen(gui.mc, event.mouseX, event.mouseY);
+            }
         }
     }
 
     @SubscribeEvent
-    public void onDrawScreenEventPost(@Nonnull GuiScreenEvent.DrawScreenEvent.Post event) {
-        JFMUYRuntime runtime = Internal.getRuntime();
-        if (runtime == null) {
-            return;
-        }
-
+    public void onDrawScreenEventPost(GuiScreenEvent.DrawScreenEvent.Post event) {
         GuiScreen gui = event.gui;
-        if (gui instanceof GuiContainer guiContainer) {
-            RecipeRegistry recipeRegistry = Internal.getRuntime()
-                .getRecipeRegistry();
+        if (gui instanceof GuiContainer) {
+            GuiContainer guiContainer = (GuiContainer) gui;
+            RecipeRegistry recipeRegistry = runtime.getRecipeRegistry();
             if (recipeRegistry.getRecipeClickableArea(
                 guiContainer,
                 event.mouseX - guiContainer.guiLeft,
@@ -112,25 +112,22 @@ public class GuiEventHandler {
         }
 
         ItemListOverlay itemListOverlay = runtime.getItemListOverlay();
-        if (itemListOverlay.isOpen()) {
-            itemListOverlay.drawTooltips(gui.mc, event.mouseX, event.mouseY);
+        ItemListOverlayInternal itemListOverlayInternal = itemListOverlay.getInternal();
+        if (itemListOverlayInternal != null) {
+            itemListOverlayInternal.drawTooltips(gui.mc, event.mouseX, event.mouseY);
         }
     }
 
     @SubscribeEvent
-    public void onClientTick(@Nonnull TickEvent.ClientTickEvent event) {
-        JFMUYRuntime runtime = Internal.getRuntime();
-        if (runtime == null) {
-            return;
-        }
-
+    public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             return;
         }
 
         ItemListOverlay itemListOverlay = runtime.getItemListOverlay();
-        if (itemListOverlay.isOpen()) {
-            itemListOverlay.handleTick();
+        ItemListOverlayInternal itemListOverlayInternal = itemListOverlay.getInternal();
+        if (itemListOverlayInternal != null) {
+            itemListOverlayInternal.handleTick();
         }
     }
 

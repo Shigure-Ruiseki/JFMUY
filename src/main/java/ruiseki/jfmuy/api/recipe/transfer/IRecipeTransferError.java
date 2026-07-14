@@ -1,20 +1,24 @@
 package ruiseki.jfmuy.api.recipe.transfer;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.Container;
 
-import ruiseki.jfmuy.gui.RecipeLayout;
+import ruiseki.jfmuy.api.gui.IRecipeLayout;
 
 /**
- * A reason that the recipe transfer couldn't happen. See IRecipeTransferError.Type
+ * A reason that a recipe transfer couldn't happen.
+ * <p>
+ * Recipe transfer errors can be created with {@link IRecipeTransferHandlerHelper} or you can implement your own.
+ * These errors are returned from
+ * {@link IRecipeTransferHandler#transferRecipe(Container, IRecipeLayout, EntityPlayer, boolean, boolean)}.
  */
 public interface IRecipeTransferError {
 
     enum Type {
         /**
-         * Errors where the Transfer handler is broken, or does not work, or the server is not present.
-         * These errors will hide the recipe transfer button, but do not display anything to the user.
+         * Errors where the Transfer handler is broken or does not work.
+         * These errors will hide the recipe transfer button, and do not display anything to the user.
          */
         INTERNAL,
 
@@ -27,6 +31,8 @@ public interface IRecipeTransferError {
 
     Type getType();
 
-    /** Called on USER_FACING errors */
-    void showError(@Nonnull Minecraft minecraft, int mouseX, int mouseY, @Nonnull RecipeLayout recipeLayout);
+    /**
+     * Called on {@link Type#USER_FACING} errors.
+     */
+    void showError(Minecraft minecraft, int mouseX, int mouseY, IRecipeLayout recipeLayout, int recipeX, int recipeY);
 }

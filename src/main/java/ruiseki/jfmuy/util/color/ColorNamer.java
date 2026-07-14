@@ -3,35 +3,23 @@ package ruiseki.jfmuy.util.color;
 import java.awt.Color;
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.minecraft.item.ItemStack;
-
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableMap;
 
 public class ColorNamer {
 
-    @NotNull
     private final ImmutableMap<Color, String> colorNames;
 
-    public ColorNamer(@NotNull ImmutableMap<Color, String> colorNames) {
+    public ColorNamer(ImmutableMap<Color, String> colorNames) {
         this.colorNames = colorNames;
     }
 
-    @NotNull
-    public Collection<String> getColorNames(@NotNull ItemStack itemStack) {
-        List<Color> colors = ColorGetter.getColors(itemStack, 2);
-        return getColorNames(colors);
-    }
-
-    @NotNull
-    private Collection<String> getColorNames(@NotNull List<Color> colors) {
-        final Set<String> allColorNames = new LinkedHashSet<>();
+    public Collection<String> getColorNames(Iterable<Color> colors) {
+        final Set<String> allColorNames = new LinkedHashSet<String>();
         for (Color color : colors) {
             final String colorName = getClosestColorName(color);
             if (colorName != null) {
@@ -42,7 +30,7 @@ public class ColorNamer {
     }
 
     @Nullable
-    private String getClosestColorName(@NotNull Color color) {
+    private String getClosestColorName(Color color) {
         if (colorNames.isEmpty()) {
             return null;
         }

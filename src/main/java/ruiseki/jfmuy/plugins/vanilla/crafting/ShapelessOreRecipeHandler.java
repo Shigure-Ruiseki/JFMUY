@@ -2,11 +2,9 @@ package ruiseki.jfmuy.plugins.vanilla.crafting;
 
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
 import net.minecraftforge.oredict.ShapelessOreRecipe;
 
-import ruiseki.jfmuy.api.IGuiHelper;
+import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
@@ -15,35 +13,31 @@ import ruiseki.jfmuy.util.Log;
 
 public class ShapelessOreRecipeHandler implements IRecipeHandler<ShapelessOreRecipe> {
 
-    @Nonnull
-    private final IGuiHelper guiHelper;
+    private final IJFMUYHelpers jfmuyHelpers;
 
-    public ShapelessOreRecipeHandler(@Nonnull IGuiHelper guiHelper) {
-        this.guiHelper = guiHelper;
+    public ShapelessOreRecipeHandler(IJFMUYHelpers jfmuyHelpers) {
+        this.jfmuyHelpers = jfmuyHelpers;
     }
 
     @Override
-    @Nonnull
     public Class<ShapelessOreRecipe> getRecipeClass() {
         return ShapelessOreRecipe.class;
     }
 
-    @Nonnull
     @Override
-    public String getRecipeCategoryUid(@Nonnull ShapelessOreRecipe recipe) {
+    public String getRecipeCategoryUid(ShapelessOreRecipe recipe) {
         return VanillaRecipeCategoryUid.CRAFTING;
     }
 
     @Override
-    @Nonnull
-    public IRecipeWrapper getRecipeWrapper(@Nonnull ShapelessOreRecipe recipe) {
-        return new ShapelessOreRecipeWrapper(guiHelper, recipe);
+    public IRecipeWrapper getRecipeWrapper(ShapelessOreRecipe recipe) {
+        return new ShapelessOreRecipeWrapper(jfmuyHelpers, recipe);
     }
 
     @Override
-    public boolean isRecipeValid(@Nonnull ShapelessOreRecipe recipe) {
+    public boolean isRecipeValid(ShapelessOreRecipe recipe) {
         if (recipe.getRecipeOutput() == null) {
-            String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+            String recipeInfo = ErrorUtil.getInfoFromRecipe(recipe, this);
             Log.error("Recipe has no outputs. {}", recipeInfo);
             return false;
         }
@@ -60,12 +54,12 @@ public class ShapelessOreRecipeHandler implements IRecipeHandler<ShapelessOreRec
             }
         }
         if (inputCount > 9) {
-            String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+            String recipeInfo = ErrorUtil.getInfoFromRecipe(recipe, this);
             Log.error("Recipe has too many inputs. {}", recipeInfo);
             return false;
         }
         if (inputCount == 0) {
-            String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+            String recipeInfo = ErrorUtil.getInfoFromRecipe(recipe, this);
             Log.error("Recipe has no inputs. {}", recipeInfo);
             return false;
         }

@@ -1,25 +1,27 @@
 package ruiseki.jfmuy.util;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-
-import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
 
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 
-public class RecipeCategoryComparator implements Comparator<IRecipeCategory> {
+public class RecipeCategoryComparator implements Comparator<String> {
 
-    @Nonnull
-    private final ImmutableList<IRecipeCategory> recipeCategories;
+    private final ImmutableList<String> recipeCategories;
 
-    public RecipeCategoryComparator(@Nonnull List<IRecipeCategory> recipeCategories) {
-        this.recipeCategories = ImmutableList.copyOf(recipeCategories);
+    public RecipeCategoryComparator(List<IRecipeCategory> recipeCategories) {
+        List<String> recipeCategoryUids = new ArrayList<>();
+        for (IRecipeCategory recipeCategory : recipeCategories) {
+            recipeCategoryUids.add(recipeCategory.getUid());
+        }
+        this.recipeCategories = ImmutableList.copyOf(recipeCategoryUids);
     }
 
     @Override
-    public int compare(IRecipeCategory recipeCategory1, IRecipeCategory recipeCategory2) {
+    public int compare(String recipeCategory1, String recipeCategory2) {
         Integer index1 = recipeCategories.indexOf(recipeCategory1);
         Integer index2 = recipeCategories.indexOf(recipeCategory2);
         return index1.compareTo(index2);

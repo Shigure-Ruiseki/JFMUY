@@ -14,7 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12; // Import thêm GL12 nếu cần thiết
+import org.lwjgl.opengl.GL12;
 
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.util.ErrorUtil;
@@ -38,8 +38,10 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
             FontRenderer font = getFontRenderer(minecraft, ingredient);
 
-            itemRender.renderItemAndEffectIntoGUI(font, minecraft.getTextureManager(), ingredient, xPosition, yPosition);
-            itemRender.renderItemOverlayIntoGUI(font, minecraft.getTextureManager(), ingredient, xPosition, yPosition, null);
+            itemRender
+                .renderItemAndEffectIntoGUI(font, minecraft.getTextureManager(), ingredient, xPosition, yPosition);
+            itemRender
+                .renderItemOverlayIntoGUI(font, minecraft.getTextureManager(), ingredient, xPosition, yPosition, null);
 
             RenderHelper.disableStandardItemLighting();
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);

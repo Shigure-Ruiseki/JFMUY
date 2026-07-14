@@ -76,9 +76,9 @@ public class BrewingRecipeCategory extends BlankRecipeCategory<BrewingRecipeWrap
     public void setRecipe(IRecipeLayout recipeLayout, BrewingRecipeWrapper recipeWrapper, IIngredients ingredients) {
         IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
 
-        itemStacks.init(brewPotionSlot1, true, 0, 35);
-        itemStacks.init(brewPotionSlot2, true, 23, 42);
-        itemStacks.init(brewPotionSlot3, true, 46, 35);
+        itemStacks.init(brewPotionSlot1, true, 0, 30);
+        itemStacks.init(brewPotionSlot2, true, 23, 37);
+        itemStacks.init(brewPotionSlot3, true, 46, 30);
         itemStacks.init(brewIngredientSlot, true, 23, 1);
         itemStacks.init(outputSlot, false, outputSlotX, outputSlotY);
 

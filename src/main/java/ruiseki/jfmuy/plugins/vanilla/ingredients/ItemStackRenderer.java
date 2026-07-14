@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.util.ErrorUtil;
@@ -28,17 +29,25 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
     @Override
     public void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable ItemStack ingredient) {
         if (ingredient != null) {
+            GL11.glPushMatrix();
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
             RenderHelper.enableGUIStandardItemLighting();
+            GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+
             FontRenderer font = getFontRenderer(minecraft, ingredient);
 
             itemRender
                 .renderItemAndEffectIntoGUI(font, minecraft.getTextureManager(), ingredient, xPosition, yPosition);
-
             itemRender
                 .renderItemOverlayIntoGUI(font, minecraft.getTextureManager(), ingredient, xPosition, yPosition, null);
 
-            GL11.glDisable(GL11.GL_BLEND);
             RenderHelper.disableStandardItemLighting();
+            GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+
+            GL11.glPopMatrix();
         }
     }
 

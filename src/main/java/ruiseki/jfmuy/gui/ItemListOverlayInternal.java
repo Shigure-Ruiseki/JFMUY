@@ -95,8 +95,7 @@ public class ItemListOverlayInternal implements IShowsRecipeFocuses, IMouseHandl
 
         this.guiProperties = guiProperties;
         this.activeAdvancedGuiHandlers = getActiveAdvancedGuiHandlers(guiScreen);
-        if (!activeAdvancedGuiHandlers.isEmpty() && guiScreen instanceof GuiContainer) {
-            GuiContainer guiContainer = (GuiContainer) guiScreen;
+        if (!activeAdvancedGuiHandlers.isEmpty() && guiScreen instanceof GuiContainer guiContainer) {
             guiAreas = getGuiAreas(guiContainer);
         } else {
             guiAreas = Collections.emptyList();

@@ -21,7 +21,6 @@ public class BrewingRecipeWrapper extends BlankRecipeWrapper {
     private final List<ItemStack> ingredients;
     private final ItemStack potionInput;
     private final ItemStack potionOutput;
-    // Đổi kiểu dữ liệu rõ ràng thay vì dùng Raw Type nguyên bản để tránh lỗi ép kiểu bậy
     private final List<List<ItemStack>> inputs;
     private final int brewingSteps;
     private final int hashCode;

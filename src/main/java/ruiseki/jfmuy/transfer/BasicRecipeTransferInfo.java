@@ -18,7 +18,7 @@ public class BasicRecipeTransferInfo<C extends Container> implements IRecipeTran
     private final int inventorySlotCount;
 
     public BasicRecipeTransferInfo(Class<C> containerClass, String recipeCategoryUid, int recipeSlotStart,
-        int recipeSlotCount, int inventorySlotStart, int inventorySlotCount) {
+                                   int recipeSlotCount, int inventorySlotStart, int inventorySlotCount) {
         this.containerClass = containerClass;
         this.recipeCategoryUid = recipeCategoryUid;
         this.recipeSlotStart = recipeSlotStart;
@@ -40,9 +40,12 @@ public class BasicRecipeTransferInfo<C extends Container> implements IRecipeTran
     @Override
     public List<Slot> getRecipeSlots(C container) {
         List<Slot> slots = new ArrayList<Slot>();
+        int maxSlots = container.inventorySlots.size();
+
         for (int i = recipeSlotStart; i < recipeSlotStart + recipeSlotCount; i++) {
-            Slot slot = container.getSlot(i);
-            slots.add(slot);
+            if (i >= 0 && i < maxSlots) {
+                slots.add(container.getSlot(i));
+            }
         }
         return slots;
     }
@@ -50,9 +53,12 @@ public class BasicRecipeTransferInfo<C extends Container> implements IRecipeTran
     @Override
     public List<Slot> getInventorySlots(C container) {
         List<Slot> slots = new ArrayList<Slot>();
+        int maxSlots = container.inventorySlots.size();
+
         for (int i = inventorySlotStart; i < inventorySlotStart + inventorySlotCount; i++) {
-            Slot slot = container.getSlot(i);
-            slots.add(slot);
+            if (i >= 0 && i < maxSlots) {
+                slots.add(container.getSlot(i));
+            }
         }
         return slots;
     }

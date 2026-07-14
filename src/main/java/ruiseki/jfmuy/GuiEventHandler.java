@@ -13,6 +13,7 @@ import org.lwjgl.input.Mouse;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.OverlayToggleEvent;
 import ruiseki.jfmuy.gui.ItemListOverlay;
 import ruiseki.jfmuy.gui.ItemListOverlayInternal;
@@ -20,6 +21,8 @@ import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.input.InputHandler;
 import ruiseki.jfmuy.util.Translator;
+import ruiseki.okcore.event.gui.BackgroundDrawnEvent;
+import ruiseki.okcore.event.gui.PotionShiftEvent;
 import ruiseki.okcore.event.input.KeyboardInputEvent;
 import ruiseki.okcore.event.input.MouseInputEvent;
 
@@ -81,7 +84,7 @@ public class GuiEventHandler {
     }
 
     @SubscribeEvent
-    public void onDrawBackgroundEventPost(@Nonnull GuiScreenEvent.DrawScreenEvent.Post event) {
+    public void onDrawBackgroundEventPost(@Nonnull BackgroundDrawnEvent event) {
         ItemListOverlay itemListOverlay = runtime.getItemListOverlay();
         ItemListOverlayInternal itemListOverlayInternal = itemListOverlay.getInternal();
         if (itemListOverlayInternal != null) {
@@ -92,7 +95,7 @@ public class GuiEventHandler {
             }
 
             if (itemListOverlayInternal != null) {
-                itemListOverlayInternal.drawScreen(gui.mc, event.mouseX, event.mouseY);
+                itemListOverlayInternal.drawScreen(gui.mc, event.getMouseX(), event.getMouseY());
             }
         }
     }
@@ -152,11 +155,10 @@ public class GuiEventHandler {
         }
     }
 
-    // TODO: Add PotionShiftEvent
-    // @SubscribeEvent
-    // public void onPotionShiftEvent(GuiScreenEvent.PotionShiftEvent event) {
-    // if (Config.isOverlayEnabled()) {
-    // event.setCanceled(true);
-    // }
-    // }
+    @SubscribeEvent
+    public void onPotionShiftEvent(PotionShiftEvent event) {
+        if (Config.isOverlayEnabled()) {
+            event.setCanceled(true);
+        }
+    }
 }

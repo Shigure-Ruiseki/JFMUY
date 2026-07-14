@@ -24,7 +24,7 @@ import ruiseki.jfmuy.network.PacketHandler;
     name = Reference.MOD_NAME,
     version = Reference.VERSION,
     guiFactory = Reference.GUI_FACTORY,
-    dependencies = "required-after:Forge@[10.13.0.0,);")
+    dependencies = Reference.DEPENDENCIES)
 public class JFMUY {
 
     @SidedProxy(serverSide = Reference.PROXY_COMMON, clientSide = Reference.PROXY_CLIENT)

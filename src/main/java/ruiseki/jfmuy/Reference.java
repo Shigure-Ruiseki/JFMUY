@@ -5,7 +5,7 @@ public class Reference {
     public static final String MOD_ID = Tags.MOD_ID;
     public static final String MOD_NAME = Tags.MOD_NAME;
     public static final String VERSION = Tags.VERSION;
-    public static final String DEPENDENCIES = "required-after:gtnhlib@[0.11.3,);";
+    public static final String DEPENDENCIES = "required-after:okcore@[26.07.13.0,);";
 
     public static final String PROXY_COMMON = Tags.MOD_GROUP + ".CommonProxy";
     public static final String PROXY_CLIENT = Tags.MOD_GROUP + ".ClientProxy";

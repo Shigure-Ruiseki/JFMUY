@@ -11,8 +11,6 @@ import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.recipe.BlankRecipeCategory;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
-import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
-import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
 import ruiseki.jfmuy.util.Translator;
 
 public class CraftingRecipeCategory extends BlankRecipeCategory<ICraftingRecipeWrapper> {

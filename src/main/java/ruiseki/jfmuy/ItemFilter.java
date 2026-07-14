@@ -19,8 +19,6 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multiset;
 
-import ruiseki.jfmuy.api.IItemBlacklist;
-import ruiseki.jfmuy.api.IItemRegistry;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.ItemStackElement;

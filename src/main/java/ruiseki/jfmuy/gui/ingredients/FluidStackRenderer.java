@@ -19,6 +19,7 @@ import net.minecraftforge.fluids.FluidStack;
 import org.lwjgl.opengl.GL11;
 
 import ruiseki.jfmuy.api.gui.IDrawable;
+import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.util.Translator;
 
 public class FluidStackRenderer implements IIngredientRenderer<FluidStack> {

@@ -2,20 +2,31 @@ package ruiseki.jfmuy.api.gui;
 
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.item.ItemStack;
 
 /**
- * Helps set crafting-grid-style GuiItemStackGroup.
- * Get an instance from IGuiHelper.
+ * Helps set crafting-grid-style {@link IGuiItemStackGroup}.
+ * This places smaller recipes in the grid in a consistent way.
+ * Get an instance from {@link ruiseki.jfmuy.api.IGuiHelper#createCraftingGridHelper(int, int)}.
  */
 public interface ICraftingGridHelper {
 
-    void setInput(@Nonnull IGuiItemStackGroup guiItemStacks, @Nonnull List input);
+    /**
+     * Place inputs ingredients onto the crafting grid in a consistent way.
+     *
+     * @since JEI 3.11.2
+     */
+    void setInputStacks(IGuiItemStackGroup guiItemStacks, List<List<ItemStack>> input);
 
-    void setInput(@Nonnull IGuiItemStackGroup guiItemStacks, @Nonnull List input, int width, int height);
+    /**
+     * Place inputs ingredients onto the crafting grid in a consistent way.
+     *
+     * @since JEI 3.11.2
+     */
+    void setInputStacks(IGuiItemStackGroup guiItemStacks, List<List<ItemStack>> input, int width, int height);
 
-    void setOutput(@Nonnull IGuiItemStackGroup guiItemStacks, @Nonnull List<ItemStack> output);
-
+    /**
+     * Place output ingredients onto the crafting grid in a consistent way.
+     */
+    void setOutput(IGuiItemStackGroup guiItemStacks, List<ItemStack> output);
 }

@@ -20,7 +20,6 @@ import net.minecraft.potion.PotionHelper;
 
 import com.google.common.collect.ImmutableList;
 
-import ruiseki.jfmuy.api.IItemRegistry;
 import ruiseki.jfmuy.util.Log;
 
 public class BrewingRecipeMaker {

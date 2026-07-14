@@ -26,8 +26,8 @@ import org.jetbrains.annotations.Nullable;
 
 import cpw.mods.fml.common.registry.GameData;
 import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.api.gui.IGuiIngredient;
 import ruiseki.jfmuy.api.recipe.IStackHelper;
-import ruiseki.jfmuy.gui.ingredients.IGuiIngredient;
 
 public class StackHelper implements IStackHelper {
 

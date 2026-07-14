@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 
 import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.util.Translator;
 
 public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {

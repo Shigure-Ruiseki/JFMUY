@@ -14,7 +14,6 @@ import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraftforge.oredict.OreDictionary;
 
 import ruiseki.jfmuy.api.IGuiHelper;
-import ruiseki.jfmuy.api.IItemRegistry;
 import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.recipe.IStackHelper;
 

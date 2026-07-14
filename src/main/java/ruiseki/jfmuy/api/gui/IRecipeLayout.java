@@ -1,22 +1,49 @@
 package ruiseki.jfmuy.api.gui;
 
-import javax.annotation.Nonnull;
+import ruiseki.jfmuy.api.ingredients.IModIngredientRegistration;
+import ruiseki.jfmuy.api.recipe.IFocus;
+import ruiseki.jfmuy.api.recipe.IRecipeCategory;
+import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 
+/**
+ * Represents the layout of one recipe on-screen.
+ * Plugins interpret a recipe wrapper to set the properties here.
+ * It is passed to plugins in {@link IRecipeCategory#setRecipe(IRecipeLayout, IRecipeWrapper)}.
+ *
+ * @see IRecipeLayoutDrawable
+ */
 public interface IRecipeLayout {
 
     /**
      * Contains all the itemStacks displayed on this recipe layout.
      * Init and set them in your recipe category.
      */
-    @Nonnull
     IGuiItemStackGroup getItemStacks();
 
     /**
      * Contains all the fluidStacks displayed on this recipe layout.
      * Init and set them in your recipe category.
      */
-    @Nonnull
     IGuiFluidStackGroup getFluidStacks();
+
+    /**
+     * Get all the ingredients of one class that are displayed on this recipe layout.
+     * Init and set them in your recipe category.
+     * <p>
+     * This method is for handling custom item types, registered with {@link IModIngredientRegistration}.
+     *
+     * @see #getItemStacks()
+     * @see #getFluidStacks()
+     */
+    <T> IGuiIngredientGroup<T> getIngredientsGroup(Class<T> ingredientClass);
+
+    /**
+     * The current search focus. Set by the player when they look up the recipe. The object being looked up is the
+     * focus.
+     *
+     * @since JEI 3.11.0
+     */
+    IFocus<?> getFocus();
 
     /**
      * Moves the recipe transfer button's position relative to the recipe layout.

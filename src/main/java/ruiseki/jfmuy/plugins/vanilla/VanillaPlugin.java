@@ -15,7 +15,6 @@ import net.minecraft.item.crafting.CraftingManager;
 
 import ruiseki.jfmuy.api.BlankModPlugin;
 import ruiseki.jfmuy.api.IGuiHelper;
-import ruiseki.jfmuy.api.IItemRegistry;
 import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.IModRegistry;
 import ruiseki.jfmuy.api.ISubtypeRegistry;

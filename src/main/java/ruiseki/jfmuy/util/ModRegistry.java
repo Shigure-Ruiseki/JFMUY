@@ -16,7 +16,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import ruiseki.jfmuy.RecipeRegistry;
-import ruiseki.jfmuy.api.IItemRegistry;
 import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.IModRegistry;
 import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;

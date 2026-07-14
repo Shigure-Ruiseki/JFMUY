@@ -11,7 +11,6 @@ import net.minecraft.item.ItemStack;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 
-import ruiseki.jfmuy.api.IItemRegistry;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.ModList;
 

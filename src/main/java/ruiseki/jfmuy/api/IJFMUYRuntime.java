@@ -1,15 +1,14 @@
 package ruiseki.jfmuy.api;
 
-import org.jetbrains.annotations.NotNull;
-
+/**
+ * Gives access to JFMUY functions that are available once everything has loaded.
+ * The IJFMUYRuntime instance is passed to your mod plugin in {@link IModPlugin#onRuntimeAvailable(IJeiRuntime)}.
+ */
 public interface IJFMUYRuntime {
 
-    @NotNull
     IRecipeRegistry getRecipeRegistry();
 
-    @NotNull
     IItemListOverlay getItemListOverlay();
 
-    @NotNull
     IRecipesGui getRecipesGui();
 }

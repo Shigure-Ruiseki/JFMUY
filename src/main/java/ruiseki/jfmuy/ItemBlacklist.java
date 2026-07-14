@@ -9,7 +9,6 @@ import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import ruiseki.jfmuy.api.IItemBlacklist;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.util.Log;
 

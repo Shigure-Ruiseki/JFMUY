@@ -2,52 +2,26 @@ package ruiseki.jfmuy.api;
 
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.Fluid;
+import ruiseki.jfmuy.api.recipe.IFocus;
 
 /**
- * JFMUY's gui for displaying recipes. Use this interface to open recipes.
+ * JEI's gui for displaying recipes. Use this interface to open recipes.
+ * Get the instance from {@link IJFMUYRuntime#getRecipesGui()}.
  */
 public interface IRecipesGui {
 
     /**
-     * Show recipes for an {@link ItemStack}.
+     * Show recipes for an {@link IFocus}.
      * Opens the {@link IRecipesGui} if it is closed.
      *
-     * @param focus the {@link ItemStack} result.
+     * @see IRecipeRegistry#createFocus(IFocus.Mode, Object)
      */
-    void showRecipes(@Nonnull ItemStack focus);
-
-    /**
-     * Show recipes for a {@link Fluid}.
-     * Opens the {@link IRecipesGui} if it is closed.
-     *
-     * @param focus the {@link Fluid} result.
-     */
-    void showRecipes(@Nonnull Fluid focus);
-
-    /**
-     * Show recipes that use an {@link ItemStack} as an ingredient.
-     * Opens the {@link IRecipesGui} if it is closed.
-     *
-     * @param focus the {@link ItemStack} ingredient.
-     */
-    void showUses(@Nonnull ItemStack focus);
-
-    /**
-     * Show recipes that use a {@link Fluid} as an ingredient.
-     * Opens the {@link IRecipesGui} if it is closed.
-     *
-     * @param focus the {@link Fluid} ingredient.
-     */
-    void showUses(@Nonnull Fluid focus);
+    <V> void show(IFocus<V> focus);
 
     /**
      * Show entire categories of recipes.
      *
      * @param recipeCategoryUids a list of categories to display, in order. Must not be empty.
      */
-    void showCategories(@Nonnull List<String> recipeCategoryUids);
+    void showCategories(List<String> recipeCategoryUids);
 }

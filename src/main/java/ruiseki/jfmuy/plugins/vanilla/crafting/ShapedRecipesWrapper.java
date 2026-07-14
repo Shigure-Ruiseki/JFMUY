@@ -9,7 +9,6 @@ import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ShapedRecipes;
 
-import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
 import ruiseki.jfmuy.plugins.vanilla.VanillaRecipeWrapper;
 
 public class ShapedRecipesWrapper extends VanillaRecipeWrapper implements IShapedCraftingRecipeWrapper {

@@ -10,7 +10,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
-import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
 import ruiseki.jfmuy.plugins.vanilla.VanillaRecipeWrapper;
 
 public class ShapedOreRecipeWrapper extends VanillaRecipeWrapper implements IShapedCraftingRecipeWrapper {

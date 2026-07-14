@@ -18,6 +18,7 @@ import net.minecraft.item.ItemStack;
 
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.JFMUY;
+import ruiseki.jfmuy.api.gui.IGuiIngredient;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
@@ -25,7 +26,6 @@ import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferInfo;
 import ruiseki.jfmuy.config.SessionData;
-import ruiseki.jfmuy.gui.ingredients.IGuiIngredient;
 import ruiseki.jfmuy.network.packets.PacketRecipeTransfer;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.StackHelper;

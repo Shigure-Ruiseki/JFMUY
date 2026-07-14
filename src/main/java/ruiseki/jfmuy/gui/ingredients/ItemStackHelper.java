@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
 
 import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.gui.Focus;
 
 public class ItemStackHelper implements IIngredientHelper<ItemStack> {

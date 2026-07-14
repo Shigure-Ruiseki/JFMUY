@@ -16,7 +16,10 @@ import net.minecraft.client.renderer.RenderHelper;
 
 import org.lwjgl.opengl.GL11;
 
+import ruiseki.jfmuy.api.gui.IGuiIngredient;
 import ruiseki.jfmuy.api.gui.ITooltipCallback;
+import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.gui.Focus;
 import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.util.CycleTimer;

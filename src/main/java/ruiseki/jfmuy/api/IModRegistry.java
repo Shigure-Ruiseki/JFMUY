@@ -2,32 +2,31 @@ package ruiseki.jfmuy.api;
 
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;
 
 import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
+import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeHandler;
+import ruiseki.jfmuy.api.recipe.IRecipeRegistryPlugin;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferRegistry;
 
 /**
- * Passed to IModPlugins so they can register themselves.
+ * Entry point for the JEI API, functions for registering recipes are available from here.
+ * The IModRegistry instance is passed to your mod plugin in {@link IModPlugin#register(IModRegistry)}.
  */
 public interface IModRegistry {
 
     /**
-     * Get helpers and tools for addon mods.
+     * Get helpers and tools for implementing JEI plugins.
      */
-    @Nonnull
     IJFMUYHelpers getJFMUYHelpers();
 
     /**
-     * Get useful functions relating to items.
+     * Get useful functions relating to recipe ingredients.
      */
-    @Nonnull
-    IItemRegistry getItemRegistry();
+    IIngredientRegistry getIngredientRegistry();
 
     /**
      * Add the recipe categories provided by this plugin.
@@ -47,17 +46,17 @@ public interface IModRegistry {
     void addRecipes(List recipes);
 
     /**
-     * Add a clickable area on a gui to jump to specific categories of recipes in JFMUY.
+     * Add a clickable area on a gui to jump to specific categories of recipes in JEI.
      *
-     * @param guiContainerClass  the gui class for JFMUY to detect.
+     * @param guiContainerClass  the gui class for JEI to detect.
      * @param xPos               left x position of the clickable area, relative to the left edge of the gui.
      * @param yPos               top y position of the clickable area, relative to the top edge of the gui.
      * @param width              the width of the clickable area.
      * @param height             the height of the clickable area.
-     * @param recipeCategoryUids the recipe categories that JFMUY should display.
+     * @param recipeCategoryUids the recipe categories that JEI should display.
      */
-    void addRecipeClickArea(@Nonnull Class<? extends GuiContainer> guiContainerClass, int xPos, int yPos, int width,
-        int height, @Nonnull String... recipeCategoryUids);
+    void addRecipeClickArea(Class<? extends GuiContainer> guiContainerClass, int xPos, int yPos, int width, int height,
+        String... recipeCategoryUids);
 
     /**
      * Add an association between an item and what it can craft. (i.e. Furnace ItemStack -> Smelting and Fuel Recipes)
@@ -66,14 +65,14 @@ public interface IModRegistry {
      * @param craftingItem       the item that can craft recipes (like a furnace or crafting table item)
      * @param recipeCategoryUids the recipe categories handled by the item
      */
-    void addRecipeCategoryCraftingItem(@Nonnull ItemStack craftingItem, @Nonnull String... recipeCategoryUids);
+    void addRecipeCategoryCraftingItem(ItemStack craftingItem, String... recipeCategoryUids);
 
     /**
-     * Add a handler to give JFMUY extra information about how to layout the item list next to a specific type of
+     * Add a handler to give JEI extra information about how to layout the item list next to a specific type of
      * GuiContainer.
-     * Used for guis with tabs on the side that would normally intersect with JFMUY's item list.
+     * Used for guis with tabs on the side that would normally intersect with JEI's item list.
      */
-    void addAdvancedGuiHandlers(@Nonnull IAdvancedGuiHandler<?>... advancedGuiHandlers);
+    void addAdvancedGuiHandlers(IAdvancedGuiHandler<?>... advancedGuiHandlers);
 
     /**
      * Add a description page for an itemStack.
@@ -93,4 +92,11 @@ public interface IModRegistry {
      * Get the registry for setting up recipe transfer.
      */
     IRecipeTransferRegistry getRecipeTransferRegistry();
+
+    /**
+     * Register your own Recipe Registry Plugin here.
+     *
+     * @see IRecipeRegistryPlugin
+     */
+    void addRecipeRegistryPlugin(IRecipeRegistryPlugin recipeRegistryPlugin);
 }

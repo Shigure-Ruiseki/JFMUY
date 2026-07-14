@@ -15,7 +15,6 @@ import cpw.mods.fml.client.config.HoverChecker;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawable;
-import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
 import ruiseki.jfmuy.plugins.vanilla.VanillaRecipeWrapper;
 import ruiseki.jfmuy.util.Translator;
 

@@ -8,6 +8,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import org.jetbrains.annotations.NotNull;
 
+import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.gui.Focus;
 
 public class FluidStackHelper implements IIngredientHelper<FluidStack> {

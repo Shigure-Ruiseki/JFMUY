@@ -2,32 +2,53 @@ package ruiseki.jfmuy.api.recipe;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.item.ItemStack;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import ruiseki.jfmuy.api.IJFMUYHelpers;
+import ruiseki.jfmuy.api.ISubtypeRegistry;
 
 /**
  * Helps get ItemStacks from common formats used in recipes.
+ * Get the instance from {@link IJFMUYHelpers#getStackHelper()}.
  */
 public interface IStackHelper {
 
     /**
      * Returns all the subtypes of itemStack if it has a wildcard meta value.
      */
-    @NotNull
-    List<ItemStack> getSubtypes(@NotNull ItemStack itemStack);
+    List<ItemStack> getSubtypes(ItemStack itemStack);
 
     /**
      * Expands an Iterable, which may contain ItemStacks or more Iterables, and
      * returns all the subtypes of itemStacks if they have wildcard meta value.
      */
-    @NotNull
-    List<ItemStack> getAllSubtypes(@NotNull Iterable stacks);
+    List<ItemStack> getAllSubtypes(Iterable stacks);
 
     /**
      * Flattens ItemStacks, OreDict Strings, and Iterables into a list of ItemStacks.
      */
-    @NotNull
     List<ItemStack> toItemStackList(@Nullable Object stacks);
+
+    /**
+     * Expands ItemStacks, OreDict Strings, and Iterables into a list of lists of ItemStacks.
+     * Expands wildcard ItemStacks into their subtypes.
+     */
+    List<List<ItemStack>> expandRecipeItemStackInputs(@Nullable List inputs);
+
+    /**
+     * Returns an ItemStack from 'stacks' that matches any of the ItemStacks in 'contains'.
+     * Returns null if there is no match.
+     * 
+     * @since JEI 3.13.4
+     */
+    @Nullable
+    ItemStack containsAnyStack(Iterable<ItemStack> stacks, Iterable<ItemStack> contains);
+
+    /**
+     * Similar to ItemStack.areItemStacksEqual but ignores NBT on items without subtypes, and uses the
+     * {@link ISubtypeRegistry}
+     */
+    boolean isEquivalent(@Nullable ItemStack lhs, @Nullable ItemStack rhs);
 }

@@ -1,6 +1,7 @@
 package ruiseki.jfmuy.gui.ingredients;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -40,6 +41,11 @@ public class FluidStackRenderer implements IIngredientRenderer<FluidStack> {
         this.width = width;
         this.height = height;
         this.overlay = overlay;
+    }
+
+    @Override
+    public void setIngredients(@Nonnull Collection<FluidStack> ingredients) {
+
     }
 
     @Override

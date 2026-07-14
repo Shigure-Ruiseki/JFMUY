@@ -8,15 +8,15 @@ import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ShapelessRecipes;
 
-import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
-import ruiseki.jfmuy.plugins.vanilla.VanillaRecipeWrapper;
+import ruiseki.jfmuy.api.IGuiHelper;
 
-public class ShapelessRecipesWrapper extends VanillaRecipeWrapper implements ICraftingRecipeWrapper {
+public class ShapelessRecipesWrapper extends AbstractShapelessRecipeWrapper {
 
     @Nonnull
     private final ShapelessRecipes recipe;
 
-    public ShapelessRecipesWrapper(@Nonnull ShapelessRecipes recipe) {
+    public ShapelessRecipesWrapper(@Nonnull IGuiHelper guiHelper, @Nonnull ShapelessRecipes recipe) {
+        super(guiHelper);
         this.recipe = recipe;
         for (Object input : this.recipe.recipeItems) {
             if (input instanceof ItemStack) {
@@ -30,7 +30,7 @@ public class ShapelessRecipesWrapper extends VanillaRecipeWrapper implements ICr
 
     @Nonnull
     @Override
-    public List getInputs() {
+    public List<ItemStack> getInputs() {
         return recipe.recipeItems;
     }
 

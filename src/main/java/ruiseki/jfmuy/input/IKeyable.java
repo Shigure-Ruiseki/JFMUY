@@ -1,6 +1,6 @@
 package ruiseki.jfmuy.input;
 
-public interface IKeyable extends ICloseable {
+public interface IKeyable {
 
     /**
      * Returns true if all keyboard input should go to this IKeyable.
@@ -12,6 +12,6 @@ public interface IKeyable extends ICloseable {
     /**
      * Returns true if the key press was used.
      */
-    boolean onKeyPressed(int keyCode);
+    boolean onKeyPressed(char typedChar, int keyCode);
 
 }

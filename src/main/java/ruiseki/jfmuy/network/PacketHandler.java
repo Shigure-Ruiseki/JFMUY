@@ -12,15 +12,16 @@ import cpw.mods.fml.common.network.FMLEventChannel;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.internal.FMLProxyPacket;
+import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.network.packets.PacketDeletePlayerItem;
-import ruiseki.jfmuy.network.packets.PacketGiveItemMessageBig;
+import ruiseki.jfmuy.network.packets.PacketGiveItemStack;
 import ruiseki.jfmuy.network.packets.PacketJFMUY;
 import ruiseki.jfmuy.network.packets.PacketRecipeTransfer;
 import ruiseki.jfmuy.util.Log;
 
 public class PacketHandler {
 
-    public static final String CHANNEL_ID = "NEI";
+    public static final String CHANNEL_ID = Reference.MOD_ID;
     private final FMLEventChannel channel;
 
     public PacketHandler() {
@@ -35,10 +36,6 @@ public class PacketHandler {
 
         try {
             byte packetIdOrdinal = packetBuffer.readByte();
-            if (packetIdOrdinal < 0 || packetIdOrdinal >= PacketIdServer.VALUES.length) {
-                Log.error("Unknown NEI server packet id: {}", packetIdOrdinal);
-                return;
-            }
             PacketIdServer packetId = PacketIdServer.VALUES[packetIdOrdinal];
             PacketJFMUY packet;
 
@@ -52,7 +49,7 @@ public class PacketHandler {
                     break;
                 }
                 case GIVE_BIG: {
-                    packet = new PacketGiveItemMessageBig();
+                    packet = new PacketGiveItemStack();
                     break;
                 }
                 default: {
@@ -61,7 +58,7 @@ public class PacketHandler {
             }
 
             checkThreadAndEnqueue(packet, packetBuffer, player);
-        } catch (Exception ex) {
+        } catch (RuntimeException ex) {
             Log.error("Packet error", ex);
         }
     }
@@ -72,7 +69,7 @@ public class PacketHandler {
      * PacketBuffer packetBuffer = new PacketBuffer(event.packet.payload());
      * Minecraft minecraft = Minecraft.getMinecraft();
      * EntityPlayer player = minecraft.thePlayer;
-     * PacketNEI packet;
+     * PacketJFMUY packet;
      * try {
      * byte packetIdOrdinal = packetBuffer.readByte();
      * PacketIdClient packetId = PacketIdClient.VALUES[packetIdOrdinal];
@@ -87,10 +84,6 @@ public class PacketHandler {
      * }
      * }
      */
-
-    public void sendToServer(FMLProxyPacket packet) {
-        channel.sendToServer(packet);
-    }
 
     public void sendPacket(FMLProxyPacket packet, EntityPlayerMP player) {
         channel.sendTo(packet, player);

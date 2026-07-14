@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
+
+import org.jetbrains.annotations.NotNull;
 
 import com.google.common.base.Objects;
 
@@ -62,7 +62,7 @@ public class BrewingRecipeWrapper extends VanillaRecipeWrapper {
     }
 
     @Override
-    public void drawInfo(@Nonnull Minecraft minecraft, int recipeWidth, int recipeHeight) {
+    public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
         if (brewingSteps > 0) {
             String steps = Translator.translateToLocalFormatted("gui.jfmuy.category.brewing.steps", brewingSteps);
             minecraft.fontRenderer.drawString(steps, 70, 28, Color.gray.getRGB());

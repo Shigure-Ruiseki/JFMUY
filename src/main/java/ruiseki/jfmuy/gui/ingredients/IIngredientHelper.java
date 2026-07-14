@@ -10,5 +10,8 @@ public interface IIngredientHelper<T> {
 
     Collection<T> expandSubtypes(Collection<T> contained);
 
-    T getMatch(Iterable<T> contained, @Nonnull Focus toMatch);
+    T getMatch(Iterable<T> ingredients, @Nonnull Focus toMatch);
+
+    @Nonnull
+    Focus createFocus(@Nonnull T ingredient);
 }

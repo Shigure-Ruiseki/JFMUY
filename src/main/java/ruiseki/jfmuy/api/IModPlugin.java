@@ -1,32 +1,23 @@
 package ruiseki.jfmuy.api;
 
+import javax.annotation.Nonnull;
+
 /**
- * The main class for a plugin. Everything communicated between a mod and JEI is through this class.
- * IModPlugins must have the @NEIPlugin annotation to get loaded by JEI.
+ * The main class for a plugin. Everything communicated between a mod and JFMUY is through this class.
+ * IModPlugins must have the @JFMUYPlugin annotation to get loaded by JFMUY.
  * This class must not import anything that could be missing at runtime (i.e. code from any other mod).
  */
 public interface IModPlugin {
-
-    /**
-     * Called when the IJFMUYHelpers is available.
-     * IModPlugins should store IJFMUYHelpers here if they need it.
-     */
-    void onJFMUYHelpersAvailable(IJFMUYHelpers jfmuyHelpers);
-
-    /**
-     * Called when the IItemRegistry is available, before register.
-     */
-    void onItemRegistryAvailable(IItemRegistry itemRegistry);
 
     /**
      * Register this mod plugin with the mod registry.
      * Called just before the game launches.
      * Will be called again if config
      */
-    void register(IModRegistry registry);
+    void register(@Nonnull IModRegistry registry);
 
     /**
-     * Called when the IRecipeRegistry is available, after all mods have registered.
+     * Called when jfmuy's runtime features are available, after all mods have registered.
      */
-    void onRecipeRegistryAvailable(IRecipeRegistry recipeRegistry);
+    void onRuntimeAvailable(@Nonnull IJFMUYRuntime jfmuyRuntime);
 }

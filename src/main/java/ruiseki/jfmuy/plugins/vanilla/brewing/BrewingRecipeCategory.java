@@ -5,7 +5,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 import ruiseki.jfmuy.api.IGuiHelper;
@@ -15,12 +14,10 @@ import ruiseki.jfmuy.api.gui.IDrawableStatic;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
-import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
-import ruiseki.jfmuy.util.StackUtil;
 import ruiseki.jfmuy.util.Translator;
 
-public class BrewingRecipeCategory implements IRecipeCategory {
+public class BrewingRecipeCategory implements IRecipeCategory<BrewingRecipeWrapper> {
 
     private static final int brewPotionSlot1 = 0;
     private static final int brewPotionSlot2 = 1;
@@ -41,18 +38,22 @@ public class BrewingRecipeCategory implements IRecipeCategory {
     private final IDrawableAnimated arrow;
     @Nonnull
     private final IDrawableAnimated bubbles;
+    @Nonnull
+    private final IDrawableStatic blazeHeat;
 
     public BrewingRecipeCategory(IGuiHelper guiHelper) {
         ResourceLocation location = new ResourceLocation("minecraft", "textures/gui/container/brewing_stand.png");
-        background = guiHelper.createDrawable(location, 55, 15, 64, 56, 0, 0, 0, 40);
+        background = guiHelper.createDrawable(location, 55, 15, 64, 60, 0, 0, 0, 40);
         localizedName = Translator.translateToLocal("gui.jfmuy.category.brewing");
 
         IDrawableStatic brewArrowDrawable = guiHelper.createDrawable(location, 176, 0, 9, 28);
         arrow = guiHelper.createAnimatedDrawable(brewArrowDrawable, 400, IDrawableAnimated.StartDirection.TOP, false);
 
-        IDrawableStatic brewBubblesDrawable = guiHelper.createDrawable(location, 185, 0, 12, 29);
+        IDrawableStatic brewBubblesDrawable = guiHelper.createDrawable(location, 185, 1, 12, 28);
         bubbles = guiHelper
             .createAnimatedDrawable(brewBubblesDrawable, 20, IDrawableAnimated.StartDirection.BOTTOM, false);
+
+        blazeHeat = guiHelper.createDrawable(location, 176, 29, 18, 4);
 
         slotDrawable = guiHelper.getSlotDrawable();
     }
@@ -76,38 +77,33 @@ public class BrewingRecipeCategory implements IRecipeCategory {
     }
 
     @Override
-    public void drawExtras(Minecraft minecraft) {
+    public void drawExtras(@Nonnull Minecraft minecraft) {
         slotDrawable.draw(minecraft, outputSlotX, outputSlotY);
+        blazeHeat.draw(minecraft, 5, 29);
     }
 
     @Override
-    public void drawAnimations(Minecraft minecraft) {
-        bubbles.draw(minecraft, 10, 0);
+    public void drawAnimations(@Nonnull Minecraft minecraft) {
+        bubbles.draw(minecraft, 8, 0);
         arrow.draw(minecraft, 42, 1);
     }
 
     @Override
-    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull IRecipeWrapper recipeWrapper) {
+    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull BrewingRecipeWrapper recipeWrapper) {
         IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
 
-        itemStacks.init(brewPotionSlot1, true, 0, 30);
-        itemStacks.init(brewPotionSlot2, true, 23, 37);
-        itemStacks.init(brewPotionSlot3, true, 46, 30);
+        itemStacks.init(brewPotionSlot1, true, 0, 35);
+        itemStacks.init(brewPotionSlot2, true, 23, 42);
+        itemStacks.init(brewPotionSlot3, true, 46, 35);
         itemStacks.init(brewIngredientSlot, true, 23, 1);
         itemStacks.init(outputSlot, false, outputSlotX, outputSlotY);
 
-        if (recipeWrapper instanceof BrewingRecipeWrapper) {
-            List inputs = recipeWrapper.getInputs();
-            List<ItemStack> inputStacks1 = StackUtil.toItemStackList(inputs.get(brewPotionSlot1));
-            List<ItemStack> inputStacks2 = StackUtil.toItemStackList(inputs.get(brewPotionSlot2));
-            List<ItemStack> inputStacks3 = StackUtil.toItemStackList(inputs.get(brewPotionSlot3));
-            List<ItemStack> ingredientStacks = StackUtil.toItemStackList(inputs.get(brewIngredientSlot));
+        List inputs = recipeWrapper.getInputs();
 
-            itemStacks.setFromRecipe(brewPotionSlot1, inputStacks1);
-            itemStacks.setFromRecipe(brewPotionSlot2, inputStacks2);
-            itemStacks.setFromRecipe(brewPotionSlot3, inputStacks3);
-            itemStacks.setFromRecipe(brewIngredientSlot, ingredientStacks);
-            itemStacks.setFromRecipe(outputSlot, recipeWrapper.getOutputs());
-        }
+        itemStacks.setFromRecipe(brewPotionSlot1, inputs.get(brewPotionSlot1));
+        itemStacks.setFromRecipe(brewPotionSlot2, inputs.get(brewPotionSlot2));
+        itemStacks.setFromRecipe(brewPotionSlot3, inputs.get(brewPotionSlot3));
+        itemStacks.setFromRecipe(brewIngredientSlot, inputs.get(brewIngredientSlot));
+        itemStacks.setFromRecipe(outputSlot, recipeWrapper.getOutputs());
     }
 }

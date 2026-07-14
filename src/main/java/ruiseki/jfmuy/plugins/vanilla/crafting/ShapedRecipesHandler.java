@@ -8,6 +8,8 @@ import net.minecraft.item.crafting.ShapedRecipes;
 import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
+import ruiseki.jfmuy.util.ErrorUtil;
+import ruiseki.jfmuy.util.Log;
 
 public class ShapedRecipesHandler implements IRecipeHandler<ShapedRecipes> {
 
@@ -19,7 +21,7 @@ public class ShapedRecipesHandler implements IRecipeHandler<ShapedRecipes> {
 
     @Nonnull
     @Override
-    public String getRecipeCategoryUid() {
+    public String getRecipeCategoryUid(@Nonnull ShapedRecipes recipe) {
         return VanillaRecipeCategoryUid.CRAFTING;
     }
 
@@ -32,6 +34,8 @@ public class ShapedRecipesHandler implements IRecipeHandler<ShapedRecipes> {
     @Override
     public boolean isRecipeValid(@Nonnull ShapedRecipes recipe) {
         if (recipe.getRecipeOutput() == null) {
+            String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+            Log.error("Recipe has no outputs. {}", recipeInfo);
             return false;
         }
         int inputCount = 0;
@@ -40,6 +44,16 @@ public class ShapedRecipesHandler implements IRecipeHandler<ShapedRecipes> {
                 inputCount++;
             }
         }
-        return inputCount > 0;
+        if (inputCount > 9) {
+            String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+            Log.error("Recipe has too many inputs. {}", recipeInfo);
+            return false;
+        }
+        if (inputCount == 0) {
+            String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+            Log.error("Recipe has no inputs. {}", recipeInfo);
+            return false;
+        }
+        return true;
     }
 }

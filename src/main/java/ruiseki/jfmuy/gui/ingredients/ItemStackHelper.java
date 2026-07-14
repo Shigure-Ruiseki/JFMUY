@@ -6,18 +6,26 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.item.ItemStack;
 
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.gui.Focus;
-import ruiseki.jfmuy.util.StackUtil;
 
 public class ItemStackHelper implements IIngredientHelper<ItemStack> {
 
     @Override
     public Collection<ItemStack> expandSubtypes(Collection<ItemStack> contained) {
-        return StackUtil.getAllSubtypes(contained);
+        return Internal.getStackHelper()
+            .getAllSubtypes(contained);
     }
 
     @Override
-    public ItemStack getMatch(Iterable<ItemStack> contained, @Nonnull Focus toMatch) {
-        return StackUtil.containsStack(contained, toMatch.getStack());
+    public ItemStack getMatch(Iterable<ItemStack> ingredients, @Nonnull Focus toMatch) {
+        return Internal.getStackHelper()
+            .containsStack(ingredients, toMatch.getStack());
+    }
+
+    @Nonnull
+    @Override
+    public Focus createFocus(@Nonnull ItemStack ingredient) {
+        return new Focus(ingredient);
     }
 }

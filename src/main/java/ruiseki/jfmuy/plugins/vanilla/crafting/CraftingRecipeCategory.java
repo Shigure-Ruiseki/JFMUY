@@ -2,7 +2,6 @@ package ruiseki.jfmuy.plugins.vanilla.crafting;
 
 import javax.annotation.Nonnull;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 
 import ruiseki.jfmuy.api.IGuiHelper;
@@ -10,18 +9,19 @@ import ruiseki.jfmuy.api.gui.ICraftingGridHelper;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
-import ruiseki.jfmuy.api.recipe.IRecipeCategory;
-import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
+import ruiseki.jfmuy.api.recipe.BlankRecipeCategory;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
-import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
 
-public class CraftingRecipeCategory implements IRecipeCategory {
+public class CraftingRecipeCategory extends BlankRecipeCategory<ICraftingRecipeWrapper> {
 
     private static final int craftOutputSlot = 0;
     private static final int craftInputSlot1 = 1;
+
+    public static final int width = 116;
+    public static final int height = 54;
 
     @Nonnull
     private final IDrawable background;
@@ -32,7 +32,7 @@ public class CraftingRecipeCategory implements IRecipeCategory {
 
     public CraftingRecipeCategory(IGuiHelper guiHelper) {
         ResourceLocation location = new ResourceLocation("minecraft", "textures/gui/container/crafting_table.png");
-        background = guiHelper.createDrawable(location, 29, 16, 116, 54);
+        background = guiHelper.createDrawable(location, 29, 16, width, height);
         localizedName = Translator.translateToLocal("gui.jfmuy.category.craftingTable");
         craftingGridHelper = guiHelper.createCraftingGridHelper(craftInputSlot1, craftOutputSlot);
     }
@@ -56,17 +56,7 @@ public class CraftingRecipeCategory implements IRecipeCategory {
     }
 
     @Override
-    public void drawExtras(Minecraft minecraft) {
-
-    }
-
-    @Override
-    public void drawAnimations(Minecraft minecraft) {
-
-    }
-
-    @Override
-    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull IRecipeWrapper recipeWrapper) {
+    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull ICraftingRecipeWrapper recipeWrapper) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
         guiItemStacks.init(craftOutputSlot, false, 94, 18);
@@ -82,12 +72,9 @@ public class CraftingRecipeCategory implements IRecipeCategory {
             IShapedCraftingRecipeWrapper wrapper = (IShapedCraftingRecipeWrapper) recipeWrapper;
             craftingGridHelper.setInput(guiItemStacks, wrapper.getInputs(), wrapper.getWidth(), wrapper.getHeight());
             craftingGridHelper.setOutput(guiItemStacks, wrapper.getOutputs());
-        } else if (recipeWrapper instanceof ICraftingRecipeWrapper) {
-            ICraftingRecipeWrapper wrapper = (ICraftingRecipeWrapper) recipeWrapper;
-            craftingGridHelper.setInput(guiItemStacks, wrapper.getInputs());
-            craftingGridHelper.setOutput(guiItemStacks, wrapper.getOutputs());
         } else {
-            Log.error("RecipeWrapper is not a known crafting wrapper type: {}", recipeWrapper);
+            craftingGridHelper.setInput(guiItemStacks, recipeWrapper.getInputs());
+            craftingGridHelper.setOutput(guiItemStacks, recipeWrapper.getOutputs());
         }
     }
 

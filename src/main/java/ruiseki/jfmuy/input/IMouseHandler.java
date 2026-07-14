@@ -1,6 +1,6 @@
 package ruiseki.jfmuy.input;
 
-public interface IMouseHandler extends ICloseable {
+public interface IMouseHandler {
 
     boolean isMouseOver(int mouseX, int mouseY);
 

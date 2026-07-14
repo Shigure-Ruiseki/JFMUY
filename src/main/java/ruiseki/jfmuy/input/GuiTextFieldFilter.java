@@ -11,16 +11,18 @@ import org.lwjgl.input.Keyboard;
 
 import cpw.mods.fml.client.config.HoverChecker;
 import ruiseki.jfmuy.ItemFilter;
+import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.util.ItemStackElement;
 
 public class GuiTextFieldFilter extends GuiTextField {
 
     private static final int MAX_HISTORY = 100;
-    private static final int maxSearchLength = 32;
+    private static final int maxSearchLength = 128;
 
     private final List<String> history = new LinkedList<>();
     private final HoverChecker hoverChecker;
     private ItemFilter itemFilter;
+    private boolean previousKeyboardRepeatEnabled;
 
     public GuiTextFieldFilter(int componentId, FontRenderer fontRenderer, int x, int y, int width, int height) {
         super(fontRenderer, x, y, width, height);
@@ -30,23 +32,21 @@ public class GuiTextFieldFilter extends GuiTextField {
 
     public void setItemFilter(ItemFilter itemFilter) {
         this.itemFilter = itemFilter;
-        setText(itemFilter.getFilterText());
+        setText(Config.getFilterText());
     }
 
     public void update() {
         List<ItemStackElement> itemList = itemFilter.getItemList();
         if (itemList.size() == 0) {
             setTextColor(Color.red.getRGB());
-            setMaxStringLength(getText().length());
         } else {
             setTextColor(Color.white.getRGB());
-            setMaxStringLength(maxSearchLength);
         }
     }
 
     @Override
-    public boolean textboxKeyTyped(char character, int keyCode) {
-        boolean handled = super.textboxKeyTyped(character, keyCode);
+    public boolean textboxKeyTyped(char typedChar, int keyCode) {
+        boolean handled = super.textboxKeyTyped(typedChar, keyCode);
         if (!handled && !history.isEmpty()) {
             if (keyCode == Keyboard.KEY_UP) {
                 String currentText = getText();
@@ -80,7 +80,7 @@ public class GuiTextFieldFilter extends GuiTextField {
                 saveHistory();
             }
         }
-        return handled && ItemFilter.setFilterText(getText());
+        return handled && Config.setFilterText(getText());
     }
 
     public boolean isMouseOver(int mouseX, int mouseY) {
@@ -90,7 +90,7 @@ public class GuiTextFieldFilter extends GuiTextField {
     public boolean handleMouseClicked(int mouseX, int mouseY, int mouseButton) {
         if (mouseButton == 1) {
             setText("");
-            return ItemFilter.setFilterText("");
+            return Config.setFilterText("");
         } else {
             super.mouseClicked(mouseX, mouseY, mouseButton);
         }
@@ -99,11 +99,20 @@ public class GuiTextFieldFilter extends GuiTextField {
 
     @Override
     public void setFocused(boolean keyboardFocus) {
+        final boolean previousFocus = isFocused();
         super.setFocused(keyboardFocus);
-        Keyboard.enableRepeatEvents(keyboardFocus);
 
-        if (!keyboardFocus) {
-            saveHistory();
+        if (previousFocus != keyboardFocus) {
+            if (keyboardFocus) {
+                previousKeyboardRepeatEnabled = Keyboard.areRepeatEventsEnabled();
+                Keyboard.enableRepeatEvents(true);
+            } else {
+                Keyboard.enableRepeatEvents(previousKeyboardRepeatEnabled);
+            }
+
+            if (!keyboardFocus) {
+                saveHistory();
+            }
         }
     }
 

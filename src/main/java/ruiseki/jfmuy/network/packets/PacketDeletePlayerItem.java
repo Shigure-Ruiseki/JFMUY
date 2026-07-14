@@ -10,7 +10,6 @@ import net.minecraft.network.PacketBuffer;
 
 import ruiseki.jfmuy.network.IPacketId;
 import ruiseki.jfmuy.network.PacketIdServer;
-import ruiseki.jfmuy.util.StackUtil;
 
 public class PacketDeletePlayerItem extends PacketJFMUY {
 
@@ -38,7 +37,7 @@ public class PacketDeletePlayerItem extends PacketJFMUY {
     public void readPacketData(PacketBuffer buf, EntityPlayer player) throws IOException {
         itemStack = buf.readItemStackFromBuffer();
         ItemStack playerItem = player.inventory.getItemStack();
-        if (StackUtil.isIdentical(itemStack, playerItem)) {
+        if (ItemStack.areItemStacksEqual(itemStack, playerItem)) {
             player.inventory.setItemStack(null);
         }
     }

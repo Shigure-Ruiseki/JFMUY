@@ -1,36 +1,22 @@
 package ruiseki.jfmuy;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.block.Block;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentData;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntityFurnace;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 
-import cpw.mods.fml.common.registry.GameRegistry;
 import ruiseki.jfmuy.api.IItemRegistry;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.ModList;
-import ruiseki.jfmuy.util.StackUtil;
 
 public class ItemRegistry implements IItemRegistry {
 
-    @Nonnull
-    private final Set<String> itemNameSet = new HashSet<>();
     @Nonnull
     private final ImmutableList<ItemStack> itemList;
     @Nonnull
@@ -42,54 +28,15 @@ public class ItemRegistry implements IItemRegistry {
     @Nonnull
     private final ModList modList;
 
-    public ItemRegistry() {
-        this.modList = new ModList();
-        List<ItemStack> itemListMutable = new ArrayList<>();
-        List<ItemStack> fuelsMutable = new ArrayList<>();
-
-        for (Object blockObj : Block.blockRegistry) {
-            Block block = (Block) blockObj;
-            addBlockAndSubBlocks(block, itemListMutable, fuelsMutable);
-        }
-
-        for (Object itemObj : Item.itemRegistry) {
-            Item item = (Item) itemObj;
-            addItemAndSubItems(item, itemListMutable, fuelsMutable);
-        }
-
-        addEnchantedBooks(itemListMutable);
-
-        this.itemList = ImmutableList.copyOf(itemListMutable);
-        this.fuels = ImmutableList.copyOf(fuelsMutable);
-
-        ImmutableListMultimap.Builder<String, ItemStack> itemsByModIdBuilder = ImmutableListMultimap.builder();
-        for (ItemStack itemStack : itemListMutable) {
-            Item item = itemStack.getItem();
-            if (item != null) {
-                String modId = GameRegistry.findUniqueIdentifierFor(item).modId.toLowerCase(Locale.ENGLISH);
-                itemsByModIdBuilder.put(modId, itemStack);
-            }
-        }
-        this.itemsByModId = itemsByModIdBuilder.build();
-
-        ImmutableList.Builder<ItemStack> potionIngredientBuilder = ImmutableList.builder();
-        for (ItemStack itemStack : this.itemList) {
-            if (itemStack.getItem()
-                .isPotionIngredient(itemStack)) {
-                potionIngredientBuilder.add(itemStack);
-            }
-        }
-        this.potionIngredients = potionIngredientBuilder.build();
-    }
-
-    private void addEnchantedBooks(List<ItemStack> itemList) {
-        for (Enchantment enchantment : Enchantment.enchantmentsBookList) {
-            if (enchantment != null && enchantment.type != null) {
-                EnchantmentData enchantmentData = new EnchantmentData(enchantment, enchantment.getMaxLevel());
-                ItemStack enchantedBook = Items.enchanted_book.getEnchantedItemStack(enchantmentData);
-                itemList.add(enchantedBook);
-            }
-        }
+    public ItemRegistry(@Nonnull ImmutableList<ItemStack> itemList,
+        @Nonnull ImmutableListMultimap<String, ItemStack> itemsByModId,
+        @Nonnull ImmutableList<ItemStack> potionIngredients, @Nonnull ImmutableList<ItemStack> fuels,
+        @Nonnull ModList modList) {
+        this.itemList = itemList;
+        this.itemsByModId = itemsByModId;
+        this.potionIngredients = potionIngredients;
+        this.fuels = fuels;
+        this.modList = modList;
     }
 
     @Override
@@ -129,82 +76,5 @@ public class ItemRegistry implements IItemRegistry {
         }
         String lowerCaseModId = modId.toLowerCase(Locale.ENGLISH);
         return itemsByModId.get(lowerCaseModId);
-    }
-
-    private void addItemAndSubItems(@Nullable Item item, @Nonnull List<ItemStack> itemList,
-        @Nonnull List<ItemStack> fuels) {
-        if (item == null) {
-            return;
-        }
-
-        List<ItemStack> items = StackUtil.getSubtypes(item);
-        addItemStacks(items, itemList, fuels);
-    }
-
-    private void addBlockAndSubBlocks(@Nullable Block block, @Nonnull List<ItemStack> itemList,
-        @Nonnull List<ItemStack> fuels) {
-        if (block == null) {
-            return;
-        }
-
-        Item item = Item.getItemFromBlock(block);
-
-        if (item == null) {
-            Log.debug("Couldn't get itemStack for block: {}", block.getUnlocalizedName());
-            return;
-        }
-
-        List<ItemStack> subItems = new ArrayList<>();
-        for (CreativeTabs itemTab : item.getCreativeTabs()) {
-            if (itemTab == null) {
-                continue;
-            }
-            subItems.clear();
-            try {
-                block.getSubBlocks(item, itemTab, subItems);
-            } catch (RuntimeException e) {
-                Log.error("Failed to get sub blocks for block: {}", block.getUnlocalizedName(), e);
-            } catch (LinkageError e) {
-                Log.error("Failed to get sub blocks for block: {}", block.getUnlocalizedName(), e);
-            }
-            addItemStacks(subItems, itemList, fuels);
-
-            if (subItems.isEmpty()) {
-                ItemStack stack = new ItemStack(block);
-                if (stack.getItem() == null) {
-                    Log.debug("Couldn't get itemStack for block: {}", block.getUnlocalizedName());
-                    return;
-                }
-                addItemStack(stack, itemList, fuels);
-            }
-        }
-    }
-
-    private void addItemStacks(@Nonnull Iterable<ItemStack> stacks, @Nonnull List<ItemStack> itemList,
-        @Nonnull List<ItemStack> fuels) {
-        for (ItemStack stack : stacks) {
-            if (stack != null) {
-                addItemStack(stack, itemList, fuels);
-            }
-        }
-    }
-
-    private void addItemStack(@Nonnull ItemStack stack, @Nonnull List<ItemStack> itemList,
-        @Nonnull List<ItemStack> fuels) {
-        try {
-            String itemKey = StackUtil.getUniqueIdentifierForStack(stack);
-
-            if (itemNameSet.contains(itemKey)) {
-                return;
-            }
-            itemNameSet.add(itemKey);
-            itemList.add(stack);
-
-            if (TileEntityFurnace.isItemFuel(stack)) {
-                fuels.add(stack);
-            }
-        } catch (RuntimeException e) {
-            Log.error("Couldn't create unique name for itemStack {}.", stack.getClass(), e);
-        }
     }
 }

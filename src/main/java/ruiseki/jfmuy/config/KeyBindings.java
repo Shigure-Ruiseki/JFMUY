@@ -19,13 +19,19 @@ public class KeyBindings {
         Keyboard.KEY_O,
         categoryName);
     @Nonnull
+    public static final KeyBinding focusSearch = new KeyBinding("key.jfmuy.focusSearch", Keyboard.KEY_F, categoryName);
+    @Nonnull
     public static final KeyBinding showRecipe = new KeyBinding("key.jfmuy.showRecipe", Keyboard.KEY_R, categoryName);
     @Nonnull
     public static final KeyBinding showUses = new KeyBinding("key.jfmuy.showUses", Keyboard.KEY_U, categoryName);
+    @Nonnull
+    public static final KeyBinding recipeBack = new KeyBinding("key.jfmuy.recipeBack", Keyboard.KEY_BACK, categoryName);
 
     public static void init() {
         ClientRegistry.registerKeyBinding(toggleOverlay);
+        ClientRegistry.registerKeyBinding(focusSearch);
         ClientRegistry.registerKeyBinding(showRecipe);
         ClientRegistry.registerKeyBinding(showUses);
+        ClientRegistry.registerKeyBinding(recipeBack);
     }
 }

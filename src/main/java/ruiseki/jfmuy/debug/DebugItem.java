@@ -10,10 +10,13 @@ import net.minecraft.nbt.NBTTagCompound;
 public class DebugItem extends Item {
 
     private static final RandomStringMaker RANDOM_STRING_MAKER = new RandomStringMaker(12);
+    private static final int MAX_DAMAGE = 1000;
 
     public DebugItem(String name) {
         setUnlocalizedName(name);
         setCreativeTab(CreativeTabs.tabAllSearch);
+        setMaxDamage(MAX_DAMAGE);
+        setHasSubtypes(true);
     }
 
     @Override
@@ -31,7 +34,10 @@ public class DebugItem extends Item {
 
     @Override
     public String getItemStackDisplayName(ItemStack stack) {
-        return stack.getTagCompound()
-            .getString("name");
+        NBTTagCompound tagCompound = stack.getTagCompound();
+        if (tagCompound == null) {
+            return "no nbt";
+        }
+        return tagCompound.getString("name");
     }
 }

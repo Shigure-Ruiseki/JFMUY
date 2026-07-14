@@ -8,15 +8,15 @@ import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
 
-import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
-import ruiseki.jfmuy.plugins.vanilla.VanillaRecipeWrapper;
+import ruiseki.jfmuy.api.IGuiHelper;
 
-public class ShapelessOreRecipeWrapper extends VanillaRecipeWrapper implements ICraftingRecipeWrapper {
+public class ShapelessOreRecipeWrapper extends AbstractShapelessRecipeWrapper {
 
     @Nonnull
     private final ShapelessOreRecipe recipe;
 
-    public ShapelessOreRecipeWrapper(@Nonnull ShapelessOreRecipe recipe) {
+    public ShapelessOreRecipeWrapper(@Nonnull IGuiHelper guiHelper, @Nonnull ShapelessOreRecipe recipe) {
+        super(guiHelper);
         this.recipe = recipe;
         for (Object input : this.recipe.getInput()) {
             if (input instanceof ItemStack) {

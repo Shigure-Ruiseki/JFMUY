@@ -2,6 +2,7 @@ package ruiseki.jfmuy.api;
 
 import javax.annotation.Nonnull;
 
+import ruiseki.jfmuy.api.recipe.IStackHelper;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 
 /**
@@ -17,16 +18,22 @@ public interface IJFMUYHelpers {
     IGuiHelper getGuiHelper();
 
     /**
-     * Used to stop JEI from displaying a specific item in the item list.
+     * Helps with getting itemStacks from recipes.
+     */
+    @Nonnull
+    IStackHelper getStackHelper();
+
+    /**
+     * Used to stop JFMUY from displaying a specific item in the item list.
      */
     @Nonnull
     IItemBlacklist getItemBlacklist();
 
     /**
-     * Used to tell JEI to ignore NBT tags when comparing items for recipes.
+     * If your item has subtypes that depend on NBT or capabilities, use this to help JFMUY identify those subtypes
+     * correctly.
      */
-    @Nonnull
-    INbtIgnoreList getNbtIgnoreList();
+    ISubtypeRegistry getSubtypeRegistry();
 
     /**
      * Helps with the implementation of Recipe Transfer Handlers
@@ -35,7 +42,7 @@ public interface IJFMUYHelpers {
     IRecipeTransferHandlerHelper recipeTransferHandlerHelper();
 
     /**
-     * Reload JEI at runtime.
+     * Reload JFMUY at runtime.
      * Used by mods that add and remove items or recipes like MineTweaker's /mt reload.
      */
     void reload();

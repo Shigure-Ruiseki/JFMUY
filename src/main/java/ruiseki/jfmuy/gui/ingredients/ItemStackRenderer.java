@@ -1,5 +1,6 @@
 package ruiseki.jfmuy.gui.ingredients;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -7,29 +8,24 @@ import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.util.Translator;
 
 public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
-    public static void enableGuiItemRender() {
-        RenderHelper.enableGUIStandardItemLighting();
-        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
-    }
+    private static final String oreDictionaryIngredient = Translator.translateToLocal("jfmuy.tooltip.recipe.ore.dict");
 
-    public static void disableGuiItemRender() {
-        RenderHelper.disableStandardItemLighting();
-        GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+    @Nullable
+    private String oreDictEquivalent;
+
+    @Override
+    public void setIngredients(@Nonnull Collection<ItemStack> itemStacks) {
+        oreDictEquivalent = Internal.getStackHelper()
+            .getOreDictEquivalent(itemStacks);
     }
 
     @Override
@@ -49,7 +45,6 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
         renderItem.renderItemOverlayIntoGUI(font, minecraft.getTextureManager(), itemStack, xPosition, yPosition, null);
     }
 
-    @SuppressWarnings("unchecked")
     @Nonnull
     @Override
     public List<String> getTooltip(@Nonnull Minecraft minecraft, @Nonnull ItemStack itemStack) {
@@ -60,6 +55,11 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
             } else {
                 list.set(k, EnumChatFormatting.GRAY + list.get(k));
             }
+        }
+
+        if (oreDictEquivalent != null) {
+            final String acceptsAny = String.format(oreDictionaryIngredient, oreDictEquivalent);
+            list.add(EnumChatFormatting.GRAY + acceptsAny);
         }
 
         return list;

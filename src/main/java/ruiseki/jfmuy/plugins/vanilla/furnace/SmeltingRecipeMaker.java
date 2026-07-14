@@ -9,13 +9,16 @@ import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.FurnaceRecipes;
 
-import ruiseki.jfmuy.util.StackUtil;
+import ruiseki.jfmuy.api.IJFMUYHelpers;
+import ruiseki.jfmuy.api.recipe.IStackHelper;
 
 public class SmeltingRecipeMaker {
 
     @Nonnull
-    public static List<SmeltingRecipe> getFurnaceRecipes() {
-        Map<ItemStack, ItemStack> smeltingMap = getSmeltingMap();
+    public static List<SmeltingRecipe> getFurnaceRecipes(IJFMUYHelpers helpers) {
+        IStackHelper stackHelper = helpers.getStackHelper();
+        FurnaceRecipes furnaceRecipes = FurnaceRecipes.smelting();
+        Map<ItemStack, ItemStack> smeltingMap = furnaceRecipes.getSmeltingList();
 
         List<SmeltingRecipe> recipes = new ArrayList<>();
 
@@ -23,20 +26,13 @@ public class SmeltingRecipeMaker {
             ItemStack input = itemStackItemStackEntry.getKey();
             ItemStack output = itemStackItemStackEntry.getValue();
 
-            float experience = FurnaceRecipes.smelting()
-                .func_151398_b(output);
+            float experience = furnaceRecipes.func_151398_b(output);
 
-            List<ItemStack> inputs = StackUtil.getSubtypes(input);
+            List<ItemStack> inputs = stackHelper.getSubtypes(input);
             SmeltingRecipe recipe = new SmeltingRecipe(inputs, output, experience);
             recipes.add(recipe);
         }
 
         return recipes;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<ItemStack, ItemStack> getSmeltingMap() {
-        return FurnaceRecipes.smelting()
-            .getSmeltingList();
     }
 }

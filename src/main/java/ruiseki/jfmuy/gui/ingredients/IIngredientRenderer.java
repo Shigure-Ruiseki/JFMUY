@@ -1,5 +1,6 @@
 package ruiseki.jfmuy.gui.ingredients;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -9,6 +10,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 
 public interface IIngredientRenderer<T> {
+
+    void setIngredients(@Nonnull Collection<T> ingredients);
 
     void draw(@Nonnull Minecraft minecraft, int xPosition, int yPosition, @Nullable T value);
 

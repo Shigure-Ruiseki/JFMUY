@@ -12,6 +12,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
+import org.jetbrains.annotations.NotNull;
+
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawableAnimated;
 import ruiseki.jfmuy.api.gui.IDrawableStatic;
@@ -47,7 +49,7 @@ public class FuelRecipe extends VanillaRecipeWrapper {
     }
 
     @Override
-    public void drawInfo(@Nonnull Minecraft minecraft, int recipeWidth, int recipeHeight) {
+    public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
         minecraft.fontRenderer.drawString(burnTimeString, 24, 12, Color.gray.getRGB());
     }
 

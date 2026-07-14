@@ -10,7 +10,7 @@
 		"updateUrl": "",
 		"authorList": ["Shiruge Ruiseki"],
 		"credits": "",
-		"logoFile": "",
+    "logoFile": "assets/${modId}/pack.png",
 		"screenshots": [],
 		"parent": "",
 		"requiredMods": [],

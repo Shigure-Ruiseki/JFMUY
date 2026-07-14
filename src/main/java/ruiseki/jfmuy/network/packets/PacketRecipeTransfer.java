@@ -9,31 +9,30 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 
 import ruiseki.jfmuy.network.IPacketId;
 import ruiseki.jfmuy.network.PacketIdServer;
-import ruiseki.jfmuy.transfer.BasicRecipeTransferHandlerServer;
+import ruiseki.jfmuy.transfer.BasicRecipeTransferHandler;
 
 public class PacketRecipeTransfer extends PacketJFMUY {
 
-    private Map<Integer, Integer> recipeMap;
+    private Map<Integer, ItemStack> recipeMap;
     private List<Integer> craftingSlots;
     private List<Integer> inventorySlots;
     private boolean maxTransfer;
-    private boolean requireCompleteSets;
 
     public PacketRecipeTransfer() {
 
     }
 
-    public PacketRecipeTransfer(@Nonnull Map<Integer, Integer> recipeMap, @Nonnull List<Integer> craftingSlots,
-        @Nonnull List<Integer> inventorySlots, boolean maxTransfer, boolean requireCompleteSets) {
+    public PacketRecipeTransfer(@Nonnull Map<Integer, ItemStack> recipeMap, @Nonnull List<Integer> craftingSlots,
+        @Nonnull List<Integer> inventorySlots, boolean maxTransfer) {
         this.recipeMap = recipeMap;
         this.craftingSlots = craftingSlots;
         this.inventorySlots = inventorySlots;
         this.maxTransfer = maxTransfer;
-        this.requireCompleteSets = requireCompleteSets;
     }
 
     @Override
@@ -46,36 +45,36 @@ public class PacketRecipeTransfer extends PacketJFMUY {
         int recipeMapSize = buf.readVarIntFromBuffer();
         recipeMap = new HashMap<>(recipeMapSize);
         for (int i = 0; i < recipeMapSize; i++) {
-            int craftIndex = buf.readVarIntFromBuffer();
-            int inventorySlotNumber = buf.readVarIntFromBuffer();
-            recipeMap.put(craftIndex, inventorySlotNumber);
+            int slotIndex = buf.readVarIntFromBuffer();
+            ItemStack recipeItem = buf.readItemStackFromBuffer();
+            recipeMap.put(slotIndex, recipeItem);
         }
 
         int craftingSlotsSize = buf.readVarIntFromBuffer();
         craftingSlots = new ArrayList<>(craftingSlotsSize);
         for (int i = 0; i < craftingSlotsSize; i++) {
-            craftingSlots.add(buf.readVarIntFromBuffer());
+            int slotIndex = buf.readVarIntFromBuffer();
+            craftingSlots.add(slotIndex);
         }
 
         int inventorySlotsSize = buf.readVarIntFromBuffer();
         inventorySlots = new ArrayList<>(inventorySlotsSize);
         for (int i = 0; i < inventorySlotsSize; i++) {
-            inventorySlots.add(buf.readVarIntFromBuffer());
+            int slotIndex = buf.readVarIntFromBuffer();
+            inventorySlots.add(slotIndex);
         }
 
         maxTransfer = buf.readBoolean();
-        requireCompleteSets = buf.readBoolean();
 
-        BasicRecipeTransferHandlerServer
-            .setItems(player, recipeMap, craftingSlots, inventorySlots, maxTransfer, requireCompleteSets);
+        BasicRecipeTransferHandler.setItems(player, recipeMap, craftingSlots, inventorySlots, maxTransfer);
     }
 
     @Override
     public void writePacketData(PacketBuffer buf) throws IOException {
         buf.writeVarIntToBuffer(recipeMap.size());
-        for (Map.Entry<Integer, Integer> recipeMapEntry : recipeMap.entrySet()) {
+        for (Map.Entry<Integer, ItemStack> recipeMapEntry : recipeMap.entrySet()) {
             buf.writeVarIntToBuffer(recipeMapEntry.getKey());
-            buf.writeVarIntToBuffer(recipeMapEntry.getValue());
+            buf.writeItemStackToBuffer(recipeMapEntry.getValue());
         }
 
         buf.writeVarIntToBuffer(craftingSlots.size());
@@ -89,6 +88,5 @@ public class PacketRecipeTransfer extends PacketJFMUY {
         }
 
         buf.writeBoolean(maxTransfer);
-        buf.writeBoolean(requireCompleteSets);
     }
 }

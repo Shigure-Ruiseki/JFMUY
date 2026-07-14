@@ -1,7 +1,7 @@
 package ruiseki.jfmuy.gui;
 
-import java.util.Arrays;
-import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,6 +15,7 @@ import ruiseki.jfmuy.util.Translator;
 
 public class RecipeTransferButton extends GuiButtonExt {
 
+    private static final String transferTooltip = Translator.translateToLocal("jfmuy.tooltip.transfer");
     private RecipeLayout recipeLayout;
     private IRecipeTransferError recipeTransferError;
 
@@ -22,9 +23,9 @@ public class RecipeTransferButton extends GuiButtonExt {
         super(id, xPos, yPos, width, height, displayString);
     }
 
-    public void init(RecipeLayout recipeLayout, EntityPlayer player) {
+    public void init(@Nullable Container container, @Nonnull RecipeLayout recipeLayout, @Nonnull EntityPlayer player) {
         this.recipeLayout = recipeLayout;
-        Container container = player != null ? player.openContainer : null;
+
         if (container != null) {
             this.recipeTransferError = RecipeTransferUtil.getTransferRecipeError(container, recipeLayout, player);
         } else {
@@ -44,14 +45,11 @@ public class RecipeTransferButton extends GuiButtonExt {
     @Override
     public void drawButton(Minecraft mc, int mouseX, int mouseY) {
         super.drawButton(mc, mouseX, mouseY);
-        if (this.field_146123_n && this.visible) {
+        if (this.field_146123_n && visible) {
             if (recipeTransferError != null) {
                 recipeTransferError.showError(mc, mouseX, mouseY, recipeLayout);
             } else {
-                List<String> tooltipLines = Arrays.asList(
-                    Translator.translateToLocal("jfmuy.tooltip.transfer"),
-                    Translator.translateToLocal("jfmuy.tooltip.transfer.shift"));
-                TooltipRenderer.drawHoveringText(mc, tooltipLines, mouseX, mouseY);
+                TooltipRenderer.drawHoveringText(mc, transferTooltip, mouseX, mouseY);
             }
         }
     }

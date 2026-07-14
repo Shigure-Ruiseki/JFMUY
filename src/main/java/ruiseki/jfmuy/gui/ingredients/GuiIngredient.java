@@ -12,7 +12,6 @@ import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 
 import org.lwjgl.opengl.GL11;
@@ -35,9 +34,11 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
     private final int padding;
 
     @Nonnull
-    private final CycleTimer cycleTimer = new CycleTimer();
+    private final CycleTimer cycleTimer;
     @Nonnull
-    private final List<T> contained = new ArrayList<>();
+    private final List<T> displayIngredients = new ArrayList<>(); // ingredients, taking focus into account
+    @Nonnull
+    private final List<T> allIngredients = new ArrayList<>(); // all ingredients, ignoring focus
     @Nonnull
     private final IIngredientRenderer<T> ingredientRenderer;
     @Nonnull
@@ -49,7 +50,7 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
 
     public GuiIngredient(@Nonnull IIngredientRenderer<T> ingredientRenderer,
         @Nonnull IIngredientHelper<T> ingredientHelper, int slotIndex, boolean input, int xPosition, int yPosition,
-        int width, int height, int padding) {
+        int width, int height, int padding, int itemCycleOffset) {
         this.ingredientRenderer = ingredientRenderer;
         this.ingredientHelper = ingredientHelper;
 
@@ -61,95 +62,119 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
         this.width = width;
         this.height = height;
         this.padding = padding;
+
+        this.cycleTimer = new CycleTimer(itemCycleOffset);
     }
 
     @Override
     public void clear() {
         enabled = false;
-        contained.clear();
+        displayIngredients.clear();
     }
 
     @Override
-    public boolean isMouseOver(int mouseX, int mouseY) {
-        return enabled && (mouseX >= xPosition)
-            && (mouseY >= yPosition)
-            && (mouseX < xPosition + width)
-            && (mouseY < yPosition + height);
+    public boolean isMouseOver(int xOffset, int yOffset, int mouseX, int mouseY) {
+        return enabled && (mouseX >= xOffset + xPosition)
+            && (mouseY >= yOffset + yPosition)
+            && (mouseX < xOffset + xPosition + width)
+            && (mouseY < yOffset + yPosition + height);
     }
 
-    @Override
     @Nullable
-    public T get() {
-        return cycleTimer.getCycledItem(contained);
+    public T getIngredient() {
+        return cycleTimer.getCycledItem(displayIngredients);
+    }
+
+    @Override
+    public Focus getFocus() {
+        T ingredient = getIngredient();
+        if (ingredient == null) {
+            return null;
+        }
+        return ingredientHelper.createFocus(ingredient);
     }
 
     @Nonnull
     @Override
-    public List<T> getAll() {
-        return contained;
+    public List<T> getAllIngredients() {
+        return allIngredients;
     }
 
     @Override
-    public void set(@Nonnull T contained, @Nonnull Focus focus) {
-        set(Collections.singleton(contained), focus);
+    public void set(@Nonnull T ingredient, @Nonnull Focus focus) {
+        set(Collections.singleton(ingredient), focus);
     }
 
     @Override
-    public void set(@Nonnull Collection<T> contained, @Nonnull Focus focus) {
-        this.contained.clear();
-        contained = ingredientHelper.expandSubtypes(contained);
+    public void set(@Nonnull Collection<T> ingredients, @Nonnull Focus focus) {
+        this.displayIngredients.clear();
+        this.allIngredients.clear();
+        ingredients = ingredientHelper.expandSubtypes(ingredients);
         T match = null;
         if ((isInput() && focus.getMode() == Focus.Mode.INPUT)
             || (!isInput() && focus.getMode() == Focus.Mode.OUTPUT)) {
-            match = ingredientHelper.getMatch(contained, focus);
+            match = ingredientHelper.getMatch(ingredients, focus);
         }
         if (match != null) {
-            this.contained.add(match);
+            this.displayIngredients.add(match);
         } else {
-            this.contained.addAll(contained);
+            this.displayIngredients.addAll(ingredients);
         }
-        enabled = !this.contained.isEmpty();
+        this.ingredientRenderer.setIngredients(ingredients);
+        this.allIngredients.addAll(ingredients);
+        enabled = !this.displayIngredients.isEmpty();
     }
 
-    public void setTooltipCallback(@Nonnull ITooltipCallback<T> tooltipCallback) {
+    public void setTooltipCallback(@Nullable ITooltipCallback<T> tooltipCallback) {
         this.tooltipCallback = tooltipCallback;
     }
 
     @Override
-    public void draw(@Nonnull Minecraft minecraft) {
-        draw(minecraft, true);
+    public void draw(@Nonnull Minecraft minecraft, int xOffset, int yOffset) {
+        cycleTimer.onDraw();
+
+        T value = getIngredient();
+        ingredientRenderer.draw(minecraft, xOffset + xPosition + padding, yOffset + yPosition + padding, value);
     }
 
     @Override
-    public void drawHovered(@Nonnull Minecraft minecraft, int mouseX, int mouseY) {
-        T value = get();
+    public void drawHovered(@Nonnull Minecraft minecraft, int xOffset, int yOffset, int mouseX, int mouseY) {
+        T value = getIngredient();
         if (value == null) {
             return;
         }
-        draw(minecraft, false);
-        drawTooltip(minecraft, mouseX, mouseY, value);
+        draw(minecraft, xOffset, yOffset);
+        drawTooltip(minecraft, xOffset, yOffset, mouseX, mouseY, value);
     }
 
     @Override
     public void drawHighlight(@Nonnull Minecraft minecraft, Color color, int xOffset, int yOffset) {
-        int x = xPosition + xOffset;
-        int y = yPosition + yOffset;
-        GuiScreen.drawRect(x, y, x + width, y + height, color.getRGB());
+        int x = xPosition + xOffset + padding;
+        int y = yPosition + yOffset + padding;
+
+        GL11.glDisable(GL11.GL_LIGHTING);
+
+        drawRect(x, y, x + width - padding * 2, y + height - padding * 2, color.getRGB());
+
+        GL11.glColor4f(1f, 1f, 1f, 1f);
     }
 
-    private void draw(Minecraft minecraft, boolean cycleIcons) {
-        cycleTimer.onDraw(cycleIcons);
-
-        T value = get();
-        ingredientRenderer.draw(minecraft, xPosition + padding, yPosition + padding, value);
-    }
-
-    private void drawTooltip(@Nonnull Minecraft minecraft, int mouseX, int mouseY, @Nonnull T value) {
+    private void drawTooltip(@Nonnull Minecraft minecraft, int xOffset, int yOffset, int mouseX, int mouseY,
+        @Nonnull T value) {
         try {
             GL11.glDisable(GL11.GL_DEPTH_TEST);
 
             RenderHelper.disableStandardItemLighting();
-            drawRect(xPosition, yPosition, xPosition + width, yPosition + height, 0x7FFFFFFF);
+
+            drawRect(
+                xOffset + xPosition + padding,
+                yOffset + yPosition + padding,
+                xOffset + xPosition + width - padding,
+                yOffset + yPosition + height - padding,
+                0x7FFFFFFF);
+
+            // FIX 1.7.10: Thay thế GlStateManager.color(...)
+            GL11.glColor4f(1f, 1f, 1f, 1f);
 
             List<String> tooltip = ingredientRenderer.getTooltip(minecraft, value);
 
@@ -158,7 +183,7 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
             }
 
             FontRenderer fontRenderer = ingredientRenderer.getFontRenderer(minecraft, value);
-            TooltipRenderer.drawHoveringText(minecraft, tooltip, mouseX, mouseY, fontRenderer);
+            TooltipRenderer.drawHoveringText(minecraft, tooltip, xOffset + mouseX, yOffset + mouseY, fontRenderer);
 
             GL11.glEnable(GL11.GL_DEPTH_TEST);
         } catch (RuntimeException e) {
@@ -166,6 +191,7 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
         }
     }
 
+    @Override
     public boolean isInput() {
         return input;
     }

@@ -11,6 +11,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import org.jetbrains.annotations.NotNull;
+
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
@@ -103,7 +105,7 @@ public class ItemDescriptionRecipe extends BlankRecipeWrapper {
     }
 
     @Override
-    public void drawInfo(@Nonnull Minecraft minecraft, int recipeWidth, int recipeHeight) {
+    public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
         int xPos = (recipeWidth - slotDrawable.getWidth()) / 2;
         int yPos = 0;
         slotDrawable.draw(minecraft, xPos, yPos);

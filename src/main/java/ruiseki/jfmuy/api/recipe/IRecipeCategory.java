@@ -3,6 +3,7 @@ package ruiseki.jfmuy.api.recipe;
 import net.minecraft.client.Minecraft;
 
 import org.jetbrains.annotations.NotNull;
+
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 

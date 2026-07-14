@@ -2,17 +2,14 @@ package ruiseki.jfmuy.plugins.vanilla.furnace;
 
 import javax.annotation.Nonnull;
 
-import net.minecraft.client.Minecraft;
-
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
-import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.util.Translator;
 
-public class FurnaceFuelCategory extends FurnaceRecipeCategory {
+public class FurnaceFuelCategory extends FurnaceRecipeCategory<FuelRecipe> {
 
     @Nonnull
     private final IDrawable background;
@@ -31,16 +28,6 @@ public class FurnaceFuelCategory extends FurnaceRecipeCategory {
         return background;
     }
 
-    @Override
-    public void drawExtras(Minecraft minecraft) {
-
-    }
-
-    @Override
-    public void drawAnimations(Minecraft minecraft) {
-
-    }
-
     @Nonnull
     @Override
     public String getUid() {
@@ -54,7 +41,7 @@ public class FurnaceFuelCategory extends FurnaceRecipeCategory {
     }
 
     @Override
-    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull IRecipeWrapper recipeWrapper) {
+    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull FuelRecipe recipeWrapper) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
         guiItemStacks.init(fuelSlot, true, 0, 14);

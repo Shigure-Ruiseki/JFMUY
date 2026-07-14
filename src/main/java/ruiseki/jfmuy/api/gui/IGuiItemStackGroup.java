@@ -16,7 +16,7 @@ import net.minecraft.item.ItemStack;
 public interface IGuiItemStackGroup extends IGuiIngredientGroup<ItemStack> {
 
     /**
-     * ItemStacks must be initialized once, and then can be set many times.
+     * Initialize the itemStack at slotIndex.
      *
      * @param slotIndex the slot index of this itemStack
      * @param input     whether this slot is an input. Used for the recipe-fill feature.
@@ -29,6 +29,11 @@ public interface IGuiItemStackGroup extends IGuiIngredientGroup<ItemStack> {
      * Takes a list of ingredients from IRecipeWrapper getInputs or getOutputs
      */
     void setFromRecipe(int slotIndex, @Nonnull List ingredients);
+
+    /**
+     * Takes an Object from IRecipeWrapper getInputs or getOutputs
+     */
+    void setFromRecipe(int slotIndex, @Nonnull Object ingredients);
 
     @Override
     void set(int slotIndex, @Nonnull Collection<ItemStack> itemStacks);

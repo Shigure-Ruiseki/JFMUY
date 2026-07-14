@@ -5,7 +5,7 @@ import javax.annotation.Nonnull;
 import net.minecraft.inventory.Container;
 
 /**
- * Register recipe transfer handlers here to give JEI the information it needs to transfer recipes into the crafting
+ * Register recipe transfer handlers here to give JFMUY the information it needs to transfer recipes into the crafting
  * area.
  */
 public interface IRecipeTransferRegistry {

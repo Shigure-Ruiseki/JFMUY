@@ -6,15 +6,16 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.item.ItemStack;
 
+import org.jetbrains.annotations.NotNull;
+
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
-import ruiseki.jfmuy.util.StackUtil;
 
 public class GuiItemStackGroup extends GuiIngredientGroup<ItemStack, GuiIngredient<ItemStack>>
     implements IGuiItemStackGroup {
 
     private static final int baseWidth = 16;
     private static final int baseHeight = 16;
-    private static final ItemStackRenderer renderer = new ItemStackRenderer();
     private static final ItemStackHelper helper = new ItemStackHelper();
 
     public static int getWidth(int padding) {
@@ -25,8 +26,9 @@ public class GuiItemStackGroup extends GuiIngredientGroup<ItemStack, GuiIngredie
         return baseHeight + (2 * padding);
     }
 
-    private static GuiIngredient<ItemStack> createGuiItemStack(int index, boolean input, int xPosition, int yPosition,
+    private GuiIngredient<ItemStack> createGuiItemStack(int index, boolean input, int xPosition, int yPosition,
         int padding) {
+        ItemStackRenderer renderer = new ItemStackRenderer();
         return new GuiIngredient<>(
             renderer,
             helper,
@@ -36,12 +38,24 @@ public class GuiItemStackGroup extends GuiIngredientGroup<ItemStack, GuiIngredie
             yPosition,
             getWidth(padding),
             getHeight(padding),
-            padding);
+            padding,
+            itemCycleOffset);
     }
 
     @Override
     public void setFromRecipe(int slotIndex, @Nonnull List ingredients) {
-        set(slotIndex, StackUtil.toItemStackList(ingredients));
+        set(
+            slotIndex,
+            Internal.getStackHelper()
+                .toItemStackList(ingredients));
+    }
+
+    @Override
+    public void setFromRecipe(int slotIndex, @NotNull Object ingredients) {
+        set(
+            slotIndex,
+            Internal.getStackHelper()
+                .toItemStackList(ingredients));
     }
 
     @Override

@@ -14,7 +14,7 @@ import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 
 /**
  * The IRecipeManager offers several functions for retrieving and handling recipes.
- * The IRecipeManager instance is provided in JEIManager.
+ * The IRecipeManager instance is provided in JFMUYManager.
  * Available to IModPlugins
  */
 public interface IRecipeRegistry {
@@ -77,7 +77,8 @@ public interface IRecipeRegistry {
     /**
      * Add a new recipe while the game is running.
      * This is only for things like gated recipes becoming available, like the ones in Thaumcraft.
-     * Use your IRecipeHandler.isValid to determine which recipes are hidden, and when a recipe becomes valid you can add it here.
+     * Use your IRecipeHandler.isValid to determine which recipes are hidden, and when a recipe becomes valid you can
+     * add it here.
      * (note that IRecipeHandler.isValid must be true when the recipe is added here for it to work)
      */
     void addRecipe(@Nonnull Object recipe);

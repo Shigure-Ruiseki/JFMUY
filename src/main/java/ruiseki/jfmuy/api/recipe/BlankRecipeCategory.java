@@ -1,10 +1,11 @@
 package ruiseki.jfmuy.api.recipe;
 
-import net.minecraft.client.Minecraft;
-
 import javax.annotation.Nonnull;
 
+import net.minecraft.client.Minecraft;
+
 public abstract class BlankRecipeCategory<T extends IRecipeWrapper> implements IRecipeCategory<T> {
+
     @Override
     public void drawExtras(@Nonnull Minecraft minecraft) {
 

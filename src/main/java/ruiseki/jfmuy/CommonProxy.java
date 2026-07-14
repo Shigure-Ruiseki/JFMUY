@@ -1,36 +1,32 @@
 package ruiseki.jfmuy;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.common.util.FakePlayer;
 
+import org.jetbrains.annotations.NotNull;
+
 import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import ruiseki.jfmuy.network.packets.PacketJFMUY;
 import ruiseki.jfmuy.util.Log;
 
 public class CommonProxy {
 
-    public void preInit(@Nonnull FMLPreInitializationEvent event) {
+    public void preInit(@NotNull FMLPreInitializationEvent event) {
 
     }
 
-    public void init(@Nonnull FMLInitializationEvent event) {
+    public void init(@NotNull FMLInitializationEvent event) {
 
     }
 
-    public void startNEI() {
+    public void postInit(@NotNull FMLPostInitializationEvent event) {
 
     }
 
-    /** Runs {@link #startNEI()} on the client thread after registry remapping (integrated server). */
-    public void scheduleStartNEI() {
-
-    }
-
-    public void restartNEI() {
+    public void restartJFMUY() {
 
     }
 

@@ -5,6 +5,8 @@ import javax.annotation.Nonnull;
 import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
+import ruiseki.jfmuy.util.ErrorUtil;
+import ruiseki.jfmuy.util.Log;
 
 public class SmeltingRecipeHandler implements IRecipeHandler<SmeltingRecipe> {
 
@@ -16,7 +18,7 @@ public class SmeltingRecipeHandler implements IRecipeHandler<SmeltingRecipe> {
 
     @Nonnull
     @Override
-    public String getRecipeCategoryUid() {
+    public String getRecipeCategoryUid(@Nonnull SmeltingRecipe recipe) {
         return VanillaRecipeCategoryUid.SMELTING;
     }
 
@@ -28,10 +30,17 @@ public class SmeltingRecipeHandler implements IRecipeHandler<SmeltingRecipe> {
 
     @Override
     public boolean isRecipeValid(@Nonnull SmeltingRecipe recipe) {
-        return recipe.getInputs()
-            .size() != 0
-            && recipe.getOutputs()
-                .size() > 0;
+        if (recipe.getInputs()
+            .isEmpty()) {
+            String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+            Log.error("Recipe has no inputs. {}", recipeInfo);
+        }
+        if (recipe.getOutputs()
+            .isEmpty()) {
+            String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+            Log.error("Recipe has no outputs. {}", recipeInfo);
+        }
+        return true;
     }
 
 }

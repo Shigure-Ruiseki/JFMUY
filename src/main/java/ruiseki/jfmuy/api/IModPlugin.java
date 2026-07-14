@@ -19,5 +19,5 @@ public interface IModPlugin {
     /**
      * Called when jfmuy's runtime features are available, after all mods have registered.
      */
-    void onRuntimeAvailable(@Nonnull IJFMUYRuntime jeiRuntime);
+    void onRuntimeAvailable(@Nonnull IJFMUYRuntime jfmuyRuntime);
 }

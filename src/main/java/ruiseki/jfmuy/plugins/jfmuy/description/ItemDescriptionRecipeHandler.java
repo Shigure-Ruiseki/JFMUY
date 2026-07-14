@@ -7,6 +7,8 @@ import javax.annotation.Nonnull;
 import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
+import ruiseki.jfmuy.util.ErrorUtil;
+import ruiseki.jfmuy.util.Log;
 
 public class ItemDescriptionRecipeHandler implements IRecipeHandler<ItemDescriptionRecipe> {
 
@@ -18,7 +20,7 @@ public class ItemDescriptionRecipeHandler implements IRecipeHandler<ItemDescript
 
     @Nonnull
     @Override
-    public String getRecipeCategoryUid() {
+    public String getRecipeCategoryUid(@Nonnull ItemDescriptionRecipe recipe) {
         return VanillaRecipeCategoryUid.DESCRIPTION;
     }
 
@@ -31,6 +33,10 @@ public class ItemDescriptionRecipeHandler implements IRecipeHandler<ItemDescript
     @Override
     public boolean isRecipeValid(@Nonnull ItemDescriptionRecipe recipe) {
         List<String> description = recipe.getDescription();
-        return description.size() > 0;
+        if (description.isEmpty()) {
+            String recipeInfo = ErrorUtil.getInfoFromBrokenRecipe(recipe, this);
+            Log.error("Recipe has no description text. {}", recipeInfo);
+        }
+        return true;
     }
 }

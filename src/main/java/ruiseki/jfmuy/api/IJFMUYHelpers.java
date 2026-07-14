@@ -30,7 +30,7 @@ public interface IJFMUYHelpers {
     IItemBlacklist getItemBlacklist();
 
     /**
-     * If your item has subtypes that depend on NBT or capabilities, use this to help JEI identify those subtypes
+     * If your item has subtypes that depend on NBT or capabilities, use this to help JFMUY identify those subtypes
      * correctly.
      */
     ISubtypeRegistry getSubtypeRegistry();

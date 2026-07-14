@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderHelper;
 
 import org.lwjgl.opengl.GL11;
 
@@ -13,11 +14,9 @@ import ruiseki.jfmuy.api.gui.IGuiFluidStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
-import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.GuiFluidStackGroup;
 import ruiseki.jfmuy.gui.ingredients.GuiIngredient;
 import ruiseki.jfmuy.gui.ingredients.GuiItemStackGroup;
-import ruiseki.jfmuy.gui.ingredients.ItemStackRenderer;
 
 public class RecipeLayout implements IRecipeLayout {
 
@@ -38,8 +37,8 @@ public class RecipeLayout implements IRecipeLayout {
     private final int posX;
     private final int posY;
 
-    public RecipeLayout(int index, int posX, int posY, @Nonnull IRecipeCategory recipeCategory,
-        @Nonnull IRecipeWrapper recipeWrapper, @Nonnull Focus focus) {
+    public <T extends IRecipeWrapper> RecipeLayout(int index, int posX, int posY,
+        @Nonnull IRecipeCategory<T> recipeCategory, @Nonnull T recipeWrapper, @Nonnull Focus focus) {
         this.recipeCategory = recipeCategory;
         this.guiItemStackGroup = new GuiItemStackGroup();
         this.guiFluidStackGroup = new GuiFluidStackGroup();
@@ -60,69 +59,82 @@ public class RecipeLayout implements IRecipeLayout {
         this.recipeWrapper = recipeWrapper;
         this.guiItemStackGroup.setFocus(focus);
         this.guiFluidStackGroup.setFocus(focus);
-        this.recipeCategory.setRecipe(this, recipeWrapper);
+        recipeCategory.setRecipe(this, recipeWrapper);
     }
 
     public void draw(@Nonnull Minecraft minecraft, int mouseX, int mouseY) {
-        GL11.glPushMatrix();
-        GL11.glTranslatef(posX, posY, 0.0F);
+        IDrawable background = recipeCategory.getBackground();
+
+        // FIX 1.7.10: Sử dụng GL11 thay thế hoàn toàn cho GlStateManager
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
 
-        IDrawable background = recipeCategory.getBackground();
-        background.draw(minecraft);
-        recipeCategory.drawExtras(minecraft);
-
-        if (Config.isRecipeAnimationsEnabled()) {
+        GL11.glPushMatrix();
+        GL11.glTranslatef(posX, posY, 0.0F);
+        {
+            background.draw(minecraft);
+            recipeCategory.drawExtras(minecraft);
             recipeCategory.drawAnimations(minecraft);
             recipeWrapper.drawAnimations(minecraft, background.getWidth(), background.getHeight());
         }
+        GL11.glPopMatrix();
 
-        GL11.glTranslatef(-posX, -posY, 0.0F);
-        if (recipeTransferButton.visible) {
-            recipeTransferButton.drawButton(minecraft, mouseX, mouseY);
-        }
-        GL11.glTranslatef(posX, posY, 0.0F);
-
-        recipeWrapper.drawInfo(minecraft, background.getWidth(), background.getHeight());
+        recipeTransferButton.drawButton(minecraft, mouseX, mouseY);
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_LIGHTING);
 
         final int recipeMouseX = mouseX - posX;
         final int recipeMouseY = mouseY - posY;
 
-        ItemStackRenderer.enableGuiItemRender();
-        GuiIngredient hoveredItemStack = guiItemStackGroup.draw(minecraft, recipeMouseX, recipeMouseY);
-        ItemStackRenderer.disableGuiItemRender();
-        GuiIngredient hoveredFluidStack = guiFluidStackGroup.draw(minecraft, recipeMouseX, recipeMouseY);
+        GL11.glPushMatrix();
+        GL11.glTranslatef(posX, posY, 0.0F);
+        {
+            recipeWrapper
+                .drawInfo(minecraft, background.getWidth(), background.getHeight(), recipeMouseX, recipeMouseY);
+        }
+        GL11.glPopMatrix();
+
+        RenderHelper.enableGUIStandardItemLighting();
+        GuiIngredient hoveredItemStack = guiItemStackGroup.draw(minecraft, posX, posY, mouseX, mouseY);
+        RenderHelper.disableStandardItemLighting();
+        GuiIngredient hoveredFluidStack = guiFluidStackGroup.draw(minecraft, posX, posY, mouseX, mouseY);
 
         if (hoveredItemStack != null) {
-            ItemStackRenderer.enableGuiItemRender();
-            hoveredItemStack.drawHovered(minecraft, recipeMouseX, recipeMouseY);
-            ItemStackRenderer.disableGuiItemRender();
+            RenderHelper.enableGUIStandardItemLighting();
+            hoveredItemStack.drawHovered(minecraft, posX, posY, recipeMouseX, recipeMouseY);
+            RenderHelper.disableStandardItemLighting();
         } else if (hoveredFluidStack != null) {
-            hoveredFluidStack.drawHovered(minecraft, recipeMouseX, recipeMouseY);
-        } else if (recipeMouseX >= 0 && recipeMouseX < background.getWidth()
-            && recipeMouseY >= 0
-            && recipeMouseY < background.getHeight()) {
-                List<String> tooltipStrings = null;
-                try {
-                    tooltipStrings = recipeWrapper.getTooltipStrings(recipeMouseX, recipeMouseY);
-                } catch (AbstractMethodError ignored) {
-                    // older wrappers don't have this method
-                }
-                if (tooltipStrings != null && !tooltipStrings.isEmpty()) {
-                    TooltipRenderer.drawHoveringText(minecraft, tooltipStrings, recipeMouseX, recipeMouseY);
-                }
+            hoveredFluidStack.drawHovered(minecraft, posX, posY, recipeMouseX, recipeMouseY);
+        } else if (isMouseOver(mouseX, mouseY)) {
+            List<String> tooltipStrings = recipeWrapper.getTooltipStrings(recipeMouseX, recipeMouseY);
+            if (tooltipStrings != null && !tooltipStrings.isEmpty()) {
+                TooltipRenderer.drawHoveringText(minecraft, tooltipStrings, mouseX, mouseY);
             }
+        }
 
-        GL11.glPopMatrix();
+        GL11.glDisable(GL11.GL_ALPHA_TEST);
+    }
+
+    public boolean isMouseOver(int mouseX, int mouseY) {
+        final int recipeMouseX = mouseX - posX;
+        final int recipeMouseY = mouseY - posY;
+        final IDrawable background = recipeCategory.getBackground();
+        return recipeMouseX >= 0 && recipeMouseX < background.getWidth()
+            && recipeMouseY >= 0
+            && recipeMouseY < background.getHeight();
     }
 
     public Focus getFocusUnderMouse(int mouseX, int mouseY) {
-        Focus focus = guiItemStackGroup.getFocusUnderMouse(mouseX - posX, mouseY - posY);
+        Focus focus = guiItemStackGroup.getFocusUnderMouse(posX, posY, mouseX, mouseY);
         if (focus == null) {
-            focus = guiFluidStackGroup.getFocusUnderMouse(mouseX - posX, mouseY - posY);
+            focus = guiFluidStackGroup.getFocusUnderMouse(posX, posY, mouseX, mouseY);
         }
         return focus;
+    }
+
+    public boolean handleClick(@Nonnull Minecraft minecraft, int mouseX, int mouseY, int mouseButton) {
+        return recipeWrapper.handleClick(minecraft, mouseX - posX, mouseY - posY, mouseButton);
     }
 
     @Override

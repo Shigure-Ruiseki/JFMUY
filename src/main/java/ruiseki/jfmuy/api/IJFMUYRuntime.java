@@ -1,18 +1,15 @@
 package ruiseki.jfmuy.api;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 public interface IJFMUYRuntime {
 
-    @Nonnull
+    @NotNull
     IRecipeRegistry getRecipeRegistry();
 
-    @Nonnull
+    @NotNull
     IItemListOverlay getItemListOverlay();
 
-    /**
-     * @since JEI 3.2.12
-     */
-    @Nonnull
+    @NotNull
     IRecipesGui getRecipesGui();
 }

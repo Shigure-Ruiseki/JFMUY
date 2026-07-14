@@ -3,20 +3,29 @@ package ruiseki.jfmuy;
 import javax.annotation.Nonnull;
 
 import ruiseki.jfmuy.api.IJFMUYHelpers;
+import ruiseki.jfmuy.api.ISubtypeRegistry;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.transfer.RecipeTransferHandlerHelper;
+import ruiseki.jfmuy.util.StackHelper;
 
 public class JFMUYHelpers implements IJFMUYHelpers {
 
+    @Nonnull
     private final GuiHelper guiHelper;
+    @Nonnull
+    private final StackHelper stackHelper;
+    @Nonnull
     private final ItemBlacklist itemBlacklist;
-    private final NbtIgnoreList nbtIgnoreList;
+    @Nonnull
+    private final SubtypeRegistry subtypeRegistry;
+    @Nonnull
     private final RecipeTransferHandlerHelper recipeTransferHandlerHelper;
 
     public JFMUYHelpers() {
         this.guiHelper = new GuiHelper();
+        this.stackHelper = new StackHelper();
         this.itemBlacklist = new ItemBlacklist();
-        this.nbtIgnoreList = new NbtIgnoreList();
+        this.subtypeRegistry = new SubtypeRegistry();
         this.recipeTransferHandlerHelper = new RecipeTransferHandlerHelper();
     }
 
@@ -28,14 +37,19 @@ public class JFMUYHelpers implements IJFMUYHelpers {
 
     @Nonnull
     @Override
-    public ItemBlacklist getItemBlacklist() {
-        return itemBlacklist;
+    public StackHelper getStackHelper() {
+        return stackHelper;
     }
 
     @Nonnull
     @Override
-    public NbtIgnoreList getNbtIgnoreList() {
-        return nbtIgnoreList;
+    public ItemBlacklist getItemBlacklist() {
+        return itemBlacklist;
+    }
+
+    @Override
+    public ISubtypeRegistry getSubtypeRegistry() {
+        return subtypeRegistry;
     }
 
     @Nonnull
@@ -47,6 +61,6 @@ public class JFMUYHelpers implements IJFMUYHelpers {
     @Override
     public void reload() {
         JFMUY.getProxy()
-            .restartNEI();
+            .restartJFMUY();
     }
 }

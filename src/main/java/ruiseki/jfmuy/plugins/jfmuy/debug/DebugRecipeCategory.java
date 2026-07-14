@@ -10,17 +10,18 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.IGuiHelper;
+import ruiseki.jfmuy.api.IItemListOverlay;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IGuiFluidStackGroup;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.gui.ITooltipCallback;
-import ruiseki.jfmuy.api.recipe.IRecipeCategory;
-import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
+import ruiseki.jfmuy.api.recipe.BlankRecipeCategory;
 
-public class DebugRecipeCategory implements IRecipeCategory {
+public class DebugRecipeCategory extends BlankRecipeCategory<DebugRecipe> {
 
     public static final int recipeWidth = 160;
     public static final int recipeHeight = 60;
@@ -63,17 +64,16 @@ public class DebugRecipeCategory implements IRecipeCategory {
     }
 
     @Override
-    public void drawExtras(Minecraft minecraft) {
+    public void drawExtras(@Nonnull Minecraft minecraft) {
         tankBackground.draw(minecraft);
+        IItemListOverlay itemListOverlay = Internal.getRuntime()
+            .getItemListOverlay();
+        minecraft.fontRenderer.drawString(itemListOverlay.getFilterText(), 20, 52, 0);
+        minecraft.fontRenderer.drawString(String.valueOf(itemListOverlay.getStackUnderMouse()), 50, 52, 0);
     }
 
     @Override
-    public void drawAnimations(Minecraft minecraft) {
-
-    }
-
-    @Override
-    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull IRecipeWrapper recipeWrapper) {
+    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull DebugRecipe recipeWrapper) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
         guiItemStacks.addTooltipCallback(new ITooltipCallback<ItemStack>() {

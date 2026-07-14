@@ -1,15 +1,17 @@
 package ruiseki.jfmuy.api;
 
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.Fluid;
+import java.util.List;
 
 import javax.annotation.Nonnull;
-import java.util.List;
+
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.Fluid;
 
 /**
  * JFMUY's gui for displaying recipes. Use this interface to open recipes.
  */
 public interface IRecipesGui {
+
     /**
      * Show recipes for an {@link ItemStack}.
      * Opens the {@link IRecipesGui} if it is closed.

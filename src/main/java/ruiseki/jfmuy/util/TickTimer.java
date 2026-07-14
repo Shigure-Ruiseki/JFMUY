@@ -21,9 +21,6 @@ public class TickTimer implements ITickTimer {
 
     @Override
     public int getValue() {
-        if (Minecraft.getMinecraft().theWorld == null) {
-            return countDown ? maxValue : 0;
-        }
         long worldTime = Minecraft.getMinecraft().theWorld.getTotalWorldTime();
         long ticksPassed = worldTime - lastUpdateWorldTime;
         lastUpdateWorldTime = worldTime;

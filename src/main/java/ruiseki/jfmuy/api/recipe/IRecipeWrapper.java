@@ -9,7 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.fluids.FluidStack;
 
 /**
- * A wrapper around a normal recipe with methods that allow JEI can make sense of it.
+ * A wrapper around a normal recipe with methods that allow JFMUY can make sense of it.
  * Implementers will have to create a wrapper for each type of recipe they have.
  */
 public interface IRecipeWrapper {
@@ -47,7 +47,7 @@ public interface IRecipeWrapper {
 
     /**
      * Get the tooltip for whatever's under the mouse.
-     * ItemStack and fluid tooltips are already handled by JEI, this is for anything else.
+     * ItemStack and fluid tooltips are already handled by JFMUY, this is for anything else.
      *
      * @param mouseX the X position of the mouse, relative to the recipe.
      * @param mouseY the Y position of the mouse, relative to the recipe.

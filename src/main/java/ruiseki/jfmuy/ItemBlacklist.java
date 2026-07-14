@@ -4,19 +4,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import net.minecraft.item.ItemStack;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.api.IItemBlacklist;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.util.Log;
-import ruiseki.jfmuy.util.StackUtil;
 
 public class ItemBlacklist implements IItemBlacklist {
 
-    @Nonnull
+    @NotNull
     private final Set<String> itemBlacklist = new HashSet<>();
 
     @Override
@@ -25,7 +24,8 @@ public class ItemBlacklist implements IItemBlacklist {
             Log.error("Null itemStack", new NullPointerException());
             return;
         }
-        String uid = StackUtil.getUniqueIdentifierForStack(itemStack);
+        String uid = Internal.getStackHelper()
+            .getUniqueIdentifierForStack(itemStack);
         itemBlacklist.add(uid);
 
         JFMUY.getProxy()
@@ -38,7 +38,8 @@ public class ItemBlacklist implements IItemBlacklist {
             Log.error("Null itemStack", new NullPointerException());
             return;
         }
-        String uid = StackUtil.getUniqueIdentifierForStack(itemStack);
+        String uid = Internal.getStackHelper()
+            .getUniqueIdentifierForStack(itemStack);
         itemBlacklist.remove(uid);
 
         JFMUY.getProxy()
@@ -51,13 +52,13 @@ public class ItemBlacklist implements IItemBlacklist {
             Log.error("Null itemStack", new NullPointerException());
             return false;
         }
-        List<String> uids = StackUtil.getUniqueIdentifiersWithWildcard(itemStack);
+        List<String> uids = Internal.getStackHelper()
+            .getUniqueIdentifiersWithWildcard(itemStack);
         for (String uid : uids) {
-            if (itemBlacklist.contains(uid) || Config.getItemBlacklist()
-                .contains(uid)) {
+            if (itemBlacklist.contains(uid)) {
                 return true;
             }
         }
-        return false;
+        return Config.isItemOnConfigBlacklist(itemStack);
     }
 }

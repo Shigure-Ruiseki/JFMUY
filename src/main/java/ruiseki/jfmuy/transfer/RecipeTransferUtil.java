@@ -28,7 +28,8 @@ public class RecipeTransferUtil {
     @Nullable
     private static IRecipeTransferError transferRecipe(@Nonnull Container container, @Nonnull RecipeLayout recipeLayout,
         @Nonnull EntityPlayer player, boolean maxTransfer, boolean doTransfer) {
-        IRecipeTransferHandler transferHandler = Internal.getRecipeRegistry()
+        IRecipeTransferHandler transferHandler = Internal.getRuntime()
+            .getRecipeRegistry()
             .getRecipeTransferHandler(container, recipeLayout.getRecipeCategory());
         if (transferHandler == null) {
             if (doTransfer) {

@@ -10,7 +10,7 @@ public abstract class BlankModPlugin implements IModPlugin {
     }
 
     @Override
-    public void onRuntimeAvailable(@Nonnull IJFMUYRuntime jeiRuntime) {
+    public void onRuntimeAvailable(@Nonnull IJFMUYRuntime jfmuyRuntime) {
 
     }
 }

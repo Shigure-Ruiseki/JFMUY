@@ -1,12 +1,15 @@
 package ruiseki.jfmuy.transfer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -15,16 +18,17 @@ import net.minecraft.item.ItemStack;
 
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.JFMUY;
+import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
+import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferInfo;
-import ruiseki.jfmuy.config.Config;
-import ruiseki.jfmuy.gui.RecipeLayout;
-import ruiseki.jfmuy.gui.ingredients.GuiIngredient;
-import ruiseki.jfmuy.gui.ingredients.GuiItemStackGroup;
+import ruiseki.jfmuy.config.SessionData;
+import ruiseki.jfmuy.gui.ingredients.IGuiIngredient;
 import ruiseki.jfmuy.network.packets.PacketRecipeTransfer;
 import ruiseki.jfmuy.util.Log;
+import ruiseki.jfmuy.util.StackHelper;
 import ruiseki.jfmuy.util.Translator;
 
 public class BasicRecipeTransferHandler implements IRecipeTransferHandler {
@@ -46,15 +50,16 @@ public class BasicRecipeTransferHandler implements IRecipeTransferHandler {
         return transferHelper.getRecipeCategoryUid();
     }
 
+    @Nullable
     @Override
-    public IRecipeTransferError transferRecipe(@Nonnull Container container, @Nonnull RecipeLayout recipeLayout,
+    public IRecipeTransferError transferRecipe(@Nonnull Container container, @Nonnull IRecipeLayout recipeLayout,
         @Nonnull EntityPlayer player, boolean maxTransfer, boolean doTransfer) {
         IRecipeTransferHandlerHelper handlerHelper = Internal.getHelpers()
             .recipeTransferHandlerHelper();
+        StackHelper stackHelper = Internal.getStackHelper();
 
-        if (!Config.isJfmuyOnServer()) {
-            String message = Translator.translateToLocal("jfmuy.tooltip.error.recipe.transfer.no.server");
-            return handlerHelper.createUserErrorWithTooltip(message);
+        if (!SessionData.isJfmuyOnServer()) {
+            return handlerHelper.createInternalError();
         }
 
         Map<Integer, Slot> inventorySlots = new HashMap<>();
@@ -68,10 +73,10 @@ public class BasicRecipeTransferHandler implements IRecipeTransferHandler {
         }
 
         int inputCount = 0;
-        GuiItemStackGroup itemStackGroup = recipeLayout.getItemStacks();
-        for (GuiIngredient<ItemStack> ingredient : itemStackGroup.getGuiIngredients()
+        IGuiItemStackGroup itemStackGroup = recipeLayout.getItemStacks();
+        for (IGuiIngredient<ItemStack> ingredient : itemStackGroup.getGuiIngredients()
             .values()) {
-            if (ingredient.isInput() && !ingredient.getAll()
+            if (ingredient.isInput() && !ingredient.getAllIngredients()
                 .isEmpty()) {
                 inputCount++;
             }
@@ -85,13 +90,12 @@ public class BasicRecipeTransferHandler implements IRecipeTransferHandler {
             return handlerHelper.createInternalError();
         }
 
-        Map<Integer, ItemStack> availableItemStacks = new HashMap<>();
+        List<ItemStack> availableItemStacks = new ArrayList<>();
         int filledCraftSlotCount = 0;
         int emptySlotCount = 0;
 
         for (Slot slot : craftingSlots.values()) {
-            final ItemStack stack = slot.getStack();
-            if (stack != null && stack.stackSize > 0) {
+            if (slot.getHasStack()) {
                 if (!slot.canTakeStack(player)) {
                     Log.error(
                         "Recipe Transfer helper {} does not work for container {}. Player can't move item out of Crafting Slot number {}",
@@ -101,25 +105,29 @@ public class BasicRecipeTransferHandler implements IRecipeTransferHandler {
                     return handlerHelper.createInternalError();
                 }
                 filledCraftSlotCount++;
-                availableItemStacks.put(slot.slotNumber, stack.copy());
+                availableItemStacks.add(
+                    slot.getStack()
+                        .copy());
             }
         }
 
         for (Slot slot : inventorySlots.values()) {
-            final ItemStack stack = slot.getStack();
-            if (stack != null && stack.stackSize > 0) {
-                availableItemStacks.put(slot.slotNumber, stack.copy());
+            if (slot.getHasStack()) {
+                availableItemStacks.add(
+                    slot.getStack()
+                        .copy());
             } else {
                 emptySlotCount++;
             }
         }
 
+        // check if we have enough inventory space to shuffle items around to their final locations
         if (filledCraftSlotCount - inputCount > emptySlotCount) {
             String message = Translator.translateToLocal("jfmuy.tooltip.error.recipe.transfer.inventory.full");
             return handlerHelper.createUserErrorWithTooltip(message);
         }
 
-        RecipeTransferMatching.MatchingItemsResult matchingItemsResult = RecipeTransferMatching
+        StackHelper.MatchingItemsResult matchingItemsResult = stackHelper
             .getMatchingItems(availableItemStacks, itemStackGroup.getGuiIngredients());
 
         if (matchingItemsResult.missingItems.size() > 0) {
@@ -133,15 +141,26 @@ public class BasicRecipeTransferHandler implements IRecipeTransferHandler {
         List<Integer> inventorySlotIndexes = new ArrayList<>(inventorySlots.keySet());
         Collections.sort(inventorySlotIndexes);
 
-        for (Map.Entry<Integer, Integer> entry : matchingItemsResult.matchingItems.entrySet()) {
+        // check that the slots exist and can be altered
+        for (Map.Entry<Integer, ItemStack> entry : matchingItemsResult.matchingItems.entrySet()) {
             int craftNumber = entry.getKey();
             int slotNumber = craftingSlotIndexes.get(craftNumber);
-            if (slotNumber < 0 || slotNumber >= container.inventorySlots.size()) {
+            if (slotNumber >= container.inventorySlots.size()) {
                 Log.error(
                     "Recipes Transfer Helper {} references slot {} outside of the inventory's size {}",
                     transferHelper.getClass(),
                     slotNumber,
                     container.inventorySlots.size());
+                return handlerHelper.createInternalError();
+            }
+            Slot slot = container.getSlot(slotNumber);
+            ItemStack stack = entry.getValue();
+            if (slot == null) {
+                Log.error("The slot number {} does not exist in the container.", slotNumber);
+                return handlerHelper.createInternalError();
+            }
+            if (!slot.isItemValid(stack)) {
+                Log.error("The ItemStack {} is not valid for the slot number {}", stack, slotNumber);
                 return handlerHelper.createInternalError();
             }
         }
@@ -151,12 +170,134 @@ public class BasicRecipeTransferHandler implements IRecipeTransferHandler {
                 matchingItemsResult.matchingItems,
                 craftingSlotIndexes,
                 inventorySlotIndexes,
-                maxTransfer,
-                transferHelper.requireCompleteSets());
+                maxTransfer);
             JFMUY.getProxy()
                 .sendPacketToServer(packet);
         }
 
         return null;
+    }
+
+    /**
+     * Called server-side to actually put the items in place.
+     */
+    public static void setItems(@Nonnull EntityPlayer player, @Nonnull Map<Integer, ItemStack> slotMap,
+        @Nonnull List<Integer> craftingSlots, @Nonnull List<Integer> inventorySlots, boolean maxTransfer) {
+        Container container = player.openContainer;
+        StackHelper stackHelper = Internal.getStackHelper();
+
+        // remove required recipe items
+        int removedSets = removeSetsFromInventory(
+            container,
+            slotMap.values(),
+            craftingSlots,
+            inventorySlots,
+            maxTransfer);
+        if (removedSets == 0) {
+            return;
+        }
+
+        // clear the crafting grid
+        List<ItemStack> clearedCraftingItems = new ArrayList<>();
+        for (Integer craftingSlotNumber : craftingSlots) {
+            Slot craftingSlot = container.getSlot(craftingSlotNumber);
+            if (craftingSlot != null && craftingSlot.getHasStack()) {
+                ItemStack craftingItem = craftingSlot.decrStackSize(Integer.MAX_VALUE);
+                clearedCraftingItems.add(craftingItem);
+            }
+        }
+
+        // put items into the crafting grid
+        for (Map.Entry<Integer, ItemStack> entry : slotMap.entrySet()) {
+            Integer craftNumber = entry.getKey();
+            Integer slotNumber = craftingSlots.get(craftNumber);
+            Slot slot = container.getSlot(slotNumber);
+
+            ItemStack stack = entry.getValue();
+            if (stack.isStackable()) {
+                int maxStackSize = Math.min(slot.getSlotStackLimit(), stack.getMaxStackSize());
+                int maxSets = maxStackSize / stack.stackSize;
+                stack.stackSize *= Math.min(maxSets, removedSets);
+            }
+
+            slot.putStack(stack);
+        }
+
+        // put cleared items back into the player's inventory
+        for (ItemStack oldCraftingItem : clearedCraftingItems) {
+            stackHelper.addStack(container, inventorySlots, oldCraftingItem, true);
+        }
+
+        container.detectAndSendChanges();
+    }
+
+    private static int removeSetsFromInventory(@Nonnull Container container, @Nonnull Collection<ItemStack> required,
+        @Nonnull List<Integer> craftingSlots, @Nonnull List<Integer> inventorySlots, boolean maxTransfer) {
+        if (maxTransfer) {
+            List<ItemStack> requiredCopy = new ArrayList<>();
+            requiredCopy.addAll(required);
+
+            int removedSets = 0;
+            while (!requiredCopy.isEmpty()
+                && removeSetsFromInventory(container, requiredCopy, craftingSlots, inventorySlots)) {
+                removedSets++;
+                Iterator<ItemStack> iterator = requiredCopy.iterator();
+                while (iterator.hasNext()) {
+                    ItemStack stack = iterator.next();
+                    if (!stack.isStackable() || (stack.stackSize * (removedSets + 1) > stack.getMaxStackSize())) {
+                        iterator.remove();
+                    }
+                }
+            }
+            return removedSets;
+        } else {
+            boolean success = removeSetsFromInventory(container, required, craftingSlots, inventorySlots);
+            return success ? 1 : 0;
+        }
+    }
+
+    private static boolean removeSetsFromInventory(@Nonnull Container container, @Nonnull Iterable<ItemStack> required,
+        @Nonnull List<Integer> craftingSlots, @Nonnull List<Integer> inventorySlots) {
+        final Map<Slot, ItemStack> originalSlotContents = new HashMap<>();
+
+        for (ItemStack matchingStack : required) {
+            final ItemStack requiredStack = matchingStack.copy();
+            while (requiredStack.stackSize > 0) {
+                final Slot slot = getSlotWithStack(container, requiredStack, craftingSlots, inventorySlots);
+                if (slot == null) {
+                    // abort! put removed items back where the came from
+                    for (Map.Entry<Slot, ItemStack> slotEntry : originalSlotContents.entrySet()) {
+                        ItemStack stack = slotEntry.getValue();
+                        slotEntry.getKey()
+                            .putStack(stack);
+                    }
+                    return false;
+                }
+
+                if (!originalSlotContents.containsKey(slot)) {
+                    originalSlotContents.put(
+                        slot,
+                        slot.getStack()
+                            .copy());
+                }
+
+                ItemStack removed = slot.decrStackSize(requiredStack.stackSize);
+                requiredStack.stackSize -= removed.stackSize;
+            }
+        }
+
+        return true;
+    }
+
+    private static Slot getSlotWithStack(@Nonnull Container container, @Nonnull ItemStack stack,
+        @Nonnull List<Integer> craftingSlots, @Nonnull List<Integer> inventorySlots) {
+        StackHelper stackHelper = Internal.getStackHelper();
+
+        Slot slot = stackHelper.getSlotWithStack(container, craftingSlots, stack);
+        if (slot == null) {
+            slot = stackHelper.getSlotWithStack(container, inventorySlots, stack);
+        }
+
+        return slot;
     }
 }

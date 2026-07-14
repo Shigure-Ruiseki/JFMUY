@@ -7,9 +7,10 @@ import net.minecraft.util.ResourceLocation;
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawableAnimated;
 import ruiseki.jfmuy.api.gui.IDrawableStatic;
-import ruiseki.jfmuy.api.recipe.IRecipeCategory;
+import ruiseki.jfmuy.api.recipe.BlankRecipeCategory;
+import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 
-public abstract class FurnaceRecipeCategory implements IRecipeCategory {
+public abstract class FurnaceRecipeCategory<T extends IRecipeWrapper> extends BlankRecipeCategory<T> {
 
     protected static final int inputSlot = 0;
     protected static final int fuelSlot = 1;

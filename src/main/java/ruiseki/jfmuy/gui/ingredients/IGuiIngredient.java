@@ -20,17 +20,18 @@ public interface IGuiIngredient<T> {
     void clear();
 
     @Nullable
-    T get();
+    Focus getFocus();
 
     @Nonnull
-    List<T> getAll();
+    List<T> getAllIngredients();
 
-    boolean isMouseOver(int mouseX, int mouseY);
+    boolean isInput();
 
-    void draw(@Nonnull Minecraft minecraft);
+    boolean isMouseOver(int xOffset, int yOffset, int mouseX, int mouseY);
 
-    void drawHovered(@Nonnull Minecraft minecraft, int mouseX, int mouseY);
+    void draw(@Nonnull Minecraft minecraft, int xOffset, int yOffset);
 
-    /** Offset is in screen coordinates, unlike the other draw methods */
+    void drawHovered(@Nonnull Minecraft minecraft, int xOffset, int yOffset, int mouseX, int mouseY);
+
     void drawHighlight(@Nonnull Minecraft minecraft, Color color, int xOffset, int yOffset);
 }

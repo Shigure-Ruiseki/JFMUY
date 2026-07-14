@@ -7,9 +7,9 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.item.ItemStack;
 
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.ICraftingGridHelper;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
-import ruiseki.jfmuy.util.StackUtil;
 
 public class CraftingGridHelper implements ICraftingGridHelper {
 
@@ -41,7 +41,8 @@ public class CraftingGridHelper implements ICraftingGridHelper {
             Object recipeItem = input.get(i);
             int index = getCraftingIndex(i, width, height);
 
-            List<ItemStack> itemStacks = StackUtil.toItemStackList(recipeItem);
+            List<ItemStack> itemStacks = Internal.getStackHelper()
+                .toItemStackList(recipeItem);
             setInput(guiItemStacks, index, itemStacks);
         }
     }

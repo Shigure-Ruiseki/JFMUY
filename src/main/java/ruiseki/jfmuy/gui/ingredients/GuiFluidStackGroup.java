@@ -25,7 +25,8 @@ public class GuiFluidStackGroup extends GuiIngredientGroup<FluidStack, GuiIngred
             yPosition,
             width,
             height,
-            0);
+            0,
+            itemCycleOffset);
         guiIngredients.put(slotIndex, guiIngredient);
     }
 }

@@ -15,6 +15,7 @@ import ruiseki.jfmuy.gui.Focus;
 
 public abstract class GuiIngredientGroup<V, T extends GuiIngredient<V>> implements IGuiIngredientGroup<V> {
 
+    protected final int itemCycleOffset = (int) (Math.random() * 1000);
     @Nonnull
     protected final Map<Integer, T> guiIngredients = new HashMap<>();
     @Nonnull
@@ -47,30 +48,31 @@ public abstract class GuiIngredientGroup<V, T extends GuiIngredient<V>> implemen
         this.tooltipCallback = tooltipCallback;
     }
 
+    @Override
     @Nonnull
     public Map<Integer, T> getGuiIngredients() {
         return guiIngredients;
     }
 
     @Nullable
-    public Focus getFocusUnderMouse(int mouseX, int mouseY) {
+    public Focus getFocusUnderMouse(int xOffset, int yOffset, int mouseX, int mouseY) {
         for (T widget : guiIngredients.values()) {
-            if (widget != null && widget.isMouseOver(mouseX, mouseY)) {
-                return Focus.create(widget.get());
+            if (widget != null && widget.isMouseOver(xOffset, yOffset, mouseX, mouseY)) {
+                return widget.getFocus();
             }
         }
         return null;
     }
 
     @Nullable
-    public T draw(@Nonnull Minecraft minecraft, int mouseX, int mouseY) {
+    public T draw(@Nonnull Minecraft minecraft, int xOffset, int yOffset, int mouseX, int mouseY) {
         T hovered = null;
         for (T ingredient : guiIngredients.values()) {
-            if (hovered == null && ingredient.isMouseOver(mouseX, mouseY)) {
+            if (hovered == null && ingredient.isMouseOver(xOffset, yOffset, mouseX, mouseY)) {
                 hovered = ingredient;
                 hovered.setTooltipCallback(tooltipCallback);
             } else {
-                ingredient.draw(minecraft);
+                ingredient.draw(minecraft, xOffset, yOffset);
             }
         }
         return hovered;

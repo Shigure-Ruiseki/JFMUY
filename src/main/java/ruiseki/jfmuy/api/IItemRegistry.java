@@ -8,7 +8,7 @@ import net.minecraft.item.ItemStack;
 import com.google.common.collect.ImmutableList;
 
 /**
- * The IItemRegistry is provided by JEI and has some useful functions related to items.
+ * The IItemRegistry is provided by JFMUY and has some useful functions related to items.
  */
 public interface IItemRegistry {
 

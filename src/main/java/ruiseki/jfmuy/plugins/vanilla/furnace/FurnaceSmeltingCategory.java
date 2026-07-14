@@ -9,11 +9,10 @@ import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
-import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.util.Translator;
 
-public class FurnaceSmeltingCategory extends FurnaceRecipeCategory {
+public class FurnaceSmeltingCategory extends FurnaceRecipeCategory<SmeltingRecipe> {
 
     @Nonnull
     private final IDrawable background;
@@ -34,12 +33,7 @@ public class FurnaceSmeltingCategory extends FurnaceRecipeCategory {
     }
 
     @Override
-    public void drawExtras(Minecraft minecraft) {
-
-    }
-
-    @Override
-    public void drawAnimations(Minecraft minecraft) {
+    public void drawAnimations(@Nonnull Minecraft minecraft) {
         flame.draw(minecraft, 2, 20);
         arrow.draw(minecraft, 24, 18);
     }
@@ -57,7 +51,7 @@ public class FurnaceSmeltingCategory extends FurnaceRecipeCategory {
     }
 
     @Override
-    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull IRecipeWrapper recipeWrapper) {
+    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull SmeltingRecipe recipeWrapper) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
         guiItemStacks.init(inputSlot, true, 0, 0);

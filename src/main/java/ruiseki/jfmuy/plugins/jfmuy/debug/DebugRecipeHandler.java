@@ -15,7 +15,7 @@ public class DebugRecipeHandler implements IRecipeHandler<DebugRecipe> {
 
     @Nonnull
     @Override
-    public String getRecipeCategoryUid() {
+    public String getRecipeCategoryUid(@Nonnull DebugRecipe recipe) {
         return "debug";
     }
 

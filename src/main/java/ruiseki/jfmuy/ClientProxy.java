@@ -1,46 +1,58 @@
 package ruiseki.jfmuy;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.resources.IReloadableResourceManager;
+import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.IResourceManagerReloadListener;
+import net.minecraft.crash.CrashReport;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 
+import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.client.event.ConfigChangedEvent;
-import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.discovery.ASMDataTable;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLInterModComms;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.network.internal.FMLProxyPacket;
-import cpw.mods.fml.relauncher.Side;
 import ruiseki.jfmuy.api.IModPlugin;
+import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.KeyBindings;
+import ruiseki.jfmuy.config.SessionData;
 import ruiseki.jfmuy.gui.ItemListOverlay;
+import ruiseki.jfmuy.gui.RecipesGui;
 import ruiseki.jfmuy.network.packets.PacketJFMUY;
+import ruiseki.jfmuy.plugins.jfmuy.JFMUYInternalPlugin;
+import ruiseki.jfmuy.plugins.vanilla.VanillaPlugin;
 import ruiseki.jfmuy.util.AnnotatedInstanceUtil;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.ModRegistry;
 
 public class ClientProxy extends CommonProxy {
 
-    private static boolean started = false;
     @Nullable
     private ItemFilter itemFilter;
-    private GuiEventHandler guiEventHandler;
     private List<IModPlugin> plugins;
 
     private static void initVersionChecker() {
         final NBTTagCompound compound = new NBTTagCompound();
-        compound.setString("curseProjectName", "just-enough-items-jei");
-        compound.setString("curseFilenameParser", "jfmuy-" + MinecraftForge.MC_VERSION + "-[].jar");
+        compound.setString("curseProjectName", "jfmuy");
+        compound.setString("curseFilenameParser", "jfmuy-[].jar");
         FMLInterModComms.sendRuntimeMessage(Reference.MOD_ID, "VersionChecker", "addCurseCheck", compound);
     }
 
@@ -52,117 +64,159 @@ public class ClientProxy extends CommonProxy {
         ASMDataTable asmDataTable = event.getAsmData();
         this.plugins = AnnotatedInstanceUtil.getModPlugins(asmDataTable);
 
-        Iterator<IModPlugin> iterator = plugins.iterator();
-        while (iterator.hasNext()) {
-            IModPlugin plugin = iterator.next();
-            try {
-                plugin.onJFMUYHelpersAvailable(Internal.getHelpers());
-            } catch (AbstractMethodError ignored) {
-                // older plugins don't have this method
-            } catch (Exception e) {
-                Log.error("Mod plugin failed: {}", plugin.getClass(), e);
-                iterator.remove();
-            }
+        IModPlugin vanillaPlugin = getVanillaPlugin(this.plugins);
+        if (vanillaPlugin != null) {
+            this.plugins.remove(vanillaPlugin);
+            this.plugins.add(0, vanillaPlugin);
+        }
+
+        IModPlugin jfmuyInternalPlugin = getJFMUYInternalPlugin(this.plugins);
+        if (jfmuyInternalPlugin != null) {
+            this.plugins.remove(jfmuyInternalPlugin);
+            this.plugins.add(jfmuyInternalPlugin);
         }
     }
 
+    @Nullable
+    private IModPlugin getVanillaPlugin(@Nonnull List<IModPlugin> modPlugins) {
+        for (IModPlugin modPlugin : modPlugins) {
+            if (modPlugin instanceof VanillaPlugin) {
+                return modPlugin;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private IModPlugin getJFMUYInternalPlugin(@Nonnull List<IModPlugin> modPlugins) {
+        for (IModPlugin modPlugin : modPlugins) {
+            if (modPlugin instanceof JFMUYInternalPlugin) {
+                return modPlugin;
+            }
+        }
+        return null;
+    }
+
     @Override
+
     public void init(@Nonnull FMLInitializationEvent event) {
         KeyBindings.init();
-        FMLCommonHandler.instance()
-            .bus()
-            .register(this);
+        MinecraftForge.EVENT_BUS.register(this);
 
-        guiEventHandler = new GuiEventHandler();
+        GuiEventHandler guiEventHandler = new GuiEventHandler();
         MinecraftForge.EVENT_BUS.register(guiEventHandler);
-        FMLCommonHandler.instance()
-            .bus()
-            .register(guiEventHandler);
+
+        fixVanillaItemHasSubtypes();
     }
 
     @Override
-    public void scheduleStartNEI() {
-        final Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft == null) {
-            return;
-        }
-        // TODO: addScheduledTask
-        // minecraft.addScheduledTask(new Runnable() {
-        // @Override
-        // public void run() {
-        // JFMUY.getProxy().startNEI();
-        // }
-        // });
+    public void postInit(@Nonnull FMLPostInitializationEvent event) {
+        // Reload when resources change
+        Minecraft minecraft = Minecraft.getMinecraft();
+        IReloadableResourceManager reloadableResourceManager = (IReloadableResourceManager) minecraft
+            .getResourceManager();
+        reloadableResourceManager.registerReloadListener(new IResourceManagerReloadListener() {
+
+            @Override
+            public void onResourceManagerReload(IResourceManager resourceManager) {
+                restartJFMUY();
+            }
+        });
     }
 
-    @Override
-    public void startNEI() {
-        if (started && Internal.getRecipeRegistry() != null) {
-            return;
+    /** fix vanilla items that don't mark themselves as having subtypes */
+    private static void fixVanillaItemHasSubtypes() {
+        List<Item> items = Arrays.asList(
+            Items.potionitem,
+            // Items.LINGERING_POTION,
+            // Items.SPLASH_POTION,
+            // Items.TIPPED_ARROW,
+            Items.enchanted_book);
+        for (Item item : items) {
+            item.setHasSubtypes(true);
         }
+    }
 
-        started = true;
-        ItemRegistry itemRegistry = new ItemRegistry();
+    @SubscribeEvent
+    public void onEntityJoinedWorld(EntityJoinWorldEvent event) {
+        if (!SessionData.isJfmuyStarted() && Minecraft.getMinecraft().thePlayer != null) {
+            try {
+                startJFMUY();
+            } catch (Throwable e) {
+                Minecraft.getMinecraft()
+                    .displayCrashReport(new CrashReport("JFMUY failed to start:", e));
+            }
+        }
+    }
+
+    private void startJFMUY() {
+        SessionData.setJFMUYStarted();
+
+        Config.startJFMUY();
+
+        Internal.setHelpers(new JFMUYHelpers());
+        Internal.getStackHelper()
+            .enableUidCache();
+
+        ItemRegistryFactory itemRegistryFactory = new ItemRegistryFactory();
+        ItemRegistry itemRegistry = itemRegistryFactory.createItemRegistry();
         Internal.setItemRegistry(itemRegistry);
+
+        ModRegistry modRegistry = new ModRegistry(Internal.getHelpers(), itemRegistry);
 
         Iterator<IModPlugin> iterator = plugins.iterator();
         while (iterator.hasNext()) {
             IModPlugin plugin = iterator.next();
             try {
-                plugin.onItemRegistryAvailable(itemRegistry);
-            } catch (AbstractMethodError ignored) {
-                // older plugins don't have this method
-            } catch (Exception e) {
-                Log.error("Mod plugin failed: {}", plugin.getClass(), e);
-                iterator.remove();
-            }
-        }
-
-        ModRegistry modRegistry = new ModRegistry();
-
-        iterator = plugins.iterator();
-        while (iterator.hasNext()) {
-            IModPlugin plugin = iterator.next();
-            try {
-                plugin.register(modRegistry);
+                long start_time = System.nanoTime();
                 Log.info(
-                    "Registered plugin: {}",
+                    "Registering plugin: {}",
                     plugin.getClass()
                         .getName());
-            } catch (Exception e) {
+                plugin.register(modRegistry);
+                long timeElapsedSeconds = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start_time);
+                Log.info(
+                    "Registered  plugin: {} in {} seconds",
+                    plugin.getClass()
+                        .getName(),
+                    timeElapsedSeconds);
+            } catch (RuntimeException | LinkageError e) {
                 Log.error("Failed to register mod plugin: {}", plugin.getClass(), e);
                 iterator.remove();
             }
         }
 
         RecipeRegistry recipeRegistry = modRegistry.createRecipeRegistry();
-        Internal.setRecipeRegistry(recipeRegistry);
+
+        List<IAdvancedGuiHandler<?>> advancedGuiHandlers = modRegistry.getAdvancedGuiHandlers();
+
+        itemFilter = new ItemFilter(itemRegistry);
+        ItemListOverlay itemListOverlay = new ItemListOverlay(itemFilter, advancedGuiHandlers);
+        RecipesGui recipesGui = new RecipesGui();
+
+        JFMUYRuntime jfmuyRuntime = new JFMUYRuntime(recipeRegistry, itemListOverlay, recipesGui);
+        Internal.setRuntime(jfmuyRuntime);
 
         iterator = plugins.iterator();
         while (iterator.hasNext()) {
             IModPlugin plugin = iterator.next();
             try {
-                plugin.onRecipeRegistryAvailable(recipeRegistry);
-            } catch (AbstractMethodError ignored) {
-                // older plugins don't have this method
-            } catch (Exception e) {
+                plugin.onRuntimeAvailable(jfmuyRuntime);
+            } catch (RuntimeException | LinkageError e) {
                 Log.error("Mod plugin failed: {}", plugin.getClass(), e);
                 iterator.remove();
             }
         }
 
-        itemFilter = new ItemFilter(itemRegistry);
-        ItemListOverlay itemListOverlay = new ItemListOverlay(itemFilter);
-        guiEventHandler.setItemListOverlay(itemListOverlay);
+        Internal.getStackHelper()
+            .disableUidCache();
     }
 
     @Override
-    public void restartNEI() {
-        if (!started) {
-            return;
+    public void restartJFMUY() {
+        if (SessionData.isJfmuyStarted()) {
+            startJFMUY();
         }
-        started = false;
-        startNEI();
     }
 
     @Override
@@ -174,10 +228,12 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void sendPacketToServer(PacketJFMUY packet) {
-        FMLProxyPacket proxyPacket = packet.getPacket();
-        proxyPacket.setTarget(Side.SERVER);
-        JFMUY.getPacketHandler()
-            .sendToServer(proxyPacket);
+        NetHandlerPlayClient netHandler = FMLClientHandler.instance()
+            .getClient()
+            .getNetHandler();
+        if (netHandler != null) {
+            netHandler.addToSendQueue(packet.getPacket());
+        }
     }
 
     // subscribe to event with low priority so that addon mods that use the config can do their stuff first
@@ -188,7 +244,7 @@ public class ClientProxy extends CommonProxy {
         }
 
         if (Config.syncConfig()) {
-            restartNEI(); // reload everything, configs can change available recipes
+            restartJFMUY(); // reload everything, configs can change available recipes
         }
     }
 }

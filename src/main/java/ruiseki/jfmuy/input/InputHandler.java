@@ -7,120 +7,80 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiRepair;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
-import ruiseki.jfmuy.GuiEventHandler;
+import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.RecipeRegistry;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.KeyBindings;
 import ruiseki.jfmuy.gui.Focus;
 import ruiseki.jfmuy.gui.ItemListOverlay;
+import ruiseki.jfmuy.gui.RecipeClickableArea;
 import ruiseki.jfmuy.gui.RecipesGui;
 import ruiseki.jfmuy.util.Commands;
 import ruiseki.jfmuy.util.MouseHelper;
 
 public class InputHandler {
 
+    @Nonnull
     private final RecipesGui recipesGui;
+    @Nonnull
     private final ItemListOverlay itemListOverlay;
-    private final MouseHelper mouseHelper;
-
-    private final List<IMouseHandler> mouseHandlers = new ArrayList<>();
-    private final List<IKeyable> keyables = new ArrayList<>();
+    @Nonnull
+    private MouseHelper mouseHelper;
+    @Nonnull
     private final List<IShowsRecipeFocuses> showsRecipeFocuses = new ArrayList<>();
 
     private boolean clickHandled = false;
 
-    public InputHandler(RecipesGui recipesGui, ItemListOverlay itemListOverlay, GuiContainer guiContainer) {
+    public InputHandler(@Nonnull RecipesGui recipesGui, @Nonnull ItemListOverlay itemListOverlay) {
         this.recipesGui = recipesGui;
         this.itemListOverlay = itemListOverlay;
 
         this.mouseHelper = new MouseHelper();
 
-        List<ICloseable> objects = new ArrayList<>();
-        objects.add(recipesGui);
-        objects.add(itemListOverlay);
-        objects.add(new GuiContainerWrapper(guiContainer, recipesGui));
-
-        for (Object gui : objects) {
-            if (gui instanceof IMouseHandler) {
-                mouseHandlers.add((IMouseHandler) gui);
-            }
-            if (gui instanceof IKeyable) {
-                keyables.add((IKeyable) gui);
-            }
-            if (gui instanceof IShowsRecipeFocuses) {
-                showsRecipeFocuses.add((IShowsRecipeFocuses) gui);
-            }
-        }
+        showsRecipeFocuses.add(recipesGui);
+        showsRecipeFocuses.add(itemListOverlay);
+        showsRecipeFocuses.add(new GuiContainerWrapper());
     }
 
-    public boolean handleForgeMouseEvent(net.minecraftforge.client.event.MouseEvent event, int mouseX, int mouseY) {
-        if (event.button >= 0) {
-            if (event.buttonstate) {
+    public void onScreenResized() {
+        this.mouseHelper = new MouseHelper();
+    }
+
+    public boolean handleMouseEvent(@Nonnull GuiScreen guiScreen, int mouseX, int mouseY) {
+        boolean cancelEvent = false;
+        if (Mouse.getEventButton() > -1) {
+            if (Mouse.getEventButtonState()) {
                 if (!clickHandled) {
-                    boolean handled = handleMouseClick(event.button, mouseX, mouseY);
-                    clickHandled = handled;
-                    return handled;
+                    cancelEvent = handleMouseClick(guiScreen, Mouse.getEventButton(), mouseX, mouseY);
+                    clickHandled = cancelEvent;
                 }
             } else if (clickHandled) {
                 clickHandled = false;
-                return true;
+                cancelEvent = true;
             }
-        } else if (event.dwheel != 0) {
-            return handleMouseScroll(event.dwheel, mouseX, mouseY);
+        } else if (Mouse.getEventDWheel() != 0) {
+            cancelEvent = handleMouseScroll(Mouse.getEventDWheel(), mouseX, mouseY);
         }
-        return false;
-    }
-
-    /**
-     * Handles a mouse click using the same coordinates as
-     * {@link net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent}.
-     * Used on 1.7.10 where draw-time mouse position can differ from queued mouse events.
-     */
-    public boolean onMouseClicked(int mouseButton, int mouseX, int mouseY) {
-        if (clickHandled) {
-            return true;
-        }
-        boolean handled = handleMouseClick(mouseButton, mouseX, mouseY);
-        clickHandled = handled;
-        return handled;
-    }
-
-    public void onMouseReleased(int mouseButton) {
-        if (clickHandled) {
-            clickHandled = false;
-        }
-    }
-
-    public boolean onMouseScrolled(int scrollDelta, int mouseX, int mouseY) {
-        return handleMouseScroll(scrollDelta, mouseX, mouseY);
-    }
-
-    public boolean shouldBlockInventoryMouseInput(int mouseX, int mouseY) {
-        if (recipesGui.isOpen()) {
-            return true;
-        }
-        return itemListOverlay.isMouseOver(mouseX, mouseY);
+        return cancelEvent;
     }
 
     private boolean handleMouseScroll(int dWheel, int mouseX, int mouseY) {
-        for (IMouseHandler scrollable : mouseHandlers) {
-            if (scrollable.handleMouseScrolled(mouseX, mouseY, dWheel)) {
-                return true;
-            }
-        }
-        return false;
+        return itemListOverlay.handleMouseScrolled(mouseX, mouseY, dWheel);
     }
 
-    private boolean handleMouseClick(int mouseButton, int mouseX, int mouseY) {
-        for (IMouseHandler clickable : mouseHandlers) {
-            if (clickable.handleMouseClicked(mouseX, mouseY, mouseButton)) {
-                return true;
-            }
+    private boolean handleMouseClick(@Nonnull GuiScreen guiScreen, int mouseButton, int mouseX, int mouseY) {
+        if (itemListOverlay.handleMouseClicked(mouseX, mouseY, mouseButton)) {
+            return true;
         }
 
         Focus focus = getFocusUnderMouseForClick(mouseX, mouseY);
@@ -128,19 +88,29 @@ public class InputHandler {
             return true;
         }
 
-        return recipesGui.isOpen();
+        if (guiScreen instanceof GuiContainer) {
+            GuiContainer guiContainer = (GuiContainer) guiScreen;
+            RecipeRegistry recipeRegistry = Internal.getRuntime()
+                .getRecipeRegistry();
+            RecipeClickableArea clickableArea = recipeRegistry
+                .getRecipeClickableArea(guiContainer, mouseX - guiContainer.guiLeft, mouseY - guiContainer.guiTop);
+            if (clickableArea != null) {
+                List<String> recipeCategoryUids = clickableArea.getRecipeCategoryUids();
+                recipesGui.showCategories(recipeCategoryUids);
+            }
+        }
+
+        return false;
     }
 
     @Nullable
     private Focus getFocusUnderMouseForClick(int mouseX, int mouseY) {
         for (IShowsRecipeFocuses gui : showsRecipeFocuses) {
-            if (!(gui instanceof IMouseHandler)) {
-                continue;
-            }
-
-            Focus focus = gui.getFocusUnderMouse(mouseX, mouseY);
-            if (focus != null) {
-                return focus;
+            if (gui.canSetFocusWithMouse()) {
+                Focus focus = gui.getFocusUnderMouse(mouseX, mouseY);
+                if (focus != null) {
+                    return focus;
+                }
             }
         }
         return null;
@@ -158,13 +128,13 @@ public class InputHandler {
     }
 
     private boolean handleMouseClickedFocus(int mouseButton, @Nonnull Focus focus) {
-        if (Config.isEditModeEnabled() && GuiScreen.isCtrlKeyDown()) {
+        if (Config.isEditModeEnabled()) {
             if (handleClickEditStack(mouseButton, focus)) {
                 return true;
             }
         }
 
-        if (Config.isCheatItemsEnabled() && focus.getStack() != null) {
+        if (Config.isCheatItemsEnabled() && focus.getStack() != null && focus.allowsCheating()) {
             if (mouseButton == 0) {
                 Commands.giveFullStack(focus.getStack());
                 return true;
@@ -191,102 +161,79 @@ public class InputHandler {
             return false;
         }
 
-        boolean wildcard;
-        if (mouseButton == 0) {
-            wildcard = false;
-        } else if (mouseButton == 1) {
-            wildcard = true;
-        } else {
+        Config.ItemBlacklistType blacklistType = null;
+        if (GuiScreen.isCtrlKeyDown()) {
+            if (GuiScreen.isShiftKeyDown()) {
+                if (mouseButton == 0) {
+                    blacklistType = Config.ItemBlacklistType.MOD_ID;
+                }
+            } else {
+                if (mouseButton == 0) {
+                    blacklistType = Config.ItemBlacklistType.ITEM;
+                } else if (mouseButton == 1) {
+                    blacklistType = Config.ItemBlacklistType.WILDCARD;
+                }
+            }
+        }
+
+        if (blacklistType == null) {
             return false;
         }
 
-        if (Config.isItemOnConfigBlacklist(focus.getStack(), wildcard)) {
-            Config.removeItemFromConfigBlacklist(focus.getStack(), wildcard);
+        if (Config.isItemOnConfigBlacklist(focus.getStack(), blacklistType)) {
+            Config.removeItemFromConfigBlacklist(focus.getStack(), blacklistType);
         } else {
-            Config.addItemToConfigBlacklist(focus.getStack(), wildcard);
+            Config.addItemToConfigBlacklist(focus.getStack(), blacklistType);
         }
         return true;
     }
 
     public boolean handleKeyEvent() {
-        boolean cancelEvent = false;
-        if (Keyboard.getEventKeyState()) {
-            int eventKey = Keyboard.getEventKey();
-            cancelEvent = handleKeyDown(eventKey);
+        char typedChar = Keyboard.getEventCharacter();
+        int eventKey = Keyboard.getEventKey();
+
+        if ((eventKey == 0 && typedChar >= 32) || Keyboard.getEventKeyState()) {
+            return handleKeyDown(typedChar, eventKey);
         }
-        return cancelEvent;
+        return false;
     }
 
-    /**
-     * Called from {@link GuiEventHandler} during client tick start, before Minecraft drains the keyboard queue.
-     */
-    public void handleGuiKeyboardEarly() {
-        if (itemListOverlay.hasKeyboardFocus()) {
-            while (Keyboard.next()) {
-                if (Keyboard.getEventKeyState()) {
-                    itemListOverlay.handleSearchKeyTyped(Keyboard.getEventCharacter(), Keyboard.getEventKey());
-                }
-            }
-            return;
-        }
-
-        if (!recipesGui.isOpen()) {
-            return;
-        }
-
-        while (Keyboard.next()) {
-            if (Keyboard.getEventKeyState()) {
-                handleKeyDown(Keyboard.getEventKey());
-            }
-        }
-    }
-
-    private boolean handleKeyDown(int eventKey) {
-        for (IKeyable keyable : keyables) {
-            if (keyable.isOpen() && keyable.hasKeyboardFocus()) {
-                if (isInventoryCloseKey(eventKey)) {
-                    keyable.setKeyboardFocus(false);
-                    return true;
-                } else if (keyable.onKeyPressed(eventKey)) {
-                    return true;
-                }
-            }
-        }
-
-        if (isInventoryCloseKey(eventKey) || isInventoryToggleKey(eventKey)) {
-            if (recipesGui.isOpen()) {
-                recipesGui.close();
+    private boolean handleKeyDown(char typedChar, int eventKey) {
+        if (itemListOverlay.isOpen() && itemListOverlay.hasKeyboardFocus()) {
+            if (isInventoryCloseKey(eventKey) || isEnterKey(eventKey)) {
+                itemListOverlay.setKeyboardFocus(false);
+                return true;
+            } else if (itemListOverlay.onKeyPressed(typedChar, eventKey)) {
                 return true;
             }
         }
 
-        if (eventKey == KeyBindings.showRecipe.getKeyCode()) {
-            Focus focus = getFocusUnderMouseForKey(mouseHelper.getX(), mouseHelper.getY());
-            if (focus != null) {
-                recipesGui.showRecipes(focus);
-                return true;
-            }
-        } else if (eventKey == KeyBindings.showUses.getKeyCode()) {
-            Focus focus = getFocusUnderMouseForKey(mouseHelper.getX(), mouseHelper.getY());
-            if (focus != null) {
-                recipesGui.showUses(focus);
-                return true;
-            }
-        } else if (eventKey == KeyBindings.toggleOverlay.getKeyCode() && GuiScreen.isCtrlKeyDown()) {
-            itemListOverlay.toggleEnabled();
+        if (eventKey == KeyBindings.toggleOverlay.getKeyCode()) {
+            Config.toggleOverlayEnabled();
             return false;
-        } else if (eventKey == Keyboard.KEY_F && GuiScreen.isCtrlKeyDown()) {
+        }
+
+        if (itemListOverlay.isOpen() && KeyBindings.focusSearch.getKeyCode() == eventKey) {
             itemListOverlay.setKeyboardFocus(true);
             return true;
-        } else if (eventKey == Keyboard.KEY_BACK) {
-            if (recipesGui.isOpen()) {
-                recipesGui.back();
-                return true;
-            }
         }
 
-        for (IKeyable keyable : keyables) {
-            if (keyable.isOpen() && keyable.onKeyPressed(eventKey)) {
+        if (!isContainerTextFieldFocused()) {
+            if (eventKey == KeyBindings.showRecipe.getKeyCode()) {
+                Focus focus = getFocusUnderMouseForKey(mouseHelper.getX(), mouseHelper.getY());
+                if (focus != null) {
+                    recipesGui.showRecipes(focus);
+                    return true;
+                }
+            } else if (eventKey == KeyBindings.showUses.getKeyCode()) {
+                Focus focus = getFocusUnderMouseForKey(mouseHelper.getX(), mouseHelper.getY());
+                if (focus != null) {
+                    recipesGui.showUses(focus);
+                    return true;
+                }
+            }
+
+            if (itemListOverlay.isOpen() && itemListOverlay.onKeyPressed(typedChar, eventKey)) {
                 return true;
             }
         }
@@ -294,12 +241,28 @@ public class InputHandler {
         return false;
     }
 
-    private boolean isInventoryToggleKey(int keyCode) {
+    private boolean isContainerTextFieldFocused() {
+        GuiScreen gui = Minecraft.getMinecraft().currentScreen;
+        GuiTextField textField = null;
+
+        if (gui instanceof GuiContainerCreative) {
+            textField = ((GuiContainerCreative) gui).searchField;
+        } else if (gui instanceof GuiRepair) {
+            textField = ((GuiRepair) gui).field_147091_w;
+        }
+
+        return textField != null && textField.getVisible() && textField.isEnabled && textField.isFocused();
+    }
+
+    public static boolean isInventoryToggleKey(int keyCode) {
         return keyCode == Minecraft.getMinecraft().gameSettings.keyBindInventory.getKeyCode();
     }
 
-    private boolean isInventoryCloseKey(int keyCode) {
+    public static boolean isInventoryCloseKey(int keyCode) {
         return keyCode == Keyboard.KEY_ESCAPE;
     }
 
+    public static boolean isEnterKey(int keyCode) {
+        return keyCode == Keyboard.KEY_RETURN;
+    }
 }

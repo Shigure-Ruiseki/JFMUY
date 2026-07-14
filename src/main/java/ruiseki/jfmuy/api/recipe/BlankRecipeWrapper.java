@@ -3,15 +3,15 @@ package ruiseki.jfmuy.api.recipe;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fluids.FluidStack;
+
 import org.jetbrains.annotations.NotNull;
 
-
 public abstract class BlankRecipeWrapper implements IRecipeWrapper {
+
     @Override
     public List getInputs() {
         return Collections.emptyList();

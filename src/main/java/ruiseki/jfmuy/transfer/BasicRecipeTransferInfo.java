@@ -56,9 +56,4 @@ public class BasicRecipeTransferInfo implements IRecipeTransferInfo {
         }
         return slots;
     }
-
-    @Override
-    public boolean requireCompleteSets() {
-        return true;
-    }
 }

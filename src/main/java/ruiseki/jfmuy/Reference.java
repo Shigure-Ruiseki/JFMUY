@@ -15,4 +15,6 @@ public class Reference {
     public static final String TEXTURE_GUI_PATH = "textures/gui/";
 
     public static final int MAX_TOOLTIP_WIDTH = 125;
+
+    public static final String MINECRAFT_MOD_NAME = "minecraft";
 }

@@ -6,6 +6,8 @@ import javax.annotation.Nonnull;
 
 import net.minecraftforge.fluids.FluidStack;
 
+import org.jetbrains.annotations.NotNull;
+
 import ruiseki.jfmuy.gui.Focus;
 
 public class FluidStackHelper implements IIngredientHelper<FluidStack> {
@@ -26,5 +28,11 @@ public class FluidStackHelper implements IIngredientHelper<FluidStack> {
             }
         }
         return null;
+    }
+
+    @NotNull
+    @Override
+    public Focus createFocus(@Nonnull FluidStack ingredient) {
+        return new Focus(ingredient.getFluid());
     }
 }

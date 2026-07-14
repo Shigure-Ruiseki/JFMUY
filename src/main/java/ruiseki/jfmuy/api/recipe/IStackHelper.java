@@ -1,15 +1,17 @@
 package ruiseki.jfmuy.api.recipe;
 
+import java.util.List;
+
 import net.minecraft.item.ItemStack;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 /**
  * Helps get ItemStacks from common formats used in recipes.
  */
 public interface IStackHelper {
+
     /**
      * Returns all the subtypes of itemStack if it has a wildcard meta value.
      */

@@ -1,8 +1,8 @@
 package ruiseki.jfmuy.plugins.vanilla.crafting;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
@@ -34,6 +34,7 @@ public class ShapedOreRecipeWrapper implements IShapedCraftingRecipeWrapper {
     public int getHeight() {
         return recipe.height;
     }
+
     @Override
     public void getIngredients(IIngredients ingredients) {
         ItemStack recipeOutput = recipe.getRecipeOutput();
@@ -46,7 +47,7 @@ public class ShapedOreRecipeWrapper implements IShapedCraftingRecipeWrapper {
             for (Object item : inputs) {
                 if (item instanceof ItemStack stack) {
                     rawInputs.add(ItemStackHelpers.copyWithSize(stack, 1));
-                } else if (item instanceof List<?> oreList) {
+                } else if (item instanceof List<?>oreList) {
                     List<ItemStack> cleanedOreList = new ArrayList<>();
 
                     for (Object oreItem : oreList) {

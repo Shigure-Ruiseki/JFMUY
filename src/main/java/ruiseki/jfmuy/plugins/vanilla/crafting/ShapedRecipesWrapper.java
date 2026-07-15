@@ -1,5 +1,8 @@
 package ruiseki.jfmuy.plugins.vanilla.crafting;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ShapedRecipes;
 
@@ -11,10 +14,6 @@ import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
 import ruiseki.jfmuy.recipes.BrokenCraftingRecipeException;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.okcore.helper.ItemStackHelpers;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class ShapedRecipesWrapper implements IShapedCraftingRecipeWrapper {
 

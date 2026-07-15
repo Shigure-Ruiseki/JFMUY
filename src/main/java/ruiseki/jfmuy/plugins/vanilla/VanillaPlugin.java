@@ -3,7 +3,6 @@ package ruiseki.jfmuy.plugins.vanilla;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -20,20 +19,17 @@ import net.minecraft.inventory.ContainerFurnace;
 import net.minecraft.inventory.ContainerRepair;
 import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.item.crafting.ShapelessRecipes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
-import net.minecraftforge.oredict.ShapedOreRecipe;
-import net.minecraftforge.oredict.ShapelessOreRecipe;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Preconditions;
 
+import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.IModPlugin;
@@ -55,7 +51,9 @@ import ruiseki.jfmuy.plugins.vanilla.brewing.BrewingRecipeCategory;
 import ruiseki.jfmuy.plugins.vanilla.brewing.BrewingRecipeMaker;
 import ruiseki.jfmuy.plugins.vanilla.brewing.PotionSubtypeInterpreter;
 import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeCategory;
-import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeChecker;
+import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeMarker;
+import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeValidator;
+import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeValidatorRegistry;
 import ruiseki.jfmuy.plugins.vanilla.crafting.ShapedOreRecipeWrapper;
 import ruiseki.jfmuy.plugins.vanilla.crafting.ShapedRecipesWrapper;
 import ruiseki.jfmuy.plugins.vanilla.crafting.ShapelessRecipeWrapper;
@@ -139,13 +137,25 @@ public class VanillaPlugin implements IModPlugin {
     @Override
     public void register(IModRegistry registry) {
         IIngredientRegistry ingredientRegistry = registry.getIngredientRegistry();
-        IJFMUYHelpers jeiHelpers = registry.getJFMUYHelpers();
-        IVanillaRecipeFactory vanillaRecipeFactory = jeiHelpers.getVanillaRecipeFactory();
+        IJFMUYHelpers jfmuyHelpers = registry.getJFMUYHelpers();
+        IVanillaRecipeFactory vanillaRecipeFactory = jfmuyHelpers.getVanillaRecipeFactory();
 
-        registry.addRecipes(CraftingRecipeChecker.getValidRecipes(jeiHelpers), VanillaRecipeCategoryUid.CRAFTING);
-        registry.addRecipes(SmeltingRecipeMaker.getFurnaceRecipes(jeiHelpers), VanillaRecipeCategoryUid.SMELTING);
+        CraftingRecipeValidatorRegistry.register(ShapedOreRecipe.class,
+            new CraftingRecipeValidator<ShapedOreRecipe>(recipe -> new ShapedOreRecipeWrapper(jfmuyHelpers, recipe)));
+
+        CraftingRecipeValidatorRegistry.register(ShapedRecipes.class,
+            new CraftingRecipeValidator<ShapedRecipes>(recipe -> new ShapedRecipesWrapper(jfmuyHelpers, recipe)));
+
+        CraftingRecipeValidatorRegistry.register(ShapelessOreRecipe.class,
+            new CraftingRecipeValidator<ShapelessOreRecipe>(recipe -> new ShapelessRecipeWrapper<>(jfmuyHelpers, recipe)));
+
+        CraftingRecipeValidatorRegistry.register(ShapelessRecipes.class,
+            new CraftingRecipeValidator<ShapelessRecipes>(recipe -> new ShapelessRecipeWrapper<>(jfmuyHelpers, recipe)));
+
+        registry.addRecipes(CraftingRecipeMarker.getValidRecipes(jfmuyHelpers), VanillaRecipeCategoryUid.CRAFTING);
+        registry.addRecipes(SmeltingRecipeMaker.getFurnaceRecipes(jfmuyHelpers), VanillaRecipeCategoryUid.SMELTING);
         registry
-            .addRecipes(FuelRecipeMaker.getFuelRecipes(ingredientRegistry, jeiHelpers), VanillaRecipeCategoryUid.FUEL);
+            .addRecipes(FuelRecipeMaker.getFuelRecipes(ingredientRegistry, jfmuyHelpers), VanillaRecipeCategoryUid.FUEL);
         registry.addRecipes(BrewingRecipeMaker.getBrewingRecipes(ingredientRegistry), VanillaRecipeCategoryUid.BREWING);
         registry.addRecipes(
             AnvilRecipeMaker.getAnvilRecipes(vanillaRecipeFactory, ingredientRegistry),
@@ -169,7 +179,7 @@ public class VanillaPlugin implements IModPlugin {
         recipeTransferRegistry
             .addRecipeTransferHandler(ContainerWorkbench.class, VanillaRecipeCategoryUid.CRAFTING, 1, 9, 10, 36);
         recipeTransferRegistry.addRecipeTransferHandler(
-            new PlayerRecipeTransferHandler(jeiHelpers.recipeTransferHandlerHelper()),
+            new PlayerRecipeTransferHandler(jfmuyHelpers.recipeTransferHandlerHelper()),
             VanillaRecipeCategoryUid.CRAFTING);
         recipeTransferRegistry
             .addRecipeTransferHandler(ContainerFurnace.class, VanillaRecipeCategoryUid.SMELTING, 0, 1, 3, 36);

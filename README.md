@@ -6,7 +6,7 @@ A backport of the modern JEI item utility system to Minecraft 1.7.10 for learnin
 
 ## Required Dependencies:
 
-- [OKCore (>= 26.07.14.1)](https://github.com/Shigure-Ruiseki/OKCore)
+- [OKCore (>= 26.07.15.0)](https://github.com/Shigure-Ruiseki/OKCore)
 
 ## Features
 

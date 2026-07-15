@@ -283,6 +283,7 @@ public final class BasicRecipeTransferHandlerServer {
 
         return added;
     }
+
     /**
      * Get the slot which contains a specific itemStack.
      *
@@ -293,12 +294,13 @@ public final class BasicRecipeTransferHandlerServer {
      */
     @Nullable
     private static Slot getSlotWithStack(EntityPlayer player, Container container, Iterable<Integer> slotNumbers,
-                                         ItemStack itemStack) {
+        ItemStack itemStack) {
         for (Integer slotNumber : slotNumbers) {
             if (slotNumber >= 0 && slotNumber < container.inventorySlots.size()) {
                 Slot slot = container.getSlot(slotNumber);
                 ItemStack slotStack = slot.getStack();
-                if (slot.canTakeStack(player) && slotStack != null && slotStack.stackSize >= itemStack.stackSize
+                if (slot.canTakeStack(player) && slotStack != null
+                    && slotStack.stackSize >= itemStack.stackSize
                     && ItemStackHelpers.areStacksEqual(itemStack, slotStack)
                     && ItemStack.areItemStackTagsEqual(itemStack, slotStack)) {
                     return slot;

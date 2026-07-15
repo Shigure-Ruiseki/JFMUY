@@ -15,6 +15,7 @@ import ruiseki.jfmuy.api.recipe.IStackHelper;
 import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
 import ruiseki.jfmuy.recipes.BrokenCraftingRecipeException;
 import ruiseki.jfmuy.util.ErrorUtil;
+
 public class ShapelessRecipeWrapper<T extends IRecipe> implements ICraftingRecipeWrapper {
 
     protected final IJFMUYHelpers jeiHelpers;

@@ -35,7 +35,7 @@
  */
 dependencies {
 
-    implementation("com.github.Shigure-Ruiseki:OKCore:ab954bccd9:dev") { transitive = false }
+    implementation("com.github.Shigure-Ruiseki:OKCore:26.07.15.0:dev") { transitive = false }
 
     devOnlyNonPublishable("com.github.GTNewHorizons:waila:1.19.30:dev") { transitive = false }
 

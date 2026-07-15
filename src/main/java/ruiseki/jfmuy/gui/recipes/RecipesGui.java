@@ -277,7 +277,7 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         }
 
         if (titleHoverChecker.checkHover(mouseX, mouseY) && !logic.hasAllCategories()) {
-            String showAllRecipesString = Translator.translateToLocal("jei.tooltip.show.all.recipes");
+            String showAllRecipesString = Translator.translateToLocal("jfmuy.tooltip.show.all.recipes");
             TooltipRenderer.drawHoveringText(mc, showAllRecipesString, mouseX, mouseY);
         }
     }

@@ -8,7 +8,6 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.EnumChatFormatting;
 
 import ruiseki.jfmuy.Internal;
-import ruiseki.jfmuy.api.IIngredientListOverlay;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.JFMUYModConfigGui;
@@ -34,28 +33,28 @@ public class ConfigButton extends GuiIconToggleButton {
 
     @Override
     protected void getTooltips(List<String> tooltip) {
-        tooltip.add(Translator.translateToLocal("jei.tooltip.config"));
+        tooltip.add(Translator.translateToLocal("jfmuy.tooltip.config"));
         if (!Config.isOverlayEnabled()) {
-            tooltip.add(EnumChatFormatting.GOLD + Translator.translateToLocal("jei.tooltip.ingredient.list.disabled"));
+            tooltip.add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.ingredient.list.disabled"));
             tooltip.add(
                 EnumChatFormatting.GOLD + Translator.translateToLocalFormatted(
-                    "jei.tooltip.ingredient.list.disabled.how.to.fix",
+                    "jfmuy.tooltip.ingredient.list.disabled.how.to.fix",
                     KeyBindings.toggleOverlay.getKeyDescription()));
         } else if (!parent.isListDisplayed()) {
-            tooltip.add(EnumChatFormatting.GOLD + Translator.translateToLocal("jei.tooltip.not.enough.space"));
+            tooltip.add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.not.enough.space"));
         }
         if (Config.isCheatItemsEnabled()) {
-            tooltip.add(EnumChatFormatting.RED + Translator.translateToLocal("jei.tooltip.cheat.mode.button.enabled"));
+            tooltip.add(EnumChatFormatting.RED + Translator.translateToLocal("jfmuy.tooltip.cheat.mode.button.enabled"));
             KeyBinding toggleCheatMode = KeyBindings.toggleCheatMode;
             if (toggleCheatMode.getKeyCode() != 0) {
                 tooltip.add(
                     EnumChatFormatting.RED + Translator.translateToLocalFormatted(
-                        "jei.tooltip.cheat.mode.how.to.disable.hotkey",
+                        "jfmuy.tooltip.cheat.mode.how.to.disable.hotkey",
                         toggleCheatMode.getKeyDescription()));
             } else {
                 tooltip.add(
                     EnumChatFormatting.RED + Translator
-                        .translateToLocalFormatted("jei.tooltip.cheat.mode.how.to.disable.no.hotkey", "key.jei.ctrl"));
+                        .translateToLocalFormatted("jfmuy.tooltip.cheat.mode.how.to.disable.no.hotkey", "key.jfmuy.ctrl"));
             }
         }
     }

@@ -124,7 +124,7 @@ public class GuiEventHandler {
                 guiContainer,
                 event.mouseX - guiContainer.guiLeft,
                 event.mouseY - guiContainer.guiTop) != null) {
-                String showRecipesText = Translator.translateToLocal("jei.tooltip.show.recipes");
+                String showRecipesText = Translator.translateToLocal("jfmuy.tooltip.show.recipes");
                 TooltipRenderer.drawHoveringText(minecraft, showRecipesText, event.mouseX, event.mouseY);
             }
         }

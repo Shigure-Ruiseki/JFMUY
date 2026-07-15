@@ -34,7 +34,7 @@ import ruiseki.okcore.client.renderer.GlStateManager;
 
 public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
 
-    private static final String oreDictionaryIngredient = Translator.translateToLocal("jei.tooltip.recipe.ore.dict");
+    private static final String oreDictionaryIngredient = Translator.translateToLocal("jfmuy.tooltip.recipe.ore.dict");
 
     private final int slotIndex;
     private final boolean input;

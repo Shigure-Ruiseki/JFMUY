@@ -23,7 +23,7 @@ public class FurnaceSmeltingCategory extends FurnaceRecipeCategory<SmeltingRecip
         super(guiHelper);
         background = guiHelper.createDrawable(Reference.RECIPE_GUI_VANILLA, 0, 114, 82, 54);
         icon = guiHelper.createDrawableIngredient(new ItemStack(Blocks.furnace));
-        localizedName = Translator.translateToLocal("gui.jei.category.smelting");
+        localizedName = Translator.translateToLocal("gui.jfmuy.category.smelting");
     }
 
     @Override

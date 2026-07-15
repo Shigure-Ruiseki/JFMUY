@@ -30,8 +30,8 @@ public class PacketCheatPermission extends PacketJFMUY {
     public static void readPacketData(PacketBuffer buf, EntityPlayer player) {
         boolean hasPermission = buf.readBoolean();
         if (!hasPermission && Config.isCheatItemsEnabled()) {
-            CommandUtilServer.writeChatMessage(player, "jei.chat.error.no.cheat.permission.1", EnumChatFormatting.RED);
-            CommandUtilServer.writeChatMessage(player, "jei.chat.error.no.cheat.permission.2", EnumChatFormatting.RED);
+            CommandUtilServer.writeChatMessage(player, "jfmuy.chat.error.no.cheat.permission.1", EnumChatFormatting.RED);
+            CommandUtilServer.writeChatMessage(player, "jfmuy.chat.error.no.cheat.permission.2", EnumChatFormatting.RED);
             Config.setCheatItemsEnabled(false);
             player.closeScreen();
         }

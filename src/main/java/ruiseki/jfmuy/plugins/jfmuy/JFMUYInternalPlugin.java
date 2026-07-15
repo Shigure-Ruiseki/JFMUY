@@ -81,9 +81,9 @@ public class JFMUYInternalPlugin implements IModPlugin {
             registry.addIngredientInfo(
                 List.of(new ItemStack(Items.wooden_door)),
                 VanillaTypes.ITEM,
-                "description.jei.wooden.door.1", // actually 2 lines
-                "description.jei.wooden.door.2",
-                "description.jei.wooden.door.3");
+                "description.jfmuy.wooden.door.1", // actually 2 lines
+                "description.jfmuy.wooden.door.2",
+                "description.jfmuy.wooden.door.3");
 
             registry.addIngredientInfo(
                 new FluidStack(FluidRegistry.WATER, FluidContainerRegistry.BUCKET_VOLUME),

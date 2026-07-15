@@ -9,7 +9,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.EnumRarity;
+import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -18,6 +22,7 @@ import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
+import ruiseki.okcore.client.renderer.GlStateManager;
 
 public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
@@ -29,7 +34,7 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
             GL11.glPushMatrix();
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
+            GlStateManager.enableDepth();
             RenderHelper.enableGUIStandardItemLighting();
             GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 
@@ -42,7 +47,7 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
             RenderHelper.disableStandardItemLighting();
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GlStateManager.disableDepth();
 
             GL11.glPopMatrix();
         }
@@ -50,23 +55,32 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
     @Override
     public List<String> getTooltip(Minecraft minecraft, ItemStack ingredient, boolean tooltipFlag) {
-        net.minecraft.entity.player.EntityPlayer player = minecraft.thePlayer;
-        List<String> list;
-        try {
-            boolean showAdvanced = minecraft.gameSettings.advancedItemTooltips;
+        EntityPlayer player = minecraft.thePlayer;
+        List<String> list = new ArrayList<>();
 
-            list = ingredient.getTooltip(player, showAdvanced);
-        } catch (RuntimeException | LinkageError e) {
-            String itemStackInfo = ErrorUtil.getItemStackInfo(ingredient);
-            Log.get()
-                .error("Failed to get tooltip: {}", itemStackInfo, e);
-            list = new ArrayList<>();
-            list.add(
-                net.minecraft.util.EnumChatFormatting.RED + Translator.translateToLocal("jei.tooltip.error.crash"));
-            return list;
+        if (player == null && ingredient.getItem() instanceof ItemMap) {
+            list.add(ingredient.getDisplayName());
+        } else {
+            try {
+                boolean showAdvanced = minecraft.gameSettings.advancedItemTooltips;
+                list = ingredient.getTooltip(player, showAdvanced);
+            } catch (RuntimeException | LinkageError e) {
+                String itemStackInfo = ErrorUtil.getItemStackInfo(ingredient);
+                Log.get()
+                    .warn("Failed to get tooltip for {} during startup indexing (Player is null).", itemStackInfo);
+
+                list.clear();
+                try {
+                    list.add(ingredient.getDisplayName());
+                } catch (Exception ex) {
+                    list.add(
+                        net.minecraft.util.EnumChatFormatting.RED
+                            + Translator.translateToLocal("jfmuy.tooltip.error.crash"));
+                }
+            }
         }
 
-        net.minecraft.item.EnumRarity rarity;
+        EnumRarity rarity;
         try {
             rarity = ingredient.getItem()
                 .getRarity(ingredient);
@@ -74,14 +88,14 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
             String itemStackInfo = ErrorUtil.getItemStackInfo(ingredient);
             Log.get()
                 .error("Failed to get rarity: {}", itemStackInfo, e);
-            rarity = net.minecraft.item.EnumRarity.common;
+            rarity = EnumRarity.common;
         }
 
         for (int k = 0; k < list.size(); ++k) {
             if (k == 0) {
                 list.set(k, rarity.rarityColor + list.get(k));
             } else {
-                list.set(k, net.minecraft.util.EnumChatFormatting.GRAY + list.get(k));
+                list.set(k, EnumChatFormatting.GRAY + list.get(k));
             }
         }
 
@@ -90,6 +104,7 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
     @Override
     public FontRenderer getFontRenderer(Minecraft minecraft, ItemStack ingredient) {
+        if (ingredient.getItem() == null) return minecraft.fontRenderer;
         FontRenderer fontRenderer = ingredient.getItem()
             .getFontRenderer(ingredient);
         if (fontRenderer == null) {

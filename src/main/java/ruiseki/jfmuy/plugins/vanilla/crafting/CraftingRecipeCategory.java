@@ -44,7 +44,7 @@ public class CraftingRecipeCategory implements IRecipeCategory<IRecipeWrapper> {
         ResourceLocation location = Reference.RECIPE_GUI_VANILLA;
         background = guiHelper.createDrawable(location, 0, 60, width, height);
         icon = guiHelper.createDrawableIngredient(new ItemStack(Blocks.crafting_table));
-        localizedName = Translator.translateToLocal("gui.jei.category.craftingTable");
+        localizedName = Translator.translateToLocal("gui.jfmuy.category.craftingTable");
         craftingGridHelper = guiHelper.createCraftingGridHelper(craftInputSlot1, craftOutputSlot);
     }
 
@@ -125,7 +125,7 @@ public class CraftingRecipeCategory implements IRecipeCategory<IRecipeWrapper> {
                             if (modName != null) {
                                 tooltip.add(
                                     EnumChatFormatting.GRAY
-                                        + Translator.translateToLocalFormatted("jei.tooltip.recipe.by", modName));
+                                        + Translator.translateToLocalFormatted("jfmuy.tooltip.recipe.by", modName));
                             }
                         }
 
@@ -134,7 +134,7 @@ public class CraftingRecipeCategory implements IRecipeCategory<IRecipeWrapper> {
                         if (showAdvanced) {
                             tooltip.add(
                                 EnumChatFormatting.DARK_GRAY + Translator
-                                    .translateToLocalFormatted("jei.tooltip.recipe.id", registryName.toString()));
+                                    .translateToLocalFormatted("jfmuy.tooltip.recipe.id", registryName.toString()));
                         }
                     }
                 });

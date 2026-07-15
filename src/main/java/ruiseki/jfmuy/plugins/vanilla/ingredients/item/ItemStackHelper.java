@@ -146,9 +146,15 @@ public class ItemStackHelper implements IIngredientHelper<ItemStack> {
 
     @Override
     public boolean isIngredientOnServer(ItemStack ingredient) {
+        if (ingredient.getItem() == null) {
+            return false;
+        }
         Item item = ingredient.getItem();
+        String registryName = GameData.getItemRegistry()
+            .getNameForObject(item);
+
         return GameData.getItemRegistry()
-            .containsKey(item);
+            .containsKey(registryName);
     }
 
     @Override

@@ -113,7 +113,7 @@ public class IngredientGrid implements IShowsRecipeFocuses {
     public void drawTooltips(Minecraft minecraft, int mouseX, int mouseY) {
         if (isMouseOver(mouseX, mouseY)) {
             if (shouldDeleteItemOnClick(minecraft, mouseX, mouseY)) {
-                String deleteItem = Translator.translateToLocal("jei.tooltip.delete.item");
+                String deleteItem = Translator.translateToLocal("jfmuy.tooltip.delete.item");
                 TooltipRenderer.drawHoveringText(minecraft, deleteItem, mouseX, mouseY);
             } else {
                 IngredientRenderer hovered = guiIngredientSlots.getHovered(mouseX, mouseY);

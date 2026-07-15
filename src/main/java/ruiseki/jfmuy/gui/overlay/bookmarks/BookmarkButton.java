@@ -35,17 +35,17 @@ public class BookmarkButton extends GuiIconToggleButton {
 
     @Override
     protected void getTooltips(List<String> tooltip) {
-        tooltip.add(Translator.translateToLocal("jei.tooltip.bookmarks"));
+        tooltip.add(Translator.translateToLocal("jfmuy.tooltip.bookmarks"));
         KeyBinding bookmarkKey = KeyBindings.bookmark;
         if (bookmarkKey.getKeyCode() == 0) {
-            tooltip.add(EnumChatFormatting.RED + Translator.translateToLocal("jei.tooltip.bookmarks.usage.nokey"));
+            tooltip.add(EnumChatFormatting.RED + Translator.translateToLocal("jfmuy.tooltip.bookmarks.usage.nokey"));
         } else if (!bookmarkOverlay.hasRoom()) {
             tooltip
-                .add(EnumChatFormatting.GOLD + Translator.translateToLocal("jei.tooltip.bookmarks.not.enough.space"));
+                .add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.bookmarks.not.enough.space"));
         } else {
             tooltip.add(
                 EnumChatFormatting.GRAY + Translator
-                    .translateToLocalFormatted("jei.tooltip.bookmarks.usage.key", bookmarkKey.getKeyDescription()));
+                    .translateToLocalFormatted("jfmuy.tooltip.bookmarks.usage.key", bookmarkKey.getKeyDescription()));
         }
     }
 

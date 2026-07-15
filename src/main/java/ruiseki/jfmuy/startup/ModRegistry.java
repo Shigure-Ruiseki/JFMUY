@@ -78,13 +78,13 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
             String uid = recipeCategory.getUid();
             Preconditions.checkNotNull(uid, "Recipe category UID cannot be null %s", recipeCategory);
             if (!recipeCategoryUids.add(uid)) {
-                throw new IllegalArgumentException("A RecipeCategory with UID \"" + uid + "\" has already been registered.");
+                throw new IllegalArgumentException(
+                    "A RecipeCategory with UID \"" + uid + "\" has already been registered.");
             }
         }
 
         Collections.addAll(this.recipeCategories, recipeCategories);
     }
-
 
     @Override
     public IJFMUYHelpers getJFMUYHelpers() {

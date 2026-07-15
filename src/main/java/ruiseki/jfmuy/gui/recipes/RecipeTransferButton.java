@@ -53,7 +53,7 @@ public class RecipeTransferButton extends GuiIconButtonSmall {
     public void drawToolTip(Minecraft mc, int mouseX, int mouseY) {
         if (this.func_146115_a() && visible) {
             if (recipeTransferError == null) {
-                String tooltipTransfer = Translator.translateToLocal("jei.tooltip.transfer");
+                String tooltipTransfer = Translator.translateToLocal("jfmuy.tooltip.transfer");
                 TooltipRenderer.drawHoveringText(mc, tooltipTransfer, mouseX, mouseY);
             } else {
                 GlStateManager.pushMatrix();

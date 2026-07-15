@@ -25,7 +25,7 @@ public class FurnaceFuelCategory extends FurnaceRecipeCategory<FuelRecipe> {
             .build();
 
         flameTransparentBackground = guiHelper.getFlameIcon();
-        localizedName = Translator.translateToLocal("gui.jei.category.fuel");
+        localizedName = Translator.translateToLocal("gui.jfmuy.category.fuel");
     }
 
     @Override

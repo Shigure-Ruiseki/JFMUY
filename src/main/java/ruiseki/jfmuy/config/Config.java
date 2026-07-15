@@ -346,7 +346,7 @@ public final class Config {
             }
         }
 
-        final File configFile = new File(jeiConfigurationDir, "jei.cfg");
+        final File configFile = new File(jeiConfigurationDir, "jfmuy.cfg");
         final File itemBlacklistConfigFile = new File(jeiConfigurationDir, "itemBlacklist.cfg");
         final File searchColorsConfigFile = new File(jeiConfigurationDir, "searchColors.cfg");
         final File worldConfigFile = new File(jeiConfigurationDir, "worldSettings.cfg");
@@ -554,27 +554,27 @@ public final class Config {
         final String worldCategory = ServerInfo.getWorldUid(networkManager);
 
         Property property = worldConfig.get(worldCategory, "overlayEnabled", defaultValues.overlayEnabled);
-        property.setLanguageKey("config.jei.interface.overlayEnabled");
-        property.comment = (Translator.translateToLocal("config.jei.interface.overlayEnabled.comment"));
+        property.setLanguageKey("config.jfmuy.interface.overlayEnabled");
+        property.comment = (Translator.translateToLocal("config.jfmuy.interface.overlayEnabled.comment"));
         property.setShowInGui(false);
         values.overlayEnabled = property.getBoolean();
 
         property = worldConfig.get(worldCategory, "cheatItemsEnabled", defaultValues.cheatItemsEnabled);
-        property.setLanguageKey("config.jei.mode.cheatItemsEnabled");
-        property.comment = (Translator.translateToLocal("config.jei.mode.cheatItemsEnabled.comment"));
+        property.setLanguageKey("config.jfmuy.mode.cheatItemsEnabled");
+        property.comment = (Translator.translateToLocal("config.jfmuy.mode.cheatItemsEnabled.comment"));
         values.cheatItemsEnabled = property.getBoolean();
 
         property = worldConfig.get(worldCategory, "editEnabled", defaultValues.editModeEnabled);
-        property.setLanguageKey("config.jei.mode.editEnabled");
-        property.comment = (Translator.translateToLocal("config.jei.mode.editEnabled.comment"));
+        property.setLanguageKey("config.jfmuy.mode.editEnabled");
+        property.comment = (Translator.translateToLocal("config.jfmuy.mode.editEnabled.comment"));
         values.editModeEnabled = property.getBoolean();
         if (property.hasChanged()) {
             MinecraftForge.EVENT_BUS.post(new EditModeToggleEvent(values.editModeEnabled));
         }
 
         property = worldConfig.get(worldCategory, "bookmarkOverlayEnabled", defaultValues.bookmarkOverlayEnabled);
-        property.setLanguageKey("config.jei.interface.bookmarkOverlayEnabled");
-        property.comment = (Translator.translateToLocal("config.jei.interface.bookmarkOverlayEnabled.comment"));
+        property.setLanguageKey("config.jfmuy.interface.bookmarkOverlayEnabled");
+        property.comment = (Translator.translateToLocal("config.jfmuy.interface.bookmarkOverlayEnabled.comment"));
         property.setShowInGui(false);
         values.bookmarkOverlayEnabled = property.getBoolean();
 

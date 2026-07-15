@@ -61,7 +61,7 @@ public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<Conta
     public IRecipeTransferError transferRecipe(ContainerPlayer container, IRecipeLayout recipeLayout,
         EntityPlayer player, boolean maxTransfer, boolean doTransfer) {
         if (!ServerInfo.isJFMUYOnServer()) {
-            String tooltipMessage = Translator.translateToLocal("jei.tooltip.error.recipe.transfer.no.server");
+            String tooltipMessage = Translator.translateToLocal("jfmuy.tooltip.error.recipe.transfer.no.server");
             return handlerHelper.createUserErrorWithTooltip(tooltipMessage);
         }
 
@@ -94,7 +94,7 @@ public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<Conta
                         inputCount++;
                         if (badIndexes.contains(inputIndex)) {
                             String tooltipMessage = Translator
-                                .translateToLocal("jei.tooltip.error.recipe.transfer.too.large.player.inventory");
+                                .translateToLocal("jfmuy.tooltip.error.recipe.transfer.too.large.player.inventory");
                             return handlerHelper.createUserErrorWithTooltip(tooltipMessage);
                         }
                     }
@@ -154,7 +154,7 @@ public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<Conta
 
         // check if we have enough inventory space to shuffle items around to their final locations
         if (filledCraftSlotCount - inputCount > emptySlotCount) {
-            String message = Translator.translateToLocal("jei.tooltip.error.recipe.transfer.inventory.full");
+            String message = Translator.translateToLocal("jfmuy.tooltip.error.recipe.transfer.inventory.full");
             return handlerHelper.createUserErrorWithTooltip(message);
         }
 
@@ -162,7 +162,7 @@ public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<Conta
             .getMatchingItems(availableItemStacks, playerInvItemStackGroup.getGuiIngredients());
 
         if (matchingItemsResult.missingItems.size() > 0) {
-            String message = Translator.translateToLocal("jei.tooltip.error.recipe.transfer.missing");
+            String message = Translator.translateToLocal("jfmuy.tooltip.error.recipe.transfer.missing");
             matchingItemsResult = stackHelper.getMatchingItems(availableItemStacks, itemStackGroup.getGuiIngredients());
             return handlerHelper.createUserErrorForSlots(message, matchingItemsResult.missingItems);
         }

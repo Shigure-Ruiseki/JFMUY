@@ -32,13 +32,13 @@ public class FuelRecipe implements IRecipeWrapper {
         this.inputs = Collections.singletonList(inputList);
 
         if (burnTime == 200) {
-            this.smeltCountString = Translator.translateToLocal("gui.jei.category.fuel.smeltCount.single");
+            this.smeltCountString = Translator.translateToLocal("gui.jfmuy.category.fuel.smeltCount.single");
         } else {
             NumberFormat numberInstance = NumberFormat.getNumberInstance();
             numberInstance.setMaximumFractionDigits(2);
             String smeltCount = numberInstance.format(burnTime / 200f);
             this.smeltCountString = Translator
-                .translateToLocalFormatted("gui.jei.category.fuel.smeltCount", smeltCount);
+                .translateToLocalFormatted("gui.jfmuy.category.fuel.smeltCount", smeltCount);
         }
 
         this.flame = guiHelper.drawableBuilder(Reference.RECIPE_GUI_VANILLA, 82, 114, 14, 14)

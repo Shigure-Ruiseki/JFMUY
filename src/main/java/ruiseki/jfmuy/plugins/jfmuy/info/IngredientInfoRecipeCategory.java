@@ -26,7 +26,7 @@ public class IngredientInfoRecipeCategory implements IRecipeCategory<IngredientI
         background = guiHelper.createBlankDrawable(recipeWidth, recipeHeight);
         icon = guiHelper.getInfoIcon();
         slotBackground = guiHelper.getSlotDrawable();
-        localizedName = Translator.translateToLocal("gui.jei.category.itemInformation");
+        localizedName = Translator.translateToLocal("gui.jfmuy.category.itemInformation");
     }
 
     @Override

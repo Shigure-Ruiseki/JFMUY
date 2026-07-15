@@ -43,7 +43,7 @@ public class ShapelessIcon {
     @Nullable
     public List<String> getTooltipStrings(int mouseX, int mouseY) {
         if (hoverChecker.checkHover(mouseX, mouseY)) {
-            return Collections.singletonList(Translator.translateToLocal("jei.tooltip.shapeless.recipe"));
+            return Collections.singletonList(Translator.translateToLocal("jfmuy.tooltip.shapeless.recipe"));
         }
         return null;
     }

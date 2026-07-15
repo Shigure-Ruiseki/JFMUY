@@ -183,10 +183,10 @@ public class FluidStackRenderer implements IIngredientRenderer<FluidStack> {
 
         if (tooltipMode == TooltipMode.SHOW_AMOUNT_AND_CAPACITY) {
             String amount = Translator
-                .translateToLocalFormatted("jei.tooltip.liquid.amount.with.capacity", fluidStack.amount, capacityMb);
+                .translateToLocalFormatted("jfmuy.tooltip.liquid.amount.with.capacity", fluidStack.amount, capacityMb);
             tooltip.add(EnumChatFormatting.GRAY + amount);
         } else if (tooltipMode == TooltipMode.SHOW_AMOUNT) {
-            String amount = Translator.translateToLocalFormatted("jei.tooltip.liquid.amount", fluidStack.amount);
+            String amount = Translator.translateToLocalFormatted("jfmuy.tooltip.liquid.amount", fluidStack.amount);
             tooltip.add(EnumChatFormatting.GRAY + amount);
         }
 

@@ -7,7 +7,6 @@ import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.okcore.client.renderer.GlStateManager;
-import ruiseki.okcore.helper.GuideHelpers;
 
 /**
  * A small gui button that has an {@link IDrawable} instead of a string label.

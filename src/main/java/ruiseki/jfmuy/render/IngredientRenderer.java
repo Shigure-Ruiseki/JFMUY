@@ -149,7 +149,7 @@ public class IngredientRenderer<T> {
         }
 
         List<String> tooltip = new ArrayList<>();
-        tooltip.add(EnumChatFormatting.RED + Translator.translateToLocal("jei.tooltip.error.crash"));
+        tooltip.add(EnumChatFormatting.RED + Translator.translateToLocal("jfmuy.tooltip.error.crash"));
         return tooltip;
     }
 
@@ -165,22 +165,22 @@ public class IngredientRenderer<T> {
             String colorNamesString = Joiner.on(", ")
                 .join(colorNames);
             String colorNamesLocalizedString = EnumChatFormatting.GRAY
-                + Translator.translateToLocalFormatted("jei.tooltip.item.colors", colorNamesString);
+                + Translator.translateToLocalFormatted("jfmuy.tooltip.item.colors", colorNamesString);
             tooltip.addAll(minecraft.fontRenderer.listFormattedStringToWidth(colorNamesLocalizedString, maxWidth));
         }
     }
 
     private static void addEditModeInfoToTooltip(Minecraft minecraft, List<String> tooltip, int maxWidth) {
         tooltip.add("");
-        tooltip.add(EnumChatFormatting.DARK_GREEN + Translator.translateToLocal("gui.jei.editMode.description"));
+        tooltip.add(EnumChatFormatting.DARK_GREEN + Translator.translateToLocal("gui.jfmuy.editMode.description"));
 
-        String hideMessage = EnumChatFormatting.GRAY + Translator.translateToLocal("gui.jei.editMode.description.hide")
-            .replace("%CTRL", "key.jei.ctrl");
+        String hideMessage = EnumChatFormatting.GRAY + Translator.translateToLocal("gui.jfmuy.editMode.description.hide")
+            .replace("%CTRL", "key.jfmuy.ctrl");
         tooltip.addAll(minecraft.fontRenderer.listFormattedStringToWidth(hideMessage, maxWidth));
 
         String hideWildMessage = EnumChatFormatting.GRAY
-            + Translator.translateToLocal("gui.jei.editMode.description.hide.wild")
-                .replace("%CTRL", "key.jei.ctrl");
+            + Translator.translateToLocal("gui.jfmuy.editMode.description.hide.wild")
+                .replace("%CTRL", "key.jfmuy.ctrl");
         tooltip.addAll(minecraft.fontRenderer.listFormattedStringToWidth(hideWildMessage, maxWidth));
     }
 

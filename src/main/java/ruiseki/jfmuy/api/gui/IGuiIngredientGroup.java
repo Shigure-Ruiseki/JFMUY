@@ -1,14 +1,17 @@
 package ruiseki.jfmuy.api.gui;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import org.jetbrains.annotations.Nullable;
 
+import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
 import ruiseki.jfmuy.api.ingredients.IModIngredientRegistration;
 import ruiseki.jfmuy.api.recipe.IFocus;
+import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 
@@ -27,15 +30,11 @@ public interface IGuiIngredientGroup<T> {
     /**
      * Set all the ingredients in the group, based on the {@link IIngredients}
      * passed to {@link IRecipeCategory#setRecipe(IRecipeLayout, IRecipeWrapper, IIngredients)}.
-     *
-     * @since JEI 3.11.0
      */
     void set(IIngredients ingredients);
 
     /**
      * Set the ingredient at slotIndex to a rotating collection of ingredients.
-     *
-     * @since JEI 3.11.0
      */
     void set(int slotIndex, @Nullable List<T> ingredients);
 
@@ -43,6 +42,12 @@ public interface IGuiIngredientGroup<T> {
      * Set the ingredient at slotIndex to a specific ingredient.
      */
     void set(int slotIndex, @Nullable T ingredient);
+
+    /**
+     * Set a background image to draw behind the ingredient.
+     * Some examples are slot background or tank background.
+     */
+    void setBackground(int slotIndex, IDrawable background);
 
     /**
      * Add a callback to alter the tooltip for these ingredients.
@@ -56,10 +61,30 @@ public interface IGuiIngredientGroup<T> {
     Map<Integer, ? extends IGuiIngredient<T>> getGuiIngredients();
 
     /**
+     * Initialize a guiIngredient for the given slot.
+     * This can handle mod ingredients registered with {@link IModIngredientRegistration}.
+     * <p>
+     * Uses the default {@link IIngredientRenderer} registered for the ingredient list in
+     * {@link IModIngredientRegistration#register(IIngredientType, Collection, IIngredientHelper, IIngredientRenderer)}
+     * Uses the same 16x16 size as the ingredient list.
+     * <p>
+     * For more advanced control over rendering, use
+     * {@link #init(int, boolean, IIngredientRenderer, int, int, int, int, int, int)}
+     *
+     * @param slotIndex the slot index of this ingredient
+     * @param input     whether this slot is an input
+     * @param xPosition x position relative to the recipe background
+     * @param yPosition y position relative to the recipe background
+     * @see IGuiItemStackGroup#init(int, boolean, int, int)
+     * @see IGuiFluidStackGroup#init(int, boolean, int, int, int, int, int, boolean, IDrawable)
+     */
+    void init(int slotIndex, boolean input, int xPosition, int yPosition);
+
+    /**
      * Initialize a custom guiIngredient for the given slot.
-     * For ItemStacks and FluidStacks, use the much simpler methods in {@link IGuiItemStackGroup} and
-     * {@link IGuiFluidStackGroup}.
-     * This is for handling mod ingredients registered with {@link IModIngredientRegistration}.
+     * For default behavior, use the much simpler method {@link #init(int, boolean, int, int)}.
+     * For FluidStack, see {@link IGuiFluidStackGroup#init(int, boolean, int, int, int, int, int, boolean, IDrawable)}
+     * This can handle mod ingredients registered with {@link IModIngredientRegistration}.
      *
      * @param slotIndex          the slot index of this ingredient
      * @param input              whether this slot is an input
@@ -81,5 +106,5 @@ public interface IGuiIngredientGroup<T> {
      * This must be set before any ingredients are set.
      * Useful for recipes that display things in a custom way depending on what the overall recipe focus is.
      */
-    void setOverrideDisplayFocus(IFocus<T> focus);
+    void setOverrideDisplayFocus(@Nullable IFocus<T> focus);
 }

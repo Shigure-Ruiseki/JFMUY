@@ -1,41 +1,63 @@
 package ruiseki.jfmuy.input;
 
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiTextField;
 
 import org.lwjgl.input.Keyboard;
 
 import cpw.mods.fml.client.config.HoverChecker;
-import ruiseki.jfmuy.ItemFilter;
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.config.Config;
+import ruiseki.jfmuy.config.KeyBindings;
+import ruiseki.jfmuy.gui.elements.DrawableNineSliceTexture;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.ingredients.IngredientFilter;
+import ruiseki.okcore.client.renderer.GlStateManager;
 
 public class GuiTextFieldFilter extends GuiTextField {
 
     private static final int MAX_HISTORY = 100;
     private static final int maxSearchLength = 128;
-    private static final List<String> history = new LinkedList<String>();
+    private static final List<String> history = new LinkedList<>();
 
     private final HoverChecker hoverChecker;
-    private final ItemFilter itemFilter;
+    private final IngredientFilter ingredientFilter;
     private boolean previousKeyboardRepeatEnabled;
 
-    public GuiTextFieldFilter(int componentId, FontRenderer fontRenderer, int x, int y, int width, int height,
-        ItemFilter itemFilter) {
-        super(fontRenderer, x, y, width, height);
+    private final DrawableNineSliceTexture background;
+
+    public GuiTextFieldFilter(int componentId, IngredientFilter ingredientFilter) {
+        super(Minecraft.getMinecraft().fontRenderer, 0, 0, 0, 0);
+
         setMaxStringLength(maxSearchLength);
-        this.hoverChecker = new HoverChecker(y, y + height, x, x + width, 0);
-        this.itemFilter = itemFilter;
-        setText(Config.getFilterText());
+        this.hoverChecker = new HoverChecker(0, 0, 0, 0, 0);
+        this.ingredientFilter = ingredientFilter;
+
+        this.background = Internal.getHelpers()
+            .getGuiHelper()
+            .getSearchBackground();
+    }
+
+    public void updateBounds(Rectangle area) {
+        this.xPosition = area.x;
+        this.yPosition = area.y;
+        this.width = area.width;
+        this.height = area.height;
+        this.hoverChecker.updateBounds(area.y, area.y + area.height, area.x, area.x + area.width);
     }
 
     public void update() {
-        List<IIngredientListElement> itemList = itemFilter.getIngredientList();
-        if (itemList.size() == 0) {
+        String filterText = Config.getFilterText();
+        if (!filterText.equals(getText())) {
+            setText(filterText);
+        }
+        List<IIngredientListElement> ingredientList = ingredientFilter.getIngredientList();
+        if (ingredientList.size() == 0) {
             setTextColor(Color.red.getRGB());
         } else {
             setTextColor(Color.white.getRGB());
@@ -74,7 +96,7 @@ public class GuiTextFieldFilter extends GuiTextField {
                     setText(historyString);
                     handled = true;
                 }
-            } else if (keyCode == Keyboard.KEY_RETURN) {
+            } else if (KeyBindings.isEnterKey(keyCode)) {
                 saveHistory();
             }
         }
@@ -123,5 +145,29 @@ public class GuiTextFieldFilter extends GuiTextField {
             return true;
         }
         return false;
+    }
+
+    private boolean isDrawing = false;
+
+    @Override
+    public boolean getEnableBackgroundDrawing() {
+        if (this.isDrawing) {
+            GlStateManager.color(1, 1, 1, 1);
+            Minecraft minecraft = Minecraft.getMinecraft();
+            background.draw(minecraft, xPosition, yPosition, width, height);
+        }
+        return false;
+    }
+
+    @Override
+    public int getWidth() {
+        return this.width - 8;
+    }
+
+    @Override
+    public void drawTextBox() {
+        this.isDrawing = true;
+        super.drawTextBox();
+        this.isDrawing = false;
     }
 }

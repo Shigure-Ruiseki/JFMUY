@@ -1,8 +1,10 @@
 package ruiseki.jfmuy.plugins.vanilla.furnace;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
 
+import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
@@ -14,12 +16,13 @@ import ruiseki.jfmuy.util.Translator;
 public class FurnaceSmeltingCategory extends FurnaceRecipeCategory<SmeltingRecipe> {
 
     private final IDrawable background;
+    private final IDrawable icon;
     private final String localizedName;
 
     public FurnaceSmeltingCategory(IGuiHelper guiHelper) {
         super(guiHelper);
-        ResourceLocation location = new ResourceLocation("minecraft", "textures/gui/container/furnace.png");
-        background = guiHelper.createDrawable(location, 55, 16, 82, 54);
+        background = guiHelper.createDrawable(Reference.RECIPE_GUI_VANILLA, 0, 114, 82, 54);
+        icon = guiHelper.createDrawableIngredient(new ItemStack(Blocks.furnace));
         localizedName = Translator.translateToLocal("gui.jfmuy.category.smelting");
     }
 
@@ -29,14 +32,24 @@ public class FurnaceSmeltingCategory extends FurnaceRecipeCategory<SmeltingRecip
     }
 
     @Override
+    public IDrawable getIcon() {
+        return icon;
+    }
+
+    @Override
     public void drawExtras(Minecraft minecraft) {
-        flame.draw(minecraft, 2, 20);
+        animatedFlame.draw(minecraft, 1, 20);
         arrow.draw(minecraft, 24, 18);
     }
 
     @Override
     public String getTitle() {
         return localizedName;
+    }
+
+    @Override
+    public String getModName() {
+        return Reference.MINECRAFT_NAME;
     }
 
     @Override

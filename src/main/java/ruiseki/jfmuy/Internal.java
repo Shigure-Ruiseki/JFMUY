@@ -1,15 +1,23 @@
 package ruiseki.jfmuy;
 
+import net.minecraftforge.common.MinecraftForge;
+
 import org.jetbrains.annotations.Nullable;
 
-import ruiseki.jfmuy.util.ModIdUtil;
-import ruiseki.jfmuy.util.StackHelper;
-import ruiseki.jfmuy.util.color.ColorNamer;
+import com.google.common.base.Preconditions;
+
+import ruiseki.jfmuy.color.ColorNamer;
+import ruiseki.jfmuy.gui.GuiEventHandler;
+import ruiseki.jfmuy.ingredients.IngredientFilter;
+import ruiseki.jfmuy.ingredients.IngredientRegistry;
+import ruiseki.jfmuy.input.InputHandler;
+import ruiseki.jfmuy.runtime.JFMUYHelpers;
+import ruiseki.jfmuy.runtime.JFMUYRuntime;
+import ruiseki.jfmuy.startup.StackHelper;
 
 /** For JFMUY internal use only, these are normally accessed from the API. */
-public class Internal {
+public final class Internal {
 
-    private static final ModIdUtil modIdUtil = new ModIdUtil();
     @Nullable
     private static StackHelper stackHelper;
     @Nullable
@@ -20,15 +28,19 @@ public class Internal {
     private static IngredientRegistry ingredientRegistry;
     @Nullable
     private static ColorNamer colorNamer;
+    @Nullable
+    private static IngredientFilter ingredientFilter;
+    @Nullable
+    private static GuiEventHandler guiEventHandler;
+    @Nullable
+    private static InputHandler inputHandler;
 
     private Internal() {
 
     }
 
     public static StackHelper getStackHelper() {
-        if (stackHelper == null) {
-            throw new IllegalStateException("StackHelper has not been created yet.");
-        }
+        Preconditions.checkState(stackHelper != null, "StackHelper has not been created yet.");
         return stackHelper;
     }
 
@@ -36,14 +48,8 @@ public class Internal {
         Internal.stackHelper = stackHelper;
     }
 
-    public static ModIdUtil getModIdUtil() {
-        return modIdUtil;
-    }
-
     public static JFMUYHelpers getHelpers() {
-        if (helpers == null) {
-            throw new IllegalStateException("JFMUYHelpers has not been created yet.");
-        }
+        Preconditions.checkState(helpers != null, "JeiHelpers has not been created yet.");
         return helpers;
     }
 
@@ -57,32 +63,59 @@ public class Internal {
     }
 
     public static void setRuntime(JFMUYRuntime runtime) {
-        JFMUYRuntime jfmuyRuntime = Internal.runtime;
-        if (jfmuyRuntime != null) {
-            jfmuyRuntime.close();
+        JFMUYRuntime jeiRuntime = Internal.runtime;
+        if (jeiRuntime != null) {
+            jeiRuntime.close();
         }
         Internal.runtime = runtime;
     }
 
     public static IngredientRegistry getIngredientRegistry() {
-        if (ingredientRegistry == null) {
-            throw new IllegalStateException("Ingredient Registry has not been created yet.");
-        }
+        Preconditions.checkState(ingredientRegistry != null, "Ingredient Registry has not been created yet.");
         return ingredientRegistry;
     }
 
-    public static void setIngredientRegistry(@Nullable IngredientRegistry ingredientRegistry) {
+    public static void setIngredientRegistry(IngredientRegistry ingredientRegistry) {
         Internal.ingredientRegistry = ingredientRegistry;
     }
 
     public static ColorNamer getColorNamer() {
-        if (colorNamer == null) {
-            throw new IllegalStateException("Color Namer has not been created yet.");
-        }
+        Preconditions.checkState(colorNamer != null, "Color Namer has not been created yet.");
         return colorNamer;
     }
 
     public static void setColorNamer(ColorNamer colorNamer) {
         Internal.colorNamer = colorNamer;
+    }
+
+    public static IngredientFilter getIngredientFilter() {
+        Preconditions.checkState(ingredientFilter != null, "Ingredient Filter has not been created yet.");
+        return ingredientFilter;
+    }
+
+    public static void setIngredientFilter(IngredientFilter ingredientFilter) {
+        if (Internal.ingredientFilter != null) {
+            MinecraftForge.EVENT_BUS.unregister(Internal.ingredientFilter);
+        }
+        Internal.ingredientFilter = ingredientFilter;
+        MinecraftForge.EVENT_BUS.register(ingredientFilter);
+    }
+
+    public static void setGuiEventHandler(GuiEventHandler guiEventHandler) {
+        if (Internal.guiEventHandler != null) {
+            MinecraftForge.EVENT_BUS.unregister(Internal.guiEventHandler);
+        }
+
+        Internal.guiEventHandler = guiEventHandler;
+        MinecraftForge.EVENT_BUS.register(guiEventHandler);
+    }
+
+    public static void setInputHandler(InputHandler inputHandler) {
+        if (Internal.inputHandler != null) {
+            MinecraftForge.EVENT_BUS.unregister(Internal.inputHandler);
+        }
+
+        Internal.inputHandler = inputHandler;
+        MinecraftForge.EVENT_BUS.register(inputHandler);
     }
 }

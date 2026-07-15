@@ -1,5 +1,7 @@
 package ruiseki.jfmuy.api;
 
+import java.util.function.Function;
+
 import javax.annotation.Nullable;
 
 import net.minecraft.item.Item;
@@ -17,8 +19,6 @@ import net.minecraft.item.ItemStack;
  * adding a subtype interpreter here will override that functionality.
  * <p>
  * Get the instance by implementing {@link IModPlugin#registerItemSubtypes(ISubtypeRegistry)}.
- *
- * @since 3.6.4
  */
 public interface ISubtypeRegistry {
 
@@ -44,14 +44,22 @@ public interface ISubtypeRegistry {
     @Nullable
     String getSubtypeInfo(ItemStack itemStack);
 
-    interface ISubtypeInterpreter {
+    /**
+     * Returns whether an {@link ISubtypeInterpreter} has been registered for this item.
+     */
+    boolean hasSubtypeInterpreter(ItemStack itemStack);
+
+    @FunctionalInterface
+    interface ISubtypeInterpreter extends Function<ItemStack, String> {
+
+        String NONE = "";
 
         /**
          * Get the data from an itemStack that is relevant to telling subtypes apart.
          * This should account for meta, nbt, and anything else that's relevant.
-         * Returns null if there is no data used for subtypes.
+         * Return {@link #NONE} if there is no data used for subtypes.
          */
-        @Nullable
-        String getSubtypeInfo(ItemStack itemStack);
+        @Override
+        String apply(ItemStack itemStack);
     }
 }

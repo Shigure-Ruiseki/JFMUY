@@ -1,15 +1,21 @@
 package ruiseki.jfmuy.api;
 
+import java.util.Collection;
 import java.util.List;
 
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.item.ItemStack;
 
 import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
+import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
+import ruiseki.jfmuy.api.gui.IGlobalGuiHandler;
+import ruiseki.jfmuy.api.gui.IGuiScreenHandler;
 import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
-import ruiseki.jfmuy.api.recipe.IRecipeCategory;
-import ruiseki.jfmuy.api.recipe.IRecipeHandler;
+import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.api.recipe.IRecipeRegistryPlugin;
+import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
+import ruiseki.jfmuy.api.recipe.IRecipeWrapperFactory;
+import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferRegistry;
 
 /**
@@ -19,74 +25,123 @@ import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferRegistry;
 public interface IModRegistry {
 
     /**
-     * Get helpers and tools for implementing JFMUY plugins.
+     * Get helpers and tools for implementing JEI plugins.
+     *
+     * @since JEI 2.27.0
      */
     IJFMUYHelpers getJFMUYHelpers();
 
     /**
      * Get useful functions relating to recipe ingredients.
+     *
+     * @since JEI 3.11.0
      */
     IIngredientRegistry getIngredientRegistry();
 
     /**
-     * Add the recipe categories provided by this plugin.
-     */
-    void addRecipeCategories(IRecipeCategory... recipeCategories);
-
-    /**
-     * Add the recipe handlers provided by this plugin.
-     */
-    void addRecipeHandlers(IRecipeHandler... recipeHandlers);
-
-    /**
-     * Add the recipes provided by the plugin.
-     * These can be regular recipes, they will get wrapped by the provided recipe handlers.
-     * Recipes that are already registered with minecraft's recipe managers don't need to be added here.
-     */
-    void addRecipes(List recipes);
-
-    /**
-     * Add a clickable area on a gui to jump to specific categories of recipes in JFMUY.
+     * Add the recipes provided by your plugin.
+     * Handle them with {@link #handleRecipes(Class, IRecipeWrapperFactory, String)}.
+     * Recipes added here that already implement {@link IRecipeWrapper} do not need to add a handler.
      *
-     * @param guiContainerClass  the gui class for JFMUY to detect.
+     * @since JEI 4.3.0
+     */
+    void addRecipes(Collection<?> recipes, String recipeCategoryUid);
+
+    /**
+     * Add a handler for recipes provided by your plugin.
+     * Recipes that already implement {@link IRecipeWrapper} do not need to add a handler here.
+     *
+     * @param recipeClass          the recipe class being handled.
+     * @param recipeWrapperFactory turns recipes into recipe wrappers.
+     * @param recipeCategoryUid    a unique category id. For vanilla category IDs, see {@link VanillaRecipeCategoryUid}.
+     * @since JEI 4.3.0
+     */
+    <T> void handleRecipes(Class<T> recipeClass, IRecipeWrapperFactory<T> recipeWrapperFactory,
+        String recipeCategoryUid);
+
+    /**
+     * Add a clickable area on a gui to jump to specific categories of recipes in JEI.
+     *
+     * @param guiContainerClass  the gui class for JEI to detect.
      * @param xPos               left x position of the clickable area, relative to the left edge of the gui.
      * @param yPos               top y position of the clickable area, relative to the top edge of the gui.
      * @param width              the width of the clickable area.
      * @param height             the height of the clickable area.
-     * @param recipeCategoryUids the recipe categories that JFMUY should display.
+     * @param recipeCategoryUids the recipe categories that JEI should display.
      */
     void addRecipeClickArea(Class<? extends GuiContainer> guiContainerClass, int xPos, int yPos, int width, int height,
         String... recipeCategoryUids);
 
     /**
-     * Add an association between an item and what it can craft. (i.e. Furnace ItemStack -> Smelting and Fuel Recipes)
-     * Allows players to see what item they need to craft in order to make recipes in that recipe category.
+     * Add an association between an ingredient and what it can craft. (i.e. Furnace ItemStack -> Smelting and Fuel
+     * Recipes)
+     * Allows players to see what ingredient they need to craft in order to make recipes from a recipe category.
      *
-     * @param craftingItem       the item that can craft recipes (like a furnace or crafting table item)
-     * @param recipeCategoryUids the recipe categories handled by the item
+     * @param catalystIngredient the ingredient that can craft recipes (like a furnace or crafting table)
+     * @param recipeCategoryUids the recipe categories handled by the ingredient
+     * @since JEI 4.5.0
      */
-    void addRecipeCategoryCraftingItem(ItemStack craftingItem, String... recipeCategoryUids);
+    void addRecipeCatalyst(Object catalystIngredient, String... recipeCategoryUids);
 
     /**
-     * Add a handler to give JFMUY extra information about how to layout the item list next to a specific type of
+     * Add a handler to give JEI extra information about how to layout the item list next to a specific type of
      * GuiContainer.
-     * Used for guis with tabs on the side that would normally intersect with JFMUY's item list.
+     * Used for guis with tabs on the side that would normally intersect with JEI's item list.
      */
     void addAdvancedGuiHandlers(IAdvancedGuiHandler<?>... advancedGuiHandlers);
 
     /**
-     * Add a description page for an itemStack.
-     * Description pages show in the recipes for an itemStack and tell the player a little bit about it.
+     * Add a handler to give JEI extra information about how to layout the item list.
+     * Used for guis that display next to GUIs and would normally intersect with JEI.
      *
-     * @param itemStack       the itemStack(s) to describe
-     * @param descriptionKeys Localization keys for description text.
+     * @since JEI 4.14.0
+     */
+    void addGlobalGuiHandlers(IGlobalGuiHandler... globalGuiHandlers);
+
+    /**
+     * Add a handler to let JEI draw next to a specific class (or subclass) of {@link GuiScreen}.
+     * By default, JEI can only draw next to {@link GuiContainer}.
+     *
+     * @since JEI 4.8.4
+     */
+    <T extends GuiScreen> void addGuiScreenHandler(Class<T> guiClass, IGuiScreenHandler<T> handler);
+
+    /**
+     * Lets mods accept ghost ingredients from JEI.
+     * These ingredients are dragged from the ingredient list on to your gui, and are useful
+     * for setting recipes or anything else that does not need the real ingredient to exist.
+     *
+     * @since JEI 4.8.4
+     */
+    <T extends GuiScreen> void addGhostIngredientHandler(Class<T> guiClass, IGhostIngredientHandler<T> handler);
+
+    /**
+     * Add an info page for an ingredient.
+     * Description pages show in the recipes for an ingredient and tell the player a little bit about it.
+     *
+     * @param ingredient      the ingredient to describe
+     * @param ingredientType  the type of the ingredient
+     * @param descriptionKeys Localization keys for info text.
      *                        New lines can be added with "\n" or by giving multiple descriptionKeys.
      *                        Long lines are wrapped automatically.
      *                        Very long entries will span multiple pages automatically.
+     * @since JEI 4.12.0
      */
-    void addDescription(ItemStack itemStack, String... descriptionKeys);
+    <T> void addIngredientInfo(T ingredient, IIngredientType<T> ingredientType, String... descriptionKeys);
 
-    void addDescription(List<ItemStack> itemStacks, String... descriptionKeys);
+    /**
+     * Add an info page for multiple ingredients together.
+     * Description pages show in the recipes for an ingredient and tell the player a little bit about it.
+     *
+     * @param ingredients     the ingredients to describe
+     * @param ingredientType  the type of the ingredients
+     * @param descriptionKeys Localization keys for info text.
+     *                        New lines can be added with "\n" or by giving multiple descriptionKeys.
+     *                        Long lines are wrapped automatically.
+     *                        Very long entries will span multiple pages automatically.
+     * @since JEI 4.12.0
+     */
+    <T> void addIngredientInfo(List<T> ingredients, IIngredientType<T> ingredientType, String... descriptionKeys);
 
     /**
      * Get the registry for setting up recipe transfer.
@@ -97,6 +152,7 @@ public interface IModRegistry {
      * Register your own Recipe Registry Plugin here.
      *
      * @see IRecipeRegistryPlugin
+     * @since JEI 3.12.0
      */
     void addRecipeRegistryPlugin(IRecipeRegistryPlugin recipeRegistryPlugin);
 }

@@ -1,0 +1,314 @@
+package ruiseki.jfmuy.ingredients;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntityFurnace;
+
+import org.jetbrains.annotations.Nullable;
+
+import com.google.common.collect.ImmutableMap;
+
+import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
+import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
+import ruiseki.jfmuy.api.ingredients.VanillaTypes;
+import ruiseki.jfmuy.api.recipe.IIngredientType;
+import ruiseki.jfmuy.config.Config;
+import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.startup.IModIdHelper;
+import ruiseki.jfmuy.util.ErrorUtil;
+import ruiseki.jfmuy.util.IngredientSet;
+import ruiseki.jfmuy.util.Log;
+import ruiseki.okcore.datastructure.NonNullList;
+
+public class IngredientRegistry implements IIngredientRegistry {
+
+    private final IModIdHelper modIdHelper;
+    private final IngredientBlacklistInternal blacklist;
+    private final Map<IIngredientType, IngredientSet> ingredientsMap;
+    private final ImmutableMap<IIngredientType, IIngredientHelper> ingredientHelperMap;
+    private final ImmutableMap<IIngredientType, IIngredientRenderer> ingredientRendererMap;
+    private final ImmutableMap<Class, IIngredientType> ingredientTypeMap;
+
+    private final NonNullList<ItemStack> fuels = NonNullList.create();
+    private final NonNullList<ItemStack> potionIngredients = NonNullList.create();
+
+    public IngredientRegistry(IModIdHelper modIdHelper, IngredientBlacklistInternal blacklist,
+        Map<IIngredientType, IngredientSet> ingredientsMap,
+        ImmutableMap<IIngredientType, IIngredientHelper> ingredientHelperMap,
+        ImmutableMap<IIngredientType, IIngredientRenderer> ingredientRendererMap) {
+        this.modIdHelper = modIdHelper;
+        this.blacklist = blacklist;
+        this.ingredientsMap = ingredientsMap;
+        this.ingredientHelperMap = ingredientHelperMap;
+        this.ingredientRendererMap = ingredientRendererMap;
+        ImmutableMap.Builder<Class, IIngredientType> ingredientTypeBuilder = ImmutableMap.builder();
+        for (IIngredientType ingredientType : ingredientsMap.keySet()) {
+            ingredientTypeBuilder.put(ingredientType.getIngredientClass(), ingredientType);
+        }
+        this.ingredientTypeMap = ingredientTypeBuilder.build();
+
+        for (ItemStack itemStack : getAllIngredients(VanillaTypes.ITEM)) {
+            getStackProperties(itemStack);
+        }
+    }
+
+    private void getStackProperties(ItemStack itemStack) {
+        try {
+            if (TileEntityFurnace.isItemFuel(itemStack)) {
+                fuels.add(itemStack);
+            }
+        } catch (RuntimeException | LinkageError e) {
+            String itemStackInfo = ErrorUtil.getItemStackInfo(itemStack);
+            Log.get()
+                .error("Failed to check if item is fuel {}.", itemStackInfo, e);
+        }
+
+        try {
+            if (itemStack.getItem()
+                .isPotionIngredient(itemStack)) {
+                potionIngredients.add(itemStack);
+            }
+        } catch (RuntimeException | LinkageError e) {
+            String itemStackInfo = ErrorUtil.getItemStackInfo(itemStack);
+            Log.get()
+                .error("Failed to check if item is a potion ingredient {}.", itemStackInfo, e);
+        }
+    }
+
+    @Override
+    public <V> Collection<V> getAllIngredients(IIngredientType<V> ingredientType) {
+        @SuppressWarnings("unchecked")
+        IngredientSet<V> ingredients = ingredientsMap.get(ingredientType);
+        if (ingredients == null) {
+            return Collections.emptySet();
+        } else {
+            return Collections.unmodifiableCollection(ingredients);
+        }
+    }
+
+    @Nullable
+    public <V> V getIngredientByUid(IIngredientType<V> ingredientType, String uid) {
+        @SuppressWarnings("unchecked")
+        IngredientSet<V> ingredients = ingredientsMap.get(ingredientType);
+        if (ingredients == null) {
+            return null;
+        } else {
+            return ingredients.getByUid(uid);
+        }
+    }
+
+    public <V> boolean isValidIngredient(V ingredient) {
+        try {
+            IIngredientHelper<V> ingredientHelper = getIngredientHelper(ingredient);
+            return ingredientHelper.isValidIngredient(ingredient);
+        } catch (RuntimeException ignored) {
+            return false;
+        }
+    }
+
+    @Override
+    public <V> IIngredientHelper<V> getIngredientHelper(V ingredient) {
+        ErrorUtil.checkNotNull(ingredient, "ingredient");
+
+        IIngredientType<V> ingredientType = getIngredientType(ingredient);
+        return getIngredientHelper(ingredientType);
+    }
+
+    @Override
+    public <V> IIngredientHelper<V> getIngredientHelper(IIngredientType<V> ingredientType) {
+        ErrorUtil.checkNotNull(ingredientType, "ingredientType");
+        @SuppressWarnings("unchecked")
+        IIngredientHelper<V> ingredientHelper = ingredientHelperMap.get(ingredientType);
+        if (ingredientHelper != null) {
+            return ingredientHelper;
+        }
+        throw new IllegalArgumentException("Unknown ingredient type: " + ingredientType);
+    }
+
+    @Override
+    public <V> IIngredientRenderer<V> getIngredientRenderer(V ingredient) {
+        ErrorUtil.checkNotNull(ingredient, "ingredient");
+        IIngredientType<V> ingredientType = getIngredientType(ingredient);
+        return getIngredientRenderer(ingredientType);
+    }
+
+    @Override
+    public <V> IIngredientRenderer<V> getIngredientRenderer(IIngredientType<V> ingredientType) {
+        ErrorUtil.checkNotNull(ingredientType, "ingredientType");
+        @SuppressWarnings("unchecked")
+        IIngredientRenderer<V> ingredientRenderer = ingredientRendererMap.get(ingredientType);
+        if (ingredientRenderer == null) {
+            throw new IllegalArgumentException("Could not find ingredient renderer for " + ingredientType);
+        }
+        return ingredientRenderer;
+    }
+
+    @Override
+    public Collection<IIngredientType> getRegisteredIngredientTypes() {
+        return ingredientTypeMap.values();
+    }
+
+    @Override
+    public List<ItemStack> getFuels() {
+        return Collections.unmodifiableList(fuels);
+    }
+
+    @Override
+    public List<ItemStack> getPotionIngredients() {
+        return Collections.unmodifiableList(potionIngredients);
+    }
+
+    @Override
+    public <V> void addIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients) {
+        addIngredientsAtRuntime(ingredientType, ingredients, Internal.getIngredientFilter());
+    }
+
+    public <V> void addIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients,
+        IngredientFilter ingredientFilter) {
+        ErrorUtil.assertMainThread();
+        ErrorUtil.checkNotNull(ingredientType, "ingredientType");
+        ErrorUtil.checkNotEmpty(ingredients, "ingredients");
+
+        Log.get()
+            .info(
+                "Ingredients are being added at runtime: {} {}",
+                ingredients.size(),
+                ingredientType.getIngredientClass()
+                    .getName());
+
+        IIngredientHelper<V> ingredientHelper = getIngredientHelper(ingredientType);
+        // noinspection unchecked
+        Set<V> set = ingredientsMap
+            .computeIfAbsent(ingredientType, k -> IngredientSet.create(ingredientType, ingredientHelper));
+        for (V ingredient : ingredients) {
+            set.add(ingredient);
+            if (ingredient instanceof ItemStack) {
+                getStackProperties((ItemStack) ingredient);
+            }
+        }
+
+        NonNullList<IIngredientListElement<V>> ingredientListElements = IngredientListElementFactory
+            .createList(this, ingredientType, ingredients, modIdHelper);
+        for (IIngredientListElement<V> element : ingredientListElements) {
+            List<IIngredientListElement<V>> matchingElements = ingredientFilter.findMatchingElements(element);
+            if (!matchingElements.isEmpty()) {
+                for (IIngredientListElement<V> matchingElement : matchingElements) {
+                    blacklist.removeIngredientFromBlacklist(matchingElement.getIngredient(), ingredientHelper);
+                    ingredientFilter.updateHiddenState(matchingElement);
+                }
+                if (Config.isDebugModeEnabled()) {
+                    Log.get()
+                        .debug("Updated ingredient: {}", ingredientHelper.getErrorInfo(element.getIngredient()));
+                }
+            } else {
+                blacklist.removeIngredientFromBlacklist(element.getIngredient(), ingredientHelper);
+                ingredientFilter.addIngredient(element);
+                if (Config.isDebugModeEnabled()) {
+                    Log.get()
+                        .debug("Added ingredient: {}", ingredientHelper.getErrorInfo(element.getIngredient()));
+                }
+            }
+        }
+        ingredientFilter.invalidateCache();
+    }
+
+    @Override
+    public <V> void removeIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients) {
+        removeIngredientsAtRuntime(ingredientType, ingredients, Internal.getIngredientFilter());
+    }
+
+    @Override
+    public <V> IIngredientType<V> getIngredientType(V ingredient) {
+        ErrorUtil.checkNotNull(ingredient, "ingredient");
+        @SuppressWarnings("unchecked")
+        Class<? extends V> ingredientClass = (Class<? extends V>) ingredient.getClass();
+        return getIngredientType(ingredientClass);
+    }
+
+    @Override
+    public <V> IIngredientType<V> getIngredientType(Class<? extends V> ingredientClass) {
+        ErrorUtil.checkNotNull(ingredientClass, "ingredientClass");
+        @SuppressWarnings("unchecked")
+        IIngredientType<V> ingredientType = this.ingredientTypeMap.get(ingredientClass);
+        if (ingredientType != null) {
+            return ingredientType;
+        }
+        for (IIngredientType<?> type : ingredientTypeMap.values()) {
+            if (type.getIngredientClass()
+                .isAssignableFrom(ingredientClass)) {
+                @SuppressWarnings("unchecked")
+                IIngredientType<V> castType = (IIngredientType<V>) type;
+                return castType;
+            }
+        }
+        throw new IllegalArgumentException("Unknown ingredient class: " + ingredientClass);
+    }
+
+    public <V> void removeIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients,
+        IngredientFilter ingredientFilter) {
+        ErrorUtil.assertMainThread();
+        ErrorUtil.checkNotNull(ingredientType, "ingredientType");
+        ErrorUtil.checkNotEmpty(ingredients, "ingredients");
+
+        Log.get()
+            .info(
+                "Ingredients are being removed at runtime: {} {}",
+                ingredients.size(),
+                ingredientType.getIngredientClass()
+                    .getName());
+
+        @SuppressWarnings("unchecked")
+        IngredientSet<V> set = ingredientsMap.get(ingredientType);
+        if (set != null) {
+            set.removeAll(ingredients);
+        }
+
+        IIngredientHelper<V> ingredientHelper = getIngredientHelper(ingredientType);
+
+        NonNullList<IIngredientListElement<V>> ingredientListElements = IngredientListElementFactory
+            .createList(this, ingredientType, ingredients, modIdHelper);
+        for (IIngredientListElement<V> element : ingredientListElements) {
+            List<IIngredientListElement<V>> matchingElements = ingredientFilter.findMatchingElements(element);
+            if (matchingElements.isEmpty()) {
+                V ingredient = element.getIngredient();
+                String errorInfo = ingredientHelper.getErrorInfo(ingredient);
+                Log.get()
+                    .error("Could not find any matching ingredients to remove: {}", errorInfo);
+            } else if (Config.isDebugModeEnabled()) {
+                Log.get()
+                    .debug("Removed ingredient: {}", ingredientHelper.getErrorInfo(element.getIngredient()));
+            }
+            for (IIngredientListElement<V> matchingElement : matchingElements) {
+                blacklist.addIngredientToBlacklist(matchingElement.getIngredient(), ingredientHelper);
+                matchingElement.setVisible(false);
+            }
+        }
+        ingredientFilter.invalidateCache();
+    }
+
+    public <V> boolean isIngredientVisible(V ingredient, IngredientFilter ingredientFilter) {
+        IIngredientType<V> ingredientType = getIngredientType(ingredient);
+        IIngredientListElement<V> element = IngredientListElementFactory
+            .createUnorderedElement(this, ingredientType, ingredient, modIdHelper);
+        if (element == null) {
+            return false;
+        }
+        List<IIngredientListElement<V>> matchingElements = ingredientFilter.findMatchingElements(element);
+        if (matchingElements.isEmpty()) {
+            return true;
+        }
+        for (IIngredientListElement matchingElement : matchingElements) {
+            if (matchingElement.isVisible()) {
+                return true;
+            }
+        }
+        return false;
+    }
+}

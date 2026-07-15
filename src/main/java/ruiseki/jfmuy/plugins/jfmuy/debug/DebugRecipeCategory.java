@@ -11,40 +11,43 @@ import net.minecraftforge.fluids.FluidStack;
 
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.IGuiHelper;
-import ruiseki.jfmuy.api.IItemListOverlay;
+import ruiseki.jfmuy.api.IIngredientFilter;
+import ruiseki.jfmuy.api.IIngredientListOverlay;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IGuiFluidStackGroup;
 import ruiseki.jfmuy.api.gui.IGuiIngredientGroup;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
-import ruiseki.jfmuy.api.gui.ITooltipCallback;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
-import ruiseki.jfmuy.api.recipe.BlankRecipeCategory;
+import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.plugins.jfmuy.JFMUYInternalPlugin;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredient;
-import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredientRenderer;
 
-public class DebugRecipeCategory extends BlankRecipeCategory<DebugRecipe> {
+public class DebugRecipeCategory implements IRecipeCategory<DebugRecipe> {
 
-    public static final int recipeWidth = 160;
-    public static final int recipeHeight = 60;
+    public static final int RECIPE_WIDTH = 160;
+    public static final int RECIPE_HEIGHT = 60;
     private final IDrawable background;
     private final String localizedName;
     private final IDrawable tankBackground;
     private final IDrawable tankOverlay;
 
     public DebugRecipeCategory(IGuiHelper guiHelper) {
-        background = guiHelper.createBlankDrawable(recipeWidth, recipeHeight);
-        localizedName = "debug";
+        this.background = guiHelper.createBlankDrawable(RECIPE_WIDTH, RECIPE_HEIGHT);
+        this.localizedName = "debug";
 
         ResourceLocation backgroundTexture = new ResourceLocation(
             Reference.MOD_ID,
-            Reference.TEXTURE_RECIPE_BACKGROUND_PATH);
-        tankBackground = guiHelper.createDrawable(backgroundTexture, 176, 0, 20, 55);
-        tankOverlay = guiHelper.createDrawable(backgroundTexture, 176, 55, 12, 47);
+            Reference.TEXTURE_GUI_PATH + "debug.png");
+        this.tankBackground = guiHelper.drawableBuilder(backgroundTexture, 220, 196, 18, 60)
+            .addPadding(-1, -1, -1, -1)
+            .build();
+        this.tankOverlay = guiHelper.drawableBuilder(backgroundTexture, 238, 196, 18, 60)
+            .addPadding(-1, -1, -1, -1)
+            .build();
     }
 
     @Override
@@ -58,27 +61,36 @@ public class DebugRecipeCategory extends BlankRecipeCategory<DebugRecipe> {
     }
 
     @Override
+    public String getModName() {
+        return Reference.MOD_NAME;
+    }
+
+    @Override
     public IDrawable getBackground() {
         return background;
     }
 
     @Override
     public void drawExtras(Minecraft minecraft) {
-        tankBackground.draw(minecraft);
         IJFMUYRuntime runtime = JFMUYInternalPlugin.jfmuyRuntime;
         if (runtime != null) {
-            IItemListOverlay itemListOverlay = runtime.getItemListOverlay();
-            minecraft.fontRenderer.drawString(itemListOverlay.getFilterText(), 20, 52, 0);
-            ItemStack stackUnderMouse = itemListOverlay.getStackUnderMouse();
-            if (stackUnderMouse != null) {
-                IIngredientRegistry ingredientRegistry = JFMUYInternalPlugin.ingredientRegistry;
-                if (ingredientRegistry != null) {
-                    IIngredientHelper<ItemStack> ingredientHelper = ingredientRegistry
-                        .getIngredientHelper(stackUnderMouse);
-                    String jfmuyUid = ingredientHelper.getUniqueId(stackUnderMouse);
-                    minecraft.fontRenderer.drawString(jfmuyUid, 50, 52, 0);
-                }
+            IIngredientFilter ingredientFilter = runtime.getIngredientFilter();
+            minecraft.fontRenderer.drawString(ingredientFilter.getFilterText(), 20, 52, 0);
+
+            IIngredientListOverlay ingredientListOverlay = runtime.getIngredientListOverlay();
+            Object ingredientUnderMouse = ingredientListOverlay.getIngredientUnderMouse();
+            if (ingredientUnderMouse != null) {
+                drawIngredientName(minecraft, ingredientUnderMouse);
             }
+        }
+    }
+
+    private <T> void drawIngredientName(Minecraft minecraft, T ingredient) {
+        IIngredientRegistry ingredientRegistry = JFMUYInternalPlugin.ingredientRegistry;
+        if (ingredientRegistry != null) {
+            IIngredientHelper<T> ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
+            String jeiUid = ingredientHelper.getUniqueId(ingredient);
+            minecraft.fontRenderer.drawString(jeiUid, 50, 52, 0);
         }
     }
 
@@ -86,15 +98,11 @@ public class DebugRecipeCategory extends BlankRecipeCategory<DebugRecipe> {
     public void setRecipe(IRecipeLayout recipeLayout, DebugRecipe recipeWrapper, IIngredients ingredients) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
-        guiItemStacks.addTooltipCallback(new ITooltipCallback<ItemStack>() {
-
-            @Override
-            public void onTooltip(int slotIndex, boolean input, ItemStack ingredient, List<String> tooltip) {
-                if (input) {
-                    tooltip.add(slotIndex + " Input itemStack");
-                } else {
-                    tooltip.add(slotIndex + " Output itemStack");
-                }
+        guiItemStacks.addTooltipCallback((slotIndex, input, ingredient, tooltip) -> {
+            if (input) {
+                tooltip.add(slotIndex + " Input itemStack");
+            } else {
+                tooltip.add(slotIndex + " Output itemStack");
             }
         });
 
@@ -104,41 +112,36 @@ public class DebugRecipeCategory extends BlankRecipeCategory<DebugRecipe> {
         guiItemStacks.set(1, new ItemStack(Items.lava_bucket));
 
         IGuiFluidStackGroup guiFluidStacks = recipeLayout.getFluidStacks();
-        guiFluidStacks.addTooltipCallback(new ITooltipCallback<FluidStack>() {
-
-            @Override
-            public void onTooltip(int slotIndex, boolean input, FluidStack ingredient, List<String> tooltip) {
-                if (input) {
-                    tooltip.add(slotIndex + " Input fluidStack");
-                } else {
-                    tooltip.add(slotIndex + " Output fluidStack");
-                }
+        guiFluidStacks.addTooltipCallback((slotIndex, input, ingredient, tooltip) -> {
+            if (input) {
+                tooltip.add(slotIndex + " Input fluidStack");
+            } else {
+                tooltip.add(slotIndex + " Output fluidStack");
             }
         });
 
-        guiFluidStacks.init(0, true, 4, 4, 12, 47, 2000, true, tankOverlay);
-        guiFluidStacks.init(1, true, 24, 0, 12, 47, 16000, true, null);
-        guiFluidStacks.init(2, false, 50, 0, 24, 24, 2000, true, tankOverlay);
-        guiFluidStacks.init(3, false, 90, 0, 12, 47, 100, false, tankOverlay);
+        guiFluidStacks.init(0, false, 90, 0, 16, 58, 16000, false, tankOverlay);
+        guiFluidStacks.init(1, true, 24, 0, 12, 47, 2000, true, null);
+
+        guiFluidStacks.setBackground(0, tankBackground);
+
+        List<FluidStack> fluidInputs = recipeWrapper.getFluidInputs();
+        guiFluidStacks.set(0, fluidInputs.get(0));
+        guiFluidStacks.set(1, fluidInputs.get(1));
 
         IGuiIngredientGroup<DebugIngredient> debugIngredientsGroup = recipeLayout
-            .getIngredientsGroup(DebugIngredient.class);
-        debugIngredientsGroup.addTooltipCallback(new ITooltipCallback<DebugIngredient>() {
-
-            @Override
-            public void onTooltip(int slotIndex, boolean input, DebugIngredient ingredient, List<String> tooltip) {
-                if (input) {
-                    tooltip.add(slotIndex + " Input DebugIngredient");
-                } else {
-                    tooltip.add(slotIndex + " Output DebugIngredient");
-                }
+            .getIngredientsGroup(DebugIngredient.TYPE);
+        debugIngredientsGroup.addTooltipCallback((slotIndex, input, ingredient, tooltip) -> {
+            if (input) {
+                tooltip.add(slotIndex + " Input DebugIngredient");
+            } else {
+                tooltip.add(slotIndex + " Output DebugIngredient");
             }
         });
 
-        DebugIngredientRenderer ingredientRenderer = new DebugIngredientRenderer();
-        debugIngredientsGroup.init(0, true, ingredientRenderer, 40, 0, 16, 16, 0, 0);
-        debugIngredientsGroup.init(1, false, ingredientRenderer, 40, 16, 16, 16, 0, 0);
-        debugIngredientsGroup.init(2, false, ingredientRenderer, 40, 32, 16, 16, 0, 0);
+        debugIngredientsGroup.init(0, true, 40, 0);
+        debugIngredientsGroup.init(1, false, 40, 16);
+        debugIngredientsGroup.init(2, false, 40, 32);
 
         debugIngredientsGroup.set(ingredients);
     }

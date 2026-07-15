@@ -8,7 +8,11 @@ public interface IJFMUYRuntime {
 
     IRecipeRegistry getRecipeRegistry();
 
-    IItemListOverlay getItemListOverlay();
-
     IRecipesGui getRecipesGui();
+
+    IIngredientFilter getIngredientFilter();
+
+    IIngredientListOverlay getIngredientListOverlay();
+
+    IBookmarkOverlay getBookmarkOverlay();
 }

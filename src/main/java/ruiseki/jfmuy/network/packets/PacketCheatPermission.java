@@ -1,7 +1,5 @@
 package ruiseki.jfmuy.network.packets;
 
-import java.io.IOException;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.EnumChatFormatting;
@@ -29,19 +27,15 @@ public class PacketCheatPermission extends PacketJFMUY {
         buf.writeBoolean(hasPermission);
     }
 
-    public static class Handler implements IPacketJFMUYHandler {
-
-        @Override
-        public void readPacketData(PacketBuffer buf, EntityPlayer player) throws IOException {
-            boolean hasPermission = buf.readBoolean();
-            if (!hasPermission && Config.isCheatItemsEnabled()) {
-                CommandUtilServer
-                    .writeChatMessage(player, "jfmuy.chat.error.no.cheat.permission.1", EnumChatFormatting.RED);
-                CommandUtilServer
-                    .writeChatMessage(player, "jfmuy.chat.error.no.cheat.permission.2", EnumChatFormatting.RED);
-                Config.setCheatItemsEnabled(false);
-                player.closeScreen();
-            }
+    public static void readPacketData(PacketBuffer buf, EntityPlayer player) {
+        boolean hasPermission = buf.readBoolean();
+        if (!hasPermission && Config.isCheatItemsEnabled()) {
+            CommandUtilServer
+                .writeChatMessage(player, "jfmuy.chat.error.no.cheat.permission.1", EnumChatFormatting.RED);
+            CommandUtilServer
+                .writeChatMessage(player, "jfmuy.chat.error.no.cheat.permission.2", EnumChatFormatting.RED);
+            Config.setCheatItemsEnabled(false);
+            player.closeScreen();
         }
     }
 }

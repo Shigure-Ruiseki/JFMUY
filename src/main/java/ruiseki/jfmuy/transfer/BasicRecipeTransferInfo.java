@@ -38,6 +38,11 @@ public class BasicRecipeTransferInfo<C extends Container> implements IRecipeTran
     }
 
     @Override
+    public boolean canHandle(C container) {
+        return true;
+    }
+
+    @Override
     public List<Slot> getRecipeSlots(C container) {
         List<Slot> slots = new ArrayList<Slot>();
         int maxSlots = container.inventorySlots.size();

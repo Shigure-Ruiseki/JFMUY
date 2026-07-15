@@ -2,9 +2,12 @@ package ruiseki.jfmuy.gui.ingredients;
 
 import net.minecraft.item.ItemStack;
 
+import org.jetbrains.annotations.Nullable;
+
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
+import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.IFocus;
-import ruiseki.jfmuy.plugins.vanilla.ingredients.ItemStackRenderer;
+import ruiseki.jfmuy.plugins.vanilla.ingredients.item.ItemStackRenderer;
 
 public class GuiItemStackGroup extends GuiIngredientGroup<ItemStack> implements IGuiItemStackGroup {
 
@@ -12,8 +15,8 @@ public class GuiItemStackGroup extends GuiIngredientGroup<ItemStack> implements 
     private static final int baseHeight = 16;
     private static final ItemStackRenderer renderer = new ItemStackRenderer();
 
-    public GuiItemStackGroup(IFocus<ItemStack> focus, int cycleOffset) {
-        super(ItemStack.class, focus, cycleOffset);
+    public GuiItemStackGroup(@Nullable IFocus<ItemStack> focus, int cycleOffset) {
+        super(VanillaTypes.ITEM, focus, cycleOffset);
     }
 
     public static int getWidth(int padding) {
@@ -26,10 +29,7 @@ public class GuiItemStackGroup extends GuiIngredientGroup<ItemStack> implements 
 
     @Override
     public void init(int slotIndex, boolean input, int xPosition, int yPosition) {
-        init(slotIndex, input, xPosition, yPosition, 1);
+        init(slotIndex, input, renderer, xPosition, yPosition, getWidth(1), getHeight(1), 1, 1);
     }
 
-    public void init(int index, boolean input, int xPosition, int yPosition, int padding) {
-        init(index, input, renderer, xPosition, yPosition, getWidth(padding), getHeight(padding), padding, padding);
-    }
 }

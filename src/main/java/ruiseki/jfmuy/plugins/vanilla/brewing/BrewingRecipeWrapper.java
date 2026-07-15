@@ -8,46 +8,42 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 
-import org.jetbrains.annotations.NotNull;
-
 import com.google.common.base.Objects;
 
 import ruiseki.jfmuy.api.ingredients.IIngredients;
-import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
+import ruiseki.jfmuy.api.ingredients.VanillaTypes;
+import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.util.Translator;
 
-public class BrewingRecipeWrapper extends BlankRecipeWrapper {
+public class BrewingRecipeWrapper implements IRecipeWrapper {
+
+    private static final BrewingRecipeUtil UTIL = new BrewingRecipeUtil();
 
     private final List<ItemStack> ingredients;
     private final ItemStack potionInput;
     private final ItemStack potionOutput;
     private final List<List<ItemStack>> inputs;
-    private final int brewingSteps;
     private final int hashCode;
 
-    public BrewingRecipeWrapper(ItemStack ingredient, ItemStack potionInput, ItemStack potionOutput, int brewingSteps) {
-        this(Collections.singletonList(ingredient), potionInput, potionOutput, brewingSteps);
-    }
-
-    @SuppressWarnings("unchecked")
-    public BrewingRecipeWrapper(List<ItemStack> ingredients, ItemStack potionInput, ItemStack potionOutput,
-        int brewingSteps) {
+    public BrewingRecipeWrapper(List<ItemStack> ingredients, ItemStack potionInput, ItemStack potionOutput) {
         this.ingredients = ingredients;
         this.potionInput = potionInput;
         this.potionOutput = potionOutput;
-        this.brewingSteps = brewingSteps;
 
-        // SỬA TẠI ĐÂY: Bọc từng potionInput đơn lẻ thành Collections.singletonList()
+        UTIL.addRecipe(potionInput, potionOutput);
+
         this.inputs = new ArrayList<>();
         this.inputs.add(Collections.singletonList(potionInput));
         this.inputs.add(Collections.singletonList(potionInput));
         this.inputs.add(Collections.singletonList(potionInput));
-        this.inputs.add(ingredients); // Thằng này bản thân nó đã là List rồi nên giữ nguyên
+        this.inputs.add(ingredients);
 
         ItemStack firstIngredient = ingredients.get(0);
 
         this.hashCode = Objects.hashCode(
+            potionInput.getItem(),
             potionInput.getItemDamage(),
+            potionOutput.getItem(),
             potionOutput.getItemDamage(),
             firstIngredient.getItem(),
             firstIngredient.getItemDamage());
@@ -55,21 +51,18 @@ public class BrewingRecipeWrapper extends BlankRecipeWrapper {
 
     @Override
     public void getIngredients(IIngredients ingredients) {
-        ingredients.setInputLists(ItemStack.class, inputs);
-        ingredients.setOutput(ItemStack.class, potionOutput);
+        ingredients.setInputLists(VanillaTypes.ITEM, inputs);
+        ingredients.setOutput(VanillaTypes.ITEM, potionOutput);
     }
 
-    public List<List<ItemStack>> getInputs() {
+    public List getInputs() {
         return inputs;
     }
 
-    public List<ItemStack> getOutputs() {
-        return Collections.singletonList(potionOutput);
-    }
-
     @Override
-    public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
-        if (brewingSteps > 0) {
+    public void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
+        int brewingSteps = getBrewingSteps();
+        if (brewingSteps < Integer.MAX_VALUE) {
             String steps = Translator.translateToLocalFormatted("gui.jfmuy.category.brewing.steps", brewingSteps);
             minecraft.fontRenderer.drawString(steps, 70, 28, Color.gray.getRGB());
         }
@@ -104,11 +97,14 @@ public class BrewingRecipeWrapper extends BlankRecipeWrapper {
     }
 
     private static boolean arePotionsEqual(ItemStack potion1, ItemStack potion2) {
-        return potion1.getItemDamage() == potion2.getItemDamage();
+        if (potion1 == null || potion2 == null) {
+            return potion1 == potion2;
+        }
+        return potion1.getItem() == potion2.getItem() && potion1.getItemDamage() == potion2.getItemDamage();
     }
 
     public int getBrewingSteps() {
-        return brewingSteps;
+        return UTIL.getBrewingSteps(potionOutput);
     }
 
     @Override
@@ -118,6 +114,14 @@ public class BrewingRecipeWrapper extends BlankRecipeWrapper {
 
     @Override
     public String toString() {
-        return ingredients + " + " + potionInput + " = " + potionOutput;
+        return ingredients + " + ["
+            + potionInput.getItem()
+            + " M:"
+            + potionInput.getItemDamage()
+            + "] = ["
+            + potionOutput
+            + " M:"
+            + potionOutput.getItemDamage()
+            + "]";
     }
 }

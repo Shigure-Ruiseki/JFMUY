@@ -1,8 +1,8 @@
 package ruiseki.jfmuy.gui.recipes;
 
-import net.minecraft.client.Minecraft;
+import java.util.List;
 
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.client.Minecraft;
 
 import cpw.mods.fml.client.config.HoverChecker;
 import ruiseki.jfmuy.Internal;
@@ -46,6 +46,5 @@ public abstract class RecipeGuiTab implements IMouseHandler {
         tab.draw(minecraft, x, y);
     }
 
-    @Nullable
-    public abstract String getTooltip();
+    public abstract List<String> getTooltip();
 }

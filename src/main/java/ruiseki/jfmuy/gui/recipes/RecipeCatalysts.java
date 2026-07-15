@@ -1,0 +1,244 @@
+package ruiseki.jfmuy.gui.recipes;
+
+import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import net.minecraft.client.Minecraft;
+
+import org.jetbrains.annotations.Nullable;
+
+import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
+import ruiseki.jfmuy.gui.GuiHelper;
+import ruiseki.jfmuy.gui.elements.DrawableNineSliceTexture;
+import ruiseki.jfmuy.gui.ingredients.GuiIngredient;
+import ruiseki.jfmuy.ingredients.IngredientRegistry;
+import ruiseki.jfmuy.input.ClickedIngredient;
+import ruiseki.jfmuy.input.IClickedIngredient;
+import ruiseki.jfmuy.input.IShowsRecipeFocuses;
+import ruiseki.jfmuy.util.MathUtil;
+import ruiseki.okcore.client.renderer.GlStateManager;
+
+/**
+ * The area drawn on left side of the {@link RecipesGui} that shows which items can craft the current recipe category.
+ */
+public class RecipeCatalysts implements IShowsRecipeFocuses {
+
+    private static final int ingredientSize = 16;
+    private static final int ingredientBorderSize = 1;
+    private static final int borderSize = 5;
+    private static final int overlapSize = 6;
+    private static final Rectangle EMPTY_AREA = new Rectangle(0, 0, 0, 0);
+
+    private final DrawableNineSliceTexture backgroundTab;
+
+    private final List<GuiIngredient<Object>> ingredients;
+    private final DrawableNineSliceTexture slotBackground;
+    private int left = 0;
+    private int top = 0;
+    private int width = 0;
+    private int height = 0;
+
+    public RecipeCatalysts() {
+        ingredients = new ArrayList<>();
+
+        GuiHelper guiHelper = Internal.getHelpers()
+            .getGuiHelper();
+        backgroundTab = guiHelper.getCatalystTab();
+        slotBackground = guiHelper.getNineSliceSlot();
+    }
+
+    public boolean isEmpty() {
+        return this.ingredients.isEmpty();
+    }
+
+    public int getWidth() {
+        return width - overlapSize;
+    }
+
+    public void updateLayout(List<Object> ingredients, RecipesGui recipesGui) {
+        this.ingredients.clear();
+
+        Rectangle recipeArea = new Rectangle(
+            recipesGui.getGuiLeft(),
+            recipesGui.getGuiTop(),
+            recipesGui.getXSize(),
+            recipesGui.getYSize());
+        Layout layout = calculateLayout(ingredients.size(), recipeArea, EMPTY_AREA);
+        left = layout.left();
+        top = layout.top();
+        width = layout.width();
+        height = layout.height();
+
+        if (layout.hasSlots()) {
+            for (int i = 0; i < ingredients.size(); i++) {
+                Object ingredientForSlot = ingredients.get(i);
+                GuiIngredient<Object> guiIngredient = createGuiIngredient(
+                    ingredientForSlot,
+                    i,
+                    layout.maxIngredientsPerColumn());
+                this.ingredients.add(guiIngredient);
+            }
+        }
+    }
+
+    static Layout calculateLayout(int ingredientCount, Rectangle recipeArea, Rectangle optionButtonsArea) {
+        if (ingredientCount <= 0) {
+            return Layout.EMPTY;
+        }
+
+        int availableHeight = recipeArea.height - optionButtonsArea.height - 8;
+        int borderHeight = (2 * borderSize) + (2 * ingredientBorderSize);
+        int maxIngredientsPerColumn = Math.max(1, (availableHeight - borderHeight) / ingredientSize);
+        int columnCount = MathUtil.divideCeil(ingredientCount, maxIngredientsPerColumn);
+        maxIngredientsPerColumn = MathUtil.divideCeil(ingredientCount, columnCount);
+
+        int width = (2 * ingredientBorderSize) + (borderSize * 2) + (columnCount * ingredientSize);
+        int height = (2 * ingredientBorderSize) + (borderSize * 2) + (maxIngredientsPerColumn * ingredientSize);
+        int top = recipeArea.y;
+        int left = recipeArea.x - width + overlapSize; // overlaps the recipe gui slightly
+        return new Layout(left, top, width, height, maxIngredientsPerColumn);
+    }
+
+    static class Layout {
+
+        private static final Layout EMPTY = new Layout(0, 0, 0, 0, 0);
+
+        private final int left;
+        private final int top;
+        private final int width;
+        private final int height;
+        private final int maxIngredientsPerColumn;
+
+        private Layout(int left, int top, int width, int height, int maxIngredientsPerColumn) {
+            this.left = left;
+            this.top = top;
+            this.width = width;
+            this.height = height;
+            this.maxIngredientsPerColumn = maxIngredientsPerColumn;
+        }
+
+        int left() {
+            return left;
+        }
+
+        int top() {
+            return top;
+        }
+
+        int width() {
+            return width;
+        }
+
+        int height() {
+            return height;
+        }
+
+        int maxIngredientsPerColumn() {
+            return maxIngredientsPerColumn;
+        }
+
+        private boolean hasSlots() {
+            return maxIngredientsPerColumn > 0;
+        }
+
+        @Override
+        public String toString() {
+            return "Layout{" + "left="
+                + left
+                + ", top="
+                + top
+                + ", width="
+                + width
+                + ", height="
+                + height
+                + ", maxIngredientsPerColumn="
+                + maxIngredientsPerColumn
+                + '}';
+        }
+    }
+
+    private <T> GuiIngredient<T> createGuiIngredient(T ingredient, int index, int maxIngredientsPerColumn) {
+        IngredientRegistry ingredientRegistry = Internal.getIngredientRegistry();
+        IIngredientRenderer<T> ingredientRenderer = ingredientRegistry.getIngredientRenderer(ingredient);
+        IIngredientHelper<T> ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
+        int column = index / maxIngredientsPerColumn;
+        int row = index % maxIngredientsPerColumn;
+        Rectangle rect = new Rectangle(
+            left + borderSize + (column * ingredientSize) + ingredientBorderSize,
+            top + borderSize + (row * ingredientSize) + ingredientBorderSize,
+            ingredientSize,
+            ingredientSize);
+        GuiIngredient<T> guiIngredient = new GuiIngredient<>(
+            index,
+            true,
+            ingredientRenderer,
+            ingredientHelper,
+            rect,
+            0,
+            0,
+            0);
+        guiIngredient.set(Collections.singletonList(ingredient), null);
+        return guiIngredient;
+    }
+
+    @Nullable
+    public GuiIngredient draw(Minecraft minecraft, int mouseX, int mouseY) {
+        int ingredientCount = ingredients.size();
+        if (ingredientCount > 0) {
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+
+            GlStateManager.disableDepth();
+            GlStateManager.enableAlpha();
+            {
+                int slotWidth = width - (2 * borderSize);
+                int slotHeight = height - (2 * borderSize);
+                backgroundTab.draw(minecraft, this.left, this.top, width, height);
+                slotBackground.draw(minecraft, this.left + borderSize, this.top + borderSize, slotWidth, slotHeight);
+            }
+            GlStateManager.disableAlpha();
+            GlStateManager.enableDepth();
+
+            GuiIngredient hovered = null;
+            for (GuiIngredient guiIngredient : this.ingredients) {
+                if (guiIngredient.isMouseOver(0, 0, mouseX, mouseY)) {
+                    hovered = guiIngredient;
+                }
+                guiIngredient.draw(minecraft, 0, 0);
+            }
+            return hovered;
+        }
+        return null;
+    }
+
+    @Nullable
+    private GuiIngredient getHovered(int mouseX, int mouseY) {
+        for (GuiIngredient guiIngredient : this.ingredients) {
+            if (guiIngredient.isMouseOver(0, 0, mouseX, mouseY)) {
+                return guiIngredient;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public IClickedIngredient<?> getIngredientUnderMouse(int mouseX, int mouseY) {
+        GuiIngredient hovered = getHovered(mouseX, mouseY);
+        if (hovered != null) {
+            Object ingredientUnderMouse = hovered.getDisplayedIngredient();
+            if (ingredientUnderMouse != null) {
+                return ClickedIngredient.create(ingredientUnderMouse, hovered.getRect());
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean canSetFocusWithMouse() {
+        return true;
+    }
+}

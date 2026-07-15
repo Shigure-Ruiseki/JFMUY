@@ -10,10 +10,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.FurnaceRecipes;
 
 import ruiseki.jfmuy.api.ingredients.IIngredients;
-import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
+import ruiseki.jfmuy.api.ingredients.VanillaTypes;
+import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.util.Translator;
 
-public class SmeltingRecipe extends BlankRecipeWrapper {
+public class SmeltingRecipe implements IRecipeWrapper {
 
     private final List<List<ItemStack>> inputs;
     private final ItemStack output;
@@ -25,16 +26,8 @@ public class SmeltingRecipe extends BlankRecipeWrapper {
 
     @Override
     public void getIngredients(IIngredients ingredients) {
-        ingredients.setInputLists(ItemStack.class, inputs);
-        ingredients.setOutput(ItemStack.class, output);
-    }
-
-    public List<List<ItemStack>> getInputs() {
-        return inputs;
-    }
-
-    public List<ItemStack> getOutputs() {
-        return Collections.singletonList(output);
+        ingredients.setInputLists(VanillaTypes.ITEM, inputs);
+        ingredients.setOutput(VanillaTypes.ITEM, output);
     }
 
     @Override
@@ -49,9 +42,9 @@ public class SmeltingRecipe extends BlankRecipeWrapper {
         if (experience > 0) {
             String experienceString = Translator
                 .translateToLocalFormatted("gui.jfmuy.category.smelting.experience", experience);
-            FontRenderer fontRendererObj = minecraft.fontRenderer;
-            int stringWidth = fontRendererObj.getStringWidth(experienceString);
-            fontRendererObj.drawString(experienceString, recipeWidth - stringWidth, 0, Color.gray.getRGB());
+            FontRenderer fontRenderer = minecraft.fontRenderer;
+            int stringWidth = fontRenderer.getStringWidth(experienceString);
+            fontRenderer.drawString(experienceString, recipeWidth - stringWidth, 0, Color.gray.getRGB());
         }
     }
 }

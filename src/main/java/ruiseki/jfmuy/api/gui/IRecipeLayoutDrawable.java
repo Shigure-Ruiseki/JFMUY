@@ -24,9 +24,14 @@ public interface IRecipeLayoutDrawable extends IRecipeLayout {
     void setPosition(int posX, int posY);
 
     /**
-     * Draw the recipe layout.
+     * Draw the recipe without overlays such as item tool tips.
      */
-    void draw(Minecraft minecraft, int mouseX, int mouseY);
+    void drawRecipe(Minecraft minecraft, int mouseX, int mouseY);
+
+    /**
+     * Draw the recipe overlays such as item tool tips.
+     */
+    void drawOverlays(Minecraft minecraft, int mouseX, int mouseY);
 
     /**
      * Returns true if the mouse is hovering over the recipe.
@@ -36,7 +41,7 @@ public interface IRecipeLayoutDrawable extends IRecipeLayout {
 
     /**
      * Returns the ingredient currently under the mouse, if there is one.
-     * Can be an ItemStack, FluidStack, or any other ingredient registered with JFMUY.
+     * Can be an ItemStack, FluidStack, or any other ingredient registered with JEI.
      */
     @Nullable
     Object getIngredientUnderMouse(int mouseX, int mouseY);

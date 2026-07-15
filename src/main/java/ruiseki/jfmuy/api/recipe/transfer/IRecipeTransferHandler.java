@@ -32,7 +32,6 @@ public interface IRecipeTransferHandler<C extends Container> {
      * @param maxTransfer  if true, transfer as many items as possible. if false, transfer one set
      * @param doTransfer   if true, do the transfer. if false, check for errors but do not actually transfer the items
      * @return a recipe transfer error if the recipe can't be transferred. Return null on success.
-     * @since JEI 2.20.0
      */
     @Nullable
     IRecipeTransferError transferRecipe(C container, IRecipeLayout recipeLayout, EntityPlayer player,

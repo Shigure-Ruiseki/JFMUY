@@ -1,6 +1,7 @@
 package ruiseki.jfmuy.api.gui;
 
 import java.awt.Color;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -8,6 +9,7 @@ import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
+import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 
 /**
  * Represents one drawn ingredient that is part of a recipe.
@@ -40,7 +42,7 @@ public interface IGuiIngredient<T> {
      * This is used by recipe transfer errors to turn missing ingredient backgrounds to red, but can be used for other
      * purposes.
      *
-     * @see IRecipeTransferHandlerHelper#createUserErrorForSlots(String, Collection).
+     * @see IRecipeTransferHandlerHelper#createUserErrorForSlots(String, Collection) .
      */
     void drawHighlight(Minecraft minecraft, Color color, int xOffset, int yOffset);
 }

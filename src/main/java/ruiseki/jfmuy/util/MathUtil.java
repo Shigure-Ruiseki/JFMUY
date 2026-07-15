@@ -1,6 +1,9 @@
 package ruiseki.jfmuy.util;
 
-public class MathUtil {
+import java.awt.Rectangle;
+import java.util.Collection;
+
+public final class MathUtil {
 
     private MathUtil() {
 
@@ -14,10 +17,36 @@ public class MathUtil {
     public static int clamp(int value, int min, int max) {
         if (value < min) {
             return min;
-        } else if (value > max) {
-            return max;
-        } else {
-            return value;
         }
+        return Math.min(value, max);
+    }
+
+    public static boolean intersects(Collection<Rectangle> areas, Rectangle comparisonArea) {
+        for (Rectangle area : areas) {
+            if (area.intersects(comparisonArea)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static Rectangle moveDownToAvoidIntersection(Collection<Rectangle> areas, Rectangle comparisonArea) {
+        for (Rectangle area : areas) {
+            if (area.intersects(comparisonArea)) {
+                Rectangle movedDown = new Rectangle(comparisonArea);
+                movedDown.y = area.y + area.height;
+                return moveDownToAvoidIntersection(areas, movedDown);
+            }
+        }
+        return comparisonArea;
+    }
+
+    public static boolean contains(Collection<Rectangle> areas, int x, int y) {
+        for (Rectangle guiArea : areas) {
+            if (guiArea.contains(x, y)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

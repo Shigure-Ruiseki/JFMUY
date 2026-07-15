@@ -21,7 +21,9 @@ public interface IDrawable {
 
     int getHeight();
 
-    void draw(Minecraft minecraft);
+    default void draw(Minecraft minecraft) {
+        draw(minecraft, 0, 0);
+    }
 
     void draw(Minecraft minecraft, int xOffset, int yOffset);
 

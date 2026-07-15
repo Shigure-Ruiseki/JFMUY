@@ -4,13 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.network.NetworkManager;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;
 
+import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.client.GuiModList;
 import cpw.mods.fml.client.config.GuiConfig;
 import cpw.mods.fml.client.config.IConfigElement;
@@ -35,19 +38,27 @@ public class JFMUYModConfigGui extends GuiConfig {
             if (parentScreen != null) {
                 return parentScreen;
             } else {
-                return new GuiInventory(parent.mc.thePlayer);
+                Minecraft minecraft = parent.mc;
+                if (minecraft != null) {
+                    EntityPlayerSP player = minecraft.thePlayer;
+                    if (player != null) {
+                        return new GuiInventory(player);
+                    }
+                }
             }
         }
         return parent;
     }
 
     private static List<IConfigElement> getConfigElements() {
-        List<IConfigElement> configElements = new ArrayList<IConfigElement>();
+        List<IConfigElement> configElements = new ArrayList<>();
 
         if (Minecraft.getMinecraft().theWorld != null) {
             Configuration worldConfig = Config.getWorldConfig();
             if (worldConfig != null) {
-                ConfigCategory categoryWorldConfig = worldConfig.getCategory(SessionData.getWorldUid());
+                NetworkManager networkManager = FMLClientHandler.instance()
+                    .getClientToServerNetworkManager();
+                ConfigCategory categoryWorldConfig = worldConfig.getCategory(ServerInfo.getWorldUid(networkManager));
                 configElements.addAll(new ConfigElement(categoryWorldConfig).getChildElements());
             }
         }
@@ -79,7 +90,7 @@ public class JFMUYModConfigGui extends GuiConfig {
     protected void actionPerformed(GuiButton button) {
         super.actionPerformed(button);
 
-        if (Config.isCheatItemsEnabled() && SessionData.isJfmuyOnServer()) {
+        if (Config.isCheatItemsEnabled() && ServerInfo.isJFMUYOnServer()) {
             JFMUY.getProxy()
                 .sendPacketToServer(new PacketRequestCheatPermission());
         }

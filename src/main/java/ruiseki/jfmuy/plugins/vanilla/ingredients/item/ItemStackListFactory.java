@@ -1,0 +1,219 @@
+package ruiseki.jfmuy.plugins.vanilla.ingredients.item;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import net.minecraft.block.Block;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.oredict.OreDictionary;
+
+import org.jetbrains.annotations.Nullable;
+
+import com.google.common.base.Joiner;
+
+import cpw.mods.fml.common.registry.FMLControlledNamespacedRegistry;
+import cpw.mods.fml.common.registry.GameData;
+import ruiseki.jfmuy.api.ISubtypeRegistry;
+import ruiseki.jfmuy.startup.StackHelper;
+import ruiseki.jfmuy.util.ErrorUtil;
+import ruiseki.jfmuy.util.Log;
+import ruiseki.okcore.datastructure.NonNullList;
+import ruiseki.okcore.fluid.capability.CapabilityFluidHandler;
+import ruiseki.okcore.fluid.handler.IFluidTankProperties;
+import ruiseki.okcore.helper.CapabilityHelpers;
+
+public final class ItemStackListFactory {
+
+    private final ISubtypeRegistry subtypeRegistry;
+
+    public ItemStackListFactory(ISubtypeRegistry subtypeRegistry) {
+        this.subtypeRegistry = subtypeRegistry;
+    }
+
+    public List<ItemStack> create(StackHelper stackHelper) {
+        final List<ItemStack> itemList = new ArrayList<>();
+        final Set<String> itemNameSet = new HashSet<>();
+
+        for (CreativeTabs creativeTab : CreativeTabs.creativeTabArray) {
+            NonNullList<ItemStack> creativeTabItemStacks = NonNullList.create();
+            try {
+                creativeTab.displayAllReleventItems(creativeTabItemStacks);
+            } catch (RuntimeException | LinkageError e) {
+                Log.get()
+                    .error(
+                        "Creative tab crashed while getting items. Some items from this tab will be missing from the item list. {}",
+                        creativeTab,
+                        e);
+            }
+            for (ItemStack itemStack : creativeTabItemStacks) {
+                if (itemStack == null) {
+                    Log.get()
+                        .error("Found an empty itemStack from creative tab: {}", creativeTab);
+                } else if (itemStack.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
+                    String itemStackInfo = ErrorUtil.getItemStackInfo(itemStack);
+                    Log.get()
+                        .error(
+                            "Found an itemStack with wildcard metadata from creative tab: {}. {}",
+                            creativeTab,
+                            itemStackInfo);
+                } else {
+                    addItemStack(stackHelper, itemStack, itemList, itemNameSet);
+                }
+            }
+        }
+
+        FMLControlledNamespacedRegistry<Block> blockRegistry = GameData.getBlockRegistry();
+        for (Block block : blockRegistry.typeSafeIterable()) {
+            if (block != null) {
+                addBlockAndSubBlocks(stackHelper, block, itemList, itemNameSet);
+            }
+        }
+
+        FMLControlledNamespacedRegistry<Item> itemRegistry = GameData.getItemRegistry();
+        for (Item item : itemRegistry.typeSafeIterable()) {
+            if (item != null) {
+                addItemAndSubItems(stackHelper, item, itemList, itemNameSet);
+            }
+        }
+
+        return itemList;
+    }
+
+    private void addItemAndSubItems(StackHelper stackHelper, @Nullable Item item, List<ItemStack> itemList,
+        Set<String> itemNameSet) {
+        if (item == null) {
+            return;
+        }
+        NonNullList<ItemStack> items = NonNullList.create();
+        stackHelper.addSubtypesToList(items, item);
+        for (ItemStack stack : items) {
+            addItemStack(stackHelper, stack, itemList, itemNameSet);
+        }
+    }
+
+    private void addBlockAndSubBlocks(StackHelper stackHelper, @Nullable Block block, List<ItemStack> itemList,
+        Set<String> itemNameSet) {
+        if (block == null) {
+            return;
+        }
+
+        Item item = Item.getItemFromBlock(block);
+        if (item == null) {
+            return;
+        }
+
+        for (CreativeTabs itemTab : item.getCreativeTabs()) {
+            NonNullList<ItemStack> subBlocks = NonNullList.create();
+            try {
+                block.getSubBlocks(item, itemTab, subBlocks);
+            } catch (RuntimeException | LinkageError e) {
+                String itemStackInfo = ErrorUtil.getItemStackInfo(new ItemStack(item));
+                Log.get()
+                    .error("Failed to getSubBlocks {}", itemStackInfo, e);
+            }
+
+            for (ItemStack subBlock : subBlocks) {
+                if (subBlock == null) {
+                    Log.get()
+                        .error("Found null subBlock of {}", block);
+                } else if (subBlock.getItem() == null) {
+                    Log.get()
+                        .error("Found empty subBlock of {}", block);
+                } else {
+                    addItemStack(stackHelper, subBlock, itemList, itemNameSet);
+                }
+            }
+        }
+    }
+
+    private void addItemStack(StackHelper stackHelper, ItemStack stack, List<ItemStack> itemList,
+        Set<String> itemNameSet) {
+        final String itemKey;
+
+        try {
+            addFallbackSubtypeInterpreter(stack);
+            itemKey = stackHelper.getUniqueIdentifierForStack(stack, StackHelper.UidMode.FULL);
+        } catch (RuntimeException | LinkageError e) {
+            String stackInfo = ErrorUtil.getItemStackInfo(stack);
+            Log.get()
+                .error("Couldn't get unique name for itemStack {}", stackInfo, e);
+            return;
+        }
+
+        if (!itemNameSet.contains(itemKey)) {
+            itemNameSet.add(itemKey);
+            itemList.add(stack);
+        }
+    }
+
+    private void addFallbackSubtypeInterpreter(ItemStack itemStack) {
+        if (!this.subtypeRegistry.hasSubtypeInterpreter(itemStack)) {
+            try {
+                String info = FluidSubtypeInterpreter.INSTANCE.apply(itemStack);
+                if (!ISubtypeRegistry.ISubtypeInterpreter.NONE.equals(info)) {
+                    this.subtypeRegistry
+                        .registerSubtypeInterpreter(itemStack.getItem(), FluidSubtypeInterpreter.INSTANCE);
+                }
+            } catch (RuntimeException | LinkageError e) {
+                String itemStackInfo = ErrorUtil.getItemStackInfo(itemStack);
+                Log.get()
+                    .error("Failed to apply FluidSubtypeInterpreter to ItemStack: {}", itemStackInfo, e);
+            }
+        }
+    }
+
+    private static class FluidSubtypeInterpreter implements ISubtypeRegistry.ISubtypeInterpreter {
+
+        public static final FluidSubtypeInterpreter INSTANCE = new FluidSubtypeInterpreter();
+
+        private FluidSubtypeInterpreter() {
+
+        }
+
+        @Override
+        public String apply(ItemStack itemStack) {
+            return CapabilityHelpers.getCapability(itemStack, CapabilityFluidHandler.FLUID_HANDLER_ITEM)
+                .map(handler -> {
+                    IFluidTankProperties[] tankPropertiesList = handler.getTankProperties();
+                    List<String> contentsNames = new ArrayList<>();
+                    String contentsName = null;
+                    for (IFluidTankProperties tankProperties : tankPropertiesList) {
+                        contentsName = getContentsName(tankProperties);
+                        if (contentsName != null) {
+                            contentsNames.add(contentsName);
+                        } else {
+                            contentsNames.add("empty");
+                        }
+                    }
+                    if (!contentsNames.isEmpty()) {
+                        String info = Joiner.on(';')
+                            .join(contentsNames);
+                        if (itemStack.getHasSubtypes()) {
+                            info += ";m=" + itemStack.getItemDamage();
+                        }
+                        return info;
+                    }
+                    return ISubtypeRegistry.ISubtypeInterpreter.NONE;
+                })
+                .orElse(ISubtypeRegistry.ISubtypeInterpreter.NONE);
+        }
+
+        @Nullable
+        private static String getContentsName(IFluidTankProperties fluidTankProperties) {
+            FluidStack contents = fluidTankProperties.getContents();
+            if (contents != null) {
+                Fluid fluid = contents.getFluid();
+                if (fluid != null) {
+                    return fluid.getName();
+                }
+            }
+            return null;
+        }
+    }
+}

@@ -4,6 +4,7 @@ import net.minecraft.inventory.Container;
 
 import ruiseki.jfmuy.api.IModRegistry;
 import ruiseki.jfmuy.api.IRecipeRegistry;
+import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 
 /**
  * Register recipe transfer handlers here to give JFMUY the information it needs to transfer recipes into the crafting

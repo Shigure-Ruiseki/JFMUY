@@ -24,9 +24,10 @@ import net.minecraftforge.event.CommandEvent;
 
 import com.google.common.base.Throwables;
 
-import cpw.mods.fml.common.registry.GameData;
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.network.packets.PacketCheatPermission;
+import ruiseki.okcore.helper.Helpers;
+import ruiseki.okcore.helper.ItemHandlerHelpers;
 
 /**
  * Server-side-safe utilities for commands.
@@ -38,13 +39,11 @@ public final class CommandUtilServer {
     public static String[] getGiveCommandParameters(EntityPlayer sender, ItemStack itemStack, int amount) {
         String senderName = sender.getCommandSenderName();
         Item item = itemStack.getItem();
-
-        String registryName = GameData.getItemRegistry()
-            .getNameForObject(item);
-        if (registryName == null) {
-            throw new IllegalArgumentException("item registry name returned null");
+        ResourceLocation itemResourceLocation = Helpers.getLocation(item);
+        if (itemResourceLocation == null) {
+            String stackInfo = ErrorUtil.getItemStackInfo(itemStack);
+            throw new IllegalArgumentException("item.getRegistryName() returned null for: " + stackInfo);
         }
-        ResourceLocation itemResourceLocation = new ResourceLocation(registryName);
 
         List<String> commandStrings = new ArrayList<>();
         commandStrings.add(senderName);
@@ -91,15 +90,78 @@ public final class CommandUtilServer {
         }
     }
 
-    public static void executeGive(EntityPlayerMP sender, ItemStack itemStack) {
+    public static void executeGive(EntityPlayerMP sender, ItemStack itemStack, GiveMode giveMode) {
         if (hasPermission(sender, itemStack)) {
-            giveToInventory(sender, itemStack);
+            if (giveMode == GiveMode.INVENTORY) {
+                giveToInventory(sender, itemStack);
+            } else if (giveMode == GiveMode.MOUSE_PICKUP) {
+                mousePickupItemStack(sender, itemStack);
+            }
         } else {
             JFMUY.getProxy()
                 .sendPacketToClient(new PacketCheatPermission(false), sender);
         }
     }
 
+    public static void setHotbarSlot(EntityPlayerMP sender, ItemStack itemStack, int hotbarSlot) {
+        if (hasPermission(sender, itemStack)) {
+            if (hotbarSlot < 0 || hotbarSlot > 8) {
+                Log.get()
+                    .error("Tried to set slot that is not in the hotbar: {}", hotbarSlot);
+                return;
+            }
+            ItemStack stackInSlot = sender.inventory.getStackInSlot(hotbarSlot);
+            if (ItemStack.areItemStacksEqual(stackInSlot, itemStack)) {
+                return;
+            }
+            final int count = itemStack.stackSize;
+            ItemStack originalStack = itemStack.copy();
+            sender.inventory.setInventorySlotContents(hotbarSlot, itemStack);
+            sender.worldObj.playSoundAtEntity(
+                sender,
+                "random.pop",
+                0.2F,
+                ((sender.getRNG()
+                    .nextFloat()
+                    - sender.getRNG()
+                        .nextFloat())
+                    * 0.7F + 1.0F) * 2.0F);
+            sender.inventoryContainer.detectAndSendChanges();
+            notifyGive(sender, originalStack, count);
+        } else {
+            JFMUY.getProxy()
+                .sendPacketToClient(new PacketCheatPermission(false), sender);
+        }
+    }
+
+    public static void mousePickupItemStack(EntityPlayer sender, ItemStack itemStack) {
+        final int giveCount;
+        ItemStack existingStack = sender.inventory.getItemStack();
+        if (canStack(existingStack, itemStack)) {
+            int newCount = Math.min(existingStack.getMaxStackSize(), existingStack.stackSize + itemStack.stackSize);
+            giveCount = newCount - existingStack.stackSize;
+            if (giveCount > 0) {
+                existingStack.stackSize = newCount;
+            }
+        } else {
+            sender.inventory.setItemStack(itemStack);
+            giveCount = itemStack.stackSize;
+        }
+
+        if (giveCount > 0 && sender instanceof EntityPlayerMP) {
+            EntityPlayerMP playerMP = (EntityPlayerMP) sender;
+            notifyGive(playerMP, itemStack, giveCount);
+            playerMP.updateHeldItem();
+        }
+    }
+
+    public static boolean canStack(ItemStack a, ItemStack b) {
+        return a != null && b != null && ItemHandlerHelpers.canItemStacksStack(a, b);
+    }
+
+    /**
+     * Gives a player an item. Similar to vanilla but without the "fake" itemStack popping into the player's face.
+     */
     private static void giveToInventory(EntityPlayerMP sender, ItemStack itemStack) {
         int count = itemStack.stackSize;
         ItemStack originalStack = itemStack.copy();
@@ -150,7 +212,7 @@ public final class CommandUtilServer {
     private static ICommand getGiveCommand(EntityPlayerMP sender) {
         MinecraftServer minecraftServer = MinecraftServer.getServer();
         ICommandManager commandManager = minecraftServer.getCommandManager();
-        Map commands = commandManager.getCommands();
-        return (ICommand) commands.get("give");
+        Map<String, ICommand> commands = commandManager.getCommands();
+        return commands.get("give");
     }
 }

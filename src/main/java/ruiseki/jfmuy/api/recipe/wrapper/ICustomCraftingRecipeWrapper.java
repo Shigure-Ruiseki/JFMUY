@@ -10,10 +10,8 @@ import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 /**
  * This interface allows recipes to override the default behavior in the
  * {@link VanillaRecipeCategoryUid#CRAFTING} recipe category.
- *
- * @since JEI 3.13.5
  */
-public interface ICustomCraftingRecipeWrapper extends IRecipeWrapper {
+public interface ICustomCraftingRecipeWrapper extends ICraftingRecipeWrapper {
 
     /**
      * This is called to override the vanilla crafting category's
@@ -26,7 +24,6 @@ public interface ICustomCraftingRecipeWrapper extends IRecipeWrapper {
      *
      * @param recipeLayout the layout that needs its properties set.
      * @param ingredients  the ingredients, already set by the recipeWrapper
-     * @since JEI 3.13.5
      */
     void setRecipe(IRecipeLayout recipeLayout, IIngredients ingredients);
 }

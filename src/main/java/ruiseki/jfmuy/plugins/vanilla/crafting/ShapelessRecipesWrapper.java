@@ -1,41 +1,53 @@
 package ruiseki.jfmuy.plugins.vanilla.crafting;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.ShapelessRecipes;
+import java.util.ArrayList;
+import java.util.List;
 
-import ruiseki.jfmuy.api.IGuiHelper;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.ShapelessRecipes;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
+
+import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
-import ruiseki.jfmuy.util.BrokenCraftingRecipeException;
+import ruiseki.jfmuy.api.ingredients.VanillaTypes;
+import ruiseki.jfmuy.api.recipe.IStackHelper;
+import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
+import ruiseki.jfmuy.recipes.BrokenCraftingRecipeException;
 import ruiseki.jfmuy.util.ErrorUtil;
 
-public class ShapelessRecipesWrapper extends AbstractShapelessRecipeWrapper {
+public class ShapelessRecipesWrapper<T extends IRecipe> implements ICraftingRecipeWrapper {
 
-    private final ShapelessRecipes recipe;
+    protected final IJFMUYHelpers jeiHelpers;
+    protected final T recipe;
 
-    public ShapelessRecipesWrapper(IGuiHelper guiHelper, ShapelessRecipes recipe) {
-        super(guiHelper);
+    public ShapelessRecipesWrapper(IJFMUYHelpers jeiHelpers, T recipe) {
+        this.jeiHelpers = jeiHelpers;
         this.recipe = recipe;
-        for (Object input : this.recipe.recipeItems) {
-            if (input instanceof ItemStack) {
-                ItemStack itemStack = (ItemStack) input;
-                if (itemStack.stackSize != 1) {
-                    itemStack.stackSize = 1;
-                }
-            }
-        }
     }
 
     @Override
     public void getIngredients(IIngredients ingredients) {
         ItemStack recipeOutput = recipe.getRecipeOutput();
+        IStackHelper stackHelper = jeiHelpers.getStackHelper();
+
+        List<Object> rawInputs = new ArrayList<>();
+        if (recipe instanceof ShapelessRecipes shapeless) {
+            if (shapeless.recipeItems != null) {
+                rawInputs.addAll(shapeless.recipeItems);
+            }
+        } else if (recipe instanceof ShapelessOreRecipe shapelessOre) {
+            if (shapelessOre.getInput() != null) {
+                rawInputs.addAll(shapelessOre.getInput());
+            }
+        }
 
         try {
-            ingredients.setInputs(ItemStack.class, recipe.recipeItems);
-            if (recipeOutput != null) {
-                ingredients.setOutput(ItemStack.class, recipeOutput);
-            }
+            List<List<ItemStack>> inputLists = stackHelper.expandRecipeItemStackInputs(rawInputs);
+            ingredients.setInputLists(VanillaTypes.ITEM, inputLists);
+            ingredients.setOutput(VanillaTypes.ITEM, recipeOutput);
         } catch (RuntimeException e) {
-            String info = ErrorUtil.getInfoFromBrokenCraftingRecipe(recipe, recipe.recipeItems, recipeOutput);
+            String info = ErrorUtil.getInfoFromBrokenCraftingRecipe(recipe, rawInputs, recipeOutput);
             throw new BrokenCraftingRecipeException(info, e);
         }
     }

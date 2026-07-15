@@ -2,6 +2,7 @@ package ruiseki.jfmuy.api;
 
 import ruiseki.jfmuy.api.ingredients.IIngredientBlacklist;
 import ruiseki.jfmuy.api.recipe.IStackHelper;
+import ruiseki.jfmuy.api.recipe.IVanillaRecipeFactory;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 
 /**
@@ -29,4 +30,9 @@ public interface IJFMUYHelpers {
      * Helps with the implementation of Recipe Transfer Handlers
      */
     IRecipeTransferHandlerHelper recipeTransferHandlerHelper();
+
+    /**
+     * Allows manual creation of vanilla recipes.
+     */
+    IVanillaRecipeFactory getVanillaRecipeFactory();
 }

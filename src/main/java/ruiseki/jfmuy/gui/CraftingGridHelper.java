@@ -2,46 +2,45 @@ package ruiseki.jfmuy.gui;
 
 import java.util.List;
 
-import net.minecraft.item.ItemStack;
-
 import ruiseki.jfmuy.api.gui.ICraftingGridHelper;
-import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
-import ruiseki.jfmuy.api.recipe.IStackHelper;
+import ruiseki.jfmuy.api.gui.IGuiIngredientGroup;
 
 public class CraftingGridHelper implements ICraftingGridHelper {
 
-    private final IStackHelper stackHelper;
     private final int craftInputSlot1;
     private final int craftOutputSlot;
 
-    public CraftingGridHelper(IStackHelper stackHelper, int craftInputSlot1, int craftOutputSlot) {
-        this.stackHelper = stackHelper;
+    public CraftingGridHelper(int craftInputSlot1, int craftOutputSlot) {
         this.craftInputSlot1 = craftInputSlot1;
         this.craftOutputSlot = craftOutputSlot;
     }
 
     @Override
-    public void setInputStacks(IGuiItemStackGroup guiItemStacks, List<List<ItemStack>> input) {
+    public <T> void setInputs(IGuiIngredientGroup<T> ingredientGroup, List<List<T>> inputs) {
         int width, height;
-        if (input.size() > 4) {
+        if (inputs.size() > 4) {
             width = height = 3;
-        } else if (input.size() > 1) {
+        } else if (inputs.size() > 1) {
             width = height = 2;
         } else {
             width = height = 1;
         }
 
-        setInputStacks(guiItemStacks, input, width, height);
+        setInputs(ingredientGroup, inputs, width, height);
     }
 
     @Override
-    public void setInputStacks(IGuiItemStackGroup guiItemStacks, List<List<ItemStack>> input, int width, int height) {
-        for (int i = 0; i < input.size(); i++) {
-            List<ItemStack> recipeItem = input.get(i);
+    public <T> void setInputs(IGuiIngredientGroup<T> ingredientGroup, List<List<T>> inputs, int width, int height) {
+        for (int i = 0; i < inputs.size(); i++) {
+            List<T> recipeItem = inputs.get(i);
             int index = getCraftingIndex(i, width, height);
 
-            setInput(guiItemStacks, index, recipeItem);
+            setInput(ingredientGroup, index, recipeItem);
         }
+    }
+
+    private <T> void setInput(IGuiIngredientGroup<T> guiIngredients, int inputIndex, List<T> input) {
+        guiIngredients.set(craftInputSlot1 + inputIndex, input);
     }
 
     private int getCraftingIndex(int i, int width, int height) {
@@ -71,14 +70,4 @@ public class CraftingGridHelper implements ICraftingGridHelper {
         }
         return index;
     }
-
-    @Override
-    public void setOutput(IGuiItemStackGroup guiItemStacks, List<ItemStack> output) {
-        guiItemStacks.set(craftOutputSlot, output);
-    }
-
-    private void setInput(IGuiItemStackGroup guiItemStacks, int inputIndex, List<ItemStack> input) {
-        guiItemStacks.set(craftInputSlot1 + inputIndex, input);
-    }
-
 }

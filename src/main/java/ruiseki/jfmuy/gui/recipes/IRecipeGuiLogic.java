@@ -2,8 +2,6 @@ package ruiseki.jfmuy.gui.recipes;
 
 import java.util.List;
 
-import net.minecraft.item.ItemStack;
-
 import com.google.common.collect.ImmutableList;
 
 import ruiseki.jfmuy.api.recipe.IFocus;
@@ -33,8 +31,6 @@ public interface IRecipeGuiLogic {
 
     <V> boolean setFocus(IFocus<V> focus);
 
-    IFocus getFocus();
-
     boolean back();
 
     void clearHistory();
@@ -47,9 +43,9 @@ public interface IRecipeGuiLogic {
 
     ImmutableList<IRecipeCategory> getRecipeCategories();
 
-    List<ItemStack> getRecipeCategoryCraftingItems();
+    List<Object> getRecipeCatalysts();
 
-    List<ItemStack> getRecipeCategoryCraftingItems(IRecipeCategory recipeCategory);
+    List<Object> getRecipeCatalysts(IRecipeCategory recipeCategory);
 
     List<RecipeLayout> getRecipeLayouts(int posX, int posY, int spacingY);
 }

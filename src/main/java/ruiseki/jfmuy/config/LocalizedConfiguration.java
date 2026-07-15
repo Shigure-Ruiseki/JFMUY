@@ -45,7 +45,7 @@ public class LocalizedConfiguration extends Configuration {
         return getString(name, category, defaultValue, comment, langKey);
     }
 
-    public String getString(String name, String category, String defaultValue, String[] validValues) {
+    public Property getString(String name, String category, String defaultValue, String[] validValues) {
         String langKey = keyPrefix + category + '.' + name;
         String commentKey = langKey + commentPostfix;
         String comment = Translator.translateToLocal(commentKey);
@@ -61,7 +61,7 @@ public class LocalizedConfiguration extends Configuration {
             + ": "
             + Arrays.toString(validValues)
             + ']');
-        return prop.getString();
+        return prop;
     }
 
     public <T extends Enum<T>> T getEnum(String name, String category, T defaultValue, T[] validEnumValues) {
@@ -99,6 +99,36 @@ public class LocalizedConfiguration extends Configuration {
         }
 
         return enumValue;
+    }
+
+    public <T extends Enum<T>> void setEnum(String name, String category, T value, T[] validEnumValues) {
+        String langKey = keyPrefix + category + '.' + name;
+        String commentKey = langKey + commentPostfix;
+        String comment = Translator.translateToLocal(commentKey);
+        Property prop = get(category, name, value.name());
+
+        String[] validValues = new String[validEnumValues.length];
+        for (int i = 0; i < validEnumValues.length; i++) {
+            T enumValue = validEnumValues[i];
+            validValues[i] = enumValue.name()
+                .toLowerCase(Locale.ENGLISH);
+        }
+
+        prop.setValue(
+            value.name()
+                .toLowerCase(Locale.ENGLISH));
+        prop.setValidValues(validValues);
+        prop.setLanguageKey(langKey);
+        prop.comment = (comment + "\n["
+            + defaultLocalized
+            + ": "
+            + value.name()
+                .toLowerCase(Locale.ENGLISH)
+            + "]\n["
+            + validLocalized
+            + ": "
+            + Arrays.toString(prop.getValidValues())
+            + ']');
     }
 
     public String[] getStringList(String name, String category, String[] defaultValue) {
@@ -144,5 +174,15 @@ public class LocalizedConfiguration extends Configuration {
         String commentKey = langKey + commentPostfix;
         String comment = Translator.translateToLocal(commentKey);
         return getInt(name, category, defaultValue, minValue, maxValue, comment, langKey);
+    }
+
+    public int setInt(String name, String category, int value, int minValue, int maxValue) {
+        String langKey = keyPrefix + category + '.' + name;
+        String commentKey = langKey + commentPostfix;
+        String comment = Translator.translateToLocal(commentKey);
+        Property property = get(category, name, value, comment, minValue, maxValue);
+        property.setLanguageKey(langKey);
+        property.setValue(value);
+        return property.getInt();
     }
 }

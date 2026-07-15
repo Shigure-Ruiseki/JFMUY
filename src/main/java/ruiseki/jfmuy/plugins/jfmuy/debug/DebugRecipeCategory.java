@@ -11,7 +11,6 @@ import net.minecraftforge.fluids.FluidStack;
 
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.IGuiHelper;
-import ruiseki.jfmuy.api.IItemListOverlay;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IGuiFluidStackGroup;
@@ -22,7 +21,6 @@ import ruiseki.jfmuy.api.gui.ITooltipCallback;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
-import ruiseki.jfmuy.api.recipe.BlankRecipeCategory;
 import ruiseki.jfmuy.plugins.jfmuy.JFMUYInternalPlugin;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredient;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredientRenderer;

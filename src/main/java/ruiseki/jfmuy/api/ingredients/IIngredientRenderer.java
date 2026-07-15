@@ -8,11 +8,13 @@ import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 
+import ruiseki.jfmuy.api.recipe.IIngredientType;
+
 /**
  * Renders a type of ingredient in JFMUY's item list and recipes.
  * <p>
  * If you have a new type of ingredient to add to JFMUY, you will have to implement this in order to use
- * {@link IModIngredientRegistration#register(Class, Collection, IIngredientHelper, IIngredientRenderer)}
+ * {@link IModIngredientRegistration#register(IIngredientType, Collection, IIngredientHelper, IIngredientRenderer)}
  */
 public interface IIngredientRenderer<T> {
 
@@ -30,11 +32,15 @@ public interface IIngredientRenderer<T> {
     /**
      * Get the tooltip text for this ingredient. JFMUY renders the tooltip based on this.
      *
-     * @param minecraft  The minecraft instance.
-     * @param ingredient The ingredient to get the tooltip for.
+     * @param minecraft   The minecraft instance.
+     * @param ingredient  The ingredient to get the tooltip for.
+     * @param tooltipFlag Whether to show advanced information on item tooltips, toggled by F3+H
      * @return The tooltip text for the ingredient.
      */
-    List<String> getTooltip(Minecraft minecraft, T ingredient);
+    default List<String> getTooltip(Minecraft minecraft, T ingredient, boolean tooltipFlag) {
+        // you should override this method. this default method is to keep old JFMUY plugins from crashing.
+        return getTooltip(minecraft, ingredient, true);
+    }
 
     /**
      * Get the tooltip font renderer for this ingredient. JFMUY renders the tooltip based on this.
@@ -43,5 +49,7 @@ public interface IIngredientRenderer<T> {
      * @param ingredient The ingredient to get the tooltip for.
      * @return The font renderer for the ingredient.
      */
-    FontRenderer getFontRenderer(Minecraft minecraft, T ingredient);
+    default FontRenderer getFontRenderer(Minecraft minecraft, T ingredient) {
+        return minecraft.fontRenderer;
+    }
 }

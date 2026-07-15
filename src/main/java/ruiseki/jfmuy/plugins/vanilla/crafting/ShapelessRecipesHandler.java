@@ -4,7 +4,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ShapelessRecipes;
 
 import ruiseki.jfmuy.api.IGuiHelper;
-import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.util.ErrorUtil;

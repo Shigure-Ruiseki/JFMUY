@@ -13,7 +13,6 @@ import net.minecraft.item.ItemStack;
 import com.google.common.collect.ImmutableList;
 
 import ruiseki.jfmuy.ItemFilter;
-import ruiseki.jfmuy.api.IItemListOverlay;
 import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
 import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.config.Config;

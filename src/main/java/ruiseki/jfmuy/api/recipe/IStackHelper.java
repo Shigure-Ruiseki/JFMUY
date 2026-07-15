@@ -32,7 +32,7 @@ public interface IStackHelper {
     List<ItemStack> toItemStackList(@Nullable Object stacks);
 
     /**
-     * Expands ItemStacks, OreDict Strings, and Iterables into a list of lists of ItemStacks.
+     * Expands ItemStacks, Ingredients, and Iterables into a list of lists of ItemStacks.
      * Expands wildcard ItemStacks into their subtypes.
      */
     List<List<ItemStack>> expandRecipeItemStackInputs(@Nullable List inputs);
@@ -40,8 +40,6 @@ public interface IStackHelper {
     /**
      * Returns an ItemStack from 'stacks' that matches any of the ItemStacks in 'contains'.
      * Returns null if there is no match.
-     * 
-     * @since JEI 3.13.4
      */
     @Nullable
     ItemStack containsAnyStack(Iterable<ItemStack> stacks, Iterable<ItemStack> contains);

@@ -26,10 +26,25 @@ public interface IRecipeTransferError {
          * Errors that the player can fix. Missing items, inventory full, etc.
          * Something informative will be shown to the player.
          */
-        USER_FACING
+        USER_FACING,
+
+        /**
+         * Errors that still allow the usage of the recipe transfer button.
+         * Hovering over the button will display the error, however the button is active and can be used.
+         */
+        COSMETIC
+
     }
 
     Type getType();
+
+    /**
+     * Return the ARGB color of the additional button highlight for {@link Type#COSMETIC}.
+     * For example, return 0 to disable the colored highlight. Default color is orange.
+     */
+    default int getButtonHighlightColor() {
+        return 0x80FFA500;
+    }
 
     /**
      * Called on {@link Type#USER_FACING} errors.

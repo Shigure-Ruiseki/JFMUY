@@ -18,7 +18,6 @@ import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
-import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.wrapper.ICustomCraftingRecipeWrapper;
 import ruiseki.jfmuy.util.Ingredients;
 import ruiseki.jfmuy.util.Translator;

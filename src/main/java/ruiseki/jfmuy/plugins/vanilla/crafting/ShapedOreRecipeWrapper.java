@@ -9,7 +9,6 @@ import net.minecraftforge.oredict.ShapedOreRecipe;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
-import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.IStackHelper;
 import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
 import ruiseki.jfmuy.util.BrokenCraftingRecipeException;

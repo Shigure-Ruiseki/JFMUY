@@ -8,6 +8,7 @@ import java.util.List;
  * Note that this works on anything that implements {@link IGuiIngredientGroup}, like {@link IGuiItemStackGroup} and
  * {@link IGuiFluidStackGroup}.
  */
+@FunctionalInterface
 public interface ITooltipCallback<T> {
 
     /**

@@ -1,6 +1,5 @@
 package ruiseki.jfmuy.plugins.vanilla.furnace;
 
-import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.util.ErrorUtil;

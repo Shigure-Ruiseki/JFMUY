@@ -5,7 +5,6 @@ import java.util.List;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
 import ruiseki.jfmuy.api.IJFMUYHelpers;
-import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.util.ErrorUtil;

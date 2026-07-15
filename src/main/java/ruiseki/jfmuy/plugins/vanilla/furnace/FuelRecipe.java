@@ -15,7 +15,6 @@ import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawableAnimated;
 import ruiseki.jfmuy.api.gui.IDrawableStatic;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
-import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
 import ruiseki.jfmuy.util.Translator;
 
 public class FuelRecipe extends BlankRecipeWrapper {

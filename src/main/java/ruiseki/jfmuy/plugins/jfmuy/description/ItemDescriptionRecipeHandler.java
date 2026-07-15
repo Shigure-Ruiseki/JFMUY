@@ -2,7 +2,6 @@ package ruiseki.jfmuy.plugins.jfmuy.description;
 
 import java.util.List;
 
-import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.util.ErrorUtil;

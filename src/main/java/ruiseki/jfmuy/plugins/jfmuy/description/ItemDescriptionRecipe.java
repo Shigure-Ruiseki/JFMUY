@@ -11,7 +11,6 @@ import net.minecraft.item.ItemStack;
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
-import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
 import ruiseki.jfmuy.util.MathUtil;
 import ruiseki.jfmuy.util.Translator;
 

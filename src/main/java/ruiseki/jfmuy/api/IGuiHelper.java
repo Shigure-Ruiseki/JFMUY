@@ -3,7 +3,9 @@ package ruiseki.jfmuy.api;
 import net.minecraft.util.ResourceLocation;
 
 import ruiseki.jfmuy.api.gui.ICraftingGridHelper;
+import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IDrawableAnimated;
+import ruiseki.jfmuy.api.gui.IDrawableBuilder;
 import ruiseki.jfmuy.api.gui.IDrawableStatic;
 import ruiseki.jfmuy.api.gui.ITickTimer;
 
@@ -13,10 +15,19 @@ import ruiseki.jfmuy.api.gui.ITickTimer;
  */
 public interface IGuiHelper {
 
-    IDrawableStatic createDrawable(ResourceLocation resourceLocation, int u, int v, int width, int height);
+    /**
+     * Create a drawable from part of a standard 256x256 gui texture.
+     */
+    default IDrawableStatic createDrawable(ResourceLocation resourceLocation, int u, int v, int width, int height) {
+        return drawableBuilder(resourceLocation, u, v, width, height).build();
+    }
 
-    IDrawableStatic createDrawable(ResourceLocation resourceLocation, int u, int v, int width, int height,
-        int paddingTop, int paddingBottom, int paddingLeft, int paddingRight);
+    /**
+     * Create a {@link IDrawableBuilder} which gives more control over drawable creation.
+     *
+     * @return a new {@link IDrawableBuilder} with the given resource location
+     */
+    IDrawableBuilder drawableBuilder(ResourceLocation resourceLocation, int u, int v, int width, int height);
 
     /**
      * Creates an animated texture for a gui, revealing the texture over time.
@@ -38,6 +49,11 @@ public interface IGuiHelper {
      * Returns a blank drawable for using as a blank recipe background.
      */
     IDrawableStatic createBlankDrawable(int width, int height);
+
+    /**
+     * Returns a 16x16 drawable for the given ingredient, matching the one JEI draws in the ingredient list.
+     */
+    <V> IDrawable createDrawableIngredient(V ingredient);
 
     /**
      * Create a crafting grid helper.

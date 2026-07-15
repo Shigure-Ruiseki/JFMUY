@@ -1,8 +1,7 @@
 package ruiseki.jfmuy.api.recipe;
 
+import java.util.Collections;
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 
@@ -15,17 +14,11 @@ import ruiseki.jfmuy.api.ingredients.IIngredients;
 /**
  * A wrapper around a normal recipe with methods that allow JFMUY can make sense of it.
  * Plugins implement these to wrap each type of recipe they have.
- * <p>
- * Normal recipes are converted to wrapped recipes by {@link IRecipeHandler#getRecipeWrapper(Object)}.
- *
- * @see BlankRecipeWrapper
  */
 public interface IRecipeWrapper {
 
     /**
      * Gets all the recipe's ingredients by filling out an instance of {@link IIngredients}.
-     *
-     * @since JFMUY 3.11.0
      */
     void getIngredients(IIngredients ingredients);
 
@@ -38,9 +31,10 @@ public interface IRecipeWrapper {
      * @param mouseY the Y position of the mouse, relative to the recipe.
      * @see IDrawable for a simple class for drawing things.
      * @see IGuiHelper for useful functions.
-     * @since JFMUY 2.19.0
      */
-    void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY);
+    default void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
+
+    }
 
     /**
      * Get the tooltip for whatever's under the mouse.
@@ -51,10 +45,11 @@ public interface IRecipeWrapper {
      *
      * @param mouseX the X position of the mouse, relative to the recipe.
      * @param mouseY the Y position of the mouse, relative to the recipe.
-     * @return tooltip strings. If there is no tooltip at this position, return null or an empty list.
+     * @return tooltip strings. If there is no tooltip at this position, return an empty list.
      */
-    @Nullable
-    List<String> getTooltipStrings(int mouseX, int mouseY);
+    default List<String> getTooltipStrings(int mouseX, int mouseY) {
+        return Collections.emptyList();
+    }
 
     /**
      * Called when a player clicks the recipe.
@@ -64,7 +59,8 @@ public interface IRecipeWrapper {
      * @param mouseY      the Y position of the mouse, relative to the recipe.
      * @param mouseButton the current mouse event button.
      * @return true if the click was handled, false otherwise
-     * @since JEI 2.19.0
      */
-    boolean handleClick(Minecraft minecraft, int mouseX, int mouseY, int mouseButton);
+    default boolean handleClick(Minecraft minecraft, int mouseX, int mouseY, int mouseButton) {
+        return false;
+    }
 }

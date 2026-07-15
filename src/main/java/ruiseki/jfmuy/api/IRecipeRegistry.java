@@ -5,14 +5,12 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import net.minecraft.inventory.Container;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.FurnaceRecipes;
 
 import ruiseki.jfmuy.api.gui.IRecipeLayoutDrawable;
 import ruiseki.jfmuy.api.recipe.IFocus;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
-import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
+import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferRegistry;
 
@@ -22,12 +20,6 @@ import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferRegistry;
  * Get the instance from {@link IJFMUYRuntime#getRecipeRegistry()}.
  */
 public interface IRecipeRegistry {
-
-    /**
-     * Returns the IRecipeHandler associated with the recipeClass or null if there is none
-     */
-    @Nullable
-    <T> IRecipeHandler<T> getRecipeHandler(Class<? extends T> recipeClass);
 
     /**
      * Returns an unmodifiable list of all Recipe Categories
@@ -40,9 +32,16 @@ public interface IRecipeRegistry {
     List<IRecipeCategory> getRecipeCategories(List<String> recipeCategoryUids);
 
     /**
+     * Returns the recipe category for the given UID.
+     * Returns null if the recipe category does not exist.
+     */
+    @Nullable
+    IRecipeCategory getRecipeCategory(String recipeCategoryUid);
+
+    /**
      * Returns a new focus.
      */
-    <V> IFocus<V> createFocus(IFocus.Mode mode, @Nullable V ingredient);
+    <V> IFocus<V> createFocus(IFocus.Mode mode, V ingredient);
 
     /**
      * Returns a list of Recipe Categories for the focus.
@@ -60,14 +59,23 @@ public interface IRecipeRegistry {
     <T extends IRecipeWrapper> List<T> getRecipeWrappers(IRecipeCategory<T> recipeCategory);
 
     /**
-     * Returns an unmodifiable collection of ItemStacks that can craft the recipes from recipeCategory.
-     * For instance, the crafting table ItemStack is returned here for Crafting recipe category.
-     * These are registered with {@link IModRegistry#addRecipeCategoryCraftingItem(ItemStack, String...)}.
-     * <p>
-     * This takes the current focus into account, so that if the focus mode is set to Input
-     * and the focus is included in the craftingItems, it is the only one returned.
+     * Returns the {@link IRecipeWrapper} for this recipe.
+     *
+     * @param recipe            the recipe to get a wrapper for.
+     * @param recipeCategoryUid the unique ID for the recipe category this recipe is a part of.
+     *                          See {@link VanillaRecipeCategoryUid} for vanilla recipe category UIDs.
+     * @return the {@link IRecipeWrapper} for this recipe. returns null if the recipe cannot be handled by JFMUY or its
+     *         addons.
      */
-    List<ItemStack> getCraftingItems(IRecipeCategory recipeCategory, IFocus focus);
+    @Nullable
+    IRecipeWrapper getRecipeWrapper(Object recipe, String recipeCategoryUid);
+
+    /**
+     * Returns an unmodifiable collection of ingredients that can craft the recipes from recipeCategory.
+     * For instance, the crafting table ItemStack is returned here for Crafting recipe category.
+     * These are registered with {@link IModRegistry#addRecipeCatalyst(Object, String...)}.
+     */
+    List<Object> getRecipeCatalysts(IRecipeCategory recipeCategory);
 
     /**
      * Returns the recipe transfer handler for the given container and category, if one exists.
@@ -89,26 +97,49 @@ public interface IRecipeRegistry {
      */
     @Nullable
     <T extends IRecipeWrapper> IRecipeLayoutDrawable createRecipeLayoutDrawable(IRecipeCategory<T> recipeCategory,
-        T recipeWrapper, IFocus focus);
+        T recipeWrapper, IFocus<?> focus);
 
     /**
-     * Add a new recipe while the game is running.
-     * This is only for things like gated recipes becoming available, like the ones in Thaumcraft.
-     * Use your {@link IRecipeHandler#isRecipeValid(Object)} to determine which recipes are hidden, and when a recipe
-     * becomes valid you can add it here.
-     * (note that {@link IRecipeHandler#isRecipeValid(Object)} must be true when the recipe is added here for it to
-     * work)
+     * Hides a recipe so that it will not be displayed.
+     * This can be used by mods that create recipe progression.
+     *
+     * @param recipe            the recipe to hide.
+     *                          Get an instance using {@link #getRecipeWrapper(Object, String)}
+     *                          or {@link #getRecipeWrappers(IRecipeCategory)}
+     * @param recipeCategoryUid the unique ID for the recipe category this recipe is a part of.
+     *                          See {@link VanillaRecipeCategoryUid} for vanilla recipe category UIDs.
+     * @see #unhideRecipe(IRecipeWrapper, String)
      */
-    void addRecipe(Object recipe);
+    void hideRecipe(IRecipeWrapper recipe, String recipeCategoryUid);
 
     /**
-     * Add a new smelting recipe while the game is running.
-     * By default, all smelting recipes from {@link FurnaceRecipes#getSmeltingList()} are already added by JFMUY.
+     * Unhides a recipe that was hidden by {@link #hideRecipe(IRecipeWrapper, String)}
+     * This can be used by mods that create recipe progression.
+     *
+     * @param recipe            the recipe to unhide.
+     *                          Get an instance using {@link #getRecipeWrapper(Object, String)}
+     *                          or {@link #getRecipeWrappers(IRecipeCategory)}
+     * @param recipeCategoryUid the unique ID for the recipe category this recipe is a part of.
+     *                          See {@link VanillaRecipeCategoryUid} for vanilla recipe category UIDs.
+     * @see #hideRecipe(IRecipeWrapper, String)
      */
-    void addSmeltingRecipe(List<ItemStack> inputs, ItemStack output);
+    void unhideRecipe(IRecipeWrapper recipe, String recipeCategoryUid);
 
     /**
-     * Remove a recipe while the game is running.
+     * Hide an entire recipe category of recipes from JFMUY.
+     * This can be used by mods that create recipe progression.
+     *
+     * @param recipeCategoryUid the unique ID for the recipe category
+     * @see #unhideRecipeCategory(String)
      */
-    void removeRecipe(Object recipe);
+    void hideRecipeCategory(String recipeCategoryUid);
+
+    /**
+     * Unhides a recipe category that was hidden by {@link #hideRecipeCategory(String)}.
+     * This can be used by mods that create recipe progression.
+     *
+     * @param recipeCategoryUid the unique ID for the recipe category
+     * @see #hideRecipeCategory(String)
+     */
+    void unhideRecipeCategory(String recipeCategoryUid);
 }

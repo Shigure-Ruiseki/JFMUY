@@ -23,7 +23,6 @@ import ruiseki.jfmuy.api.IModRegistry;
 import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
 import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
-import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeRegistryPlugin;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferRegistry;

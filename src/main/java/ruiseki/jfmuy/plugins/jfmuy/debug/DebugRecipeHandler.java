@@ -1,6 +1,5 @@
 package ruiseki.jfmuy.plugins.jfmuy.debug;
 
-import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 
 public class DebugRecipeHandler implements IRecipeHandler<DebugRecipe> {

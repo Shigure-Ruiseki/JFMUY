@@ -1,13 +1,12 @@
 package ruiseki.jfmuy.api.ingredients;
 
+import java.util.Collection;
 import java.util.List;
 
 import net.minecraft.item.ItemStack;
 
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
-
 import ruiseki.jfmuy.api.IModRegistry;
+import ruiseki.jfmuy.api.recipe.IIngredientType;
 
 /**
  * The IIngredientRegistry is provided by JFMUY and has some useful functions related to recipe ingredients.
@@ -16,10 +15,9 @@ import ruiseki.jfmuy.api.IModRegistry;
 public interface IIngredientRegistry {
 
     /**
-     * Returns a list of all the ingredients known to JFMUY, of the specified class.
-     * Calling this with ItemStack.class is equivalent to {@link IItemRegistry#getItemList()}.
+     * Returns an unmodifiable collection of all the ingredients known to JFMUY, of the specified type.
      */
-    <V> ImmutableList<V> getIngredients(Class<V> ingredientClass);
+    <V> Collection<V> getAllIngredients(IIngredientType<V> ingredientType);
 
     /**
      * Returns the appropriate ingredient helper for this ingredient.
@@ -27,9 +25,9 @@ public interface IIngredientRegistry {
     <V> IIngredientHelper<V> getIngredientHelper(V ingredient);
 
     /**
-     * Returns the appropriate ingredient helper for this ingredient class
+     * Returns the appropriate ingredient helper for this ingredient type.
      */
-    <V> IIngredientHelper<V> getIngredientHelper(Class<V> ingredientClass);
+    <V> IIngredientHelper<V> getIngredientHelper(IIngredientType<V> ingredientType);
 
     /**
      * Returns the ingredient renderer for this ingredient.
@@ -39,30 +37,43 @@ public interface IIngredientRegistry {
     /**
      * Returns the ingredient renderer for this ingredient class.
      */
-    <V> IIngredientRenderer<V> getIngredientRenderer(Class<V> ingredientClass);
+    <V> IIngredientRenderer<V> getIngredientRenderer(IIngredientType<V> ingredientType);
 
     /**
-     * Returns a list of all registered ingredient classes.
-     * Without addons, there is ItemStack.class and FluidStack.class.
+     * Returns an unmodifiable collection of all registered ingredient types.
+     * Without addons, there are {@link VanillaTypes#ITEM} and {@link VanillaTypes#FLUID}.
      */
-    ImmutableCollection<Class> getRegisteredIngredientClasses();
+    Collection<IIngredientType> getRegisteredIngredientTypes();
 
     /**
-     * Returns a list of all the ItemStacks that can be used as fuel in a vanilla furnace.
+     * Returns an unmodifiable list of all the ItemStacks that can be used as fuel in a vanilla furnace.
      */
-    ImmutableList<ItemStack> getFuels();
+    List<ItemStack> getFuels();
 
     /**
-     * Returns a list of all the ItemStacks that return true to isPotionIngredient.
+     * Returns an unmodifiable list of all the ItemStacks that return true to isPotionIngredient.
      */
-    ImmutableList<ItemStack> getPotionIngredients();
+    List<ItemStack> getPotionIngredients();
 
     /**
      * Add new ingredients to JFMUY at runtime.
      * Used by mods that have items created while the game is running, or use the server to define items.
-     * Using this method will reload the ingredient list, do not call it unless necessary.
-     *
-     * @since JEI 3.14.4
      */
-    <V> void addIngredientsAtRuntime(Class<V> ingredientClass, List<V> ingredients);
+    <V> void addIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients);
+
+    /**
+     * Remove ingredients from JFMUY at runtime.
+     * Used by mods that have items created while the game is running, or use the server to define items.
+     */
+    <V> void removeIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients);
+
+    /**
+     * Helper method to get ingredient type for an ingredient.
+     */
+    <V> IIngredientType<V> getIngredientType(V ingredient);
+
+    /**
+     * Helper method to get ingredient type from a legacy ingredient class.
+     */
+    <V> IIngredientType<V> getIngredientType(Class<? extends V> ingredientClass);
 }

@@ -20,12 +20,9 @@ import net.minecraftforge.fluids.FluidStack;
 
 import cpw.mods.fml.client.config.GuiButtonExt;
 import cpw.mods.fml.client.config.HoverChecker;
-import ruiseki.jfmuy.api.IItemListOverlay;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
 import ruiseki.jfmuy.api.IRecipeRegistry;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
-import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
-import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.plugins.jfmuy.JFMUYInternalPlugin;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredient;
 import ruiseki.jfmuy.util.ErrorUtil;

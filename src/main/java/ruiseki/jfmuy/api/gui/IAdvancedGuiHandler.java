@@ -13,8 +13,6 @@ import ruiseki.jfmuy.api.ingredients.IModIngredientRegistration;
 /**
  * Allows plugins to change how JFMUY is displayed next to their mod's guis.
  * Register your implementation with {@link IModRegistry#addAdvancedGuiHandlers(IAdvancedGuiHandler[])}.
- * 
- * @see BlankAdvancedGuiHandler
  */
 public interface IAdvancedGuiHandler<T extends GuiContainer> {
 
@@ -30,7 +28,9 @@ public interface IAdvancedGuiHandler<T extends GuiContainer> {
      * @return the space that the gui takes up besides the normal rectangle defined by GuiContainer.
      */
     @Nullable
-    List<Rectangle> getGuiExtraAreas(T guiContainer);
+    default List<Rectangle> getGuiExtraAreas(T guiContainer) {
+        return null;
+    }
 
     /**
      * Return anything under the mouse that JFMUY could not normally detect, used for JFMUY recipe lookups.
@@ -42,8 +42,9 @@ public interface IAdvancedGuiHandler<T extends GuiContainer> {
      *
      * @param mouseX the current X position of the mouse in screen coordinates.
      * @param mouseY the current Y position of the mouse in screen coordinates.
-     * @since JEI 3.13.2
      */
     @Nullable
-    Object getIngredientUnderMouse(T guiContainer, int mouseX, int mouseY);
+    default Object getIngredientUnderMouse(T guiContainer, int mouseX, int mouseY) {
+        return null;
+    }
 }

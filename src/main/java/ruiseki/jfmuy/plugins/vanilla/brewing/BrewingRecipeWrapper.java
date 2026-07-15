@@ -13,7 +13,6 @@ import org.jetbrains.annotations.NotNull;
 import com.google.common.base.Objects;
 
 import ruiseki.jfmuy.api.ingredients.IIngredients;
-import ruiseki.jfmuy.api.recipe.BlankRecipeWrapper;
 import ruiseki.jfmuy.util.Translator;
 
 public class BrewingRecipeWrapper extends BlankRecipeWrapper {

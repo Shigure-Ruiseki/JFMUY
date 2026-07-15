@@ -46,34 +46,34 @@ public class GuiHelper implements IGuiHelper {
     private final IDrawableStatic infoIcon;
     private final IDrawableStatic flameIcon;
 
-    public GuiHelper(IIngredientRegistry ingredientRegistry, Textures textures) {
+    public GuiHelper(IIngredientRegistry ingredientRegistry) {
         this.ingredientRegistry = ingredientRegistry;
-        this.slotDrawable = createDrawable(textures.slot);
-        this.nineSliceSlot = createNineSliceDrawable(textures.slot);
+        this.slotDrawable = createDrawable(Textures.slot);
+        this.nineSliceSlot = createNineSliceDrawable(Textures.slot);
 
-        this.tabSelected = createDrawable(textures.tabSelected);
-        this.tabUnselected = createDrawable(textures.tabUnselected);
+        this.tabSelected = createDrawable(Textures.tabSelected);
+        this.tabUnselected = createDrawable(Textures.tabUnselected);
 
-        this.buttonDisabled = createNineSliceDrawable(textures.buttonDisabled);
-        this.buttonEnabled = createNineSliceDrawable(textures.buttonEnabled);
-        this.buttonHighlight = createNineSliceDrawable(textures.buttonHighlight);
-        this.guiBackground = createNineSliceDrawable(textures.guiBackground);
-        this.recipeBackground = createNineSliceDrawable(textures.recipeBackground);
-        this.searchBackground = createNineSliceDrawable(textures.searchBackground);
-        this.catalystTab = createNineSliceDrawable(textures.catalystTab);
+        this.buttonDisabled = createNineSliceDrawable(Textures.buttonDisabled);
+        this.buttonEnabled = createNineSliceDrawable(Textures.buttonEnabled);
+        this.buttonHighlight = createNineSliceDrawable(Textures.buttonHighlight);
+        this.guiBackground = createNineSliceDrawable(Textures.guiBackground);
+        this.recipeBackground = createNineSliceDrawable(Textures.recipeBackground);
+        this.searchBackground = createNineSliceDrawable(Textures.searchBackground);
+        this.catalystTab = createNineSliceDrawable(Textures.catalystTab);
 
-        this.shapelessIcon = createDrawable(textures.shapelessIcon);
-        this.arrowPrevious = createDrawable(textures.arrowPrevious);
-        this.arrowNext = createDrawable(textures.arrowNext);
-        this.recipeTransfer = createDrawable(textures.recipeTransfer);
+        this.shapelessIcon = createDrawable(Textures.shapelessIcon);
+        this.arrowPrevious = createDrawable(Textures.arrowPrevious);
+        this.arrowNext = createDrawable(Textures.arrowNext);
+        this.recipeTransfer = createDrawable(Textures.recipeTransfer);
 
-        this.configButtonIcon = createDrawable(textures.configButtonIcon);
-        this.configButtonCheatIcon = createDrawable(textures.configButtonCheatIcon);
-        this.bookmarkButtonDisabledIcon = createDrawable(textures.bookmarkButtonDisabledIcon);
-        this.bookmarkButtonEnabledIcon = createDrawable(textures.bookmarkButtonEnabledIcon);
+        this.configButtonIcon = createDrawable(Textures.configButtonIcon);
+        this.configButtonCheatIcon = createDrawable(Textures.configButtonCheatIcon);
+        this.bookmarkButtonDisabledIcon = createDrawable(Textures.bookmarkButtonDisabledIcon);
+        this.bookmarkButtonEnabledIcon = createDrawable(Textures.bookmarkButtonEnabledIcon);
 
-        this.infoIcon = createDrawable(textures.infoIcon);
-        this.flameIcon = createDrawable(textures.flameIcon);
+        this.infoIcon = createDrawable(Textures.infoIcon);
+        this.flameIcon = createDrawable(Textures.flameIcon);
     }
 
     @Override

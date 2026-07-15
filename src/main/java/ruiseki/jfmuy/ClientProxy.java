@@ -11,11 +11,8 @@ import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
-import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
-
-import com.google.common.base.Preconditions;
 
 import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.client.event.ConfigChangedEvent;
@@ -27,14 +24,11 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import ruiseki.jfmuy.api.IModPlugin;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.KeyBindings;
 import ruiseki.jfmuy.config.ServerInfo;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
-import ruiseki.jfmuy.gui.textures.JFMUYTextureMap;
 import ruiseki.jfmuy.gui.textures.Textures;
 import ruiseki.jfmuy.input.MouseHelper;
 import ruiseki.jfmuy.network.PacketHandler;
@@ -52,7 +46,6 @@ public class ClientProxy extends CommonProxy {
 
     private List<IModPlugin> plugins = new ArrayList<>();
     private final JFMUYStarter starter = new JFMUYStarter();
-    private final JFMUYTextureMap textureMap = new JFMUYTextureMap("textures");
     @Nullable
     private Textures textures;
 
@@ -114,8 +107,6 @@ public class ClientProxy extends CommonProxy {
 
     public void init(@Nonnull FMLInitializationEvent event) {
         KeyBindings.init();
-        Minecraft minecraft = Minecraft.getMinecraft();
-        minecraft.renderEngine.loadTickableTexture(textureMap.getLocation(), textureMap);
         MinecraftForge.EVENT_BUS.register(MouseHelper.INSTANCE);
     }
 
@@ -134,13 +125,10 @@ public class ClientProxy extends CommonProxy {
                     Log.get()
                         .info("Restarting JEI.");
                 }
-                Preconditions.checkNotNull(textures);
-                this.starter.start(this.plugins, textures);
+                this.starter.start(this.plugins);
             }
         });
-
-        Preconditions.checkNotNull(textures);
-        this.starter.start(plugins, textures);
+        this.starter.start(plugins);
     }
 
     @SubscribeEvent
@@ -192,11 +180,5 @@ public class ClientProxy extends CommonProxy {
             Log.get()
                 .error("Failed to save filter text.", e);
         }
-    }
-
-    @SubscribeEvent
-    @SideOnly(Side.CLIENT)
-    public void handleTextureRemap(TextureStitchEvent.Pre event) {
-        textures = new Textures(textureMap);
     }
 }

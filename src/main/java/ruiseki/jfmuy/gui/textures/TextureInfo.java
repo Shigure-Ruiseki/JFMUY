@@ -1,12 +1,10 @@
 package ruiseki.jfmuy.gui.textures;
 
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.ResourceLocation;
 
 public class TextureInfo {
 
     private final ResourceLocation location;
-    private final TextureAtlasSprite sprite;
     private final int width;
     private final int height;
     private int sliceLeft;
@@ -18,9 +16,8 @@ public class TextureInfo {
     private int trimTop;
     private int trimBottom;
 
-    public TextureInfo(ResourceLocation location, TextureAtlasSprite sprite, int width, int height) {
+    public TextureInfo(ResourceLocation location, int width, int height) {
         this.location = location;
-        this.sprite = sprite;
         this.width = width;
         this.height = height;
     }
@@ -43,10 +40,6 @@ public class TextureInfo {
 
     public ResourceLocation getLocation() {
         return location;
-    }
-
-    public TextureAtlasSprite getSprite() {
-        return sprite;
     }
 
     public int getWidth() {

@@ -2,7 +2,6 @@ package ruiseki.jfmuy.gui.elements;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
@@ -33,10 +32,12 @@ public class DrawableSprite implements IDrawableStatic {
     }
 
     @Override
-    public void draw(Minecraft minecraft, int xOffset, int yOffset, int maskTop, int maskBottom, int maskLeft,
-        int maskRight) {
+    public void draw(Minecraft minecraft, int xOffset, int yOffset,
+                     int maskTop, int maskBottom,
+                     int maskLeft, int maskRight) {
+
         ResourceLocation location = info.getLocation();
-        TextureAtlasSprite sprite = info.getSprite();
+
         int textureWidth = info.getWidth();
         int textureHeight = info.getHeight();
 
@@ -50,20 +51,18 @@ public class DrawableSprite implements IDrawableStatic {
 
         int x = xOffset + maskLeft;
         int y = yOffset + maskTop;
-        int width = textureWidth - maskRight - maskLeft;
-        int height = textureHeight - maskBottom - maskTop;
+        int width = textureWidth - maskLeft - maskRight;
+        int height = textureHeight - maskTop - maskBottom;
 
         if (width <= 0 || height <= 0) {
             return;
         }
 
-        float uSize = sprite.getMaxU() - sprite.getMinU();
-        float vSize = sprite.getMaxV() - sprite.getMinV();
+        float minU = maskLeft / (float) textureWidth;
+        float minV = maskTop / (float) textureHeight;
 
-        float minU = sprite.getMinU() + uSize * (maskLeft / (float) textureWidth);
-        float minV = sprite.getMinV() + vSize * (maskTop / (float) textureHeight);
-        float maxU = sprite.getMaxU() - uSize * (maskRight / (float) textureWidth);
-        float maxV = sprite.getMaxV() - vSize * (maskBottom / (float) textureHeight);
+        float maxU = (textureWidth - maskRight) / (float) textureWidth;
+        float maxV = (textureHeight - maskBottom) / (float) textureHeight;
 
         Tessellator tessellator = Tessellator.instance;
 

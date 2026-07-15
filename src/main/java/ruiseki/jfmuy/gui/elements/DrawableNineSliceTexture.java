@@ -20,139 +20,148 @@ public class DrawableNineSliceTexture {
         this.info = info;
     }
 
-    public void draw(Minecraft minecraft, int xOffset, int yOffset, int width, int height) {
+    public void draw(Minecraft mc, int xOffset, int yOffset, int width, int height) {
         ResourceLocation location = info.getLocation();
-        TextureAtlasSprite sprite = info.getSprite();
+
         int leftWidth = info.getSliceLeft();
         int rightWidth = info.getSliceRight();
         int topHeight = info.getSliceTop();
         int bottomHeight = info.getSliceBottom();
+
         int textureWidth = info.getWidth();
         int textureHeight = info.getHeight();
 
-        TextureManager textureManager = minecraft.getTextureManager();
-        textureManager.bindTexture(location);
+        mc.getTextureManager().bindTexture(location);
 
-        float uMin = sprite.getMinU();
-        float uMax = sprite.getMaxU();
-        float vMin = sprite.getMinV();
-        float vMax = sprite.getMaxV();
-        float uSize = uMax - uMin;
-        float vSize = vMax - vMin;
+        float uMin = 0.0F;
+        float vMin = 0.0F;
+        float uMax = 1.0F;
+        float vMax = 1.0F;
 
-        float uLeft = uMin + uSize * (leftWidth / (float) textureWidth);
-        float uRight = uMax - uSize * (rightWidth / (float) textureWidth);
-        float vTop = vMin + vSize * (topHeight / (float) textureHeight);
-        float vBottom = vMax - vSize * (bottomHeight / (float) textureHeight);
+        float uLeft = leftWidth / (float) textureWidth;
+        float uRight = 1.0F - rightWidth / (float) textureWidth;
 
-        Tessellator tessellator = Tessellator.instance;
-        tessellator.startDrawingQuads();
+        float vTop = topHeight / (float) textureHeight;
+        float vBottom = 1.0F - bottomHeight / (float) textureHeight;
+
+        Tessellator tess = Tessellator.instance;
+        tess.startDrawingQuads();
 
         // left top
-        draw(tessellator, uMin, vMin, uLeft, vTop, xOffset, yOffset, leftWidth, topHeight);
+        draw(
+            tess,
+            0F, 0F,
+            uLeft, vTop,
+            xOffset, yOffset,
+            leftWidth, topHeight
+        );
+
         // left bottom
         draw(
-            tessellator,
-            uMin,
-            vBottom,
-            uLeft,
-            vMax,
+            tess,
+            0F, vBottom,
+            uLeft, 1F,
             xOffset,
             yOffset + height - bottomHeight,
             leftWidth,
-            bottomHeight);
+            bottomHeight
+        );
+
         // right top
-        draw(tessellator, uRight, vMin, uMax, vTop, xOffset + width - rightWidth, yOffset, rightWidth, topHeight);
+        draw(
+            tess,
+            uRight, 0F,
+            1F, vTop,
+            xOffset + width - rightWidth,
+            yOffset,
+            rightWidth,
+            topHeight
+        );
+
         // right bottom
         draw(
-            tessellator,
-            uRight,
-            vBottom,
-            uMax,
-            vMax,
+            tess,
+            uRight, vBottom,
+            1F, 1F,
             xOffset + width - rightWidth,
             yOffset + height - bottomHeight,
             rightWidth,
-            bottomHeight);
+            bottomHeight
+        );
 
         int middleWidth = textureWidth - leftWidth - rightWidth;
         int middleHeight = textureHeight - topHeight - bottomHeight;
+
         int tiledMiddleWidth = width - leftWidth - rightWidth;
         int tiledMiddleHeight = height - topHeight - bottomHeight;
 
         if (tiledMiddleWidth > 0) {
-            // top edge
             drawTiled(
-                tessellator,
-                uLeft,
-                vMin,
-                uRight,
-                vTop,
+                tess,
+                uLeft, 0F,
+                uRight, vTop,
                 xOffset + leftWidth,
                 yOffset,
                 tiledMiddleWidth,
                 topHeight,
                 middleWidth,
-                topHeight);
-            // bottom edge
+                topHeight
+            );
+
             drawTiled(
-                tessellator,
-                uLeft,
-                vBottom,
-                uRight,
-                vMax,
+                tess,
+                uLeft, vBottom,
+                uRight, 1F,
                 xOffset + leftWidth,
                 yOffset + height - bottomHeight,
                 tiledMiddleWidth,
                 bottomHeight,
                 middleWidth,
-                bottomHeight);
+                bottomHeight
+            );
         }
+
         if (tiledMiddleHeight > 0) {
-            // left side
             drawTiled(
-                tessellator,
-                uMin,
-                vTop,
-                uLeft,
-                vBottom,
+                tess,
+                0F, vTop,
+                uLeft, vBottom,
                 xOffset,
                 yOffset + topHeight,
                 leftWidth,
                 tiledMiddleHeight,
                 leftWidth,
-                middleHeight);
-            // right side
+                middleHeight
+            );
+
             drawTiled(
-                tessellator,
-                uRight,
-                vTop,
-                uMax,
-                vBottom,
+                tess,
+                uRight, vTop,
+                1F, vBottom,
                 xOffset + width - rightWidth,
                 yOffset + topHeight,
                 rightWidth,
                 tiledMiddleHeight,
                 rightWidth,
-                middleHeight);
+                middleHeight
+            );
         }
-        if (tiledMiddleHeight > 0 && tiledMiddleWidth > 0) {
-            // middle area
+
+        if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0) {
             drawTiled(
-                tessellator,
-                uLeft,
-                vTop,
-                uRight,
-                vBottom,
+                tess,
+                uLeft, vTop,
+                uRight, vBottom,
                 xOffset + leftWidth,
                 yOffset + topHeight,
                 tiledMiddleWidth,
                 tiledMiddleHeight,
                 middleWidth,
-                middleHeight);
+                middleHeight
+            );
         }
 
-        tessellator.draw();
+        tess.draw();
     }
 
     private void drawTiled(Tessellator tessellator, float uMin, float vMin, float uMax, float vMax, int xOffset,

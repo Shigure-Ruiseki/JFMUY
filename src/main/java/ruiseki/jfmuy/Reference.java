@@ -16,9 +16,6 @@ public class Reference {
     public static final String TEXTURE_GUI_PATH = "textures/gui/";
     public static final String TEXTURE_GUI_VANILLA = TEXTURE_GUI_PATH + "gui_vanilla.png";
 
-    public static final String TEXTURE_RECIPE_BACKGROUND_PATH = TEXTURE_GUI_PATH + "recipeBackground2.png";
-    public static final String TEXTURE_RECIPE_BACKGROUND_TALL_PATH = TEXTURE_GUI_PATH + "recipeBackgroundTall2.png";
-
     public static final ResourceLocation RECIPE_GUI_VANILLA = new ResourceLocation(MOD_ID, TEXTURE_GUI_VANILLA);
 
     public static final int MAX_TOOLTIP_WIDTH = 150;

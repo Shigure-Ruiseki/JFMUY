@@ -24,7 +24,6 @@ import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.BookmarkOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.LeftAreaDispatcher;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
-import ruiseki.jfmuy.gui.textures.Textures;
 import ruiseki.jfmuy.ingredients.IngredientBlacklistInternal;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
@@ -43,7 +42,7 @@ public class JFMUYStarter {
 
     private boolean started;
 
-    public void start(List<IModPlugin> plugins, Textures textures) {
+    public void start(List<IModPlugin> plugins) {
         LoggedTimer totalTime = new LoggedTimer();
         totalTime.start("Starting JEI");
 
@@ -63,7 +62,7 @@ public class JFMUYStarter {
         IngredientRegistry ingredientRegistry = modIngredientRegistry.createIngredientRegistry(modIdHelper, blacklist);
         Internal.setIngredientRegistry(ingredientRegistry);
 
-        GuiHelper guiHelper = new GuiHelper(ingredientRegistry, textures);
+        GuiHelper guiHelper = new GuiHelper(ingredientRegistry);
         JFMUYHelpers jeiHelpers = new JFMUYHelpers(guiHelper, ingredientRegistry, blacklist, stackHelper);
         Internal.setHelpers(jeiHelpers);
 

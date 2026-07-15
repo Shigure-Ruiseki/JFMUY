@@ -9,9 +9,13 @@ import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.gui.IDrawable;
+import ruiseki.jfmuy.api.gui.IDrawableStatic;
+import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.TooltipRenderer;
+import ruiseki.okcore.client.renderer.GlStateManager;
 
 public class GuiIconButton extends GuiButton {
 
@@ -36,6 +40,51 @@ public class GuiIconButton extends GuiButton {
         this.yPosition = area.y;
         this.width = area.width;
         this.height = area.height;
+    }
+
+    @Override
+    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
+        if (this.visible) {
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            this.field_146123_n = mouseX >= this.xPosition && mouseY >= this.yPosition
+                && mouseX < this.xPosition + this.width
+                && mouseY < this.yPosition + this.height;
+            int i = this.getHoverState(this.func_146115_a());
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(
+                GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                GlStateManager.SourceFactor.ONE,
+                GlStateManager.DestFactor.ZERO);
+            GuiHelper guiHelper = Internal.getHelpers()
+                .getGuiHelper();
+            DrawableNineSliceTexture texture = guiHelper.getButtonForState(i);
+            texture.draw(mc, this.xPosition, this.yPosition, this.width, this.height);
+            this.mouseDragged(mc, mouseX, mouseY);
+
+            int color = 14737632;
+            if (!this.enabled) {
+                color = 10526880;
+            } else if (this.field_146123_n) {
+                color = 16777120;
+            }
+            color |= -16777216;
+
+            float red = (float) (color >> 16 & 255) / 255.0F;
+            float blue = (float) (color >> 8 & 255) / 255.0F;
+            float green = (float) (color & 255) / 255.0F;
+            float alpha = (float) (color >> 24 & 255) / 255.0F;
+            GlStateManager.color(red, blue, green, alpha);
+
+            IDrawable icon = iconSupplier.get();
+            double xOffset = xPosition + (width - icon.getWidth()) / 2.0;
+            double yOffset = yPosition + (height - icon.getHeight()) / 2.0;
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(xOffset, yOffset, 0);
+            icon.draw(mc);
+            GlStateManager.popMatrix();
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        }
     }
 
     public void drawTooltips(Minecraft minecraft, int mouseX, int mouseY) {

@@ -6,17 +6,17 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.EnumChatFormatting;
 
-import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
 import ruiseki.jfmuy.gui.TooltipRenderer;
+import ruiseki.jfmuy.util.Translator;
 
 public class RecipeTransferErrorTooltip implements IRecipeTransferError {
 
     private final List<String> message = new ArrayList<>();
 
     public RecipeTransferErrorTooltip(String message) {
-        this.message.add(Reference.RECIPE_TRANSFER_TOOLTIP);
+        this.message.add(Translator.translateToLocal("jei.tooltip.transfer"));
         this.message.add(EnumChatFormatting.RED + message);
     }
 
@@ -28,6 +28,6 @@ public class RecipeTransferErrorTooltip implements IRecipeTransferError {
     @Override
     public void showError(Minecraft minecraft, int mouseX, int mouseY, IRecipeLayout recipeLayout, int recipeX,
         int recipeY) {
-        TooltipRenderer.drawHoveringText(minecraft, message, mouseX, mouseY);
+        TooltipRenderer.drawHoveringText(minecraft, message, mouseX, mouseY, 150);
     }
 }

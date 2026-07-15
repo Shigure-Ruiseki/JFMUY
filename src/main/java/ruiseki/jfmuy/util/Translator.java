@@ -1,8 +1,14 @@
 package ruiseki.jfmuy.util;
 
 import java.util.IllegalFormatException;
+import java.util.Locale;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.Language;
+import net.minecraft.client.resources.LanguageManager;
 import net.minecraft.util.StatCollector;
+
+import org.apache.commons.lang3.LocaleUtils;
 
 public class Translator {
 
@@ -23,9 +29,33 @@ public class Translator {
         try {
             return String.format(s, format);
         } catch (IllegalFormatException e) {
-            String errorMessage = "Format error: " + s;
-            Log.error(errorMessage, e);
-            return errorMessage;
+            Log.get()
+                .error("Format error: {}", s, e);
+            return "Format error: " + s;
         }
+    }
+
+    public static String toLowercaseWithLocale(String string) {
+        return string.toLowerCase(getLocale());
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private static Locale getLocale() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft != null) {
+            LanguageManager languageManager = minecraft.getLanguageManager();
+            if (languageManager != null) {
+                Language currentLanguage = languageManager.getCurrentLanguage();
+                if (currentLanguage != null) {
+                    String code = currentLanguage.getLanguageCode();
+                    try {
+                        return LocaleUtils.toLocale(code);
+                    } catch (IllegalArgumentException e) {
+                        return Locale.getDefault();
+                    }
+                }
+            }
+        }
+        return Locale.getDefault();
     }
 }

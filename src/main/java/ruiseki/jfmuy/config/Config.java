@@ -5,9 +5,11 @@ import java.io.File;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import net.minecraft.network.NetworkManager;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigCategory;
@@ -16,26 +18,43 @@ import net.minecraftforge.common.config.Property;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
+import cpw.mods.fml.client.FMLClientHandler;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
+import ruiseki.jfmuy.api.recipe.IIngredientType;
+import ruiseki.jfmuy.color.ColorGetter;
+import ruiseki.jfmuy.color.ColorNamer;
+import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.ingredients.IngredientFilter;
+import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
 import ruiseki.jfmuy.network.packets.PacketRequestCheatPermission;
+import ruiseki.jfmuy.startup.ForgeModIdHelper;
+import ruiseki.jfmuy.startup.IModIdHelper;
+import ruiseki.jfmuy.util.GiveMode;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
-import ruiseki.jfmuy.util.color.ColorGetter;
-import ruiseki.jfmuy.util.color.ColorNamer;
 
-public class Config {
+public final class Config {
 
-    private static final String configKeyPrefix = "config.jfmuy";
+    private static final String configKeyPrefix = "config.jei";
 
     public static final String CATEGORY_SEARCH = "search";
     public static final String CATEGORY_ADVANCED = "advanced";
     public static final String CATEGORY_SEARCH_COLORS = "searchColors";
+
+    public static final String defaultModNameFormatFriendly = "blue italic";
+    public static final int smallestNumColumns = 4;
+    public static final int largestNumColumns = 100;
+    public static final int minRecipeGuiHeight = 175;
+    public static final int maxRecipeGuiHeight = 5000;
 
     @Nullable
     private static LocalizedConfiguration config;
@@ -45,39 +64,17 @@ public class Config {
     private static LocalizedConfiguration itemBlacklistConfig;
     @Nullable
     private static LocalizedConfiguration searchColorsConfig;
+    @Nullable
+    private static File bookmarkFile;
 
-    // advanced
-    private static boolean debugModeEnabled = false;
-    private static boolean centerSearchBarEnabled = false;
-    private static final String defaultModNameFormatFriendly = "blue italic";
-    private static String modNameFormat = parseFriendlyModNameFormat(defaultModNameFormatFriendly);
-
-    // search
-    private static final SearchMode defaultModNameSearchMode = SearchMode.REQUIRE_PREFIX;
-    private static final SearchMode defaultTooltipSearchMode = SearchMode.ENABLED;
-    private static final SearchMode defaultOreDictSearchMode = SearchMode.REQUIRE_PREFIX;
-    private static final SearchMode defaultCreativeTabSearchMode = SearchMode.REQUIRE_PREFIX;
-    private static final SearchMode defaultColorSearchMode = SearchMode.DISABLED;
-
-    private static SearchMode modNameSearchMode = defaultModNameSearchMode;
-    private static SearchMode tooltipSearchMode = defaultTooltipSearchMode;
-    private static SearchMode oreDictSearchMode = defaultOreDictSearchMode;
-    private static SearchMode creativeTabSearchMode = defaultCreativeTabSearchMode;
-    private static SearchMode colorSearchMode = defaultColorSearchMode;
-
-    // per-world
-    private static final boolean defaultOverlayEnabled = true;
-    private static final boolean defaultCheatItemsEnabled = false;
-    private static final boolean defaultEditModeEnabled = false;
-    private static final String defaultFilterText = "";
-
-    private static boolean overlayEnabled = defaultOverlayEnabled;
-    private static boolean cheatItemsEnabled = defaultCheatItemsEnabled;
-    private static boolean editModeEnabled = defaultEditModeEnabled;
-    private static String filterText = defaultFilterText;
+    private static final ConfigValues defaultValues = new ConfigValues();
+    private static final ConfigValues values = new ConfigValues();
+    @Nullable
+    private static String modNameFormatOverride; // when we detect another mod is adding mod names to tooltips, use its
+                                                 // formatting
 
     // item blacklist
-    private static final Set<String> itemBlacklist = new HashSet<String>();
+    private static final Set<String> itemBlacklist = new HashSet<>();
     private static final String[] defaultItemBlacklist = new String[] {};
 
     private Config() {
@@ -85,48 +82,78 @@ public class Config {
     }
 
     public static boolean isOverlayEnabled() {
-        return overlayEnabled;
+        return values.overlayEnabled || KeyBindings.toggleOverlay.getKeyCode() == 0; // if there is no key binding to
+                                                                                     // enable it, don't allow the
+                                                                                     // overlay to be disabled
     }
 
     public static void toggleOverlayEnabled() {
-        overlayEnabled = !overlayEnabled;
+        values.overlayEnabled = !values.overlayEnabled;
 
         if (worldConfig != null) {
-            final String worldCategory = SessionData.getWorldUid();
-            Property property = worldConfig.get(worldCategory, "overlayEnabled", overlayEnabled);
-            property.set(overlayEnabled);
+            NetworkManager networkManager = FMLClientHandler.instance()
+                .getClientToServerNetworkManager();
+            final String worldCategory = ServerInfo.getWorldUid(networkManager);
+            Property property = worldConfig.get(worldCategory, "overlayEnabled", defaultValues.overlayEnabled);
+            property.set(values.overlayEnabled);
 
             if (worldConfig.hasChanged()) {
                 worldConfig.save();
             }
         }
 
-        MinecraftForge.EVENT_BUS.post(new OverlayToggleEvent(overlayEnabled));
+        MinecraftForge.EVENT_BUS.post(new OverlayToggleEvent(values.overlayEnabled));
+    }
+
+    public static boolean isBookmarkOverlayEnabled() {
+        return isOverlayEnabled() && values.bookmarkOverlayEnabled;
+    }
+
+    public static void toggleBookmarkEnabled() {
+        values.bookmarkOverlayEnabled = !values.bookmarkOverlayEnabled;
+
+        if (worldConfig != null) {
+            NetworkManager networkManager = FMLClientHandler.instance()
+                .getClientToServerNetworkManager();
+            final String worldCategory = ServerInfo.getWorldUid(networkManager);
+            Property property = worldConfig
+                .get(worldCategory, "bookmarkOverlayEnabled", defaultValues.bookmarkOverlayEnabled);
+            property.set(values.bookmarkOverlayEnabled);
+
+            if (worldConfig.hasChanged()) {
+                worldConfig.save();
+            }
+        }
+
+        MinecraftForge.EVENT_BUS.post(new BookmarkOverlayToggleEvent(values.bookmarkOverlayEnabled));
     }
 
     public static boolean isCheatItemsEnabled() {
-        return cheatItemsEnabled;
+        return values.cheatItemsEnabled;
     }
 
     public static void toggleCheatItemsEnabled() {
-        setCheatItemsEnabled(!cheatItemsEnabled);
+        setCheatItemsEnabled(!values.cheatItemsEnabled);
     }
 
     public static void setCheatItemsEnabled(boolean value) {
-        if (cheatItemsEnabled != value) {
-            cheatItemsEnabled = value;
+        if (values.cheatItemsEnabled != value) {
+            values.cheatItemsEnabled = value;
 
             if (worldConfig != null) {
-                final String worldCategory = SessionData.getWorldUid();
-                Property property = worldConfig.get(worldCategory, "cheatItemsEnabled", cheatItemsEnabled);
-                property.set(cheatItemsEnabled);
+                NetworkManager networkManager = FMLClientHandler.instance()
+                    .getClientToServerNetworkManager();
+                final String worldCategory = ServerInfo.getWorldUid(networkManager);
+                Property property = worldConfig
+                    .get(worldCategory, "cheatItemsEnabled", defaultValues.cheatItemsEnabled);
+                property.set(values.cheatItemsEnabled);
 
                 if (worldConfig.hasChanged()) {
                     worldConfig.save();
                 }
             }
 
-            if (cheatItemsEnabled && SessionData.isJfmuyOnServer()) {
+            if (values.cheatItemsEnabled && ServerInfo.isJFMUYOnServer()) {
                 JFMUY.getProxy()
                     .sendPacketToServer(new PacketRequestCheatPermission());
             }
@@ -134,43 +161,104 @@ public class Config {
     }
 
     public static boolean isEditModeEnabled() {
-        return editModeEnabled;
+        return values.editModeEnabled;
+    }
+
+    public static void toggleEditModeEnabled() {
+        values.editModeEnabled = !values.editModeEnabled;
+        if (worldConfig != null) {
+            NetworkManager networkManager = FMLClientHandler.instance()
+                .getClientToServerNetworkManager();
+            final String worldCategory = ServerInfo.getWorldUid(networkManager);
+            Property property = worldConfig.get(worldCategory, "editEnabled", defaultValues.editModeEnabled);
+            property.set(values.editModeEnabled);
+
+            if (worldConfig.hasChanged()) {
+                worldConfig.save();
+            }
+        }
+
+        MinecraftForge.EVENT_BUS.post(new EditModeToggleEvent(values.editModeEnabled));
     }
 
     public static boolean isDebugModeEnabled() {
-        return debugModeEnabled;
+        return values.debugModeEnabled;
     }
 
     public static boolean isDeleteItemsInCheatModeActive() {
-        return cheatItemsEnabled && SessionData.isJfmuyOnServer();
+        return values.cheatItemsEnabled && ServerInfo.isJFMUYOnServer();
     }
 
     public static boolean isCenterSearchBarEnabled() {
-        return centerSearchBarEnabled;
+        return values.centerSearchBarEnabled;
+    }
+
+    public static boolean isOptimizeMemoryUsage() {
+        return values.optimizeMemoryUsage;
+    }
+
+    public static boolean isAddingBookmarksToFront() {
+        return values.addBookmarksToFront;
+    }
+
+    public static GiveMode getGiveMode() {
+        return values.giveMode;
     }
 
     public static String getModNameFormat() {
-        return modNameFormat;
+        String override = Config.modNameFormatOverride;
+        if (override != null) {
+            return override;
+        }
+        return values.modNameFormat;
+    }
+
+    public static boolean isModNameFormatOverrideActive() {
+        return Config.modNameFormatOverride != null;
+    }
+
+    public static void checkForModNameFormatOverride() {
+        IModIdHelper modIdHelper = ForgeModIdHelper.getInstance();
+        Config.modNameFormatOverride = modIdHelper.getModNameTooltipFormatting();
+        if (config != null) {
+            updateModNameFormat(config);
+        }
+    }
+
+    public static int getMaxColumns() {
+        return values.maxColumns;
+    }
+
+    public static int getMaxRecipeGuiHeight() {
+        return values.maxRecipeGuiHeight;
     }
 
     public static SearchMode getModNameSearchMode() {
-        return modNameSearchMode;
+        return values.modNameSearchMode;
     }
 
     public static SearchMode getTooltipSearchMode() {
-        return tooltipSearchMode;
+        return values.tooltipSearchMode;
     }
 
     public static SearchMode getOreDictSearchMode() {
-        return oreDictSearchMode;
+        return values.oreDictSearchMode;
     }
 
     public static SearchMode getCreativeTabSearchMode() {
-        return creativeTabSearchMode;
+        return values.creativeTabSearchMode;
     }
 
     public static SearchMode getColorSearchMode() {
-        return colorSearchMode;
+        return values.colorSearchMode;
+    }
+
+    public static SearchMode getResourceIdSearchMode() {
+        return values.resourceIdSearchMode;
+    }
+
+    public static boolean getSearchAdvancedTooltips() {
+        return values.searchAdvancedTooltips;
     }
 
     public enum SearchMode {
@@ -180,24 +268,25 @@ public class Config {
     }
 
     public static boolean setFilterText(String filterText) {
-        String lowercaseFilterText = filterText.toLowerCase();
-        if (Config.filterText.equals(lowercaseFilterText)) {
+        if (values.filterText.equals(filterText)) {
             return false;
+        } else {
+            values.filterText = filterText;
+            return true;
         }
-
-        Config.filterText = lowercaseFilterText;
-        return true;
     }
 
     public static String getFilterText() {
-        return filterText;
+        return values.filterText;
     }
 
     public static void saveFilterText() {
         if (worldConfig != null) {
-            final String worldCategory = SessionData.getWorldUid();
-            Property property = worldConfig.get(worldCategory, "filterText", defaultFilterText);
-            property.set(Config.filterText);
+            NetworkManager networkManager = FMLClientHandler.instance()
+                .getClientToServerNetworkManager();
+            final String worldCategory = ServerInfo.getWorldUid(networkManager);
+            Property property = worldConfig.get(worldCategory, "filterText", defaultValues.filterText);
+            property.set(values.filterText);
 
             if (worldConfig.hasChanged()) {
                 worldConfig.save();
@@ -210,8 +299,14 @@ public class Config {
         return config;
     }
 
+    @Nullable
     public static Configuration getWorldConfig() {
         return worldConfig;
+    }
+
+    @Nullable
+    public static File getBookmarkFile() {
+        return bookmarkFile;
     }
 
     public static void preInit(FMLPreInitializationEvent event) {
@@ -220,11 +315,33 @@ public class Config {
         if (!jeiConfigurationDir.exists()) {
             try {
                 if (!jeiConfigurationDir.mkdir()) {
-                    Log.error("Could not create config directory {}", jeiConfigurationDir);
+                    Log.get()
+                        .error("Could not create config directory {}", jeiConfigurationDir);
                     return;
                 }
             } catch (SecurityException e) {
-                Log.error("Could not create config directory {}", jeiConfigurationDir, e);
+                Log.get()
+                    .error("Could not create config directory {}", jeiConfigurationDir, e);
+                return;
+            }
+        }
+
+        File minecraftDir = new File(
+            Loader.instance()
+                .getConfigDir()
+                .getParent());
+        bookmarkFile = new File(minecraftDir, "jei_bookmarks.ini");
+        File oldBookmarkFile = new File(jeiConfigurationDir, "bookmarks.ini");
+        if (!bookmarkFile.exists() && oldBookmarkFile.exists()) {
+            try {
+                if (!oldBookmarkFile.renameTo(bookmarkFile)) {
+                    Log.get()
+                        .error("Could not move the old bookmark file from {} to {}", jeiConfigurationDir, "./");
+                    return;
+                }
+            } catch (SecurityException e) {
+                Log.get()
+                    .error("Could not move the old bookmark file from {} to {}", jeiConfigurationDir, "./", e);
                 return;
             }
         }
@@ -234,36 +351,7 @@ public class Config {
         final File searchColorsConfigFile = new File(jeiConfigurationDir, "searchColors.cfg");
         final File worldConfigFile = new File(jeiConfigurationDir, "worldSettings.cfg");
         worldConfig = new Configuration(worldConfigFile, "0.1.0");
-
-        {
-            final File oldConfigFile = event.getSuggestedConfigurationFile();
-            if (oldConfigFile.exists()) {
-                try {
-                    if (!oldConfigFile.renameTo(configFile)) {
-                        Log.error("Could not move old config file {}", oldConfigFile);
-                    }
-                } catch (SecurityException e) {
-                    Log.error("Could not move old config file {}", oldConfigFile, e);
-                }
-            }
-        }
-
-        {
-            final File oldItemBlacklistConfigFile = new File(
-                event.getModConfigurationDirectory(),
-                Reference.MOD_ID + "-itemBlacklist.cfg");
-            if (oldItemBlacklistConfigFile.exists()) {
-                try {
-                    if (!oldItemBlacklistConfigFile.renameTo(itemBlacklistConfigFile)) {
-                        Log.error("Could not move old config file {}", oldItemBlacklistConfigFile);
-                    }
-                } catch (SecurityException e) {
-                    Log.error("Could not move old config file {}", oldItemBlacklistConfigFile, e);
-                }
-            }
-        }
-
-        config = new LocalizedConfiguration(configKeyPrefix, configFile, "0.2.0");
+        config = new LocalizedConfiguration(configKeyPrefix, configFile, "0.4.0");
         itemBlacklistConfig = new LocalizedConfiguration(configKeyPrefix, itemBlacklistConfigFile, "0.1.0");
         searchColorsConfig = new LocalizedConfiguration(configKeyPrefix, searchColorsConfigFile, "0.1.0");
 
@@ -282,7 +370,9 @@ public class Config {
             needsReload = true;
         }
 
-        if (syncWorldConfig()) {
+        NetworkManager networkManager = FMLClientHandler.instance()
+            .getClientToServerNetworkManager();
+        if (syncWorldConfig(networkManager)) {
             needsReload = true;
         }
 
@@ -325,16 +415,33 @@ public class Config {
         searchCategory.remove("prefixRequiredForColorSearch");
 
         SearchMode[] searchModes = SearchMode.values();
-        modNameSearchMode = config.getEnum("modNameSearchMode", CATEGORY_SEARCH, defaultModNameSearchMode, searchModes);
-        tooltipSearchMode = config.getEnum("tooltipSearchMode", CATEGORY_SEARCH, defaultTooltipSearchMode, searchModes);
-        oreDictSearchMode = config.getEnum("oreDictSearchMode", CATEGORY_SEARCH, defaultOreDictSearchMode, searchModes);
-        creativeTabSearchMode = config
-            .getEnum("creativeTabSearchMode", CATEGORY_SEARCH, defaultCreativeTabSearchMode, searchModes);
-        colorSearchMode = config.getEnum("colorSearchMode", CATEGORY_SEARCH, defaultColorSearchMode, searchModes);
+
+        String loadedConfigVersion = config.getLoadedConfigVersion();
+        // set new defaults moving to config version 0.3.0
+        if (loadedConfigVersion != null && versionCompare(loadedConfigVersion, "0.3.0") < 0) {
+            config.setEnum("creativeTabSearchMode", CATEGORY_SEARCH, defaultValues.creativeTabSearchMode, searchModes);
+            config.setEnum("oreDictSearchMode", CATEGORY_SEARCH, defaultValues.oreDictSearchMode, searchModes);
+        }
+
+        values.modNameSearchMode = config
+            .getEnum("modNameSearchMode", CATEGORY_SEARCH, defaultValues.modNameSearchMode, searchModes);
+        values.tooltipSearchMode = config
+            .getEnum("tooltipSearchMode", CATEGORY_SEARCH, defaultValues.tooltipSearchMode, searchModes);
+        values.oreDictSearchMode = config
+            .getEnum("oreDictSearchMode", CATEGORY_SEARCH, defaultValues.oreDictSearchMode, searchModes);
+        values.creativeTabSearchMode = config
+            .getEnum("creativeTabSearchMode", CATEGORY_SEARCH, defaultValues.creativeTabSearchMode, searchModes);
+        values.colorSearchMode = config
+            .getEnum("colorSearchMode", CATEGORY_SEARCH, defaultValues.colorSearchMode, searchModes);
+        values.resourceIdSearchMode = config
+            .getEnum("resourceIdSearchMode", CATEGORY_SEARCH, defaultValues.resourceIdSearchMode, searchModes);
         if (config.getCategory(CATEGORY_SEARCH)
             .hasChanged()) {
             needsReload = true;
         }
+
+        values.searchAdvancedTooltips = config
+            .getBoolean("searchAdvancedTooltips", CATEGORY_SEARCH, defaultValues.searchAdvancedTooltips);
 
         ConfigCategory categoryAdvanced = config.getCategory(CATEGORY_ADVANCED);
         categoryAdvanced.remove("nbtKeyIgnoreList");
@@ -343,36 +450,35 @@ public class Config {
         categoryAdvanced.remove("hideMissingModelsEnabled");
         categoryAdvanced.remove("debugItemEnabled");
         categoryAdvanced.remove("colorSearchEnabled");
+        categoryAdvanced.remove("maxSubtypes");
 
-        centerSearchBarEnabled = config.getBoolean(CATEGORY_ADVANCED, "centerSearchBarEnabled", centerSearchBarEnabled);
+        values.centerSearchBarEnabled = config
+            .getBoolean(CATEGORY_ADVANCED, "centerSearchBarEnabled", defaultValues.centerSearchBarEnabled);
 
-        EnumSet<EnumChatFormatting> validFormatting = EnumSet.allOf(EnumChatFormatting.class);
-        validFormatting.remove(EnumChatFormatting.RESET);
-        String[] validValues = new String[validFormatting.size()];
-        int i = 0;
-        for (EnumChatFormatting formatting : validFormatting) {
-            validValues[i] = formatting.getFriendlyName()
-                .toLowerCase(Locale.ENGLISH);
-            i++;
-        }
-        String modNameFormatFriendly = config
-            .getString("modNameFormat", CATEGORY_ADVANCED, defaultModNameFormatFriendly, validValues);
-        modNameFormat = parseFriendlyModNameFormat(modNameFormatFriendly);
+        values.optimizeMemoryUsage = config
+            .getBoolean(CATEGORY_ADVANCED, "optimizeMemoryUsage", defaultValues.optimizeMemoryUsage);
 
-        debugModeEnabled = config.getBoolean(CATEGORY_ADVANCED, "debugModeEnabled", debugModeEnabled);
+        values.addBookmarksToFront = config
+            .getBoolean(CATEGORY_ADVANCED, "addBookmarksToFront", defaultValues.addBookmarksToFront);
+
+        values.giveMode = config.getEnum("giveMode", CATEGORY_ADVANCED, defaultValues.giveMode, GiveMode.values());
+
+        values.maxColumns = config
+            .getInt("maxColumns", CATEGORY_ADVANCED, defaultValues.maxColumns, smallestNumColumns, largestNumColumns);
+
+        values.maxRecipeGuiHeight = config.getInt(
+            "maxRecipeGuiHeight",
+            CATEGORY_ADVANCED,
+            defaultValues.maxRecipeGuiHeight,
+            minRecipeGuiHeight,
+            maxRecipeGuiHeight);
+
+        updateModNameFormat(config);
+
         {
-            Property property = config.get(CATEGORY_ADVANCED, "debugModeEnabled", debugModeEnabled);
+            Property property = config.get(CATEGORY_ADVANCED, "debugModeEnabled", defaultValues.debugModeEnabled);
             property.setShowInGui(false);
-        }
-
-        // migrate item blacklist to new file
-        if (itemBlacklistConfig != null && config.hasKey(CATEGORY_ADVANCED, "itemBlacklist")) {
-            Property oldItemBlacklistProperty = config.get(CATEGORY_ADVANCED, "itemBlacklist", defaultItemBlacklist);
-            String[] itemBlacklistArray = oldItemBlacklistProperty.getStringList();
-            Property newItemBlacklistProperty = itemBlacklistConfig
-                .get(CATEGORY_ADVANCED, "itemBlacklist", defaultItemBlacklist);
-            newItemBlacklistProperty.set(itemBlacklistArray);
-            categoryAdvanced.remove("itemBlacklist");
+            values.debugModeEnabled = property.getBoolean();
         }
 
         final boolean configChanged = config.hasChanged();
@@ -382,21 +488,44 @@ public class Config {
         return needsReload;
     }
 
-    private static String parseFriendlyModNameFormat(String formatWithEnumNames) {
-        String format = "";
-        if (formatWithEnumNames.isEmpty()) {
-            return format;
+    private static void updateModNameFormat(LocalizedConfiguration config) {
+        EnumSet<EnumChatFormatting> validFormatting = EnumSet.allOf(EnumChatFormatting.class);
+        validFormatting.remove(EnumChatFormatting.RESET);
+        String[] validValues = new String[validFormatting.size()];
+        int i = 0;
+        for (EnumChatFormatting formatting : validFormatting) {
+            validValues[i] = formatting.getFriendlyName()
+                .toLowerCase(Locale.ENGLISH);
+            i++;
         }
+
+        String comment = "Format formatting for mod name.";
+
+        Property property = config
+            .get(CATEGORY_ADVANCED, "modNameFormat", defaultModNameFormatFriendly, comment, validValues);
+
+        boolean showInGui = !isModNameFormatOverrideActive();
+        property.setShowInGui(showInGui);
+        String modNameFormatFriendly = property.getString();
+        values.modNameFormat = parseFriendlyModNameFormat(modNameFormatFriendly);
+    }
+
+    public static String parseFriendlyModNameFormat(String formatWithEnumNames) {
+        if (formatWithEnumNames.isEmpty()) {
+            return "";
+        }
+        StringBuilder format = new StringBuilder();
         String[] strings = formatWithEnumNames.split(" ");
         for (String string : strings) {
             EnumChatFormatting valueByName = EnumChatFormatting.getValueByName(string);
             if (valueByName != null) {
-                format += valueByName.toString();
+                format.append(valueByName.toString());
             } else {
-                Log.error("Invalid format: {}", string);
+                Log.get()
+                    .error("Invalid format: {}", string);
             }
         }
-        return format;
+        return format.toString();
     }
 
     private static boolean syncItemBlacklistConfig() {
@@ -417,42 +546,47 @@ public class Config {
         return configChanged;
     }
 
-    public static boolean syncWorldConfig() {
+    public static boolean syncWorldConfig(@Nullable NetworkManager networkManager) {
         if (worldConfig == null) {
             return false;
         }
 
-        boolean needsReload = false;
-        final String worldCategory = SessionData.getWorldUid();
+        final String worldCategory = ServerInfo.getWorldUid(networkManager);
 
-        Property property = worldConfig.get(worldCategory, "overlayEnabled", defaultOverlayEnabled);
+        Property property = worldConfig.get(worldCategory, "overlayEnabled", defaultValues.overlayEnabled);
         property.setLanguageKey("config.jei.interface.overlayEnabled");
         property.comment = (Translator.translateToLocal("config.jei.interface.overlayEnabled.comment"));
         property.setShowInGui(false);
-        overlayEnabled = property.getBoolean();
+        values.overlayEnabled = property.getBoolean();
 
-        property = worldConfig.get(worldCategory, "cheatItemsEnabled", defaultCheatItemsEnabled);
+        property = worldConfig.get(worldCategory, "cheatItemsEnabled", defaultValues.cheatItemsEnabled);
         property.setLanguageKey("config.jei.mode.cheatItemsEnabled");
         property.comment = (Translator.translateToLocal("config.jei.mode.cheatItemsEnabled.comment"));
-        cheatItemsEnabled = property.getBoolean();
+        values.cheatItemsEnabled = property.getBoolean();
 
-        property = worldConfig.get(worldCategory, "editEnabled", defaultEditModeEnabled);
+        property = worldConfig.get(worldCategory, "editEnabled", defaultValues.editModeEnabled);
         property.setLanguageKey("config.jei.mode.editEnabled");
         property.comment = (Translator.translateToLocal("config.jei.mode.editEnabled.comment"));
-        editModeEnabled = property.getBoolean();
+        values.editModeEnabled = property.getBoolean();
         if (property.hasChanged()) {
-            needsReload = true;
+            MinecraftForge.EVENT_BUS.post(new EditModeToggleEvent(values.editModeEnabled));
         }
 
-        property = worldConfig.get(worldCategory, "filterText", defaultFilterText);
+        property = worldConfig.get(worldCategory, "bookmarkOverlayEnabled", defaultValues.bookmarkOverlayEnabled);
+        property.setLanguageKey("config.jei.interface.bookmarkOverlayEnabled");
+        property.comment = (Translator.translateToLocal("config.jei.interface.bookmarkOverlayEnabled.comment"));
         property.setShowInGui(false);
-        filterText = property.getString();
+        values.bookmarkOverlayEnabled = property.getBoolean();
+
+        property = worldConfig.get(worldCategory, "filterText", defaultValues.filterText);
+        property.setShowInGui(false);
+        values.filterText = property.getString();
 
         final boolean configChanged = worldConfig.hasChanged();
         if (configChanged) {
             worldConfig.save();
         }
-        return needsReload;
+        return false;
     }
 
     private static boolean syncSearchColorsConfig() {
@@ -469,7 +603,8 @@ public class Config {
         for (String entry : searchColors) {
             final String[] values = entry.split(":");
             if (values.length != 2) {
-                Log.error("Invalid format for searchColor entry: {}", entry);
+                Log.get()
+                    .error("Invalid format for searchColor entry: {}", entry);
             } else {
                 try {
                     final String name = values[0];
@@ -477,7 +612,8 @@ public class Config {
                     final Color color = new Color(colorValue);
                     searchColorsMapBuilder.put(color, name);
                 } catch (NumberFormatException e) {
-                    Log.error("Invalid number format for searchColor entry: {}", entry, e);
+                    Log.get()
+                        .error("Invalid number format for searchColor entry: {}", entry, e);
                 }
             }
         }
@@ -491,34 +627,145 @@ public class Config {
         return configChanged;
     }
 
-    private static boolean updateBlacklist() {
+    private static void updateBlacklist() {
         if (itemBlacklistConfig == null) {
-            return false;
+            return;
         }
         Property property = itemBlacklistConfig.get(CATEGORY_ADVANCED, "itemBlacklist", defaultItemBlacklist);
 
-        String[] currentBlacklist = itemBlacklist.toArray(new String[itemBlacklist.size()]);
+        String[] currentBlacklist = itemBlacklist.toArray(new String[0]);
         property.set(currentBlacklist);
 
         boolean changed = itemBlacklistConfig.hasChanged();
         if (changed) {
             itemBlacklistConfig.save();
         }
-        return changed;
     }
 
-    public static <V> void addIngredientToConfigBlacklist(V itemStack, IngredientBlacklistType blacklistType,
+    public static <V> void addIngredientToConfigBlacklist(IngredientFilter ingredientFilter,
+        IIngredientRegistry ingredientRegistry, V ingredient, IngredientBlacklistType blacklistType,
         IIngredientHelper<V> ingredientHelper) {
-        final String uid = getIngredientUid(itemStack, blacklistType, ingredientHelper);
-        if (itemBlacklist.add(uid)) {
+        IIngredientType<V> ingredientType = ingredientRegistry.getIngredientType(ingredient);
+        IIngredientListElement<V> element = IngredientListElementFactory
+            .createUnorderedElement(ingredientRegistry, ingredientType, ingredient, ForgeModIdHelper.getInstance());
+        Preconditions.checkNotNull(element, "Failed to create element for blacklist");
+
+        // combine item-level blacklist into wildcard-level ones
+        if (blacklistType == IngredientBlacklistType.ITEM) {
+            final String uid = getIngredientUid(ingredient, IngredientBlacklistType.ITEM, ingredientHelper);
+            List<IIngredientListElement<V>> elementsToBeBlacklisted = ingredientFilter.getMatches(
+                element,
+                (input) -> getIngredientUid((IIngredientListElement) input, IngredientBlacklistType.WILDCARD));
+            if (areAllBlacklisted(elementsToBeBlacklisted, uid, IngredientBlacklistType.ITEM)) {
+                if (addIngredientToConfigBlacklist(
+                    ingredientFilter,
+                    element,
+                    ingredient,
+                    IngredientBlacklistType.WILDCARD,
+                    ingredientHelper)) {
+                    updateBlacklist();
+                }
+                return;
+            }
+        }
+        if (addIngredientToConfigBlacklist(ingredientFilter, element, ingredient, blacklistType, ingredientHelper)) {
             updateBlacklist();
         }
     }
 
-    public static <V> void removeIngredientFromConfigBlacklist(V ingredient, IngredientBlacklistType blacklistType,
+    private static <V> boolean addIngredientToConfigBlacklist(IngredientFilter ingredientFilter,
+        IIngredientListElement<V> element, V ingredient, IngredientBlacklistType blacklistType,
         IIngredientHelper<V> ingredientHelper) {
+        boolean updated = false;
+
+        // remove lower-level blacklist entries when a higher-level one is added
+        if (blacklistType == IngredientBlacklistType.WILDCARD) {
+            List<IIngredientListElement<V>> elementsToBeBlacklisted = ingredientFilter
+                .getMatches(element, (input) -> getIngredientUid((IIngredientListElement) input, blacklistType));
+            for (IIngredientListElement<V> elementToBeBlacklisted : elementsToBeBlacklisted) {
+                String uid = getIngredientUid(elementToBeBlacklisted, IngredientBlacklistType.ITEM);
+                updated |= itemBlacklist.remove(uid);
+            }
+        }
+
         final String uid = getIngredientUid(ingredient, blacklistType, ingredientHelper);
-        if (itemBlacklist.remove(uid)) {
+        updated |= itemBlacklist.add(uid);
+        return updated;
+    }
+
+    private static <V> boolean areAllBlacklisted(List<IIngredientListElement<V>> elements, String newUid,
+        IngredientBlacklistType blacklistType) {
+        for (IIngredientListElement<V> element : elements) {
+            String uid = getIngredientUid(element, blacklistType);
+            if (!uid.equals(newUid) && !itemBlacklist.contains(uid)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static <V> void removeIngredientFromConfigBlacklist(IngredientFilter ingredientFilter,
+        IIngredientRegistry ingredientRegistry, V ingredient, IngredientBlacklistType blacklistType,
+        IIngredientHelper<V> ingredientHelper) {
+        IIngredientType<V> ingredientType = ingredientRegistry.getIngredientType(ingredient);
+        IIngredientListElement<V> element = IngredientListElementFactory
+            .createUnorderedElement(ingredientRegistry, ingredientType, ingredient, ForgeModIdHelper.getInstance());
+        Preconditions.checkNotNull(element, "Failed to create element for blacklist");
+
+        boolean updated = false;
+
+        // deconstruct any mod-id blacklists into lower-level ones first. mod-id blacklist is deprecated
+        {
+            final String modUid = getIngredientUid(ingredient, IngredientBlacklistType.MOD_ID, ingredientHelper);
+            if (itemBlacklist.contains(modUid)) {
+                updated = true;
+                itemBlacklist.remove(modUid);
+                List<IIngredientListElement<V>> modMatches = ingredientFilter.getMatches(
+                    element,
+                    (input) -> getIngredientUid((IIngredientListElement) input, IngredientBlacklistType.MOD_ID));
+                for (IIngredientListElement<V> modMatch : modMatches) {
+                    addIngredientToConfigBlacklist(
+                        ingredientFilter,
+                        modMatch,
+                        modMatch.getIngredient(),
+                        IngredientBlacklistType.ITEM,
+                        ingredientHelper);
+                }
+            }
+        }
+
+        if (blacklistType == IngredientBlacklistType.ITEM) {
+            // deconstruct any wildcard blacklist since we are removing one element from it
+            final String wildUid = getIngredientUid(ingredient, IngredientBlacklistType.WILDCARD, ingredientHelper);
+            if (itemBlacklist.contains(wildUid)) {
+                updated = true;
+                itemBlacklist.remove(wildUid);
+                List<IIngredientListElement<V>> modMatches = ingredientFilter.getMatches(
+                    element,
+                    (input) -> getIngredientUid((IIngredientListElement) input, IngredientBlacklistType.WILDCARD));
+                for (IIngredientListElement<V> modMatch : modMatches) {
+                    addIngredientToConfigBlacklist(
+                        ingredientFilter,
+                        modMatch,
+                        modMatch.getIngredient(),
+                        IngredientBlacklistType.ITEM,
+                        ingredientHelper);
+                }
+            }
+        } else if (blacklistType == IngredientBlacklistType.WILDCARD) {
+            // remove any item-level blacklist on items that match this wildcard
+            List<IIngredientListElement<V>> modMatches = ingredientFilter.getMatches(
+                element,
+                (input) -> getIngredientUid((IIngredientListElement) input, IngredientBlacklistType.WILDCARD));
+            for (IIngredientListElement<V> modMatch : modMatches) {
+                final String uid = getIngredientUid(modMatch, IngredientBlacklistType.ITEM);
+                updated |= itemBlacklist.remove(uid);
+            }
+        }
+
+        final String uid = getIngredientUid(ingredient, blacklistType, ingredientHelper);
+        updated |= itemBlacklist.remove(uid);
+        if (updated) {
             updateBlacklist();
         }
     }
@@ -538,6 +785,16 @@ public class Config {
         return itemBlacklist.contains(uid);
     }
 
+    private static <V> String getIngredientUid(@Nullable IIngredientListElement<V> element,
+        IngredientBlacklistType blacklistType) {
+        if (element == null) {
+            return "";
+        }
+        V ingredient = element.getIngredient();
+        IIngredientHelper<V> ingredientHelper = element.getIngredientHelper();
+        return getIngredientUid(ingredient, blacklistType, ingredientHelper);
+    }
+
     private static <V> String getIngredientUid(V ingredient, IngredientBlacklistType blacklistType,
         IIngredientHelper<V> ingredientHelper) {
         switch (blacklistType) {
@@ -547,16 +804,42 @@ public class Config {
                 return ingredientHelper.getWildcardId(ingredient);
             case MOD_ID:
                 return ingredientHelper.getModId(ingredient);
+            default:
+                throw new IllegalStateException("Unknown blacklist type: " + blacklistType);
         }
-        return "";
     }
 
-    public enum IngredientBlacklistType {
-
-        ITEM,
-        WILDCARD,
-        MOD_ID;
-
-        public static final IngredientBlacklistType[] VALUES = values();
+    /**
+     * https://stackoverflow.com/questions/6701948/efficient-way-to-compare-version-strings-in-java
+     * Compares two version strings.
+     *
+     * Use this instead of String.compareTo() for a non-lexicographical
+     * comparison that works for version strings. e.g. "1.10".compareTo("1.6").
+     *
+     * note It does not work if "1.10" is supposed to be equal to "1.10.0".
+     *
+     * @param str1 a string of ordinal numbers separated by decimal points.
+     * @param str2 a string of ordinal numbers separated by decimal points.
+     * @return The result is a negative integer if str1 is _numerically_ less than str2.
+     *         The result is a positive integer if str1 is _numerically_ greater than str2.
+     *         The result is zero if the strings are _numerically_ equal.
+     */
+    private static int versionCompare(String str1, String str2) {
+        String[] vals1 = str1.split("\\.");
+        String[] vals2 = str2.split("\\.");
+        int i = 0;
+        // set index to first non-equal ordinal or length of shortest version string
+        while (i < vals1.length && i < vals2.length && vals1[i].equals(vals2[i])) {
+            i++;
+        }
+        // compare first non-equal ordinal number
+        if (i < vals1.length && i < vals2.length) {
+            int diff = Integer.valueOf(vals1[i])
+                .compareTo(Integer.valueOf(vals2[i]));
+            return Integer.signum(diff);
+        }
+        // the strings are equal or one string is a substring of the other
+        // e.g. "1.2.3" = "1.2.3" or "1.2.3" < "1.2.3.4"
+        return Integer.signum(vals1.length - vals2.length);
     }
 }

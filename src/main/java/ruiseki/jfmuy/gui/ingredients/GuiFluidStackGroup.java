@@ -6,13 +6,14 @@ import net.minecraftforge.fluids.FluidStack;
 
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IGuiFluidStackGroup;
+import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.IFocus;
-import ruiseki.jfmuy.plugins.vanilla.ingredients.FluidStackRenderer;
+import ruiseki.jfmuy.plugins.vanilla.ingredients.fluid.FluidStackRenderer;
 
 public class GuiFluidStackGroup extends GuiIngredientGroup<FluidStack> implements IGuiFluidStackGroup {
 
-    public GuiFluidStackGroup(IFocus<FluidStack> focus, int cycleOffset) {
-        super(FluidStack.class, focus, cycleOffset);
+    public GuiFluidStackGroup(@Nullable IFocus<FluidStack> focus, int cycleOffset) {
+        super(VanillaTypes.FLUID, focus, cycleOffset);
     }
 
     @Override

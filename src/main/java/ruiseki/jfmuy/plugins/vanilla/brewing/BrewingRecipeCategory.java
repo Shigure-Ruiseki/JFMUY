@@ -1,19 +1,24 @@
 package ruiseki.jfmuy.plugins.vanilla.brewing;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
+import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IDrawableAnimated;
 import ruiseki.jfmuy.api.gui.IDrawableStatic;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
+import ruiseki.jfmuy.api.gui.ITickTimer;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
+import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.util.Translator;
 
-public class BrewingRecipeCategory extends BlankRecipeCategory<BrewingRecipeWrapper> {
+public class BrewingRecipeCategory implements IRecipeCategory<BrewingRecipeWrapper> {
 
     private static final int brewPotionSlot1 = 0;
     private static final int brewPotionSlot2 = 1;
@@ -21,10 +26,8 @@ public class BrewingRecipeCategory extends BlankRecipeCategory<BrewingRecipeWrap
     private static final int brewIngredientSlot = 3;
     private static final int outputSlot = 4; // for display only
 
-    private static final int outputSlotX = 80;
-    private static final int outputSlotY = 1;
-
     private final IDrawable background;
+    private final IDrawable icon;
     private final IDrawable slotDrawable;
     private final String localizedName;
     private final IDrawableAnimated arrow;
@@ -32,18 +35,21 @@ public class BrewingRecipeCategory extends BlankRecipeCategory<BrewingRecipeWrap
     private final IDrawableStatic blazeHeat;
 
     public BrewingRecipeCategory(IGuiHelper guiHelper) {
-        ResourceLocation location = new ResourceLocation("minecraft", "textures/gui/container/brewing_stand.png");
-        background = guiHelper.createDrawable(location, 55, 15, 64, 60, 0, 0, 0, 40);
-        localizedName = Translator.translateToLocal("gui.jfmuy.category.brewing");
+        ResourceLocation location = Reference.RECIPE_GUI_VANILLA;
+        background = guiHelper.drawableBuilder(location, 0, 0, 64, 60)
+            .addPadding(1, 0, 0, 50)
+            .build();
+        icon = guiHelper.createDrawableIngredient(new ItemStack(Items.brewing_stand));
+        localizedName = Translator.translateToLocal("gui.jei.category.brewing");
 
-        IDrawableStatic brewArrowDrawable = guiHelper.createDrawable(location, 176, 0, 9, 28);
-        arrow = guiHelper.createAnimatedDrawable(brewArrowDrawable, 400, IDrawableAnimated.StartDirection.TOP, false);
+        arrow = guiHelper.drawableBuilder(location, 64, 0, 9, 28)
+            .buildAnimated(400, IDrawableAnimated.StartDirection.TOP, false);
 
-        IDrawableStatic brewBubblesDrawable = guiHelper.createDrawable(location, 185, 1, 12, 28);
-        bubbles = guiHelper
-            .createAnimatedDrawable(brewBubblesDrawable, 20, IDrawableAnimated.StartDirection.BOTTOM, false);
+        ITickTimer bubblesTickTimer = new BrewingBubblesTickTimer(guiHelper);
+        bubbles = guiHelper.drawableBuilder(location, 73, 0, 12, 29)
+            .buildAnimated(bubblesTickTimer, IDrawableAnimated.StartDirection.BOTTOM);
 
-        blazeHeat = guiHelper.createDrawable(location, 176, 29, 18, 4);
+        blazeHeat = guiHelper.createDrawable(location, 64, 29, 18, 4);
 
         slotDrawable = guiHelper.getSlotDrawable();
     }
@@ -59,28 +65,60 @@ public class BrewingRecipeCategory extends BlankRecipeCategory<BrewingRecipeWrap
     }
 
     @Override
+    public String getModName() {
+        return Reference.MINECRAFT_NAME;
+    }
+
+    @Override
     public IDrawable getBackground() {
         return background;
     }
 
     @Override
+    public IDrawable getIcon() {
+        return icon;
+    }
+
+    @Override
     public void drawExtras(Minecraft minecraft) {
-        slotDrawable.draw(minecraft, outputSlotX, outputSlotY);
-        blazeHeat.draw(minecraft, 5, 29);
+        blazeHeat.draw(minecraft, 5, 30);
         bubbles.draw(minecraft, 8, 0);
-        arrow.draw(minecraft, 42, 1);
+        arrow.draw(minecraft, 42, 2);
     }
 
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, BrewingRecipeWrapper recipeWrapper, IIngredients ingredients) {
         IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
 
-        itemStacks.init(brewPotionSlot1, true, 0, 30);
-        itemStacks.init(brewPotionSlot2, true, 23, 37);
-        itemStacks.init(brewPotionSlot3, true, 46, 30);
-        itemStacks.init(brewIngredientSlot, true, 23, 1);
-        itemStacks.init(outputSlot, false, outputSlotX, outputSlotY);
+        itemStacks.init(brewPotionSlot1, true, 0, 36);
+        itemStacks.init(brewPotionSlot2, true, 23, 43);
+        itemStacks.init(brewPotionSlot3, true, 46, 36);
+        itemStacks.init(brewIngredientSlot, true, 23, 2);
+        itemStacks.init(outputSlot, false, 80, 2);
+
+        itemStacks.setBackground(outputSlot, slotDrawable);
 
         itemStacks.set(ingredients);
+    }
+
+    private static class BrewingBubblesTickTimer implements ITickTimer {
+
+        private static final int[] BUBBLE_LENGTHS = new int[] { 29, 23, 18, 13, 9, 5, 0 };
+        private final ITickTimer internalTimer;
+
+        public BrewingBubblesTickTimer(IGuiHelper guiHelper) {
+            this.internalTimer = guiHelper.createTickTimer(14, BUBBLE_LENGTHS.length - 1, false);
+        }
+
+        @Override
+        public int getValue() {
+            int timerValue = this.internalTimer.getValue();
+            return BUBBLE_LENGTHS[timerValue];
+        }
+
+        @Override
+        public int getMaxValue() {
+            return BUBBLE_LENGTHS[0];
+        }
     }
 }

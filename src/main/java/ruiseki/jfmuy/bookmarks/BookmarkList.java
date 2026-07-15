@@ -1,0 +1,254 @@
+package ruiseki.jfmuy.bookmarks;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.JsonToNBT;
+import net.minecraft.nbt.NBTException;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fluids.FluidStack;
+
+import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.Nullable;
+
+import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.api.ingredients.VanillaTypes;
+import ruiseki.jfmuy.api.recipe.IIngredientType;
+import ruiseki.jfmuy.config.Config;
+import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.gui.overlay.IIngredientGridSource;
+import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
+import ruiseki.jfmuy.ingredients.IngredientRegistry;
+import ruiseki.jfmuy.startup.ForgeModIdHelper;
+import ruiseki.jfmuy.util.LegacyUtil;
+import ruiseki.jfmuy.util.Log;
+
+public class BookmarkList implements IIngredientGridSource {
+
+    private static final String MARKER_OTHER = "O:";
+    private static final String MARKER_STACK = "T:";
+
+    private final List<Object> list = new LinkedList<>();
+    private final List<IIngredientListElement> ingredientListElements = new LinkedList<>();
+    private final IngredientRegistry ingredientRegistry;
+    private final List<IIngredientGridSource.Listener> listeners = new ArrayList<>();
+
+    public BookmarkList(IngredientRegistry ingredientRegistry) {
+        this.ingredientRegistry = ingredientRegistry;
+    }
+
+    public <T> boolean add(T ingredient) {
+        Object normalized = normalize(ingredient);
+        if (!contains(normalized)) {
+            if (addToLists(normalized, Config.isAddingBookmarksToFront())) {
+                notifyListenersOfChange();
+                saveBookmarks();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected <T> T normalize(T ingredient) {
+        IIngredientHelper<T> ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
+        T copy = LegacyUtil.getIngredientCopy(ingredient, ingredientHelper);
+        if (copy instanceof ItemStack) {
+            ((ItemStack) copy).stackSize = 1;
+        } else if (copy instanceof FluidStack) {
+            ((FluidStack) copy).amount = 1000;
+        }
+        return copy;
+    }
+
+    private <T> boolean contains(T ingredient) {
+        return indexOf(ingredient) >= 0;
+    }
+
+    private <T> int indexOf(T ingredient) {
+        // We cannot assume that ingredients have a working equals() implementation. Even ItemStack doesn't have one...
+        IIngredientHelper<T> ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
+        ingredient = normalize(ingredient);
+        String uniqueId = ingredientHelper.getUniqueId(ingredient);
+
+        for (int i = 0; i < list.size(); i++) {
+            Object existing = list.get(i);
+            if (equal(ingredientHelper, ingredient, uniqueId, existing)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static <T> boolean equal(IIngredientHelper<T> ingredientHelper, T a, String uidA, Object b) {
+        if (a == b) {
+            return true;
+        }
+        if (!a.getClass()
+            .isInstance(b)) {
+            return false;
+        }
+        if (a instanceof ItemStack) {
+            return ItemStack.areItemStacksEqual((ItemStack) a, (ItemStack) b);
+        }
+
+        @SuppressWarnings("unchecked")
+        T castB = (T) b;
+        String uidB = ingredientHelper.getUniqueId(castB);
+        return uidA.equals(uidB);
+    }
+
+    public <T> boolean remove(T ingredient) {
+        int index = indexOf(ingredient);
+        if (index < 0) {
+            return false;
+        }
+
+        list.remove(index);
+        ingredientListElements.remove(index);
+        notifyListenersOfChange();
+        saveBookmarks();
+        return true;
+    }
+
+    public void saveBookmarks() {
+        List<String> strings = new ArrayList<>();
+        for (IIngredientListElement<?> element : ingredientListElements) {
+            Object object = element.getIngredient();
+            if (object instanceof ItemStack) {
+                strings.add(
+                    MARKER_STACK + ((ItemStack) object).writeToNBT(new NBTTagCompound())
+                        .toString());
+            } else {
+                strings.add(MARKER_OTHER + getUid(element));
+            }
+        }
+        File file = Config.getBookmarkFile();
+        if (file != null) {
+            try (FileWriter writer = new FileWriter(file)) {
+                IOUtils.writeLines(strings, "\n", writer);
+            } catch (IOException e) {
+                Log.get()
+                    .error("Failed to save bookmarks list to file {}", file, e);
+            }
+        }
+    }
+
+    private static <T> String getUid(IIngredientListElement<T> element) {
+        IIngredientHelper<T> ingredientHelper = element.getIngredientHelper();
+        return ingredientHelper.getUniqueId(element.getIngredient());
+    }
+
+    public void loadBookmarks() {
+        File file = Config.getBookmarkFile();
+        if (file == null || !file.exists()) {
+            return;
+        }
+        List<String> ingredientJsonStrings;
+        try (FileReader reader = new FileReader(file)) {
+            ingredientJsonStrings = IOUtils.readLines(reader);
+        } catch (IOException e) {
+            Log.get()
+                .error("Failed to load bookmarks from file {}", file, e);
+            return;
+        }
+
+        Collection<IIngredientType> otherIngredientTypes = new ArrayList<>(
+            ingredientRegistry.getRegisteredIngredientTypes());
+        otherIngredientTypes.remove(VanillaTypes.ITEM);
+
+        list.clear();
+        ingredientListElements.clear();
+        for (String ingredientJsonString : ingredientJsonStrings) {
+            if (ingredientJsonString.startsWith(MARKER_STACK)) {
+                String itemStackAsJson = ingredientJsonString.substring(MARKER_STACK.length());
+                try {
+                    NBTTagCompound itemStackAsNbt = (NBTTagCompound) JsonToNBT.func_150315_a(itemStackAsJson);
+                    ItemStack itemStack = ItemStack.loadItemStackFromNBT(itemStackAsNbt);
+                    if (itemStack != null) {
+                        ItemStack normalized = normalize(itemStack);
+                        addToLists(normalized, false);
+                    } else {
+                        Log.get()
+                            .warn(
+                                "Failed to load bookmarked ItemStack from json string, the item no longer exists:\n{}",
+                                itemStackAsJson);
+                    }
+                } catch (NBTException e) {
+                    Log.get()
+                        .error("Failed to load bookmarked ItemStack from json string:\n{}", itemStackAsJson, e);
+                }
+            } else if (ingredientJsonString.startsWith(MARKER_OTHER)) {
+                String uid = ingredientJsonString.substring(MARKER_OTHER.length());
+                Object ingredient = getUnknownIngredientByUid(otherIngredientTypes, uid);
+                if (ingredient != null) {
+                    Object normalized = normalize(ingredient);
+                    addToLists(normalized, false);
+                }
+            } else {
+                Log.get()
+                    .error("Failed to load unknown bookmarked ingredient:\n{}", ingredientJsonString);
+            }
+        }
+        notifyListenersOfChange();
+    }
+
+    @Nullable
+    private Object getUnknownIngredientByUid(Collection<IIngredientType> ingredientTypes, String uid) {
+        for (IIngredientType<?> ingredientType : ingredientTypes) {
+            Object ingredient = ingredientRegistry.getIngredientByUid(ingredientType, uid);
+            if (ingredient != null) {
+                return ingredient;
+            }
+        }
+        return null;
+    }
+
+    private <T> boolean addToLists(T ingredient, boolean addToFront) {
+        IIngredientType<T> ingredientType = ingredientRegistry.getIngredientType(ingredient);
+        IIngredientListElement<T> element = IngredientListElementFactory
+            .createUnorderedElement(ingredientRegistry, ingredientType, ingredient, ForgeModIdHelper.getInstance());
+        if (element != null) {
+            if (addToFront) {
+                list.add(0, ingredient);
+                ingredientListElements.add(0, element);
+            } else {
+                list.add(ingredient);
+                ingredientListElements.add(element);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public List<IIngredientListElement> getIngredientList() {
+        return ingredientListElements;
+    }
+
+    @Override
+    public int size() {
+        return ingredientListElements.size();
+    }
+
+    public boolean isEmpty() {
+        return ingredientListElements.isEmpty();
+    }
+
+    @Override
+    public void addListener(IIngredientGridSource.Listener listener) {
+        listeners.add(listener);
+    }
+
+    private void notifyListenersOfChange() {
+        for (IIngredientGridSource.Listener listener : listeners) {
+            listener.onChange();
+        }
+    }
+}

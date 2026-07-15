@@ -24,18 +24,14 @@ public class PacketRequestCheatPermission extends PacketJFMUY {
         // the packet itself is the only data needed
     }
 
-    public static class Handler implements IPacketJFMUYHandler {
+    public static void readPacketData(PacketBuffer buf, EntityPlayer player) {
+        if (player instanceof EntityPlayerMP) {
+            EntityPlayerMP sender = (EntityPlayerMP) player;
+            boolean hasPermission = CommandUtilServer.hasPermission(sender, new ItemStack(Items.nether_star, 64));
+            PacketCheatPermission packetCheatPermission = new PacketCheatPermission(hasPermission);
 
-        @Override
-        public void readPacketData(PacketBuffer buf, EntityPlayer player) {
-            if (player instanceof EntityPlayerMP) {
-                EntityPlayerMP sender = (EntityPlayerMP) player;
-                boolean hasPermission = CommandUtilServer.hasPermission(sender, new ItemStack(Items.nether_star, 64));
-                PacketCheatPermission packetCheatPermission = new PacketCheatPermission(hasPermission);
-
-                CommonProxy proxy = JFMUY.getProxy();
-                proxy.sendPacketToClient(packetCheatPermission, sender);
-            }
+            CommonProxy proxy = JFMUY.getProxy();
+            proxy.sendPacketToClient(packetCheatPermission, sender);
         }
     }
 }

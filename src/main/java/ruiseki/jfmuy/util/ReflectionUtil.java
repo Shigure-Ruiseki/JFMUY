@@ -1,16 +1,17 @@
 package ruiseki.jfmuy.util;
 
 import java.lang.reflect.Field;
+import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
+import ruiseki.jfmuy.collect.Table;
 
-public class ReflectionUtil {
+public final class ReflectionUtil {
 
-    private static Table<Class, Class, Optional<Field>> cache = HashBasedTable.create();
+    private static final Table<Class, Class, Optional<Field>> CACHE = Table.hashBasedTable();
+
+    private ReflectionUtil() {}
 
     @Nullable
     public static <T> T getFieldWithClass(final Object object, final Class<T> fieldClass) {
@@ -32,13 +33,9 @@ public class ReflectionUtil {
     @Nullable
     private static Field getField(final Object object, final Class<?> fieldClass) {
         Class<?> objectClass = object.getClass();
-        Optional<Field> cachedField = cache.get(fieldClass, objectClass);
+        Optional<Field> cachedField = CACHE.get(fieldClass, objectClass);
         if (cachedField != null) {
-            if (cachedField.isPresent()) {
-                return cachedField.get();
-            } else {
-                return null;
-            }
+            return cachedField.orElse(null);
         }
 
         try {
@@ -48,14 +45,14 @@ public class ReflectionUtil {
                     if (!field.isAccessible()) {
                         field.setAccessible(true);
                     }
-                    cache.put(fieldClass, objectClass, Optional.of(field));
+                    CACHE.put(fieldClass, objectClass, Optional.of(field));
                     return field;
                 }
             }
-        } catch (SecurityException ignored) {
+        } catch (SecurityException | LinkageError ignored) {
 
         }
-        cache.put(fieldClass, objectClass, Optional.<Field>absent());
+        CACHE.put(fieldClass, objectClass, Optional.empty());
         return null;
     }
 

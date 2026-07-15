@@ -9,38 +9,52 @@ import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.resources.IReloadableResourceManager;
-import net.minecraft.client.resources.IResourceManager;
-import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.NetworkManager;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.world.WorldEvent;
+
+import com.google.common.base.Preconditions;
 
 import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.client.event.ConfigChangedEvent;
-import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.discovery.ASMDataTable;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLInterModComms;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.network.FMLNetworkEvent;
+import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import ruiseki.jfmuy.api.IModPlugin;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.KeyBindings;
-import ruiseki.jfmuy.config.SessionData;
-import ruiseki.jfmuy.gui.ItemListOverlay;
+import ruiseki.jfmuy.config.ServerInfo;
+import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
+import ruiseki.jfmuy.gui.textures.JFMUYTextureMap;
+import ruiseki.jfmuy.gui.textures.Textures;
+import ruiseki.jfmuy.input.MouseHelper;
+import ruiseki.jfmuy.network.PacketHandler;
+import ruiseki.jfmuy.network.PacketHandlerClient;
 import ruiseki.jfmuy.network.packets.PacketJFMUY;
 import ruiseki.jfmuy.plugins.jfmuy.JFMUYInternalPlugin;
 import ruiseki.jfmuy.plugins.vanilla.VanillaPlugin;
-import ruiseki.jfmuy.util.AnnotatedInstanceUtil;
+import ruiseki.jfmuy.runtime.JFMUYRuntime;
+import ruiseki.jfmuy.startup.AnnotatedInstanceUtil;
+import ruiseki.jfmuy.startup.JFMUYStarter;
+import ruiseki.jfmuy.startup.PlayerJoinedWorldEvent;
 import ruiseki.jfmuy.util.Log;
 
 public class ClientProxy extends CommonProxy {
 
     private List<IModPlugin> plugins = new ArrayList<>();
     private final JFMUYStarter starter = new JFMUYStarter();
+    private final JFMUYTextureMap textureMap = new JFMUYTextureMap("textures");
+    @Nullable
+    private Textures textures;
 
     private static void initVersionChecker() {
         final NBTTagCompound compound = new NBTTagCompound();
@@ -51,7 +65,10 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void preInit(@Nonnull FMLPreInitializationEvent event) {
-        super.preInit(event);
+        PacketHandlerClient packetHandler = new PacketHandlerClient();
+        channel = NetworkRegistry.INSTANCE.newEventDrivenChannel(PacketHandler.CHANNEL_ID);
+        channel.register(packetHandler);
+
         Config.preInit(event);
         initVersionChecker();
 
@@ -64,11 +81,13 @@ public class ClientProxy extends CommonProxy {
             this.plugins.add(0, vanillaPlugin);
         }
 
-        IModPlugin jfmuyInternalPlugin = getJFMUYInternalPlugin(this.plugins);
-        if (jfmuyInternalPlugin != null) {
-            this.plugins.remove(jfmuyInternalPlugin);
-            this.plugins.add(jfmuyInternalPlugin);
+        IModPlugin jeiInternalPlugin = getJFMUYInternalPlugin(this.plugins);
+        if (jeiInternalPlugin != null) {
+            this.plugins.remove(jeiInternalPlugin);
+            this.plugins.add(jeiInternalPlugin);
         }
+
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     @Nullable
@@ -95,7 +114,9 @@ public class ClientProxy extends CommonProxy {
 
     public void init(@Nonnull FMLInitializationEvent event) {
         KeyBindings.init();
-        MinecraftForge.EVENT_BUS.register(this);
+        Minecraft minecraft = Minecraft.getMinecraft();
+        minecraft.renderEngine.loadTickableTexture(textureMap.getLocation(), textureMap);
+        MinecraftForge.EVENT_BUS.register(MouseHelper.INSTANCE);
     }
 
     @Override
@@ -104,69 +125,39 @@ public class ClientProxy extends CommonProxy {
         Minecraft minecraft = Minecraft.getMinecraft();
         IReloadableResourceManager reloadableResourceManager = (IReloadableResourceManager) minecraft
             .getResourceManager();
-        reloadableResourceManager.registerReloadListener(new IResourceManagerReloadListener() {
-
-            @Override
-            public void onResourceManagerReload(IResourceManager resourceManager) {
-                restartJFMUY();
+        reloadableResourceManager.registerReloadListener(resourceManager -> {
+            if (this.starter.hasStarted()) {
+                if (Config.isDebugModeEnabled()) {
+                    Log.get()
+                        .info("Restarting JEI.", new RuntimeException("Stack trace for debugging"));
+                } else {
+                    Log.get()
+                        .info("Restarting JEI.");
+                }
+                Preconditions.checkNotNull(textures);
+                this.starter.start(this.plugins, textures);
             }
         });
-        try {
-            this.starter.start(plugins, false);
-        } catch (Exception e) {
-            Log.error("Exception on load", e);
-        }
+
+        Preconditions.checkNotNull(textures);
+        this.starter.start(plugins, textures);
     }
 
     @SubscribeEvent
-    public void onEntityJoinedWorld(EntityJoinWorldEvent event) {
-        if (event.world.isRemote && !SessionData.hasJoinedWorld() && Minecraft.getMinecraft().thePlayer != null) {
-            SessionData.setJoinedWorld();
-            Config.syncWorldConfig();
+    public void onClientConnectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        if (!event.isLocal && !event.connectionType.equals("MODDED")) {
+            ServerInfo.onConnectedToServer(false);
         }
-    }
-
-    @Override
-    public void restartJFMUY() {
-        // Log.warning(
-        // "Restarting JFMUY. Warning: This feature will be removed soon, please see the JavaDocs for more
-        // information.",
-        // new RuntimeException());
-        restartJFMUY(false);
-    }
-
-    private void restartJFMUY(final boolean resourceReload) {
-        if (Thread.currentThread()
-            .getName()
-            .equals("Client thread")) {
-            if (this.starter.hasStarted()) {
-                this.starter.start(this.plugins, resourceReload);
-            }
-        } else {
-            Log.error("A mod is trying to restart JFMUY from the wrong thread!", new RuntimeException());
-
-            FMLCommonHandler.instance()
-                .bus()
-                .register(new Object() {
-
-                    @SubscribeEvent
-                    public void onClientTick(TickEvent.ClientTickEvent event) {
-                        if (event.phase == TickEvent.Phase.END) {
-                            restartJFMUY(resourceReload);
-                            FMLCommonHandler.instance()
-                                .bus()
-                                .unregister(this);
-                        }
-                    }
-                });
-        }
+        NetworkManager networkManager = event.manager;
+        Config.syncWorldConfig(networkManager);
+        MinecraftForge.EVENT_BUS.post(new PlayerJoinedWorldEvent());
     }
 
     private static void reloadItemList() {
         JFMUYRuntime runtime = Internal.getRuntime();
         if (runtime != null) {
-            ItemListOverlay itemListOverlay = runtime.getItemListOverlay();
-            itemListOverlay.rebuildItemFilter();
+            IngredientListOverlay ingredientListOverlay = runtime.getIngredientListOverlay();
+            ingredientListOverlay.rebuildItemFilter();
         }
     }
 
@@ -175,20 +166,37 @@ public class ClientProxy extends CommonProxy {
         NetHandlerPlayClient netHandler = FMLClientHandler.instance()
             .getClient()
             .getNetHandler();
-        if (netHandler != null) {
+        if (netHandler != null && ServerInfo.isJFMUYOnServer()) {
             netHandler.addToSendQueue(packet.getPacket());
         }
     }
 
-    // subscribe to event with low priority so that addon mods that use the config can do their stuff first
-    @SubscribeEvent(priority = EventPriority.LOW)
-    public void onConfigChanged(@Nonnull ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
-        if (!Reference.MOD_ID.equals(eventArgs.modID)) {
-            return;
+    @SubscribeEvent
+    public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
+        if (Reference.MOD_ID.equals(eventArgs.modID)) {
+            if (Config.syncAllConfig()) {
+                reloadItemList();
+            }
+        } else {
+            if (starter.hasStarted()) {
+                Config.checkForModNameFormatOverride();
+            }
         }
+    }
 
-        if (Config.syncAllConfig()) {
-            reloadItemList(); // reload everything, configs can change available recipes
+    @SubscribeEvent
+    public void onWorldSave(WorldEvent.Save event) {
+        try {
+            Config.saveFilterText();
+        } catch (RuntimeException e) {
+            Log.get()
+                .error("Failed to save filter text.", e);
         }
+    }
+
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    public void handleTextureRemap(TextureStitchEvent.Pre event) {
+        textures = new Textures(textureMap);
     }
 }

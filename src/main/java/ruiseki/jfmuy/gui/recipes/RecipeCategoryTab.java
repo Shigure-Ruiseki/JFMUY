@@ -1,20 +1,22 @@
 package ruiseki.jfmuy.gui.recipes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11;
-
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IDrawable;
+import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
-import ruiseki.jfmuy.plugins.vanilla.ingredients.ItemStackRenderer;
+import ruiseki.jfmuy.ingredients.IngredientRegistry;
+import ruiseki.jfmuy.startup.ForgeModIdHelper;
+import ruiseki.jfmuy.util.LegacyUtil;
+import ruiseki.okcore.client.renderer.GlStateManager;
 
 public class RecipeCategoryTab extends RecipeGuiTab {
 
@@ -43,23 +45,16 @@ public class RecipeCategoryTab extends RecipeGuiTab {
         int iconX = x + 4;
         int iconY = y + 4;
 
-        IDrawable icon = getCategoryIcon(category);
+        IDrawable icon = category.getIcon();
         if (icon != null) {
             iconX += (16 - icon.getWidth()) / 2;
             iconY += (16 - icon.getHeight()) / 2;
             icon.draw(minecraft, iconX, iconY);
         } else {
-            List<ItemStack> craftingItems = logic.getRecipeCategoryCraftingItems(category);
-            if (!craftingItems.isEmpty()) {
-                ItemStackRenderer renderer = new ItemStackRenderer();
-                ItemStack ingredient = craftingItems.getFirst();
-                GL11.glEnable(GL11.GL_DEPTH_TEST);
-
-                renderer.render(minecraft, iconX, iconY, ingredient);
-
-                GL11.glEnable(GL11.GL_ALPHA_TEST);
-
-                GL11.glDisable(GL11.GL_DEPTH_TEST);
+            List<Object> recipeCatalysts = logic.getRecipeCatalysts(category);
+            if (!recipeCatalysts.isEmpty()) {
+                Object ingredient = recipeCatalysts.get(0);
+                renderIngredient(minecraft, iconX, iconY, ingredient);
             } else {
                 String text = category.getTitle()
                     .substring(0, 2);
@@ -72,18 +67,18 @@ public class RecipeCategoryTab extends RecipeGuiTab {
                     (int) (textCenterX - fontRenderer.getStringWidth(text) / 2f),
                     (int) textCenterY,
                     color);
-                GL11.glColor4f(1, 1, 1, 1);
+                GlStateManager.color(1, 1, 1, 1);
             }
         }
     }
 
-    @Nullable
-    private static IDrawable getCategoryIcon(IRecipeCategory recipeCategory) {
-        try {
-            return recipeCategory.getIcon();
-        } catch (AbstractMethodError ignored) { // old recipe categories do not implement this method
-            return null;
-        }
+    private static <T> void renderIngredient(Minecraft minecraft, int iconX, int iconY, T ingredient) {
+        IngredientRegistry ingredientRegistry = Internal.getIngredientRegistry();
+        IIngredientRenderer<T> ingredientRenderer = ingredientRegistry.getIngredientRenderer(ingredient);
+        GlStateManager.enableDepth();
+        ingredientRenderer.render(minecraft, iconX, iconY, ingredient);
+        GlStateManager.enableAlpha();
+        GlStateManager.disableDepth();
     }
 
     @Override
@@ -92,9 +87,23 @@ public class RecipeCategoryTab extends RecipeGuiTab {
             .equals(selectedCategory.getUid());
     }
 
-    @Nullable
     @Override
-    public String getTooltip() {
-        return category.getTitle();
+    public List<String> getTooltip() {
+        List<String> tooltip = new ArrayList<>();
+        String title = category.getTitle();
+        // noinspection ConstantConditions
+        if (title != null) {
+            tooltip.add(title);
+        }
+
+        String modName = LegacyUtil.getModName(category);
+        if (modName != null) {
+            modName = ForgeModIdHelper.getInstance()
+                .getFormattedModNameForModId(modName);
+            if (modName != null) {
+                tooltip.add(modName);
+            }
+        }
+        return tooltip;
     }
 }

@@ -1,47 +1,48 @@
 package ruiseki.jfmuy.gui.recipes;
 
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 
-import org.lwjgl.opengl.GL11;
-
 import com.google.common.collect.ImmutableList;
 
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
-import ruiseki.jfmuy.gui.GuiProperties;
+import ruiseki.jfmuy.gui.PageNavigation;
 import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.input.IMouseHandler;
+import ruiseki.jfmuy.input.IPaged;
+import ruiseki.jfmuy.util.MathUtil;
+import ruiseki.okcore.client.renderer.GlStateManager;
 
 /**
- * The area drawn on top of the {@link RecipesGui} that show the recipe categories.
+ * The area drawn on top and bottom of the {@link RecipesGui} that show the recipe categories.
  */
-public class RecipeGuiTabs implements IMouseHandler {
+public class RecipeGuiTabs implements IMouseHandler, IPaged {
 
     private final IRecipeGuiLogic recipeGuiLogic;
-    private final List<RecipeGuiTab> tabs = new ArrayList<RecipeGuiTab>();
+    private final List<RecipeGuiTab> tabs = new ArrayList<>();
+    private final PageNavigation pageNavigation;
+    private final Rectangle area = new Rectangle();
 
     private int pageCount = 1;
     private int pageNumber = 0;
     private int categoriesPerPage = 1;
-    private int left;
-    private int top;
-    private int width;
-    private int height;
 
     public RecipeGuiTabs(IRecipeGuiLogic recipeGuiLogic) {
         this.recipeGuiLogic = recipeGuiLogic;
+        this.pageNavigation = new PageNavigation(this, true);
     }
 
-    public void updateLayout(GuiProperties guiProperties) {
+    public void initLayout(RecipesGui recipesGui) {
         ImmutableList<IRecipeCategory> categories = recipeGuiLogic.getRecipeCategories();
         if (!categories.isEmpty()) {
             int totalWidth = 0;
             categoriesPerPage = 0;
 
             for (int i = 0; i < categories.size(); i++) {
-                if (totalWidth + RecipeGuiTab.TAB_WIDTH <= (guiProperties.getGuiXSize() - 4)) {
+                if (totalWidth + RecipeGuiTab.TAB_WIDTH <= (recipesGui.getXSize() - 4)) {
                     totalWidth += RecipeGuiTab.TAB_WIDTH;
                     categoriesPerPage++;
                 } else {
@@ -49,134 +50,57 @@ public class RecipeGuiTabs implements IMouseHandler {
                 }
             }
 
-            width = totalWidth;
-            height = RecipeGuiTab.TAB_HEIGHT;
-            left = guiProperties.getGuiLeft() + 2;
-            top = guiProperties.getGuiTop() - RecipeGuiTab.TAB_HEIGHT + 3; // overlaps the recipe gui slightly
+            area.width = totalWidth;
+            area.height = RecipeGuiTab.TAB_HEIGHT;
+            area.x = recipesGui.getGuiLeft() + 2;
+            area.y = recipesGui.getGuiTop() - RecipeGuiTab.TAB_HEIGHT + 3; // overlaps the recipe gui slightly
 
-            pageCount = getPageCount(categories.size(), categoriesPerPage);
+            pageCount = MathUtil.divideCeil(categories.size(), categoriesPerPage);
 
             IRecipeCategory currentCategory = recipeGuiLogic.getSelectedRecipeCategory();
             int categoryIndex = categories.indexOf(currentCategory);
-            pageNumber = getPageNumber(categoryIndex, pageCount, categoriesPerPage);
+            pageNumber = categoryIndex / categoriesPerPage;
 
-            createTabs();
+            Rectangle navigationArea = new Rectangle(area);
+            navigationArea.height = 20;
+            navigationArea.translate(0, -(2 + navigationArea.height));
+            pageNavigation.updateBounds(navigationArea);
+
+            updateLayout();
         }
     }
 
-    private static int getPageCount(int categoryCount, final int categoriesPerPage) {
-        int pageCount = 0;
-        while (categoryCount > 0) {
-            int availableCategories = categoriesPerPage;
-            if (pageCount > 0) {
-                availableCategories--; // back button
-            }
-
-            if (categoryCount > availableCategories) {
-                availableCategories--; // next button
-            }
-            categoryCount -= availableCategories;
-            pageCount++;
-        }
-
-        return pageCount;
-    }
-
-    private static int getFirstCategoryIndex(final int pageNumber, final int pageCount, final int categoriesPerPage) {
-        int categoryIndex = 0;
-
-        for (int i = 0; i < pageNumber; i++) {
-            int availableCategories = categoriesPerPage;
-            if (i > 0) {
-                availableCategories--; // back button
-            }
-
-            if (i + 1 < pageCount) {
-                availableCategories--; // next button
-            }
-
-            categoryIndex += availableCategories;
-        }
-
-        return categoryIndex;
-    }
-
-    private static int getPageNumber(final int categoryIndex, final int pageCount, final int categoriesPerPage) {
-        int currentCategoryIndex = 0;
-        for (int pageNumber = 0; pageNumber < pageCount; pageNumber++) {
-            int availableCategories = categoriesPerPage;
-            if (pageNumber > 0) {
-                availableCategories--; // back button
-            }
-
-            if (pageNumber + 1 < pageCount) {
-                availableCategories--; // next button
-            }
-
-            currentCategoryIndex += availableCategories;
-            if (currentCategoryIndex > categoryIndex) {
-                return pageNumber;
-            }
-        }
-
-        return 0;
-    }
-
-    private void createTabs() {
+    private void updateLayout() {
         tabs.clear();
 
         ImmutableList<IRecipeCategory> categories = recipeGuiLogic.getRecipeCategories();
 
-        boolean nextButton = false;
-        boolean prevButton = false;
+        int tabX = area.x;
 
-        int categoryCount = categoriesPerPage;
-        if (categories.size() > categoryCount) {
-            if (pageNumber + 1 < pageCount) {
-                nextButton = true;
-                categoryCount--;
-            }
-            if (pageNumber > 0) {
-                prevButton = true;
-                categoryCount--;
-            }
-        }
-
-        int tabX = this.left;
-
-        if (prevButton) {
-            RecipeArrowTab tab = new RecipeArrowTab(this, false, tabX, top);
-            this.tabs.add(tab);
-            tabX += RecipeGuiTab.TAB_WIDTH;
-        }
-
-        final int startIndex = getFirstCategoryIndex(pageNumber, pageCount, categoriesPerPage);
-        for (int i = 0; i < categoryCount; i++) {
+        final int startIndex = pageNumber * categoriesPerPage;
+        for (int i = 0; i < categoriesPerPage; i++) {
             int index = i + startIndex;
             if (index >= categories.size()) {
                 break;
             }
             IRecipeCategory category = categories.get(index);
-            RecipeGuiTab tab = new RecipeCategoryTab(recipeGuiLogic, category, tabX, top);
+            RecipeGuiTab tab = new RecipeCategoryTab(recipeGuiLogic, category, tabX, area.y);
             this.tabs.add(tab);
             tabX += RecipeGuiTab.TAB_WIDTH;
         }
 
-        if (nextButton) {
-            RecipeArrowTab tab = new RecipeArrowTab(this, true, tabX, top);
-            this.tabs.add(tab);
-        }
+        pageNavigation.updatePageState();
     }
 
     public void draw(Minecraft minecraft, int mouseX, int mouseY) {
         IRecipeCategory selectedCategory = recipeGuiLogic.getSelectedRecipeCategory();
 
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
         RecipeGuiTab hovered = null;
 
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glDisable(GL11.GL_ALPHA_TEST);
+        GlStateManager.disableDepth();
+        GlStateManager.enableAlpha();
         {
             for (RecipeGuiTab tab : tabs) {
                 boolean selected = tab.isSelected(selectedCategory);
@@ -186,20 +110,20 @@ public class RecipeGuiTabs implements IMouseHandler {
                 }
             }
         }
-        GL11.glEnable(GL11.GL_ALPHA_TEST);
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GlStateManager.disableAlpha();
+        GlStateManager.enableDepth();
+
+        pageNavigation.draw(minecraft, mouseX, mouseY);
 
         if (hovered != null) {
-            String tooltip = hovered.getTooltip();
-            if (tooltip != null) {
-                TooltipRenderer.drawHoveringText(minecraft, tooltip, mouseX, mouseY);
-            }
+            List<String> tooltip = hovered.getTooltip();
+            TooltipRenderer.drawHoveringText(minecraft, tooltip, mouseX, mouseY);
         }
     }
 
     @Override
     public boolean isMouseOver(int mouseX, int mouseY) {
-        return (mouseX > left && mouseX < (left + width)) && (mouseY > top && mouseY < (top + height));
+        return area.contains(mouseX, mouseY) || pageNavigation.isMouseOver();
     }
 
     @Override
@@ -211,6 +135,9 @@ public class RecipeGuiTabs implements IMouseHandler {
                     return true;
                 }
             }
+            if (pageNavigation.isMouseOver()) {
+                return pageNavigation.handleMouseClickedButtons(mouseX, mouseY);
+            }
         }
         return false;
     }
@@ -220,17 +147,45 @@ public class RecipeGuiTabs implements IMouseHandler {
         return false;
     }
 
-    public void nextPage() {
-        if (pageNumber + 1 < pageCount) {
+    @Override
+    public boolean nextPage() {
+        if (hasNext()) {
             pageNumber++;
-            createTabs();
+        } else {
+            pageNumber = 0;
         }
+        updateLayout();
+        return true;
     }
 
-    public void prevPage() {
-        if (pageNumber > 0) {
+    @Override
+    public boolean hasNext() {
+        return pageNumber + 1 < pageCount;
+    }
+
+    @Override
+    public boolean previousPage() {
+        if (hasPrevious()) {
             pageNumber--;
-            createTabs();
+        } else {
+            pageNumber = pageCount - 1;
         }
+        updateLayout();
+        return true;
+    }
+
+    @Override
+    public boolean hasPrevious() {
+        return pageNumber > 0;
+    }
+
+    @Override
+    public int getPageCount() {
+        return pageCount;
+    }
+
+    @Override
+    public int getPageNumber() {
+        return pageNumber;
     }
 }

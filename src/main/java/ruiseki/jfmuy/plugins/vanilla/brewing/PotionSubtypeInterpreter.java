@@ -6,7 +6,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.PotionEffect;
 
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import ruiseki.jfmuy.api.ISubtypeRegistry;
 
@@ -18,11 +18,10 @@ public class PotionSubtypeInterpreter implements ISubtypeRegistry.ISubtypeInterp
 
     }
 
-    @Nullable
     @Override
-    public String getSubtypeInfo(ItemStack itemStack) {
-        if (itemStack == null || itemStack.getItem() == null) {
-            return null;
+    public @NotNull String apply(@NotNull ItemStack itemStack) {
+        if (itemStack.getItem() == null) {
+            return "";
         }
 
         int meta = itemStack.getItemDamage();

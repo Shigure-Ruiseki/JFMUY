@@ -5,11 +5,12 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 
 import org.jetbrains.annotations.Nullable;
 
+import ruiseki.jfmuy.api.gui.IGuiProperties;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 
-public class GuiProperties {
+public class GuiProperties implements IGuiProperties {
 
-    private final Class guiClass;
+    private final Class<? extends GuiScreen> guiClass;
     private final int guiLeft;
     private final int guiTop;
     private final int guiXSize;
@@ -18,18 +19,11 @@ public class GuiProperties {
     private final int screenHeight;
 
     @Nullable
-    public static GuiProperties create(GuiScreen guiScreen) {
-        if (guiScreen instanceof RecipesGui) {
-            return create((RecipesGui) guiScreen);
-        } else if (guiScreen instanceof GuiContainer) {
-            return create((GuiContainer) guiScreen);
-        } else {
+    public static GuiProperties create(GuiContainer guiContainer) {
+        if (guiContainer.width == 0 || guiContainer.height == 0) {
             return null;
         }
-    }
-
-    public static GuiProperties create(GuiContainer guiContainer) {
-        return new GuiProperties(
+        return create(
             guiContainer.getClass(),
             guiContainer.guiLeft,
             guiContainer.guiTop,
@@ -39,19 +33,34 @@ public class GuiProperties {
             guiContainer.height);
     }
 
+    @Nullable
     public static GuiProperties create(RecipesGui recipesGui) {
-        return new GuiProperties(
+        int extraWidth = recipesGui.getRecipeCatalystExtraWidth();
+        return create(
             recipesGui.getClass(),
-            recipesGui.getGuiLeft(),
+            recipesGui.getGuiLeft() - extraWidth,
             recipesGui.getGuiTop(),
-            recipesGui.getXSize(),
+            recipesGui.getXSize() + extraWidth,
             recipesGui.getYSize(),
             recipesGui.width,
             recipesGui.height);
     }
 
-    private GuiProperties(Class guiClass, int guiLeft, int guiTop, int guiXSize, int guiYSize, int screenWidth,
-        int screenHeight) {
+    public static boolean areEqual(@Nullable IGuiProperties a, @Nullable IGuiProperties b) {
+        if (a == b) {
+            return true;
+        }
+        return a != null && b != null
+            && a.getGuiClass()
+                .equals(b.getGuiClass())
+            && a.getGuiLeft() == b.getGuiLeft()
+            && a.getGuiXSize() == b.getGuiXSize()
+            && a.getScreenWidth() == b.getScreenWidth()
+            && a.getScreenHeight() == b.getScreenHeight();
+    }
+
+    private GuiProperties(Class<? extends GuiScreen> guiClass, int guiLeft, int guiTop, int guiXSize, int guiYSize,
+        int screenWidth, int screenHeight) {
         this.guiClass = guiClass;
         this.guiLeft = guiLeft;
         this.guiTop = guiTop;
@@ -61,53 +70,47 @@ public class GuiProperties {
         this.screenHeight = screenHeight;
     }
 
-    public Class getGuiClass() {
+    @Nullable
+    private static GuiProperties create(Class<? extends GuiScreen> guiClass, int guiLeft, int guiTop, int guiXSize,
+        int guiYSize, int screenWidth, int screenHeight) {
+        if (guiXSize <= 0 || guiYSize <= 0) {
+            return null;
+        }
+        return new GuiProperties(guiClass, guiLeft, guiTop, guiXSize, guiYSize, screenWidth, screenHeight);
+    }
+
+    @Override
+    public Class<? extends GuiScreen> getGuiClass() {
         return guiClass;
     }
 
+    @Override
     public int getGuiLeft() {
         return guiLeft;
     }
 
+    @Override
     public int getGuiTop() {
         return guiTop;
     }
 
+    @Override
     public int getGuiXSize() {
         return guiXSize;
     }
 
+    @Override
     public int getGuiYSize() {
         return guiYSize;
     }
 
+    @Override
     public int getScreenWidth() {
         return screenWidth;
     }
 
+    @Override
     public int getScreenHeight() {
         return screenHeight;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof GuiProperties)) {
-            return false;
-        }
-        GuiProperties other = (GuiProperties) obj;
-        return guiClass == other.getGuiClass() && guiLeft == other.getGuiLeft()
-            && guiXSize == other.getGuiXSize()
-            && screenWidth == other.getScreenWidth()
-            && screenHeight == other.getScreenHeight();
-    }
-
-    @Override
-    public int hashCode() {
-        int result = guiClass.hashCode();
-        result = 31 * result + guiLeft;
-        result = 31 * result + guiXSize;
-        result = 31 * result + screenWidth;
-        result = 31 * result + screenHeight;
-        return result;
     }
 }

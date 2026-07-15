@@ -17,7 +17,7 @@ import ruiseki.jfmuy.util.Log;
 public class CommonProxy {
 
     @Nullable
-    private FMLEventChannel channel;
+    protected FMLEventChannel channel;
 
     public void preInit(@NotNull FMLPreInitializationEvent event) {
         PacketHandler packetHandler = new PacketHandler();
@@ -38,7 +38,8 @@ public class CommonProxy {
     }
 
     public void sendPacketToServer(PacketJFMUY packet) {
-        Log.error("Tried to send packet to the server from the server: {}", packet);
+        Log.get()
+            .error("Tried to send packet to the server from the server: {}", packet);
     }
 
     public void sendPacketToClient(PacketJFMUY packet, EntityPlayerMP player) {

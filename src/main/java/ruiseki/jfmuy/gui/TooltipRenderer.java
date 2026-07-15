@@ -1,61 +1,71 @@
 package ruiseki.jfmuy.gui;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.RenderItem;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.item.ItemStack;
 
 import ruiseki.jfmuy.Reference;
+import ruiseki.okcore.helper.GuiHelpers;
 
-/**
- * Workaround for GuiScreen.drawHoveringText being protected instead of public.
- * (the method with FontRenderer is added by Forge and can't be AT'd).
- */
-public class TooltipRenderer {
+public final class TooltipRenderer {
 
-    private static final TooltipGuiScreen tooltipScreen = new TooltipGuiScreen();
+    private TooltipRenderer() {}
 
     public static void drawHoveringText(Minecraft minecraft, String textLine, int x, int y) {
         @SuppressWarnings("unchecked")
         List<String> textLines = minecraft.fontRenderer
             .listFormattedStringToWidth(textLine, Reference.MAX_TOOLTIP_WIDTH);
-        drawHoveringText(minecraft, textLines, x, y, minecraft.fontRenderer);
+        drawHoveringText(null, minecraft, textLines, x, y, -1, minecraft.fontRenderer);
     }
 
     public static void drawHoveringText(Minecraft minecraft, @Nonnull List<String> textLines, int x, int y) {
-        drawHoveringText(minecraft, textLines, x, y, minecraft.fontRenderer);
+        drawHoveringText(null, minecraft, textLines, x, y, -1, minecraft.fontRenderer);
+    }
+
+    public static void drawHoveringText(Minecraft minecraft, List<String> textLines, int x, int y, int maxWidth) {
+        drawHoveringText(null, minecraft, textLines, x, y, maxWidth, minecraft.fontRenderer);
     }
 
     public static void drawHoveringText(Minecraft minecraft, @Nonnull List<String> textLines, int x, int y,
         FontRenderer font) {
-        tooltipScreen.set(minecraft);
-        tooltipScreen.drawHoveringText(textLines, x, y, font);
-
-        GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-        RenderHelper.disableStandardItemLighting();
-        GL11.glDisable(GL11.GL_LIGHTING);
+        drawHoveringText(null, minecraft, textLines, x, y, -1, font);
     }
 
-    private static class TooltipGuiScreen extends GuiScreen {
+    public static void drawHoveringText(ItemStack itemStack, Minecraft minecraft, @Nonnull List<String> textLines,
+        int x, int y, FontRenderer font) {
+        drawHoveringText(itemStack, minecraft, textLines, x, y, -1, font);
+    }
 
-        public void set(Minecraft minecraft) {
-            this.mc = minecraft;
-            this.itemRender = RenderItem.getInstance();
-            this.width = minecraft.currentScreen.width;
-            this.height = minecraft.currentScreen.height;
+    public static void drawHoveringText(ItemStack itemStack, Minecraft minecraft, @Nonnull List<String> textLines,
+        int x, int y, int maxWidth, FontRenderer font) {
+        List<String> safeTextLines = new ArrayList<>(textLines.size());
+        for (String textLine : textLines) {
+            if (textLine != null) {
+                safeTextLines.add(textLine);
+            }
+        }
+        if (safeTextLines.isEmpty()) {
+            return;
         }
 
-        @Override
-        public void drawHoveringText(@Nonnull List textLines, int x, int y, FontRenderer font) {
-            super.drawHoveringText(textLines, x, y, font);
-        }
+        ScaledResolution scaledresolution = new ScaledResolution(
+            minecraft,
+            minecraft.displayWidth,
+            minecraft.displayHeight);
+        GuiHelpers.drawHoveringText(
+            itemStack,
+            safeTextLines,
+            x,
+            y,
+            scaledresolution.getScaledWidth(),
+            scaledresolution.getScaledHeight(),
+            maxWidth,
+            font);
     }
 }

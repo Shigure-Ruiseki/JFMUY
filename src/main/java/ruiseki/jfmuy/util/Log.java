@@ -1,34 +1,17 @@
 package ruiseki.jfmuy.util;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import ruiseki.jfmuy.Reference;
 
-public class Log {
+public final class Log {
 
-    public static void trace(String message, Object... params) {
-        log(Level.TRACE, message, params);
+    private static final Logger LOGGER = LogManager.getLogger(Reference.MOD_ID);
+
+    public static Logger get() {
+        return LOGGER;
     }
 
-    public static void debug(String message, Object... params) {
-        log(Level.DEBUG, message, params);
-    }
-
-    public static void info(String message, Object... params) {
-        log(Level.INFO, message, params);
-    }
-
-    public static void warning(String message, Object... params) {
-        log(Level.WARN, message, params);
-    }
-
-    public static void error(String message, Object... params) {
-        log(Level.ERROR, message, params);
-    }
-
-    private static void log(Level logLevel, String message, Object... params) {
-        LogManager.getLogger(Reference.MOD_ID)
-            .log(logLevel, message, params);
-    }
+    private Log() {}
 }

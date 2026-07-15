@@ -1,7 +1,5 @@
 package ruiseki.jfmuy.network.packets;
 
-import java.io.IOException;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -29,16 +27,12 @@ public class PacketDeletePlayerItem extends PacketJFMUY {
         buf.writeShort(itemId);
     }
 
-    public static class Handler implements IPacketJFMUYHandler {
-
-        @Override
-        public void readPacketData(PacketBuffer buf, EntityPlayer player) throws IOException {
-            int itemId = buf.readShort();
-            Item item = Item.getItemById(itemId);
-            ItemStack playerItem = player.inventory.getItemStack();
-            if (playerItem != null && playerItem.getItem() == item) {
-                player.inventory.setItemStack(null);
-            }
+    public static void readPacketData(PacketBuffer buf, EntityPlayer player) {
+        int itemId = buf.readShort();
+        Item item = Item.getItemById(itemId);
+        ItemStack playerItem = player.inventory.getItemStack();
+        if (playerItem != null && playerItem.getItem() == item) {
+            player.inventory.setItemStack(null);
         }
     }
 }

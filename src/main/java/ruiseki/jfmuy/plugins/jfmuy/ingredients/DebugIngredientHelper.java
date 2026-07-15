@@ -2,19 +2,19 @@ package ruiseki.jfmuy.plugins.jfmuy.ingredients;
 
 import java.awt.Color;
 import java.util.Collections;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
+
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.util.CommandUtilServer;
 
 public class DebugIngredientHelper implements IIngredientHelper<DebugIngredient> {
-
-    @Override
-    public List<DebugIngredient> expandSubtypes(List<DebugIngredient> ingredients) {
-        return ingredients;
-    }
 
     @Nullable
     @Override
@@ -53,7 +53,29 @@ public class DebugIngredientHelper implements IIngredientHelper<DebugIngredient>
     }
 
     @Override
-    public String getErrorInfo(DebugIngredient ingredient) {
+    public String getResourceId(DebugIngredient ingredient) {
+        return "debug_" + ingredient.getNumber();
+    }
+
+    @Override
+    public ItemStack getCheatItemStack(DebugIngredient ingredient) {
+        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+        if (player != null) {
+            CommandUtilServer.writeChatMessage(player, "Debug ingredients cannot be cheated", EnumChatFormatting.RED);
+        }
+        return null;
+    }
+
+    @Override
+    public DebugIngredient copyIngredient(DebugIngredient ingredient) {
+        return ingredient.copy();
+    }
+
+    @Override
+    public String getErrorInfo(@Nullable DebugIngredient ingredient) {
+        if (ingredient == null) {
+            return "debug ingredient: null";
+        }
         return getDisplayName(ingredient);
     }
 }

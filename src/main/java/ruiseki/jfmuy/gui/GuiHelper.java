@@ -1,106 +1,92 @@
 package ruiseki.jfmuy.gui;
 
-import javax.annotation.Nullable;
-
 import net.minecraft.util.ResourceLocation;
 
-import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.gui.ICraftingGridHelper;
+import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IDrawableAnimated;
+import ruiseki.jfmuy.api.gui.IDrawableBuilder;
 import ruiseki.jfmuy.api.gui.IDrawableStatic;
 import ruiseki.jfmuy.api.gui.ITickTimer;
-import ruiseki.jfmuy.api.recipe.IStackHelper;
-import ruiseki.jfmuy.util.Log;
-import ruiseki.jfmuy.util.TickTimer;
+import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
+import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
+import ruiseki.jfmuy.gui.elements.DrawableAnimated;
+import ruiseki.jfmuy.gui.elements.DrawableBlank;
+import ruiseki.jfmuy.gui.elements.DrawableBuilder;
+import ruiseki.jfmuy.gui.elements.DrawableIngredient;
+import ruiseki.jfmuy.gui.elements.DrawableNineSliceTexture;
+import ruiseki.jfmuy.gui.elements.DrawableSprite;
+import ruiseki.jfmuy.gui.textures.TextureInfo;
+import ruiseki.jfmuy.gui.textures.Textures;
+import ruiseki.jfmuy.util.ErrorUtil;
 
 public class GuiHelper implements IGuiHelper {
 
-    private final IStackHelper stackHelper;
+    private final IIngredientRegistry ingredientRegistry;
     private final IDrawableStatic slotDrawable;
     private final IDrawableStatic tabSelected;
     private final IDrawableStatic tabUnselected;
+    private final IDrawableStatic shapelessIcon;
+    private final IDrawableStatic arrowPrevious;
+    private final IDrawableStatic arrowNext;
+    private final IDrawableStatic recipeTransfer;
+    private final IDrawableStatic configButtonIcon;
+    private final IDrawableStatic configButtonCheatIcon;
+    private final IDrawableStatic bookmarkButtonDisabledIcon;
+    private final IDrawableStatic bookmarkButtonEnabledIcon;
+    private final DrawableNineSliceTexture buttonDisabled;
+    private final DrawableNineSliceTexture buttonEnabled;
+    private final DrawableNineSliceTexture buttonHighlight;
+    private final DrawableNineSliceTexture guiBackground;
+    private final DrawableNineSliceTexture recipeBackground;
+    private final DrawableNineSliceTexture searchBackground;
+    private final DrawableNineSliceTexture catalystTab;
+    private final DrawableNineSliceTexture nineSliceSlot;
+    private final IDrawableStatic infoIcon;
+    private final IDrawableStatic flameIcon;
 
-    private final ResourceLocation recipeBackgroundResource;
-    private final ResourceLocation recipeBackgroundTallResource;
+    public GuiHelper(IIngredientRegistry ingredientRegistry, Textures textures) {
+        this.ingredientRegistry = ingredientRegistry;
+        this.slotDrawable = createDrawable(textures.slot);
+        this.nineSliceSlot = createNineSliceDrawable(textures.slot);
 
-    public GuiHelper(IStackHelper stackHelper) {
-        this.stackHelper = stackHelper;
+        this.tabSelected = createDrawable(textures.tabSelected);
+        this.tabUnselected = createDrawable(textures.tabUnselected);
 
-        ResourceLocation location = new ResourceLocation("minecraft", "textures/gui/container/furnace.png");
-        this.slotDrawable = createDrawable(location, 55, 16, 18, 18);
+        this.buttonDisabled = createNineSliceDrawable(textures.buttonDisabled);
+        this.buttonEnabled = createNineSliceDrawable(textures.buttonEnabled);
+        this.buttonHighlight = createNineSliceDrawable(textures.buttonHighlight);
+        this.guiBackground = createNineSliceDrawable(textures.guiBackground);
+        this.recipeBackground = createNineSliceDrawable(textures.recipeBackground);
+        this.searchBackground = createNineSliceDrawable(textures.searchBackground);
+        this.catalystTab = createNineSliceDrawable(textures.catalystTab);
 
-        recipeBackgroundResource = new ResourceLocation(Reference.MOD_ID, Reference.TEXTURE_RECIPE_BACKGROUND_PATH);
-        recipeBackgroundTallResource = new ResourceLocation(
-            Reference.MOD_ID,
-            Reference.TEXTURE_RECIPE_BACKGROUND_TALL_PATH);
+        this.shapelessIcon = createDrawable(textures.shapelessIcon);
+        this.arrowPrevious = createDrawable(textures.arrowPrevious);
+        this.arrowNext = createDrawable(textures.arrowNext);
+        this.recipeTransfer = createDrawable(textures.recipeTransfer);
 
-        tabSelected = createDrawable(recipeBackgroundResource, 196, 15, 24, 24);
-        tabUnselected = createDrawable(recipeBackgroundResource, 220, 15, 24, 22);
+        this.configButtonIcon = createDrawable(textures.configButtonIcon);
+        this.configButtonCheatIcon = createDrawable(textures.configButtonCheatIcon);
+        this.bookmarkButtonDisabledIcon = createDrawable(textures.bookmarkButtonDisabledIcon);
+        this.bookmarkButtonEnabledIcon = createDrawable(textures.bookmarkButtonEnabledIcon);
+
+        this.infoIcon = createDrawable(textures.infoIcon);
+        this.flameIcon = createDrawable(textures.flameIcon);
     }
 
     @Override
-    public IDrawableStatic createDrawable(@Nullable ResourceLocation resourceLocation, int u, int v, int width,
-        int height) {
-        if (resourceLocation == null) {
-            Log.error("Null resourceLocation, returning blank drawable", new NullPointerException());
-            return createBlankDrawable(width, height);
-        }
-        return new DrawableResource(resourceLocation, u, v, width, height);
+    public IDrawableBuilder drawableBuilder(ResourceLocation resourceLocation, int u, int v, int width, int height) {
+        return new DrawableBuilder(resourceLocation, u, v, width, height);
     }
 
     @Override
-    public IDrawableStatic createDrawable(@Nullable ResourceLocation resourceLocation, int u, int v, int width,
-        int height, int paddingTop, int paddingBottom, int paddingLeft, int paddingRight) {
-        if (resourceLocation == null) {
-            Log.error("Null resourceLocation, returning blank drawable", new NullPointerException());
-            return createBlankDrawable(width, height);
-        }
-        return new DrawableResource(
-            resourceLocation,
-            u,
-            v,
-            width,
-            height,
-            paddingTop,
-            paddingBottom,
-            paddingLeft,
-            paddingRight);
-    }
-
-    @Override
-    public IDrawableAnimated createAnimatedDrawable(@Nullable IDrawableStatic drawable, int ticksPerCycle,
-        @Nullable IDrawableAnimated.StartDirection startDirection, boolean inverted) {
-        if (drawable == null) {
-            Log.error("Null drawable, returning blank drawable", new NullPointerException());
-            return new DrawableBlank(0, 0);
-        }
-        if (startDirection == null) {
-            Log.error("Null startDirection, defaulting to Top", new NullPointerException());
-            startDirection = IDrawableAnimated.StartDirection.TOP;
-        }
-
-        if (inverted) {
-            if (startDirection == IDrawableAnimated.StartDirection.TOP) {
-                startDirection = IDrawableAnimated.StartDirection.BOTTOM;
-            } else if (startDirection == IDrawableAnimated.StartDirection.BOTTOM) {
-                startDirection = IDrawableAnimated.StartDirection.TOP;
-            } else if (startDirection == IDrawableAnimated.StartDirection.LEFT) {
-                startDirection = IDrawableAnimated.StartDirection.RIGHT;
-            } else {
-                startDirection = IDrawableAnimated.StartDirection.LEFT;
-            }
-        }
-
-        int tickTimerMaxValue;
-        if (startDirection == IDrawableAnimated.StartDirection.TOP
-            || startDirection == IDrawableAnimated.StartDirection.BOTTOM) {
-            tickTimerMaxValue = drawable.getHeight();
-        } else {
-            tickTimerMaxValue = drawable.getWidth();
-        }
-        ITickTimer tickTimer = createTickTimer(ticksPerCycle, tickTimerMaxValue, !inverted);
-        return new DrawableAnimated(drawable, tickTimer, startDirection);
+    public IDrawableAnimated createAnimatedDrawable(IDrawableStatic drawable, int ticksPerCycle,
+        IDrawableAnimated.StartDirection startDirection, boolean inverted) {
+        ErrorUtil.checkNotNull(drawable, "drawable");
+        ErrorUtil.checkNotNull(startDirection, "startDirection");
+        return new DrawableAnimated(drawable, ticksPerCycle, startDirection, inverted);
     }
 
     @Override
@@ -114,13 +100,27 @@ public class GuiHelper implements IGuiHelper {
     }
 
     @Override
+    public <V> IDrawable createDrawableIngredient(V ingredient) {
+        IIngredientRenderer<V> ingredientRenderer = ingredientRegistry.getIngredientRenderer(ingredient);
+        return new DrawableIngredient<>(ingredient, ingredientRenderer);
+    }
+
+    @Override
     public ICraftingGridHelper createCraftingGridHelper(int craftInputSlot1, int craftOutputSlot) {
-        return new CraftingGridHelper(stackHelper, craftInputSlot1, craftOutputSlot);
+        return new CraftingGridHelper(craftInputSlot1, craftOutputSlot);
     }
 
     @Override
     public ITickTimer createTickTimer(int ticksPerCycle, int maxValue, boolean countDown) {
         return new TickTimer(ticksPerCycle, maxValue, countDown);
+    }
+
+    private IDrawableStatic createDrawable(TextureInfo textureInfo) {
+        return new DrawableSprite(textureInfo);
+    }
+
+    private DrawableNineSliceTexture createNineSliceDrawable(TextureInfo textureInfo) {
+        return new DrawableNineSliceTexture(textureInfo);
     }
 
     public IDrawableStatic getTabSelected() {
@@ -131,11 +131,85 @@ public class GuiHelper implements IGuiHelper {
         return tabUnselected;
     }
 
-    public ResourceLocation getRecipeBackgroundResource() {
-        return recipeBackgroundResource;
+    public IDrawableStatic getShapelessIcon() {
+        return shapelessIcon;
     }
 
-    public ResourceLocation getRecipeBackgroundTallResource() {
-        return recipeBackgroundTallResource;
+    public IDrawableStatic getArrowPrevious() {
+        return arrowPrevious;
+    }
+
+    public IDrawableStatic getArrowNext() {
+        return arrowNext;
+    }
+
+    public IDrawableStatic getRecipeTransfer() {
+        return recipeTransfer;
+    }
+
+    public IDrawableStatic getConfigButtonIcon() {
+        return configButtonIcon;
+    }
+
+    public IDrawableStatic getConfigButtonCheatIcon() {
+        return configButtonCheatIcon;
+    }
+
+    public IDrawableStatic getBookmarkButtonDisabledIcon() {
+        return bookmarkButtonDisabledIcon;
+    }
+
+    public IDrawableStatic getBookmarkButtonEnabledIcon() {
+        return bookmarkButtonEnabledIcon;
+    }
+
+    public DrawableNineSliceTexture getButtonDisabled() {
+        return buttonDisabled;
+    }
+
+    public DrawableNineSliceTexture getButtonEnabled() {
+        return buttonEnabled;
+    }
+
+    public DrawableNineSliceTexture getButtonHighlight() {
+        return buttonHighlight;
+    }
+
+    public DrawableNineSliceTexture getButtonForState(int state) {
+        if (state == 0) {
+            return getButtonDisabled();
+        } else if (state == 2) {
+            return getButtonHighlight();
+        } else {
+            return getButtonEnabled();
+        }
+    }
+
+    public DrawableNineSliceTexture getGuiBackground() {
+        return guiBackground;
+    }
+
+    public DrawableNineSliceTexture getRecipeBackground() {
+        return recipeBackground;
+    }
+
+    public DrawableNineSliceTexture getSearchBackground() {
+        return searchBackground;
+    }
+
+    public IDrawableStatic getInfoIcon() {
+        return infoIcon;
+    }
+
+    public DrawableNineSliceTexture getCatalystTab() {
+        return catalystTab;
+    }
+
+    public DrawableNineSliceTexture getNineSliceSlot() {
+        return nineSliceSlot;
+    }
+
+    public IDrawableStatic getFlameIcon() {
+        return flameIcon;
     }
 }

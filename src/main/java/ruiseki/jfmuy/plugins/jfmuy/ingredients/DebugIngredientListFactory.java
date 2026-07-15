@@ -1,11 +1,14 @@
 package ruiseki.jfmuy.plugins.jfmuy.ingredients;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-public class DebugIngredientListFactory {
+public final class DebugIngredientListFactory {
 
-    public static List<DebugIngredient> create() {
+    private DebugIngredientListFactory() {}
+
+    public static Collection<DebugIngredient> create() {
         List<DebugIngredient> ingredients = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             DebugIngredient debugIngredient = new DebugIngredient(i);

@@ -11,7 +11,7 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkCheckHandler;
 import cpw.mods.fml.relauncher.Side;
-import ruiseki.jfmuy.config.SessionData;
+import ruiseki.jfmuy.config.ServerInfo;
 
 @Mod(
     modid = Reference.MOD_ID,
@@ -32,7 +32,7 @@ public class JFMUY {
     public boolean checkModLists(Map<String, String> modList, Side side) {
         if (side == Side.SERVER) {
             boolean JFMUYOnServer = modList.containsKey(Reference.MOD_ID);
-            SessionData.onConnectedToServer(JFMUYOnServer);
+            ServerInfo.onConnectedToServer(JFMUYOnServer);
         }
         return true;
     }

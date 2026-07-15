@@ -37,11 +37,13 @@ import ruiseki.jfmuy.network.PacketHandlerClient;
 import ruiseki.jfmuy.network.packets.PacketJFMUY;
 import ruiseki.jfmuy.plugins.jfmuy.JFMUYInternalPlugin;
 import ruiseki.jfmuy.plugins.vanilla.VanillaPlugin;
+import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeValidatorRegistry;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
 import ruiseki.jfmuy.startup.AnnotatedInstanceUtil;
 import ruiseki.jfmuy.startup.JFMUYStarter;
 import ruiseki.jfmuy.startup.PlayerJoinedWorldEvent;
 import ruiseki.jfmuy.util.Log;
+import ruiseki.okcore.event.recipes.RecipesUpdatedEvent;
 
 public class ClientProxy extends CommonProxy {
 
@@ -111,6 +113,7 @@ public class ClientProxy extends CommonProxy {
 
     public void init(@Nonnull FMLInitializationEvent event) {
         KeyBindings.init();
+        CraftingRecipeValidatorRegistry.init();
         MinecraftForge.EVENT_BUS.register(MouseHelper.INSTANCE);
     }
 
@@ -183,6 +186,15 @@ public class ClientProxy extends CommonProxy {
         } catch (RuntimeException e) {
             Log.get()
                 .error("Failed to save filter text.", e);
+        }
+    }
+
+    @SubscribeEvent
+    public void onUpdatedRecipe(RecipesUpdatedEvent event) {
+        if (this.starter.hasStarted()) {
+            Log.get()
+                .info("Recipes updated from server. Reloading JFMUY...");
+            this.starter.start(this.plugins);
         }
     }
 }

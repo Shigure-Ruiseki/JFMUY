@@ -16,12 +16,12 @@ import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
 import ruiseki.jfmuy.recipes.BrokenCraftingRecipeException;
 import ruiseki.jfmuy.util.ErrorUtil;
 
-public class ShapelessRecipeWrapper<T extends IRecipe> implements ICraftingRecipeWrapper {
+public class ShapelessRecipesWrapper<T extends IRecipe> implements ICraftingRecipeWrapper {
 
     protected final IJFMUYHelpers jeiHelpers;
     protected final T recipe;
 
-    public ShapelessRecipeWrapper(IJFMUYHelpers jeiHelpers, T recipe) {
+    public ShapelessRecipesWrapper(IJFMUYHelpers jeiHelpers, T recipe) {
         this.jeiHelpers = jeiHelpers;
         this.recipe = recipe;
     }

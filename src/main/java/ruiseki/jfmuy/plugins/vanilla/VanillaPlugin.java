@@ -19,14 +19,10 @@ import net.minecraft.inventory.ContainerFurnace;
 import net.minecraft.inventory.ContainerRepair;
 import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.ShapedRecipes;
-import net.minecraft.item.crafting.ShapelessRecipes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
-import net.minecraftforge.oredict.ShapedOreRecipe;
-import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 import com.google.common.base.Preconditions;
 
@@ -52,11 +48,6 @@ import ruiseki.jfmuy.plugins.vanilla.brewing.BrewingRecipeMaker;
 import ruiseki.jfmuy.plugins.vanilla.brewing.PotionSubtypeInterpreter;
 import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeCategory;
 import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeMarker;
-import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeValidator;
-import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeValidatorRegistry;
-import ruiseki.jfmuy.plugins.vanilla.crafting.ShapedOreRecipeWrapper;
-import ruiseki.jfmuy.plugins.vanilla.crafting.ShapedRecipesWrapper;
-import ruiseki.jfmuy.plugins.vanilla.crafting.ShapelessRecipeWrapper;
 import ruiseki.jfmuy.plugins.vanilla.furnace.FuelRecipeMaker;
 import ruiseki.jfmuy.plugins.vanilla.furnace.FurnaceFuelCategory;
 import ruiseki.jfmuy.plugins.vanilla.furnace.FurnaceSmeltingCategory;
@@ -139,24 +130,6 @@ public class VanillaPlugin implements IModPlugin {
         IIngredientRegistry ingredientRegistry = registry.getIngredientRegistry();
         IJFMUYHelpers jfmuyHelpers = registry.getJFMUYHelpers();
         IVanillaRecipeFactory vanillaRecipeFactory = jfmuyHelpers.getVanillaRecipeFactory();
-
-        CraftingRecipeValidatorRegistry.register(
-            ShapedOreRecipe.class,
-            new CraftingRecipeValidator<ShapedOreRecipe>(recipe -> new ShapedOreRecipeWrapper(jfmuyHelpers, recipe)));
-
-        CraftingRecipeValidatorRegistry.register(
-            ShapedRecipes.class,
-            new CraftingRecipeValidator<ShapedRecipes>(recipe -> new ShapedRecipesWrapper(jfmuyHelpers, recipe)));
-
-        CraftingRecipeValidatorRegistry.register(
-            ShapelessOreRecipe.class,
-            new CraftingRecipeValidator<ShapelessOreRecipe>(
-                recipe -> new ShapelessRecipeWrapper<>(jfmuyHelpers, recipe)));
-
-        CraftingRecipeValidatorRegistry.register(
-            ShapelessRecipes.class,
-            new CraftingRecipeValidator<ShapelessRecipes>(
-                recipe -> new ShapelessRecipeWrapper<>(jfmuyHelpers, recipe)));
 
         registry.addRecipes(CraftingRecipeMarker.getValidRecipes(jfmuyHelpers), VanillaRecipeCategoryUid.CRAFTING);
         registry.addRecipes(SmeltingRecipeMaker.getFurnaceRecipes(jfmuyHelpers), VanillaRecipeCategoryUid.SMELTING);

@@ -18,10 +18,12 @@ public class OKCorePlugin implements IModPlugin {
     public void register(IModRegistry registry) {
         IJFMUYHelpers jfmuyHelpers = registry.getJFMUYHelpers();
 
-        CraftingRecipeValidatorRegistry.register(ShapedRecipe.class,
+        CraftingRecipeValidatorRegistry.register(
+            ShapedRecipe.class,
             new CraftingRecipeValidator<ShapedRecipe>(recipe -> new ShapedRecipeWrapper(jfmuyHelpers, recipe)));
 
-        CraftingRecipeValidatorRegistry.register(ShapelessRecipe.class,
+        CraftingRecipeValidatorRegistry.register(
+            ShapelessRecipe.class,
             new CraftingRecipeValidator<ShapelessRecipe>(recipe -> new ShapelessRecipeWrapper(jfmuyHelpers, recipe)));
     }
 }

@@ -35,7 +35,8 @@ public class ConfigButton extends GuiIconToggleButton {
     protected void getTooltips(List<String> tooltip) {
         tooltip.add(Translator.translateToLocal("jfmuy.tooltip.config"));
         if (!Config.isOverlayEnabled()) {
-            tooltip.add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.ingredient.list.disabled"));
+            tooltip
+                .add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.ingredient.list.disabled"));
             tooltip.add(
                 EnumChatFormatting.GOLD + Translator.translateToLocalFormatted(
                     "jfmuy.tooltip.ingredient.list.disabled.how.to.fix",
@@ -44,7 +45,8 @@ public class ConfigButton extends GuiIconToggleButton {
             tooltip.add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.not.enough.space"));
         }
         if (Config.isCheatItemsEnabled()) {
-            tooltip.add(EnumChatFormatting.RED + Translator.translateToLocal("jfmuy.tooltip.cheat.mode.button.enabled"));
+            tooltip
+                .add(EnumChatFormatting.RED + Translator.translateToLocal("jfmuy.tooltip.cheat.mode.button.enabled"));
             KeyBinding toggleCheatMode = KeyBindings.toggleCheatMode;
             if (toggleCheatMode.getKeyCode() != 0) {
                 tooltip.add(
@@ -53,8 +55,9 @@ public class ConfigButton extends GuiIconToggleButton {
                         toggleCheatMode.getKeyDescription()));
             } else {
                 tooltip.add(
-                    EnumChatFormatting.RED + Translator
-                        .translateToLocalFormatted("jfmuy.tooltip.cheat.mode.how.to.disable.no.hotkey", "key.jfmuy.ctrl"));
+                    EnumChatFormatting.RED + Translator.translateToLocalFormatted(
+                        "jfmuy.tooltip.cheat.mode.how.to.disable.no.hotkey",
+                        "key.jfmuy.ctrl"));
             }
         }
     }

@@ -174,8 +174,9 @@ public class IngredientRenderer<T> {
         tooltip.add("");
         tooltip.add(EnumChatFormatting.DARK_GREEN + Translator.translateToLocal("gui.jfmuy.editMode.description"));
 
-        String hideMessage = EnumChatFormatting.GRAY + Translator.translateToLocal("gui.jfmuy.editMode.description.hide")
-            .replace("%CTRL", "key.jfmuy.ctrl");
+        String hideMessage = EnumChatFormatting.GRAY
+            + Translator.translateToLocal("gui.jfmuy.editMode.description.hide")
+                .replace("%CTRL", "key.jfmuy.ctrl");
         tooltip.addAll(minecraft.fontRenderer.listFormattedStringToWidth(hideMessage, maxWidth));
 
         String hideWildMessage = EnumChatFormatting.GRAY

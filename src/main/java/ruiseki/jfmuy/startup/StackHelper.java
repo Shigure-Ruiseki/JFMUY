@@ -356,10 +356,26 @@ public class StackHelper implements IStackHelper {
 
     public List<List<ItemStack>> expandRecipeItemStackInputs(List inputs, boolean expandSubtypes) {
         List<List<ItemStack>> expandedInputs = new ArrayList<>();
-        for (Object input : inputs) {
+
+        // --- LOG BẮT ĐẦU EXPAND ---
+        System.out.println("--- DEBUG STACKHELPER: Bắt đầu expand danh sách inputs size = " + inputs.size() + " ---");
+        // --------------------------
+
+        for (int i = 0; i < inputs.size(); i++) {
+            Object input = inputs.get(i);
             List<ItemStack> expandedInput = toItemStackList(input, expandSubtypes);
             expandedInputs.add(expandedInput);
+
+            // --- LOG TỪNG PHẦN TỬ ĐƯỢC CONVERT ---
+            if (input == null) {
+                System.out.println("  Phần tử chỉ mục [" + i + "] thô là: null -> Convert ra list size: " + (expandedInput != null ? expandedInput.size() : "null"));
+            } else {
+                System.out.println("  Phần tử chỉ mục [" + i + "] thô là: " + input.getClass().getSimpleName() + " (" + input + ") -> Convert ra list size: " + (expandedInput != null ? expandedInput.size() : "null"));
+            }
+            // -------------------------------------
         }
+
+        System.out.println("--- DEBUG STACKHELPER: Kết thúc expand, trả về list size = " + expandedInputs.size() + " ---");
         return expandedInputs;
     }
 

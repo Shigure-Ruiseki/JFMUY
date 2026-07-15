@@ -1,109 +1,148 @@
 package ruiseki.jfmuy.plugins.vanilla.crafting;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
+import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.startup.StackHelper;
+import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.item.crafting.ShapelessRecipes;
-import net.minecraftforge.oredict.ShapedOreRecipe;
-import net.minecraftforge.oredict.ShapelessOreRecipe;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import ruiseki.jfmuy.api.IJFMUYHelpers;
+import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
+import ruiseki.jfmuy.api.recipe.IRecipeWrapperFactory;
+import ruiseki.jfmuy.util.ErrorUtil;
+import ruiseki.jfmuy.util.Log;
 
 public final class CraftingRecipeChecker {
+    private CraftingRecipeChecker() {
+    }
 
-    private CraftingRecipeChecker() {}
+    @SuppressWarnings("unchecked")
+    public static List<IRecipeWrapper> getValidRecipes(final IJFMUYHelpers jfmuyHelpers) {
+        CraftingRecipeValidator<ShapedOreRecipe> shapedOreRecipeValidator = new CraftingRecipeValidator<>(
+            recipe -> new ShapedOreRecipeWrapper(jfmuyHelpers, recipe)
+        );
+        CraftingRecipeValidator<ShapedRecipes> shapedRecipesValidator = new CraftingRecipeValidator<>(
+            recipe -> new ShapedRecipesWrapper(jfmuyHelpers, recipe)
+        );
+        CraftingRecipeValidator<ShapelessOreRecipe> shapelessOreRecipeValidator = new CraftingRecipeValidator<>(
+            recipe -> new ShapelessRecipeWrapper<>(jfmuyHelpers, recipe)
+        );
+        CraftingRecipeValidator<ShapelessRecipes> shapelessRecipesValidator = new CraftingRecipeValidator<>(
+            recipe -> new ShapelessRecipeWrapper<>(jfmuyHelpers, recipe)
+        );
 
-    public static Pair<List<IRecipe>, Set<Class<? extends IRecipe>>> getValidRecipes(final IJFMUYHelpers jeiHelpers) {
-        CraftingRecipeValidator validator = new CraftingRecipeValidator();
+        StackHelper stackHelper = Internal.getStackHelper();
+        List<IRecipe> recipeList = CraftingManager.getInstance().getRecipeList();
+        List<IRecipeWrapper> validRecipeWrappers = new ArrayList<>();
 
-        Set<Class<? extends IRecipe>> recipeTypes = new HashSet<>();
+        for (IRecipe recipe : recipeList) {
+            if (recipe == null) {
+                continue;
+            }
 
-        List<?> recipeList = CraftingManager.getInstance()
-            .getRecipeList();
-        Iterator<?> recipeIterator = recipeList.iterator();
-        List<IRecipe> validRecipes = new ArrayList<>();
-
-        while (recipeIterator.hasNext()) {
-            Object obj = recipeIterator.next();
-            if (obj instanceof IRecipe) {
-                IRecipe recipe = (IRecipe) obj;
-                recipeTypes.add(recipe.getClass());
-
-                if (validator.isRecipeValid(recipe)) {
-                    validRecipes.add(recipe);
+            if (recipe instanceof ShapedOreRecipe shapedOreRecipe) {
+                if (shapedOreRecipeValidator.isRecipeValid(shapedOreRecipe, stackHelper)) {
+                    validRecipeWrappers.add(shapedOreRecipeValidator.getRecipeWrapper(shapedOreRecipe));
+                }
+            } else if (recipe instanceof ShapedRecipes shapedRecipes) {
+                if (shapedRecipesValidator.isRecipeValid(shapedRecipes, stackHelper)) {
+                    validRecipeWrappers.add(shapedRecipesValidator.getRecipeWrapper(shapedRecipes));
+                }
+            } else if (recipe instanceof ShapelessOreRecipe shapelessOreRecipe) {
+                if (shapelessOreRecipeValidator.isRecipeValid(shapelessOreRecipe, stackHelper)) {
+                    validRecipeWrappers.add(shapelessOreRecipeValidator.getRecipeWrapper(shapelessOreRecipe));
+                }
+            } else if (recipe instanceof ShapelessRecipes shapelessRecipes) {
+                if (shapelessRecipesValidator.isRecipeValid(shapelessRecipes, stackHelper)) {
+                    validRecipeWrappers.add(shapelessRecipesValidator.getRecipeWrapper(shapelessRecipes));
                 }
             }
         }
-
-        return Pair.of(validRecipes, recipeTypes);
+        return validRecipeWrappers;
     }
 
-    private static final class CraftingRecipeValidator {
+    private static final class CraftingRecipeValidator<T extends IRecipe> {
+        private static final int INVALID_COUNT = -1;
+        private final IRecipeWrapperFactory<T> recipeWrapperFactory;
 
-        public boolean isRecipeValid(IRecipe recipe) {
+        public CraftingRecipeValidator(IRecipeWrapperFactory<T> recipeWrapperFactory) {
+            this.recipeWrapperFactory = recipeWrapperFactory;
+        }
+
+        public IRecipeWrapper getRecipeWrapper(T recipe) {
+            return this.recipeWrapperFactory.getRecipeWrapper(recipe);
+        }
+
+        public boolean isRecipeValid(T recipe, StackHelper stackHelper) {
             ItemStack recipeOutput = recipe.getRecipeOutput();
             if (recipeOutput == null || recipeOutput.getItem() == null) {
+                String recipeInfo = getInfo(recipe);
+                Log.get().error("Recipe has no output. {}", recipeInfo);
                 return false;
+            }
+
+            int inputCount = getInputCount(recipe, stackHelper);
+            if (inputCount == INVALID_COUNT) {
+                return false;
+            } else if (inputCount > 9) {
+                String recipeInfo = getInfo(recipe);
+                Log.get().error("Recipe has too many inputs. {}", recipeInfo);
+                return false;
+            } else if (inputCount == 0) {
+                String recipeInfo = getInfo(recipe);
+                Log.get().error("Recipe has no inputs. {}", recipeInfo);
+                return false;
+            }
+            return true;
+        }
+
+        private String getInfo(T recipe) {
+            IRecipeWrapper recipeWrapper = getRecipeWrapper(recipe);
+            return ErrorUtil.getInfoFromRecipe(recipe, recipeWrapper);
+        }
+
+        private static int getInputCount(IRecipe recipe, StackHelper stackHelper) {
+            Object[] inputs = null;
+
+            if (recipe instanceof ShapedRecipes) {
+                inputs = ((ShapedRecipes) recipe).recipeItems;
+            } else if (recipe instanceof ShapelessRecipes) {
+                List<?> list = ((ShapelessRecipes) recipe).recipeItems;
+                if (list != null) {
+                    inputs = list.toArray();
+                }
+            } else if (recipe instanceof ShapedOreRecipe) {
+                inputs = ((ShapedOreRecipe) recipe).getInput();
+            } else if (recipe instanceof ShapelessOreRecipe) {
+                List<?> list = ((ShapelessOreRecipe) recipe).getInput();
+                if (list != null) {
+                    inputs = list.toArray();
+                }
+            }
+
+            if (inputs == null) {
+                return INVALID_COUNT;
             }
 
             int inputCount = 0;
-
-            if (recipe instanceof ShapedRecipes) {
-                ShapedRecipes shaped = (ShapedRecipes) recipe;
-                if (shaped.recipeItems == null) return false;
-                for (ItemStack stack : shaped.recipeItems) {
-                    if (stack != null) inputCount++;
-                }
-            } else if (recipe instanceof ShapelessRecipes) {
-                ShapelessRecipes shapeless = (ShapelessRecipes) recipe;
-                if (shapeless.recipeItems == null) return false;
-                for (Object obj : shapeless.recipeItems) {
-                    if (obj instanceof ItemStack) {
-                        inputCount++;
-                    }
-                }
-            } else if (recipe instanceof ShapedOreRecipe) {
-                ShapedOreRecipe shapedOre = (ShapedOreRecipe) recipe;
-                Object[] inputObjects = shapedOre.getInput();
-                if (inputObjects == null) return false;
-                for (Object obj : inputObjects) {
-                    if (obj != null) {
-                        if (obj instanceof List && ((List<?>) obj).isEmpty()) {
-                            return false;
+            for (Object input : inputs) {
+                if (input != null) {
+                    if (input instanceof List) {
+                        if (((List<?>) input).isEmpty()) {
+                            return INVALID_COUNT;
                         }
-                        inputCount++;
                     }
+                    inputCount++;
                 }
-            } else if (recipe instanceof ShapelessOreRecipe) {
-                ShapelessOreRecipe shapelessOre = (ShapelessOreRecipe) recipe;
-                List<?> inputList = shapelessOre.getInput();
-                if (inputList == null) return false;
-                for (Object obj : inputList) {
-                    if (obj != null) {
-                        if (obj instanceof List && ((List<?>) obj).isEmpty()) {
-                            return false;
-                        }
-                        inputCount++;
-                    }
-                }
-            } else {
-                return recipe.getRecipeSize() > 0;
             }
-
-            if (inputCount > 9 || inputCount == 0) {
-                return false;
-            }
-
-            return true;
+            return inputCount;
         }
     }
 }

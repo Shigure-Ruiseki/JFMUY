@@ -32,9 +32,8 @@ public class DrawableSprite implements IDrawableStatic {
     }
 
     @Override
-    public void draw(Minecraft minecraft, int xOffset, int yOffset,
-                     int maskTop, int maskBottom,
-                     int maskLeft, int maskRight) {
+    public void draw(Minecraft minecraft, int xOffset, int yOffset, int maskTop, int maskBottom, int maskLeft,
+        int maskRight) {
 
         ResourceLocation location = info.getLocation();
 

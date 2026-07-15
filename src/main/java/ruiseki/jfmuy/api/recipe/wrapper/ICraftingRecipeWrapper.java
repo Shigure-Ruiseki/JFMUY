@@ -1,9 +1,5 @@
 package ruiseki.jfmuy.api.recipe.wrapper;
 
-import net.minecraft.util.ResourceLocation;
-
-import org.jetbrains.annotations.Nullable;
-
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 
@@ -16,17 +12,4 @@ import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
  */
 public interface ICraftingRecipeWrapper extends IRecipeWrapper {
 
-    /**
-     * Return the registry name of the recipe here.
-     * With advanced tooltips on, this will show on the output item's tooltip.
-     *
-     * This will also show the modId when the recipe modId and output item modId do not match.
-     * This lets the player know where the recipe came from.
-     *
-     * @return the registry name of the recipe, or null if there is none
-     */
-    @Nullable
-    default ResourceLocation getRegistryName() {
-        return null;
-    }
 }

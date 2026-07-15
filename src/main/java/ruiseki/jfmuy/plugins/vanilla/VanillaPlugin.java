@@ -142,10 +142,7 @@ public class VanillaPlugin implements IModPlugin {
         IJFMUYHelpers jeiHelpers = registry.getJFMUYHelpers();
         IVanillaRecipeFactory vanillaRecipeFactory = jeiHelpers.getVanillaRecipeFactory();
 
-        Pair<List<IRecipe>, Set<Class<? extends IRecipe>>> result = CraftingRecipeChecker.getValidRecipes(jeiHelpers);
-        List<IRecipe> validRecipes = result.getLeft();
-
-        registry.addRecipes(validRecipes, VanillaRecipeCategoryUid.CRAFTING);
+        registry.addRecipes(CraftingRecipeChecker.getValidRecipes(jeiHelpers), VanillaRecipeCategoryUid.CRAFTING);
         registry.addRecipes(SmeltingRecipeMaker.getFurnaceRecipes(jeiHelpers), VanillaRecipeCategoryUid.SMELTING);
         registry
             .addRecipes(FuelRecipeMaker.getFuelRecipes(ingredientRegistry, jeiHelpers), VanillaRecipeCategoryUid.FUEL);
@@ -153,23 +150,6 @@ public class VanillaPlugin implements IModPlugin {
         registry.addRecipes(
             AnvilRecipeMaker.getAnvilRecipes(vanillaRecipeFactory, ingredientRegistry),
             VanillaRecipeCategoryUid.ANVIL);
-
-        registry.handleRecipes(
-            ShapedOreRecipe.class,
-            recipe -> new ShapedOreRecipeWrapper(jeiHelpers, recipe),
-            VanillaRecipeCategoryUid.CRAFTING);
-        registry.handleRecipes(
-            ShapedRecipes.class,
-            recipe -> new ShapedRecipesWrapper(jeiHelpers, recipe),
-            VanillaRecipeCategoryUid.CRAFTING);
-        registry.handleRecipes(
-            ShapelessOreRecipe.class,
-            recipe -> new ShapelessRecipeWrapper<>(jeiHelpers, recipe),
-            VanillaRecipeCategoryUid.CRAFTING);
-        registry.handleRecipes(
-            ShapelessRecipes.class,
-            recipe -> new ShapelessRecipeWrapper<>(jeiHelpers, recipe),
-            VanillaRecipeCategoryUid.CRAFTING);
 
         registry.addRecipeClickArea(GuiCrafting.class, 88, 32, 28, 23, VanillaRecipeCategoryUid.CRAFTING);
         registry.addRecipeClickArea(GuiInventory.class, 137, 29, 10, 13, VanillaRecipeCategoryUid.CRAFTING);

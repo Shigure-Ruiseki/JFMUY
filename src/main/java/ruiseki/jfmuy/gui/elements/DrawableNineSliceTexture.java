@@ -2,8 +2,6 @@ package ruiseki.jfmuy.gui.elements;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
 import ruiseki.jfmuy.gui.textures.TextureInfo;
@@ -31,7 +29,8 @@ public class DrawableNineSliceTexture {
         int textureWidth = info.getWidth();
         int textureHeight = info.getHeight();
 
-        mc.getTextureManager().bindTexture(location);
+        mc.getTextureManager()
+            .bindTexture(location);
 
         float uMin = 0.0F;
         float vMin = 0.0F;
@@ -48,46 +47,25 @@ public class DrawableNineSliceTexture {
         tess.startDrawingQuads();
 
         // left top
-        draw(
-            tess,
-            0F, 0F,
-            uLeft, vTop,
-            xOffset, yOffset,
-            leftWidth, topHeight
-        );
+        draw(tess, 0F, 0F, uLeft, vTop, xOffset, yOffset, leftWidth, topHeight);
 
         // left bottom
-        draw(
-            tess,
-            0F, vBottom,
-            uLeft, 1F,
-            xOffset,
-            yOffset + height - bottomHeight,
-            leftWidth,
-            bottomHeight
-        );
+        draw(tess, 0F, vBottom, uLeft, 1F, xOffset, yOffset + height - bottomHeight, leftWidth, bottomHeight);
 
         // right top
-        draw(
-            tess,
-            uRight, 0F,
-            1F, vTop,
-            xOffset + width - rightWidth,
-            yOffset,
-            rightWidth,
-            topHeight
-        );
+        draw(tess, uRight, 0F, 1F, vTop, xOffset + width - rightWidth, yOffset, rightWidth, topHeight);
 
         // right bottom
         draw(
             tess,
-            uRight, vBottom,
-            1F, 1F,
+            uRight,
+            vBottom,
+            1F,
+            1F,
             xOffset + width - rightWidth,
             yOffset + height - bottomHeight,
             rightWidth,
-            bottomHeight
-        );
+            bottomHeight);
 
         int middleWidth = textureWidth - leftWidth - rightWidth;
         int middleHeight = textureHeight - topHeight - bottomHeight;
@@ -98,67 +76,72 @@ public class DrawableNineSliceTexture {
         if (tiledMiddleWidth > 0) {
             drawTiled(
                 tess,
-                uLeft, 0F,
-                uRight, vTop,
+                uLeft,
+                0F,
+                uRight,
+                vTop,
                 xOffset + leftWidth,
                 yOffset,
                 tiledMiddleWidth,
                 topHeight,
                 middleWidth,
-                topHeight
-            );
+                topHeight);
 
             drawTiled(
                 tess,
-                uLeft, vBottom,
-                uRight, 1F,
+                uLeft,
+                vBottom,
+                uRight,
+                1F,
                 xOffset + leftWidth,
                 yOffset + height - bottomHeight,
                 tiledMiddleWidth,
                 bottomHeight,
                 middleWidth,
-                bottomHeight
-            );
+                bottomHeight);
         }
 
         if (tiledMiddleHeight > 0) {
             drawTiled(
                 tess,
-                0F, vTop,
-                uLeft, vBottom,
+                0F,
+                vTop,
+                uLeft,
+                vBottom,
                 xOffset,
                 yOffset + topHeight,
                 leftWidth,
                 tiledMiddleHeight,
                 leftWidth,
-                middleHeight
-            );
+                middleHeight);
 
             drawTiled(
                 tess,
-                uRight, vTop,
-                1F, vBottom,
+                uRight,
+                vTop,
+                1F,
+                vBottom,
                 xOffset + width - rightWidth,
                 yOffset + topHeight,
                 rightWidth,
                 tiledMiddleHeight,
                 rightWidth,
-                middleHeight
-            );
+                middleHeight);
         }
 
         if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0) {
             drawTiled(
                 tess,
-                uLeft, vTop,
-                uRight, vBottom,
+                uLeft,
+                vTop,
+                uRight,
+                vBottom,
                 xOffset + leftWidth,
                 yOffset + topHeight,
                 tiledMiddleWidth,
                 tiledMiddleHeight,
                 middleWidth,
-                middleHeight
-            );
+                middleHeight);
         }
 
         tess.draw();

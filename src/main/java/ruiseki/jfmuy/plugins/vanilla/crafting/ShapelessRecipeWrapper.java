@@ -6,10 +6,7 @@ import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.ShapelessRecipes;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
-
-import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
@@ -18,10 +15,9 @@ import ruiseki.jfmuy.api.recipe.IStackHelper;
 import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
 import ruiseki.jfmuy.recipes.BrokenCraftingRecipeException;
 import ruiseki.jfmuy.util.ErrorUtil;
-
 public class ShapelessRecipeWrapper<T extends IRecipe> implements ICraftingRecipeWrapper {
 
-    private final IJFMUYHelpers jeiHelpers;
+    protected final IJFMUYHelpers jeiHelpers;
     protected final T recipe;
 
     public ShapelessRecipeWrapper(IJFMUYHelpers jeiHelpers, T recipe) {
@@ -35,13 +31,11 @@ public class ShapelessRecipeWrapper<T extends IRecipe> implements ICraftingRecip
         IStackHelper stackHelper = jeiHelpers.getStackHelper();
 
         List<Object> rawInputs = new ArrayList<>();
-        if (recipe instanceof ShapelessRecipes) {
-            ShapelessRecipes shapeless = (ShapelessRecipes) recipe;
+        if (recipe instanceof ShapelessRecipes shapeless) {
             if (shapeless.recipeItems != null) {
                 rawInputs.addAll(shapeless.recipeItems);
             }
-        } else if (recipe instanceof ShapelessOreRecipe) {
-            ShapelessOreRecipe shapelessOre = (ShapelessOreRecipe) recipe;
+        } else if (recipe instanceof ShapelessOreRecipe shapelessOre) {
             if (shapelessOre.getInput() != null) {
                 rawInputs.addAll(shapelessOre.getInput());
             }
@@ -55,11 +49,5 @@ public class ShapelessRecipeWrapper<T extends IRecipe> implements ICraftingRecip
             String info = ErrorUtil.getInfoFromBrokenCraftingRecipe(recipe, rawInputs, recipeOutput);
             throw new BrokenCraftingRecipeException(info, e);
         }
-    }
-
-    @Nullable
-    @Override
-    public ResourceLocation getRegistryName() {
-        return null;
     }
 }

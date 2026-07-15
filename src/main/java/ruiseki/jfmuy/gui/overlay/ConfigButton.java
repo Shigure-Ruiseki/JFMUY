@@ -57,7 +57,7 @@ public class ConfigButton extends GuiIconToggleButton {
                 tooltip.add(
                     EnumChatFormatting.RED + Translator.translateToLocalFormatted(
                         "jfmuy.tooltip.cheat.mode.how.to.disable.no.hotkey",
-                        "key.jfmuy.ctrl"));
+                        Translator.translateToLocal("key.jfmuy.ctrl")));
             }
         }
     }

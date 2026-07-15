@@ -12,7 +12,6 @@ import net.minecraft.client.gui.GuiButton;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.gui.IDrawable;
-import ruiseki.jfmuy.api.gui.IDrawableStatic;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.okcore.client.renderer.GlStateManager;

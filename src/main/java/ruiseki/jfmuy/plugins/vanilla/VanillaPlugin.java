@@ -25,11 +25,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 import com.google.common.base.Preconditions;
 
-import net.minecraftforge.oredict.ShapedOreRecipe;
-import net.minecraftforge.oredict.ShapelessOreRecipe;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.IModPlugin;
@@ -140,22 +140,29 @@ public class VanillaPlugin implements IModPlugin {
         IJFMUYHelpers jfmuyHelpers = registry.getJFMUYHelpers();
         IVanillaRecipeFactory vanillaRecipeFactory = jfmuyHelpers.getVanillaRecipeFactory();
 
-        CraftingRecipeValidatorRegistry.register(ShapedOreRecipe.class,
+        CraftingRecipeValidatorRegistry.register(
+            ShapedOreRecipe.class,
             new CraftingRecipeValidator<ShapedOreRecipe>(recipe -> new ShapedOreRecipeWrapper(jfmuyHelpers, recipe)));
 
-        CraftingRecipeValidatorRegistry.register(ShapedRecipes.class,
+        CraftingRecipeValidatorRegistry.register(
+            ShapedRecipes.class,
             new CraftingRecipeValidator<ShapedRecipes>(recipe -> new ShapedRecipesWrapper(jfmuyHelpers, recipe)));
 
-        CraftingRecipeValidatorRegistry.register(ShapelessOreRecipe.class,
-            new CraftingRecipeValidator<ShapelessOreRecipe>(recipe -> new ShapelessRecipeWrapper<>(jfmuyHelpers, recipe)));
+        CraftingRecipeValidatorRegistry.register(
+            ShapelessOreRecipe.class,
+            new CraftingRecipeValidator<ShapelessOreRecipe>(
+                recipe -> new ShapelessRecipeWrapper<>(jfmuyHelpers, recipe)));
 
-        CraftingRecipeValidatorRegistry.register(ShapelessRecipes.class,
-            new CraftingRecipeValidator<ShapelessRecipes>(recipe -> new ShapelessRecipeWrapper<>(jfmuyHelpers, recipe)));
+        CraftingRecipeValidatorRegistry.register(
+            ShapelessRecipes.class,
+            new CraftingRecipeValidator<ShapelessRecipes>(
+                recipe -> new ShapelessRecipeWrapper<>(jfmuyHelpers, recipe)));
 
         registry.addRecipes(CraftingRecipeMarker.getValidRecipes(jfmuyHelpers), VanillaRecipeCategoryUid.CRAFTING);
         registry.addRecipes(SmeltingRecipeMaker.getFurnaceRecipes(jfmuyHelpers), VanillaRecipeCategoryUid.SMELTING);
-        registry
-            .addRecipes(FuelRecipeMaker.getFuelRecipes(ingredientRegistry, jfmuyHelpers), VanillaRecipeCategoryUid.FUEL);
+        registry.addRecipes(
+            FuelRecipeMaker.getFuelRecipes(ingredientRegistry, jfmuyHelpers),
+            VanillaRecipeCategoryUid.FUEL);
         registry.addRecipes(BrewingRecipeMaker.getBrewingRecipes(ingredientRegistry), VanillaRecipeCategoryUid.BREWING);
         registry.addRecipes(
             AnvilRecipeMaker.getAnvilRecipes(vanillaRecipeFactory, ingredientRegistry),

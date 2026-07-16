@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -26,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 
 import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameData;
 import ruiseki.jfmuy.Internal;
@@ -89,7 +92,7 @@ public final class Config {
     private static final Set<String> itemBlacklist = new HashSet<>();
     private static final String[] defaultItemBlacklist = new String[] {};
 
-    private static boolean needToRebuildSearchTree;
+    public static boolean needToRebuildSearchTree;
 
     private Config() {
 
@@ -330,7 +333,12 @@ public final class Config {
     }
 
     public static boolean bufferIngredientRenders() {
-        return !isOptifineInstalled && values.bufferIngredientRenders;
+        boolean fastRender = false;
+        if (isOptifineInstalled) {
+            fastRender = ObfuscationReflectionHelper
+                .getPrivateValue(GameSettings.class, Minecraft.getMinecraft().gameSettings, "ofFastRender");
+        }
+        return !fastRender && values.bufferIngredientRenders;
     }
 
     public static boolean mouseClickToSeeRecipe() {
@@ -339,6 +347,10 @@ public final class Config {
 
     public static boolean getTooltipShowRecipeBy() {
         return values.tooltipShowRecipeBy;
+    }
+
+    public static boolean getShowHiddenIngredientsInCreative() {
+        return values.showHiddenIngredientsInCreative;
     }
 
     @Nullable
@@ -540,6 +552,11 @@ public final class Config {
 
         values.tooltipShowRecipeBy = config
             .getBoolean(CATEGORY_MISC, "tooltipShowRecipeBy", defaultValues.tooltipShowRecipeBy);
+
+        values.showHiddenIngredientsInCreative = config.getBoolean(
+            CATEGORY_MISC,
+            "showHiddenIngredientsInCreative",
+            defaultValues.showHiddenIngredientsInCreative);
 
         Property property = config.get(CATEGORY_ADVANCED, "debugModeEnabled", defaultValues.debugModeEnabled);
         property.setShowInGui(false);

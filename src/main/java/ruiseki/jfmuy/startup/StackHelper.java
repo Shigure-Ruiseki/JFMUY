@@ -12,7 +12,6 @@ import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -20,6 +19,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.oredict.OreDictionary;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
@@ -85,7 +85,7 @@ public class StackHelper implements IStackHelper {
      * Returns a result that contains missingItems if there are not enough items in availableItemStacks.
      */
     public MatchingItemsResult getMatchingItems(Map<Integer, ItemStack> availableItemStacks,
-                                                Map<Integer, ? extends IGuiIngredient<ItemStack>> ingredientsMap) {
+        Map<Integer, ? extends IGuiIngredient<ItemStack>> ingredientsMap) {
         MatchingItemsResult matchingItemResult = new MatchingItemsResult();
 
         int recipeSlotNumber = -1;

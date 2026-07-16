@@ -8,14 +8,19 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import net.minecraft.client.Minecraft;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableSet;
 
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
+import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.startup.IModIdHelper;
 import ruiseki.jfmuy.util.LegacyUtil;
@@ -186,7 +191,13 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
 
     @Override
     public boolean isVisible() {
-        return visible;
+        return (Config.getShowHiddenIngredientsInCreative() && !Internal.getIngredientFilter()
+            .getIngredientBlacklist()
+            .isIngredientBlacklistedByApi(ingredient, ingredientHelper)
+            && FMLLaunchHandler.side()
+                .isClient()
+            && Minecraft.getMinecraft().thePlayer != null
+            && Minecraft.getMinecraft().thePlayer.capabilities.isCreativeMode) || visible;
     }
 
     @Override

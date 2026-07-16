@@ -260,41 +260,57 @@ public class IngredientRegistry implements IIngredientRegistry {
         ErrorUtil.assertMainThread();
         ErrorUtil.checkNotNull(ingredientType, "ingredientType");
         ErrorUtil.checkNotEmpty(ingredients, "ingredients");
+        Internal.getIngredientFilter()
+            .delegateAfterBlock(() -> {
 
-        Log.get()
-            .info(
-                "Ingredients are being removed at runtime: {} {}",
-                ingredients.size(),
-                ingredientType.getIngredientClass()
-                    .getName());
-
-        @SuppressWarnings("unchecked")
-        IngredientSet<V> set = ingredientsMap.get(ingredientType);
-        if (set != null) {
-            set.removeAll(ingredients);
-        }
-
-        IIngredientHelper<V> ingredientHelper = getIngredientHelper(ingredientType);
-
-        NonNullList<IIngredientListElement<V>> ingredientListElements = IngredientListElementFactory
-            .createList(this, ingredientType, ingredients, modIdHelper);
-        for (IIngredientListElement<V> element : ingredientListElements) {
-            List<IIngredientListElement<V>> matchingElements = ingredientFilter.findMatchingElements(element);
-            if (matchingElements.isEmpty()) {
-                V ingredient = element.getIngredient();
-                String errorInfo = ingredientHelper.getErrorInfo(ingredient);
                 Log.get()
-                    .error("Could not find any matching ingredients to remove: {}", errorInfo);
-            } else if (Config.isDebugModeEnabled()) {
-                Log.get()
-                    .debug("Removed ingredient: {}", ingredientHelper.getErrorInfo(element.getIngredient()));
-            }
-            for (IIngredientListElement<V> matchingElement : matchingElements) {
-                blacklist.addIngredientToBlacklist(matchingElement.getIngredient(), ingredientHelper);
-                matchingElement.setVisible(false);
-            }
-        }
-        ingredientFilter.invalidateCache();
+                    .info(
+                        "Ingredients are being added at runtime: {} {}",
+                        ingredients.size(),
+                        ingredientType.getIngredientClass()
+                            .getName());
+
+                IIngredientHelper<V> ingredientHelper = getIngredientHelper(ingredientType);
+                // noinspection unchecked
+                Set<V> set = ingredientsMap
+                    .computeIfAbsent(ingredientType, k -> IngredientSet.create(ingredientType, ingredientHelper));
+                for (V ingredient : ingredients) {
+                    set.add(ingredient);
+                    if (ingredient instanceof ItemStack) {
+                        getStackProperties((ItemStack) ingredient);
+                    }
+                }
+
+                NonNullList<IIngredientListElement<V>> ingredientListElements = IngredientListElementFactory
+                    .createList(this, ingredientType, ingredients, modIdHelper);
+                NonNullList<IIngredientListElement> ingredientsToAdd = NonNullList.create();
+                for (IIngredientListElement<V> element : ingredientListElements) {
+                    List<IIngredientListElement<V>> matchingElements = ingredientFilter.findMatchingElements(element);
+                    if (!matchingElements.isEmpty()) {
+                        for (IIngredientListElement<V> matchingElement : matchingElements) {
+                            blacklist.removeIngredientFromBlacklist(matchingElement.getIngredient(), ingredientHelper);
+                            ingredientFilter.updateHiddenState(matchingElement);
+                        }
+                        if (Config.isDebugModeEnabled()) {
+                            Log.get()
+                                .debug(
+                                    "Updated ingredient: {}",
+                                    ingredientHelper.getErrorInfo(element.getIngredient()));
+                        }
+                    } else {
+                        blacklist.removeIngredientFromBlacklist(element.getIngredient(), ingredientHelper);
+                        ingredientsToAdd.add(element);
+                        if (Config.isDebugModeEnabled()) {
+                            Log.get()
+                                .debug("Added ingredient: {}", ingredientHelper.getErrorInfo(element.getIngredient()));
+                        }
+                    }
+                }
+                if (!ingredientsToAdd.isEmpty()) {
+                    ingredientFilter.addIngredients(ingredientsToAdd);
+                }
+            });
+
     }
 
     public <V> boolean isIngredientVisible(V ingredient, IngredientFilter ingredientFilter) {

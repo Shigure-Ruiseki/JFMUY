@@ -32,6 +32,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
                 '#',
                 0,
                 true,
+                false,
                 "tooltip",
                 Config::getTooltipSearchMode,
                 IIngredientListElement::getTooltipStrings,
@@ -97,7 +98,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
 
     private final char prefix;
     private final int priority;
-    private final boolean potentialDialecticInclusion;
+    private final boolean potentialDialecticInclusion, async;
     private final String desc;
     private final IModeGetter modeGetter;
     private final IStringsGetter stringsGetter;
@@ -106,9 +107,16 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
     public PrefixInfo(char prefix, int priority, boolean potentialDialecticInclusion, String desc,
         IModeGetter modeGetter, IStringsGetter stringsGetter,
         Supplier<ISearchStorage<IIngredientListElement<?>>> storage) {
+        this(prefix, priority, potentialDialecticInclusion, true, desc, modeGetter, stringsGetter, storage);
+    }
+
+    public PrefixInfo(char prefix, int priority, boolean potentialDialecticInclusion, boolean async, String desc,
+        IModeGetter modeGetter, IStringsGetter stringsGetter,
+        Supplier<ISearchStorage<IIngredientListElement<?>>> storage) {
         this.prefix = prefix;
         this.priority = priority;
         this.potentialDialecticInclusion = potentialDialecticInclusion;
+        this.async = async;
         this.desc = desc;
         this.modeGetter = modeGetter;
         this.stringsGetter = stringsGetter;
@@ -128,6 +136,10 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
         return potentialDialecticInclusion;
     }
 
+    public boolean isAsyncable() {
+        return this.async;
+    }
+
     public String getDesc() {
         return desc;
     }
@@ -145,27 +157,24 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
             return this.stringsGetter.getStrings(element);
         }
         Collection<String> strings = this.stringsGetter.getStrings(element);
+        Collection<String> newStrings = null;
         for (String string : strings) {
-            boolean hasNonAscii = false;
+
             for (int i = 0; i < string.length(); i++) {
                 if (string.charAt(i) > 0x7F) {
-                    hasNonAscii = true;
+                    String stripped = StringUtil.stripAccents(string);
+                    if (!stripped.equals(string)) {
+                        if (newStrings == null) {
+                            newStrings = new ArrayList<>(strings);
+                        }
+                        newStrings.add(stripped);
+
+                    }
                     break;
                 }
             }
-            if (hasNonAscii) {
-                String stripped = StringUtil.stripAccents(string);
-                if (!stripped.equals(string)) {
-                    try {
-                        strings.add(stripped);
-                    } catch (UnsupportedOperationException e) { // If list is unmodifiable
-                        strings = new ArrayList<>(strings);
-                        strings.add(StringUtil.stripAccents(string));
-                    }
-                }
-            }
         }
-        return strings;
+        return newStrings == null ? strings : newStrings;
     }
 
     @Override

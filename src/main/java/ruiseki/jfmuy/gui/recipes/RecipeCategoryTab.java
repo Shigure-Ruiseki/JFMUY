@@ -9,6 +9,9 @@ import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.util.ResourceLocation;
 
+import org.apache.commons.lang3.mutable.MutableObject;
+import org.jetbrains.annotations.Nullable;
+
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
@@ -22,6 +25,9 @@ public class RecipeCategoryTab extends RecipeGuiTab {
 
     private final IRecipeGuiLogic logic;
     private final IRecipeCategory category;
+
+    @Nullable
+    private MutableObject<Object> cachedRecipeCatalyst = null;
 
     public RecipeCategoryTab(IRecipeGuiLogic logic, IRecipeCategory category, int x, int y) {
         super(x, y);
@@ -51,9 +57,16 @@ public class RecipeCategoryTab extends RecipeGuiTab {
             iconY += (16 - icon.getHeight()) / 2;
             icon.draw(minecraft, iconX, iconY);
         } else {
-            List<Object> recipeCatalysts = logic.getRecipeCatalysts(category);
-            if (!recipeCatalysts.isEmpty()) {
-                Object ingredient = recipeCatalysts.get(0);
+            if (this.cachedRecipeCatalyst == null) {
+                List<Object> cachedRecipeCatalysts = logic.getRecipeCatalysts(category);
+                if (cachedRecipeCatalysts.isEmpty()) {
+                    this.cachedRecipeCatalyst = new MutableObject<>(null);
+                } else {
+                    this.cachedRecipeCatalyst = new MutableObject<>(cachedRecipeCatalysts.getFirst());
+                }
+            }
+            Object ingredient = this.cachedRecipeCatalyst.getValue();
+            if (ingredient != null) {
                 renderIngredient(minecraft, iconX, iconY, ingredient);
             } else {
                 String text = category.getTitle()

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerPlayer;
 import net.minecraft.inventory.Slot;
@@ -17,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableSet;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.api.gui.IGuiIngredient;

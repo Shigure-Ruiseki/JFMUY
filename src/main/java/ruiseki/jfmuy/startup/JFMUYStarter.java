@@ -84,7 +84,9 @@ public class JFMUYStarter {
         timer.stop();
 
         timer.start("Building ingredient filter and search trees");
-        IngredientFilter ingredientFilter = new IngredientFilter(blacklist, IngredientListElementFactory.createBaseList(ingredientRegistry, modIdHelper));
+        IngredientFilter ingredientFilter = new IngredientFilter(
+            blacklist,
+            IngredientListElementFactory.createBaseList(ingredientRegistry, modIdHelper));
         Internal.setIngredientFilter(ingredientFilter);
         timer.stop();
 

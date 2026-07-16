@@ -105,13 +105,18 @@ public class JFMUYHandler {
                 if (this.starter.hasStarted()) {
                     if (Config.isDebugModeEnabled()) {
                         Log.get()
-                            .info("Restarting JEI.", new RuntimeException("Stack trace for debugging"));
+                            .info(
+                                "Reloading HEI ingredient filter.",
+                                new RuntimeException("Stack trace for debugging"));
                     } else {
                         Log.get()
-                            .info("Restarting JFMUY.");
+                            .info("Reloading HEI ingredient filter.");
                     }
-                    this.starter.start(this.plugins);
+                    // force search tree to reload
+                    Config.needToRebuildSearchTree = true;
+                    reloadItemList();
                 }
+                Translator.invalidateLocale();
             });
             this.starter.start(plugins);
         }
@@ -125,6 +130,8 @@ public class JFMUYHandler {
         NetworkManager networkManager = event.manager;
         Config.syncWorldConfig(networkManager);
         MinecraftForge.EVENT_BUS.post(new PlayerJoinedWorldEvent());
+        Internal.getIngredientFilter()
+            .block();
     }
 
     private static void reloadItemList() {
@@ -132,6 +139,7 @@ public class JFMUYHandler {
         if (runtime != null) {
             IngredientListOverlay ingredientListOverlay = runtime.getIngredientListOverlay();
             ingredientListOverlay.rebuildItemFilter();
+            ingredientListOverlay.invalidateBuffer();
         }
     }
 

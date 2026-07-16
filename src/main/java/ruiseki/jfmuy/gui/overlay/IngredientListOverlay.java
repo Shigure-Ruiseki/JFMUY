@@ -85,6 +85,10 @@ public class IngredientListOverlay implements IIngredientListOverlay, IMouseHand
         updateLayout(true);
     }
 
+    public void invalidateBuffer() {
+        this.contents.invalidateBuffer();
+    }
+
     public boolean isListDisplayed() {
         return Config.isOverlayEnabled() && this.guiProperties != null && this.hasRoom;
     }

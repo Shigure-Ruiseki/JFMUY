@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import net.minecraft.client.Minecraft;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableList;
@@ -28,7 +30,6 @@ import ruiseki.jfmuy.search.IElementSearch;
 import ruiseki.jfmuy.search.PrefixInfo;
 import ruiseki.jfmuy.search.SearchToken;
 import ruiseki.jfmuy.search.TokenInfo;
-import ruiseki.jfmuy.startup.PlayerJoinedWorldEvent;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.datastructure.NonNullList;
@@ -50,10 +51,13 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     @Nullable
     private String filterCached;
 
+    private boolean afterBlock = false;
+    @Nullable
+    private List<Runnable> delegatedActions;
+
     public IngredientFilter(IngredientBlacklistInternal blacklist, NonNullList<IIngredientListElement> ingredients) {
         this.blacklist = blacklist;
         this.elementSearch = Config.isUltraLowMemoryMode() ? new ElementSearchLowMem() : new ElementSearch();
-        ingredients.sort(IngredientListElementComparator.INSTANCE);
         this.elementSearch.addAll(ingredients);
         firstBuild = false;
     }
@@ -74,10 +78,37 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         this.filterCached = null;
     }
 
+    public void delegateAfterBlock(Runnable runnable) {
+        if (this.afterBlock) {
+            runnable.run();
+            invalidateCache();
+        } else {
+            if (this.delegatedActions == null) {
+                this.delegatedActions = new ArrayList<>();
+            }
+            this.delegatedActions.add(runnable);
+        }
+    }
+
     public void block() {
         if (this.elementSearch instanceof ElementSearch) {
             ((ElementSearch) this.elementSearch).block();
         }
+        this.afterBlock = true;
+        if (this.delegatedActions != null) {
+            Minecraft.getMinecraft()
+                .func_152344_a(() -> {
+                    invalidateCache();
+                    this.delegatedActions.forEach(Runnable::run);
+                    this.delegatedActions = null;
+                    this.afterBlock = true;
+                    updateHidden();
+                });
+        } else {
+            Minecraft.getMinecraft()
+                .func_152344_a(this::updateHidden);
+        }
+        invalidateCache();
     }
 
     public void invalidateCache() {
@@ -110,6 +141,7 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         if (Config.doesSearchTreeNeedReload()) {
             firstBuild = true;
             rebuild = true;
+            this.afterBlock = false;
             NonNullList<IIngredientListElement> ingredients = NonNullList.from(
                 null,
                 this.elementSearch.getAllIngredients()
@@ -117,20 +149,18 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
             this.elementSearch = Config.isUltraLowMemoryMode() ? new ElementSearchLowMem() : new ElementSearch();
             ingredients.sort(IngredientListElementComparator.INSTANCE);
             this.elementSearch.addAll(ingredients);
+            // make sure search tree finishes building before gameplay resumes
+            if (this.elementSearch instanceof ElementSearch) {
+                ((ElementSearch) this.elementSearch).block();
+            }
             firstBuild = false;
             rebuild = false;
+            this.afterBlock = true;
         }
     }
 
     @SubscribeEvent
     public void onEditModeToggleEvent(EditModeToggleEvent event) {
-        this.filterCached = null;
-        updateHidden();
-    }
-
-    @SubscribeEvent
-    public void onPlayerJoinedWorldEvent(PlayerJoinedWorldEvent event) {
-        block();
         this.filterCached = null;
         updateHidden();
     }
@@ -288,4 +318,7 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         }
     }
 
+    public IngredientBlacklistInternal getIngredientBlacklist() {
+        return blacklist;
+    }
 }

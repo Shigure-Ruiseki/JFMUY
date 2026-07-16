@@ -83,6 +83,12 @@ public class IngredientListBatchRenderer {
                 i++;
             }
         }
+
+        invalidateBuffer();
+    }
+
+    public void invalidateBuffer() {
+        refreshBuffer = true;
     }
 
     private <V> void set(IngredientListSlot ingredientListSlot, IIngredientListElement<V> element) {
@@ -205,6 +211,8 @@ public class IngredientListBatchRenderer {
             refreshBuffer = false;
             minecraft.getFramebuffer()
                 .bindFramebuffer(false);
+            // ensure that we actually render the new items
+            render(minecraft);
         }
     }
 

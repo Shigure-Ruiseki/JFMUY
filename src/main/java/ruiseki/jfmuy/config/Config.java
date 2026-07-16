@@ -79,6 +79,8 @@ public final class Config {
     private static LocalizedConfiguration searchColorsConfig;
     @Nullable
     private static File bookmarkFile;
+    @Nullable
+    private static File favoriteFile;
 
     private static final ConfigValues defaultValues = new ConfigValues();
     private static final ConfigValues values = new ConfigValues();
@@ -196,6 +198,10 @@ public final class Config {
         MinecraftForge.EVENT_BUS.post(new EditModeToggleEvent(values.editModeEnabled));
     }
 
+    public static boolean areRecipeBookmarksEnabled() {
+        return values.recipeBookmarksEnabled;
+    }
+
     public static boolean isDebugModeEnabled() {
         return values.debugModeEnabled;
     }
@@ -293,6 +299,10 @@ public final class Config {
         return needToRebuildSearchTree;
     }
 
+    public static boolean isAutocraftingEnabled() {
+        return values.autocraftingEnabled && values.bookmarkOverlayEnabled;
+    }
+
     public enum SearchMode {
         ENABLED,
         REQUIRE_PREFIX,
@@ -354,6 +364,10 @@ public final class Config {
         return values.hideBottomRightCornerConfigButton;
     }
 
+    public static int getRecipeBookmarkGroupColor() {
+        return values.recipeBookmarkGroupColor;
+    }
+
     public static List<String> categoryUidOrder() {
         return values.categoryUidOrder;
     }
@@ -371,6 +385,11 @@ public final class Config {
     @Nullable
     public static File getBookmarkFile() {
         return bookmarkFile;
+    }
+
+    @Nullable
+    public static File getFavoriteFile() {
+        return favoriteFile;
     }
 
     public static void preInit(FMLPreInitializationEvent event) {
@@ -406,6 +425,7 @@ public final class Config {
             }
         }
 
+        favoriteFile = new File("./", "hei_favorites.ini");
         final File configFile = new File(jfmuyConfigurationDir, "jfmuy.cfg");
         final File itemBlacklistConfigFile = new File(jfmuyConfigurationDir, "itemBlacklist.cfg");
         final File searchColorsConfigFile = new File(jfmuyConfigurationDir, "searchColors.cfg");
@@ -543,6 +563,13 @@ public final class Config {
             minRecipeGuiHeight,
             maxRecipeGuiHeight);
 
+        values.recipeBookmarkGroupColor = config.getInt(
+            "recipeBookmarkGroupColor",
+            CATEGORY_ADVANCED,
+            defaultValues.recipeBookmarkGroupColor,
+            Integer.MIN_VALUE,
+            Integer.MAX_VALUE);
+
         updateModNameFormat(config);
 
         values.bufferIngredientRenders = config
@@ -678,6 +705,16 @@ public final class Config {
         property.comment = (Translator.translateToLocal("config.jfmuy.interface.bookmarkOverlayEnabled.comment"));
         property.setShowInGui(false);
         values.bookmarkOverlayEnabled = property.getBoolean();
+
+        property = worldConfig.get(worldCategory, "autocraftingEnabled", defaultValues.recipeBookmarksEnabled);
+        property.setLanguageKey("config.jfmuy.interface.autocraftingEnabled");
+        property.comment = (Translator.translateToLocal("config.jfmuy.interface.autocraftingEnabled.comment"));
+        values.autocraftingEnabled = property.getBoolean();
+
+        property = worldConfig.get(worldCategory, "recipeBookmarksEnabled", defaultValues.autocraftingEnabled);
+        property.setLanguageKey("config.jfmuy.interface.recipeBookmarksEnabled");
+        property.comment = (Translator.translateToLocal("config.jfmuy.interface.autocraftingEnabled.comment"));
+        values.autocraftingEnabled = property.getBoolean();
 
         property = worldConfig.get(worldCategory, "filterText", defaultValues.filterText);
         property.setShowInGui(false);

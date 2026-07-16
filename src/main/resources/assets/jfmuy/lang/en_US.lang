@@ -66,6 +66,10 @@ config.jfmuy.interface.overlayEnabled=Show Ingredient List Overlay
 config.jfmuy.interface.overlayEnabled.comment=Show the ingredient list overlay next to open GUIs.
 config.jfmuy.interface.bookmarkOverlayEnabled=Show Bookmark List Overlay
 config.jfmuy.interface.bookmarkOverlayEnabled.comment=Show the bookmark list overlay next to open GUIs.
+config.jfmuy.interface.recipeBookmarksEnabled=Enable Recipe Bookmarks
+config.jfmuy.interface.recipeBookmarksEnabled.comment=Add and remove bookmark groups for recipes.
+config.jfmuy.interface.autocraftingEnabled=Enable Autocraft
+config.jfmuy.interface.autocraftingEnabled.comment=IF AND ONLY IF recipe bookmarks are enabled, allow autocrafting with them.
 
 config.jfmuy.search=Search Options
 config.jfmuy.search.comment=Options related to the search bar.
@@ -107,6 +111,8 @@ config.jfmuy.advanced.optimizeMemoryUsage=Optimize Memory Usage
 config.jfmuy.advanced.optimizeMemoryUsage.comment=Enable JFMUY memory usage optimizations.
 config.jfmuy.advanced.ultraLowMemoryUsage=Ultra Low Memory Usage Mode
 config.jfmuy.advanced.ultraLowMemoryUsage.comment=Enable ultra low memory usage mode, can slow down searching by a lot however.
+config.jfmuy.advanced.recipeBookmarkGroupColor=Color of Recipe Bookmark Group
+config.jfmuy.advanced.recipeBookmarkGroupColor.comment=Color of the recipe bookmark group in RGBA format.
 config.jfmuy.misc=Miscellaneous
 config.jfmuy.misc.comment=Miscellaneous config options
 config.jfmuy.misc.mouseClickToSeeRecipes=Mouse Click to See Recipes/Usages
@@ -158,9 +164,20 @@ config.jfmuy.misc.hideBottomRightCornerConfigButton=Hide Bottom-Right Corner Con
 config.jfmuy.misc.hideBottomRightCornerConfigButton.comment=Whether to hide the bottom-right corner config button
 
 config.jfmuy.category.categoryUidOrder=Category UID Order
-config.jfmuy.category.categoryUidOrder.comment=Determines the display order of recipe categories in JEI. Categories listed earlier appear first in the JEI interface.
+config.jfmuy.category.categoryUidOrder.comment=Determines the display order of recipe categories in JFMUY. Categories listed earlier appear first in the JFMUY interface.
 
 jfmuy.generic.ticks=%d Ticks
 
 jfmuy.command.load_bookmarks.failure=Bookmark List not found, something went horribly wrong.
 jfmuy.command.load_bookmarks.success=Loaded %d bookmarks.
+
+jfmuy.tooltip.unfavorite=Remove this recipe from your favorites.
+jfmuy.tooltip.favorite=Add this recipe to your favorites.
+jfmuy.tooltip.favorite_scroll=Scroll: change favorited item.
+jfmuy.tooltip.recipe_bookmark=Bookmark this recipe.
+
+jfmuy.tooltip.press_alt=Press §fALT§r to see tooltips
+jfmuy.tooltip.organizer.1=§fUP§r or §fDOWN§r: Move Group Up or Down
+jfmuy.tooltip.organizer.2=§fCTRL + SCROLL§r: Change Crafting Final Output
+jfmuy.tooltip.organizer.3=§f%s§r: Autocraft (by default)
+jfmuy.tooltip.missing_ingredients=§cMissing ingredients:

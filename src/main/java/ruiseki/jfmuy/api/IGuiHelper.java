@@ -51,7 +51,7 @@ public interface IGuiHelper {
     IDrawableStatic createBlankDrawable(int width, int height);
 
     /**
-     * Returns a 16x16 drawable for the given ingredient, matching the one JEI draws in the ingredient list.
+     * Returns a 16x16 drawable for the given ingredient, matching the one JFMUY draws in the ingredient list.
      */
     <V> IDrawable createDrawableIngredient(V ingredient);
 

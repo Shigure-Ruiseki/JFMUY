@@ -139,6 +139,11 @@ public final class Internal {
         MinecraftForge.EVENT_BUS.register(inputHandler);
     }
 
+    @Nullable
+    public static InputHandler getInputHandler() {
+        return inputHandler;
+    }
+
     public static void setBookmarkList(BookmarkList bookmarkList) {
         Internal.bookmarkList = bookmarkList;
     }

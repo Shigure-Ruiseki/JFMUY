@@ -22,39 +22,49 @@ public class PacketRecipeTransfer extends PacketCodec {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public Map<Integer, Integer> recipeMap;
-    public List<Integer> craftingSlots;
-    public List<Integer> inventorySlots;
-    public Map<Integer, Integer> itemCounts;
+    public Map<Integer, Integer> recipeMap = new HashMap<>();
+    public List<Integer> craftingSlots = new ArrayList<>();
+    public List<Integer> inventorySlots = new ArrayList<>();
+    public Map<Integer, Integer> itemCounts = new HashMap<>();
 
     @CodecField
-    private boolean maxTransfer;
-
+    public int outputSlot = -1;
     @CodecField
-    private boolean requireCompleteSets;
+    private int maxTransfer = 0;
+    @CodecField
+    private boolean performRecipe = false;
+    @CodecField
+    private boolean requireCompleteSets = false;
 
     public PacketRecipeTransfer() {}
 
     public PacketRecipeTransfer(Map<Integer, Integer> recipeMap, List<Integer> craftingSlots,
-        List<Integer> inventorySlots, boolean maxTransfer, boolean requireCompleteSets) {
+        List<Integer> inventorySlots, int maxTransfer, boolean performRecipe, boolean requireCompleteSets) {
         this(
             recipeMap,
             craftingSlots,
             inventorySlots,
             maxTransfer,
+            performRecipe,
             requireCompleteSets,
             createDefaultRecipeCountMap(recipeMap));
     }
 
     public PacketRecipeTransfer(Map<Integer, Integer> recipeMap, List<Integer> craftingSlots,
-        List<Integer> inventorySlots, boolean maxTransfer, boolean requireCompleteSets,
+        List<Integer> inventorySlots, int maxTransfer, boolean performRecipe, boolean requireCompleteSets,
         Map<Integer, Integer> itemCounts) {
         this.recipeMap = recipeMap;
         this.itemCounts = itemCounts;
         this.craftingSlots = craftingSlots;
         this.inventorySlots = inventorySlots;
         this.maxTransfer = maxTransfer;
+        this.performRecipe = performRecipe;
         this.requireCompleteSets = requireCompleteSets;
+    }
+
+    public PacketRecipeTransfer setOutputSlot(int outputSlot) {
+        this.outputSlot = outputSlot;
+        return this;
     }
 
     @Override
@@ -64,6 +74,8 @@ public class PacketRecipeTransfer extends PacketCodec {
 
     @Override
     public void decode(ExtendedBuffer input) {
+        super.decode(input);
+
         int recipeMapSize = input.readVarIntFromBuffer();
         this.recipeMap = new HashMap<>();
         this.itemCounts = new HashMap<>();
@@ -86,12 +98,12 @@ public class PacketRecipeTransfer extends PacketCodec {
         for (int i = 0; i < inventorySlotsSize; i++) {
             this.inventorySlots.add(input.readVarIntFromBuffer());
         }
-
-        super.decode(input);
     }
 
     @Override
     public void encode(ExtendedBuffer output) {
+        super.encode(output);
+
         output.writeVarIntToBuffer(recipeMap.size());
         for (Map.Entry<Integer, Integer> recipeMapEntry : recipeMap.entrySet()) {
             output.writeVarIntToBuffer(recipeMapEntry.getKey());
@@ -108,8 +120,6 @@ public class PacketRecipeTransfer extends PacketCodec {
         for (Integer inventorySlot : inventorySlots) {
             output.writeVarIntToBuffer(inventorySlot);
         }
-
-        super.encode(output);
     }
 
     @Override
@@ -164,6 +174,9 @@ public class PacketRecipeTransfer extends PacketCodec {
             this.maxTransfer,
             this.requireCompleteSets,
             this.itemCounts);
+        if (performRecipe && outputSlot != -1) {
+            BasicRecipeTransferHandlerServer.performRecipe(player, outputSlot);
+        }
     }
 
     private static boolean isValidCollectionSize(Container container, int slotCount, String collectionName) {

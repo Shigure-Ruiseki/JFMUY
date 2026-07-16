@@ -43,6 +43,23 @@ public class RecipeTransferRegistry implements IRecipeTransferRegistry {
     }
 
     @Override
+    public <C extends Container> void addRecipeTransferHandlerWithOutput(Class<C> containerClass,
+        String recipeCategoryUid, int recipeSlotStart, int recipeSlotCount, int inventorySlotStart,
+        int inventorySlotCount, int outputSlot) {
+        ErrorUtil.checkNotNull(containerClass, "containerClass");
+        ErrorUtil.checkNotNull(recipeCategoryUid, "recipeCategoryUid");
+
+        IRecipeTransferInfo<C> recipeTransferHelper = new BasicRecipeTransferInfo<>(
+            containerClass,
+            recipeCategoryUid,
+            recipeSlotStart,
+            recipeSlotCount,
+            inventorySlotStart,
+            inventorySlotCount).setCraftingSlot(outputSlot);
+        addRecipeTransferHandler(recipeTransferHelper);
+    }
+
+    @Override
     public <C extends Container> void addRecipeTransferHandler(IRecipeTransferInfo<C> recipeTransferInfo) {
         ErrorUtil.checkNotNull(recipeTransferInfo, "recipeTransferInfo");
 
@@ -50,11 +67,12 @@ public class RecipeTransferRegistry implements IRecipeTransferRegistry {
             stackHelper,
             handlerHelper,
             recipeTransferInfo);
-        addRecipeTransferHandler(recipeTransferHandler, recipeTransferInfo.getRecipeCategoryUid());
+        addRecipeTransferHandlerWithOutput(recipeTransferHandler, recipeTransferInfo.getRecipeCategoryUid());
     }
 
     @Override
-    public void addRecipeTransferHandler(IRecipeTransferHandler<?> recipeTransferHandler, String recipeCategoryUid) {
+    public void addRecipeTransferHandlerWithOutput(IRecipeTransferHandler<?> recipeTransferHandler,
+        String recipeCategoryUid) {
         ErrorUtil.checkNotNull(recipeTransferHandler, "recipeTransferHandler");
         ErrorUtil.checkNotNull(recipeCategoryUid, "recipeCategoryUid");
 

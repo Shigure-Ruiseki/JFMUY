@@ -18,8 +18,8 @@ import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.api.gui.IGuiIngredient;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
+import ruiseki.jfmuy.api.recipe.transfer.IRecipeCraftingHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
-import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferInfo;
 import ruiseki.jfmuy.config.ServerInfo;
@@ -28,7 +28,7 @@ import ruiseki.jfmuy.startup.StackHelper;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
 
-public class BasicRecipeTransferHandler<C extends Container> implements IRecipeTransferHandler<C> {
+public class BasicRecipeTransferHandler<C extends Container> implements IRecipeCraftingHandler<C> {
 
     private final StackHelper stackHelper;
     private final IRecipeTransferHandlerHelper handlerHelper;
@@ -50,6 +50,11 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
     @Override
     public IRecipeTransferError transferRecipe(C container, IRecipeLayout recipeLayout, EntityPlayer player,
         boolean maxTransfer, boolean doTransfer) {
+        return transferRecipe(container, recipeLayout, player, maxTransfer ? Integer.MAX_VALUE : 1, false, doTransfer);
+    }
+
+    protected IRecipeTransferError transferRecipe(C container, IRecipeLayout recipeLayout, EntityPlayer player,
+        int maxTransfer, boolean performRecipe, boolean doTransfer) {
         if (!ServerInfo.isJFMUYOnServer()) {
             String tooltipMessage = Translator.translateToLocal("jfmuy.y.tooltip.error.recipe.transfer.no.server");
             return handlerHelper.createUserErrorWithTooltip(tooltipMessage);
@@ -146,6 +151,8 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
         IntList inventorySlotIndexes = new IntArrayList(inventorySlots.keySet());
         Collections.sort(inventorySlotIndexes);
 
+        int outputSlot = transferHelper.getOutputSlot();
+
         // check that the slots exist and can be altered
         for (Int2IntMap.Entry entry : matchingItemsResult.matchingItemsCasted.int2IntEntrySet()) {
             int slotNumber = craftingSlotIndexes.get(entry.getIntKey());
@@ -164,24 +171,33 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
             PacketRecipeTransfer packet;
             if (stackCrafting) {
                 packet = new PacketRecipeTransfer(
-                    matchingItemsResult.matchingItemsCasted,
+                    matchingItemsResult.matchingItems,
                     craftingSlotIndexes,
                     inventorySlotIndexes,
                     maxTransfer,
+                    performRecipe,
                     transferHelper.requireCompleteSets(),
-                    ((StackHelper.SensitiveCountMatchingItemsResult) matchingItemsResult).matchingItemsCounts);
+                    ((StackHelper.SensitiveCountMatchingItemsResult) matchingItemsResult).matchingItemsCounts)
+                        .setOutputSlot(outputSlot);
             } else {
                 packet = new PacketRecipeTransfer(
-                    matchingItemsResult.matchingItemsCasted,
+                    matchingItemsResult.matchingItems,
                     craftingSlotIndexes,
                     inventorySlotIndexes,
                     maxTransfer,
-                    transferHelper.requireCompleteSets());
+                    performRecipe,
+                    transferHelper.requireCompleteSets()).setOutputSlot(outputSlot);
             }
             JFMUY.instance.getPacketHandler()
                 .sendToServer(packet);
         }
 
         return null;
+    }
+
+    @Override
+    public @Nullable IRecipeTransferError craft(C container, IRecipeLayout recipeLayout, EntityPlayer player,
+        int amount, boolean doTransfer) {
+        return this.transferRecipe(container, recipeLayout, player, amount, true, doTransfer);
     }
 }

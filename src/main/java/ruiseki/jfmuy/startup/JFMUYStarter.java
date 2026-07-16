@@ -12,11 +12,13 @@ import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
 import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
 import ruiseki.jfmuy.api.gui.IGlobalGuiHandler;
 import ruiseki.jfmuy.api.gui.IGuiScreenHandler;
+import ruiseki.jfmuy.autocrafting.favorites.FavoriteRecipes;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.GuiEventHandler;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.GuiScreenHelper;
+import ruiseki.jfmuy.gui.ghost.GhostIngredientDragManager;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.BookmarkOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.LeftAreaDispatcher;
@@ -65,10 +67,10 @@ public class JFMUYStarter {
         Internal.setIngredientRegistry(ingredientRegistry);
 
         GuiHelper guiHelper = new GuiHelper(ingredientRegistry);
-        JFMUYHelpers jfmuyHelpers = new JFMUYHelpers(guiHelper, ingredientRegistry, blacklist, stackHelper);
-        Internal.setHelpers(jfmuyHelpers);
+        JFMUYHelpers jeiHelpers = new JFMUYHelpers(guiHelper, ingredientRegistry, blacklist, stackHelper);
+        Internal.setHelpers(jeiHelpers);
 
-        ModRegistry modRegistry = new ModRegistry(jfmuyHelpers, ingredientRegistry);
+        ModRegistry modRegistry = new ModRegistry(jeiHelpers, ingredientRegistry);
 
         LoggedTimer timer = new LoggedTimer();
         timer.start("Registering recipe categories");
@@ -96,11 +98,8 @@ public class JFMUYStarter {
             timer.stop();
         }
 
-        timer.start("Building bookmarks");
         BookmarkList bookmarkList = new BookmarkList(ingredientRegistry);
-        bookmarkList.loadBookmarks();
         Internal.setBookmarkList(bookmarkList);
-        timer.stop();
 
         timer.start("Building runtime");
         List<IAdvancedGuiHandler<?>> advancedGuiHandlers = modRegistry.getAdvancedGuiHandlers();
@@ -113,45 +112,56 @@ public class JFMUYStarter {
             advancedGuiHandlers,
             ghostIngredientHandlers,
             guiScreenHandlers);
+        GhostIngredientDragManager ghostIngredientDragManager = new GhostIngredientDragManager(
+            guiScreenHelper,
+            ingredientRegistry);
         IngredientListOverlay ingredientListOverlay = new IngredientListOverlay(
             ingredientFilter,
             ingredientRegistry,
-            guiScreenHelper);
+            guiScreenHelper,
+            ghostIngredientDragManager);
 
-        BookmarkOverlay bookmarkOverlay = new BookmarkOverlay(
-            bookmarkList,
-            jfmuyHelpers.getGuiHelper(),
-            guiScreenHelper);
+        BookmarkOverlay bookmarkOverlay = new BookmarkOverlay(bookmarkList, jeiHelpers.getGuiHelper(), guiScreenHelper);
         RecipesGui recipesGui = new RecipesGui(recipeRegistry, ingredientRegistry);
-        JFMUYRuntime jfmuyRuntime = new JFMUYRuntime(
+        JFMUYRuntime jeiRuntime = new JFMUYRuntime(
             recipeRegistry,
             ingredientListOverlay,
             bookmarkOverlay,
             recipesGui,
             ingredientFilter);
-        Internal.setRuntime(jfmuyRuntime);
+        Internal.setRuntime(jeiRuntime);
         timer.stop();
 
         stackHelper.disableUidCache();
 
-        sendRuntime(plugins, jfmuyRuntime);
+        sendRuntime(plugins, jeiRuntime);
 
         LeftAreaDispatcher leftAreaDispatcher = new LeftAreaDispatcher(guiScreenHelper);
         leftAreaDispatcher.addContent(bookmarkOverlay);
+
+        timer.start("Building favorites");
+        FavoriteRecipes.load();
+        timer.stop();
+
+        timer.start("Building bookmarks");
+        bookmarkList.loadBookmarks();
+        timer.stop();
 
         GuiEventHandler guiEventHandler = new GuiEventHandler(
             guiScreenHelper,
             leftAreaDispatcher,
             ingredientListOverlay,
-            recipeRegistry);
+            recipeRegistry,
+            ghostIngredientDragManager);
         Internal.setGuiEventHandler(guiEventHandler);
         InputHandler inputHandler = new InputHandler(
-            jfmuyRuntime,
+            jeiRuntime,
             ingredientRegistry,
             ingredientListOverlay,
             guiScreenHelper,
             leftAreaDispatcher,
-            bookmarkList);
+            bookmarkList,
+            ghostIngredientDragManager);
         Internal.setInputHandler(inputHandler);
 
         Config.checkForModNameFormatOverride();

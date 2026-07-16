@@ -5,6 +5,8 @@ import java.util.List;
 
 import net.minecraft.item.ItemStack;
 
+import com.google.common.collect.ImmutableList;
+
 import ruiseki.jfmuy.api.IModRegistry;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
 
@@ -76,4 +78,12 @@ public interface IIngredientRegistry {
      * Helper method to get ingredient type from a legacy ingredient class.
      */
     <V> IIngredientType<V> getIngredientType(Class<? extends V> ingredientClass);
+
+    /**
+     * Returns a list of all the craftable ingredient types.
+     *
+     * @since JEI 4.12.0
+     */
+    ImmutableList<IIngredientType> getCraftableIngredientTypes();
+
 }

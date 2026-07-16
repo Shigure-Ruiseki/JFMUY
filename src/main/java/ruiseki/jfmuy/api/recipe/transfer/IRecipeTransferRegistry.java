@@ -30,9 +30,33 @@ public interface IRecipeTransferRegistry {
         int recipeSlotStart, int recipeSlotCount, int inventorySlotStart, int inventorySlotCount);
 
     /**
+     * More advanced method for adding a recipe transfer handler including an output slot for autocrafting.
+     *
+     * @param containerClass     the class of the container that this recipe transfer handler is for
+     * @param recipeCategoryUid  the recipe categories that this container can use
+     * @param recipeSlotStart    the first slot for recipe inputs
+     * @param recipeSlotCount    the number of slots for recipe inputs
+     * @param inventorySlotStart the first slot of the available inventory (usually player inventory)
+     * @param inventorySlotCount the number of slots of the available inventory
+     * @param outputSlot         the output slot that resulting items may be taken from for autocrafting
+     */
+    default <C extends Container> void addRecipeTransferHandlerWithOutput(Class<C> containerClass,
+        String recipeCategoryUid, int recipeSlotStart, int recipeSlotCount, int inventorySlotStart,
+        int inventorySlotCount, int outputSlot) {
+        addRecipeTransferHandler(
+            containerClass,
+            recipeCategoryUid,
+            recipeSlotStart,
+            recipeSlotCount,
+            inventorySlotStart,
+            inventorySlotCount);
+    }
+
+    /**
      * Advanced method for adding a recipe transfer handler.
      * <p>
-     * Use this when recipe slots or inventory slots are spread out in different number ranges.
+     * Use this when recipe slots or inventory slots are spread out in different number ranges or if the container
+     * supports autocrafting.
      */
     <C extends Container> void addRecipeTransferHandler(IRecipeTransferInfo<C> recipeTransferInfo);
 
@@ -40,7 +64,7 @@ public interface IRecipeTransferRegistry {
      * Complete control over recipe transfer.
      * Use this when the container has a non-standard inventory or crafting area.
      */
-    void addRecipeTransferHandler(IRecipeTransferHandler<?> recipeTransferHandler, String recipeCategoryUid);
+    void addRecipeTransferHandlerWithOutput(IRecipeTransferHandler<?> recipeTransferHandler, String recipeCategoryUid);
 
     /**
      * Add a universal handler that can handle any category of recipe.

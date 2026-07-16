@@ -106,11 +106,12 @@ public class VanillaPlugin implements IModPlugin {
         ItemStackHelper itemStackHelper = new ItemStackHelper(stackHelper);
         ItemStackRenderer itemStackRenderer = new ItemStackRenderer();
         ingredientRegistration.register(VanillaTypes.ITEM, itemStacks, itemStackHelper, itemStackRenderer);
-
+        ingredientRegistration.markAsCraftable(VanillaTypes.ITEM);
         List<FluidStack> fluidStacks = FluidStackListFactory.create();
         FluidStackHelper fluidStackHelper = new FluidStackHelper();
         FluidStackRenderer fluidStackRenderer = new FluidStackRenderer();
         ingredientRegistration.register(VanillaTypes.FLUID, fluidStacks, fluidStackHelper, fluidStackRenderer);
+        ingredientRegistration.markAsCraftable(VanillaTypes.FLUID);
     }
 
     @Override
@@ -156,9 +157,15 @@ public class VanillaPlugin implements IModPlugin {
 
         IRecipeTransferRegistry recipeTransferRegistry = registry.getRecipeTransferRegistry();
 
-        recipeTransferRegistry
-            .addRecipeTransferHandler(ContainerWorkbench.class, VanillaRecipeCategoryUid.CRAFTING, 1, 9, 10, 36);
-        recipeTransferRegistry.addRecipeTransferHandler(
+        recipeTransferRegistry.addRecipeTransferHandlerWithOutput(
+            ContainerWorkbench.class,
+            VanillaRecipeCategoryUid.CRAFTING,
+            1,
+            9,
+            10,
+            36,
+            0);
+        recipeTransferRegistry.addRecipeTransferHandlerWithOutput(
             new PlayerRecipeTransferHandler(jfmuyHelpers.recipeTransferHandlerHelper()),
             VanillaRecipeCategoryUid.CRAFTING);
         recipeTransferRegistry

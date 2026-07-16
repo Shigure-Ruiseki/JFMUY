@@ -196,7 +196,7 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
         Preconditions.checkArgument(GuiScreen.class.isAssignableFrom(guiClass), "guiClass must inherit from GuiScreen");
         Preconditions.checkArgument(
             !ghostIngredientGuiBlacklist.contains(guiClass),
-            "you cannot add a ghost ingredient handler for the following Guis, it would interfere with using JEI: %s",
+            "you cannot add a ghost ingredient handler for the following Guis, it would interfere with using JFMUY: %s",
             ghostIngredientGuiBlacklist);
         ErrorUtil.checkNotNull(handler, "handler");
         this.ghostIngredientHandlers.put(guiClass, handler);

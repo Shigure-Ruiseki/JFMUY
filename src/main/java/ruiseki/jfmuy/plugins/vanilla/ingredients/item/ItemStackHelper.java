@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
@@ -21,6 +22,7 @@ import net.minecraftforge.oredict.OreDictionary;
 import org.jetbrains.annotations.Nullable;
 
 import cpw.mods.fml.common.registry.GameData;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.recipe.IFocus;
 import ruiseki.jfmuy.color.ColorGetter;
@@ -31,6 +33,7 @@ import ruiseki.okcore.helper.Helpers;
 public class ItemStackHelper implements IIngredientHelper<ItemStack> {
 
     private final StackHelper stackHelper;
+    private final Map<ItemStack, Integer> hashCache = new Object2IntOpenHashMap<>();
 
     public ItemStackHelper(StackHelper stackHelper) {
         this.stackHelper = stackHelper;
@@ -73,6 +76,25 @@ public class ItemStackHelper implements IIngredientHelper<ItemStack> {
     public String getUniqueId(ItemStack ingredient) {
         ErrorUtil.checkNotEmpty(ingredient);
         return stackHelper.getUniqueIdentifierForStack(ingredient);
+    }
+
+    @Override
+    public int getHash(ItemStack ingredient) {
+        if (hashCache.containsKey(ingredient)) {
+            return hashCache.get(ingredient);
+        }
+        int hash = ingredient.stackSize;
+        hash = hash * 31 + ingredient.getItemDamage();
+        if (ingredient.getItem() != null) {
+            hash = hash * 31 + GameData.getItemRegistry()
+                .getNameForObject(ingredient.getItem())
+                .hashCode();
+        }
+        hash = hash * 31 + (ingredient.getTagCompound() == null ? 0
+            : ingredient.getTagCompound()
+                .hashCode());
+        hashCache.put(ingredient, hash);
+        return hash;
     }
 
     @Override

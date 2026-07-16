@@ -39,7 +39,7 @@ public class SmeltingRecipe implements IRecipeWrapper {
         }
         if (this.experience > 0) {
             String experienceString = Translator
-                .translateToLocalFormatted("gui.jei.category.smelting.experience", experience);
+                .translateToLocalFormatted("gui.jfmuy.category.smelting.experience", experience);
             FontRenderer fontRenderer = minecraft.fontRenderer;
             int stringWidth = fontRenderer.getStringWidth(experienceString);
             fontRenderer.drawString(experienceString, recipeWidth - stringWidth, 0, Color.gray.getRGB());

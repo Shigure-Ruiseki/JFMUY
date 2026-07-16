@@ -24,6 +24,7 @@ import ruiseki.jfmuy.input.IMouseHandler;
 import ruiseki.jfmuy.input.IPaged;
 import ruiseki.jfmuy.input.IShowsRecipeFocuses;
 import ruiseki.jfmuy.input.MouseHelper;
+import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 import ruiseki.jfmuy.render.IngredientListSlot;
 import ruiseki.jfmuy.render.IngredientRenderer;
 import ruiseki.jfmuy.util.CommandUtil;
@@ -46,7 +47,7 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
 
     public IngredientGridWithNavigation(IIngredientGridSource ingredientSource, GuiScreenHelper guiScreenHelper,
         GridAlignment alignment) {
-        this.ingredientGrid = new IngredientGrid(alignment);
+        this.ingredientGrid = new IngredientGrid(new IngredientListBatchRenderer(), alignment);
         this.ingredientSource = ingredientSource;
         this.guiScreenHelper = guiScreenHelper;
         this.pageDelegate = new IngredientGridPaged();
@@ -74,15 +75,11 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
         Rectangle movedNavigationArea = MathUtil
             .moveDownToAvoidIntersection(guiExclusionAreas, estimatedNavigationArea);
         int navigationMaxY = movedNavigationArea.y + movedNavigationArea.height;
-        int boundsHeight = availableArea.y + availableArea.height - navigationMaxY;
-        if (availableArea.width <= 0 || boundsHeight <= 0) {
-            return false;
-        }
         Rectangle boundsWithoutNavigation = new Rectangle(
             availableArea.x,
             navigationMaxY,
             availableArea.width,
-            boundsHeight);
+            availableArea.height - navigationMaxY);
         boolean gridHasRoom = this.ingredientGrid.updateBounds(boundsWithoutNavigation, minWidth, guiExclusionAreas);
         if (!gridHasRoom) {
             return false;
@@ -104,10 +101,6 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
 
     public Rectangle getArea() {
         return this.area;
-    }
-
-    public int size() {
-        return this.ingredientGrid.size();
     }
 
     public void draw(Minecraft minecraft, int mouseX, int mouseY) {
@@ -136,24 +129,28 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
     @Override
     public boolean handleMouseScrolled(int mouseX, int mouseY, int scrollDelta) {
         if (scrollDelta < 0) {
-            return this.pageDelegate.nextPage();
+            this.pageDelegate.nextPage();
+            return true;
         } else if (scrollDelta > 0) {
-            return this.pageDelegate.previousPage();
+            this.pageDelegate.previousPage();
+            return true;
         }
         return false;
     }
 
     public boolean onKeyPressed(char typedChar, int keyCode) {
         if (KeyBindings.nextPage.getKeyCode() == keyCode) {
-            return this.pageDelegate.nextPage();
+            this.pageDelegate.nextPage();
+            return true;
         } else if (KeyBindings.previousPage.getKeyCode() == keyCode) {
-            return this.pageDelegate.previousPage();
+            this.pageDelegate.previousPage();
+            return true;
         }
         return checkHotbarKeys(keyCode);
     }
 
     /**
-     * Modeled after {@link GuiContainer#checkHotbarKeys(int)}
+     * Modeled after {@link net.minecraft.client.gui.inventory.GuiContainer#checkHotbarKeys(int)}
      * Sets the stack in a hotbar slot to the one that's hovered over.
      */
     protected boolean checkHotbarKeys(int keyCode) {
@@ -213,9 +210,6 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
 
         @Override
         public boolean nextPage() {
-            if (getPageCount() <= 1) {
-                return false;
-            }
             final int itemsCount = ingredientSource.size();
             if (itemsCount > 0) {
                 firstItemIndex += ingredientGrid.size();
@@ -233,9 +227,6 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
 
         @Override
         public boolean previousPage() {
-            if (getPageCount() <= 1) {
-                return false;
-            }
             final int itemsPerPage = ingredientGrid.size();
             if (itemsPerPage == 0) {
                 firstItemIndex = 0;
@@ -263,13 +254,15 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
         @Override
         public boolean hasNext() {
             // true if there is more than one page because this wraps around
-            return getPageCount() > 1;
+            int itemsPerPage = ingredientGrid.size();
+            return itemsPerPage > 0 && ingredientSource.size() > itemsPerPage;
         }
 
         @Override
         public boolean hasPrevious() {
             // true if there is more than one page because this wraps around
-            return getPageCount() > 1;
+            int itemsPerPage = ingredientGrid.size();
+            return itemsPerPage > 0 && ingredientSource.size() > itemsPerPage;
         }
 
         @Override

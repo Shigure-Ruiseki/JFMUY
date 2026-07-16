@@ -5,8 +5,6 @@ import ruiseki.jfmuy.api.IModPlugin;
 
 /**
  * This is given to your {@link IModPlugin#registerCategories(IRecipeCategoryRegistration)}.
- *
- * @since JEI 4.5.0
  */
 public interface IRecipeCategoryRegistration {
 
@@ -16,7 +14,7 @@ public interface IRecipeCategoryRegistration {
     void addRecipeCategories(IRecipeCategory... recipeCategories);
 
     /**
-     * Get helpers and tools for implementing JEI plugins.
+     * Get helpers and tools for implementing JFMUY plugins.
      */
     IJFMUYHelpers getJFMUYHelpers();
 }

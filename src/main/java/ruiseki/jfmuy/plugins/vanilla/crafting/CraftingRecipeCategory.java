@@ -127,7 +127,7 @@ public class CraftingRecipeCategory implements IRecipeCategory<IRecipeWrapper> {
                             if (modName != null) {
                                 tooltip.add(
                                     EnumChatFormatting.GRAY
-                                        + Translator.translateToLocalFormatted("jei.tooltip.recipe.by", modName));
+                                        + Translator.translateToLocalFormatted("jfmuy.tooltip.recipe.by", modName));
                             }
                         }
 
@@ -136,7 +136,7 @@ public class CraftingRecipeCategory implements IRecipeCategory<IRecipeWrapper> {
                         if (showAdvanced) {
                             tooltip.add(
                                 EnumChatFormatting.DARK_GRAY + Translator
-                                    .translateToLocalFormatted("jei.tooltip.recipe.id", registryName.toString()));
+                                    .translateToLocalFormatted("jfmuy.tooltip.recipe.id", registryName.toString()));
                         }
                     }
                 });

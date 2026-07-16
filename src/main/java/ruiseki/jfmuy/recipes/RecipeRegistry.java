@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +22,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableTable;
 
 import cpw.mods.fml.common.ProgressManager;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
@@ -53,6 +53,7 @@ import ruiseki.jfmuy.util.Log;
 
 public class RecipeRegistry implements IRecipeRegistry {
 
+    private final Map<IRecipeWrapper, Long> recipeIds = new Object2LongOpenHashMap<>();
     private final IngredientRegistry ingredientRegistry;
     private final ImmutableList<IRecipeCategory> recipeCategories;
     private final Set<String> hiddenRecipeCategoryUids = new ObjectOpenHashSet<>();
@@ -65,6 +66,7 @@ public class RecipeRegistry implements IRecipeRegistry {
     private final Table<String, Object, IRecipeWrapper> wrapperMaps = new Table<>(
         new Object2ObjectOpenHashMap<>(),
         Reference2ObjectOpenHashMap::new);
+    private final Table<IRecipeCategory, Long, IRecipeWrapper> recipeWrappersByCategory = Table.hashBasedTable();
     private final ListMultiMap<IRecipeCategory, IRecipeWrapper> recipeWrappersForCategories = new ListMultiMap<>();
     private final RecipeMap recipeInputMap;
     private final RecipeMap recipeOutputMap;
@@ -102,6 +104,7 @@ public class RecipeRegistry implements IRecipeRegistry {
                     IIngredientType ingredientType = ingredientRegistry.getIngredientType(catalystIngredient);
                     @SuppressWarnings("unchecked")
                     IIngredientHelper ingredientHelper = ingredientRegistry.getIngredientHelper(ingredientType);
+                    // noinspection unchecked
                     recipeInputMap.addRecipeCategory(recipeCategory, catalystIngredient, ingredientHelper);
                     String catalystIngredientKey = getUniqueId(catalystIngredient);
                     categoriesForRecipeCatalystKeysBuilder.put(catalystIngredientKey, recipeCategoryUid);
@@ -125,6 +128,46 @@ public class RecipeRegistry implements IRecipeRegistry {
         for (IRecipeRegistryPlugin plugin : plugins) {
             this.plugins.add(new RecipeRegistryPluginSafeWrapper(plugin));
         }
+    }
+
+    private long calculateId(IRecipeWrapper recipe, IRecipeCategory<?> category) {
+        Ingredients ings = new Ingredients();
+        recipe.getIngredients(ings);
+        long hash = 0;
+        for (IIngredientType<?> type : Internal.getIngredientRegistry()
+            .getCraftableIngredientTypes()) {
+            List<Object> ingredients = ings.getInputIngredients()
+                .get(type);
+            if (ingredients == null) {
+                continue;
+            }
+            for (Object ingredient : ingredients) {
+                if (ingredient == null) { // Looking at you, Techguns
+                    continue;
+                }
+                hash = (long) this.ingredientRegistry.getIngredientHelper(ingredient)
+                    .getHash(ingredient) + hash * 31;
+            }
+        }
+        for (IIngredientType<?> type : Internal.getIngredientRegistry()
+            .getCraftableIngredientTypes()) {
+            List<Object> ingredients = ings.getOutputIngredients()
+                .get(type);
+            if (ingredients == null) {
+                continue;
+            }
+            for (Object ingredient : ingredients) {
+                if (ingredient == null) {
+                    continue;
+                }
+                hash = (long) this.ingredientRegistry.getIngredientHelper(ingredient)
+                    .getHash(ingredient) + hash * 31;
+            }
+        }
+        hash = category.getUid()
+            .hashCode() + hash * 31;
+        recipeIds.put(recipe, hash);
+        return hash;
     }
 
     private <T> String getUniqueId(T ingredient) {
@@ -178,18 +221,16 @@ public class RecipeRegistry implements IRecipeRegistry {
         return new Focus<>(mode, ingredient);
     }
 
+    @Override
+    @Nullable
+    public IRecipeCategory getRecipeCategory(String recipeCategoryUid) {
+        ErrorUtil.checkNotNull(recipeCategoryUid, "recipeCategoryUid");
+        return recipeCategoriesMap.get(recipeCategoryUid);
+    }
+
     private <T> void addRecipe(T recipe, IRecipeWrapper recipeWrapper, IRecipeCategory recipeCategory) {
         try {
-            wrapperMaps.put(recipeCategory.getUid(), recipe, recipeWrapper);
-            Ingredients ingredients = new Ingredients();
-            recipeWrapper.getIngredients(ingredients);
-
-            recipeInputMap.addRecipe(recipeWrapper, recipeCategory, ingredients.getInputIngredients());
-            recipeOutputMap.addRecipe(recipeWrapper, recipeCategory, ingredients.getOutputIngredients());
-
-            recipeWrappersForCategories.put(recipeCategory, recipeWrapper);
-            unhideRecipe(recipeWrapper, recipeCategory.getUid());
-            recipeCategoriesVisibleCache.clear();
+            addRecipeUnchecked(recipe, recipeWrapper, recipeCategory);
         } catch (BrokenCraftingRecipeException e) {
             Log.get()
                 .error("Found a broken crafting recipe.", e);
@@ -200,11 +241,50 @@ public class RecipeRegistry implements IRecipeRegistry {
         }
     }
 
-    @Override
-    @Nullable
-    public IRecipeCategory getRecipeCategory(String recipeCategoryUid) {
-        ErrorUtil.checkNotNull(recipeCategoryUid, "recipeCategoryUid");
-        return recipeCategoriesMap.get(recipeCategoryUid);
+    private <T> void addRecipeUnchecked(T recipe, IRecipeWrapper recipeWrapper, IRecipeCategory recipeCategory) {
+        wrapperMaps.put(recipeCategory.getUid(), recipe, recipeWrapper);
+
+        Ingredients ingredients = getIngredients(recipeWrapper);
+
+        // noinspection unchecked
+        recipeInputMap.addRecipe(recipeWrapper, recipeCategory, ingredients.getInputIngredients());
+        // noinspection unchecked
+        recipeOutputMap.addRecipe(recipeWrapper, recipeCategory, ingredients.getOutputIngredients());
+
+        recipeWrappersForCategories.put(recipeCategory, recipeWrapper);
+
+        long recipeId = calculateId(recipeWrapper, recipeCategory);
+        recipeIds.put(recipeWrapper, recipeId);
+        recipeWrappersByCategory.put(recipeCategory, recipeId, recipeWrapper);
+
+        unhideRecipe(recipeWrapper, recipeCategory.getUid());
+
+        recipeCategoriesVisibleCache.clear();
+    }
+
+    public Ingredients getIngredients(IRecipeWrapper recipeWrapper) {
+        Ingredients ingredients = new Ingredients();
+        recipeWrapper.getIngredients(ingredients);
+        return ingredients;
+    }
+
+    private <T> void removeRecipe(T recipe, String recipeCategoryUid) {
+        IRecipeCategory recipeCategory = recipeCategoriesMap.get(recipeCategoryUid);
+        if (recipeCategory == null) {
+            Log.get()
+                .error("No recipe category registered for recipeCategoryUid: {}", recipeCategoryUid);
+            return;
+        }
+
+        try {
+            IRecipeWrapper recipeWrapper = getRecipeWrapper(recipe, recipeCategory.getUid());
+            if (recipeWrapper != null) {
+                hideRecipe(recipeWrapper, recipeCategoryUid);
+            }
+        } catch (BrokenCraftingRecipeException e) {
+            Log.get()
+                .error("Found a broken crafting recipe.", e);
+        }
     }
 
     @Override
@@ -281,7 +361,7 @@ public class RecipeRegistry implements IRecipeRegistry {
         focus = Focus.check(focus);
 
         List<String> allRecipeCategoryUids = new ArrayList<>();
-        for (RecipeRegistryPluginSafeWrapper plugin : this.plugins) {
+        for (IRecipeRegistryPlugin plugin : this.plugins) {
             List<String> recipeCategoryUids = plugin.getRecipeCategoryUids(focus);
             for (String recipeCategoryUid : recipeCategoryUids) {
                 if (!allRecipeCategoryUids.contains(recipeCategoryUid)) {
@@ -309,7 +389,7 @@ public class RecipeRegistry implements IRecipeRegistry {
         focus = Focus.check(focus);
 
         List<T> allRecipeWrappers = new ArrayList<>();
-        for (RecipeRegistryPluginSafeWrapper plugin : this.plugins) {
+        for (IRecipeRegistryPlugin plugin : this.plugins) {
             List<T> recipeWrappers = plugin.getRecipeWrappers(recipeCategory, focus);
             allRecipeWrappers.addAll(recipeWrappers);
         }
@@ -318,7 +398,6 @@ public class RecipeRegistry implements IRecipeRegistry {
         Set<T> hidden = (Set<T>) hiddenRecipes.get(recipeCategory.getUid());
         allRecipeWrappers.removeAll(hidden);
 
-        allRecipeWrappers = new ArrayList<>(new LinkedHashSet<>(allRecipeWrappers));
         return allRecipeWrappers;
     }
 
@@ -327,7 +406,7 @@ public class RecipeRegistry implements IRecipeRegistry {
         ErrorUtil.checkNotNull(recipeCategory, "recipeCategory");
 
         List<T> allRecipeWrappers = new ArrayList<>();
-        for (RecipeRegistryPluginSafeWrapper plugin : this.plugins) {
+        for (IRecipeRegistryPlugin plugin : this.plugins) {
             List<T> recipeWrappers = plugin.getRecipeWrappers(recipeCategory);
             allRecipeWrappers.addAll(recipeWrappers);
         }
@@ -336,7 +415,6 @@ public class RecipeRegistry implements IRecipeRegistry {
         Set<T> hidden = (Set<T>) hiddenRecipes.get(recipeCategory.getUid());
         allRecipeWrappers.removeAll(hidden);
 
-        allRecipeWrappers = new ArrayList<>(new LinkedHashSet<>(allRecipeWrappers));
         return allRecipeWrappers;
     }
 
@@ -425,5 +503,14 @@ public class RecipeRegistry implements IRecipeRegistry {
         }
         hiddenRecipeCategoryUids.remove(recipeCategoryUid);
         recipeCategoriesVisibleCache.clear();
+    }
+
+    @Nullable
+    public IRecipeWrapper getRecipeById(long id, IRecipeCategory recipeCategory) {
+        return recipeWrappersByCategory.get(recipeCategory, id);
+    }
+
+    public long getRecipeId(IRecipeWrapper recipe) {
+        return recipeIds.get(recipe);
     }
 }

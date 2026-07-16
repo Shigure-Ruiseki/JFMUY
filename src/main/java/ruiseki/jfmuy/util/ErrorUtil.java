@@ -315,7 +315,7 @@ public final class ErrorUtil {
         if (minecraft != null && !minecraft.func_152345_ab()) {
             Thread currentThread = Thread.currentThread();
             throw new IllegalStateException(
-                "A JEI API method is being called by another mod from the wrong thread:\n" + currentThread
+                "A JFMUY API method is being called by another mod from the wrong thread:\n" + currentThread
                     + "\n"
                     + "It must be called on the main thread by using Minecraft.addScheduledTask.");
         }
@@ -363,7 +363,7 @@ public final class ErrorUtil {
             }
         });
 
-        CrashReportCategory jfmuyCategory = crashreport.makeCategory("JEI render details");
+        CrashReportCategory jfmuyCategory = crashreport.makeCategory("JFMUY render details");
         jfmuyCategory.addCrashSectionCallable("Unique Id (for Blacklist)", new Callable<String>() {
 
             @Override

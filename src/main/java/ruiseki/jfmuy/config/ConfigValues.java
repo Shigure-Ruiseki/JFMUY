@@ -20,6 +20,7 @@ public class ConfigValues {
     public String modNameFormat = Config.parseFriendlyModNameFormat(Config.defaultModNameFormatFriendly);
     public int maxColumns = 9;
     public int maxRecipeGuiHeight = 350;
+    public int recipeBookmarkGroupColor = 0x9F00FF00;
 
     // search
     public Config.SearchMode modNameSearchMode = Config.SearchMode.REQUIRE_PREFIX;
@@ -36,6 +37,8 @@ public class ConfigValues {
     public boolean cheatItemsEnabled = false;
     public boolean editModeEnabled = false;
     public boolean bookmarkOverlayEnabled = true;
+    public boolean recipeBookmarksEnabled = true;
+    public boolean autocraftingEnabled = true;
     public String filterText = "";
     public ItemStack defaultFluidContainerItem = new ItemStack(Items.bucket);
 

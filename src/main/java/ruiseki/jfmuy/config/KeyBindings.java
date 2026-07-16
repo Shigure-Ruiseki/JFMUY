@@ -27,6 +27,7 @@ public class KeyBindings {
     public static final KeyBinding nextPage;
     public static final KeyBinding bookmark;
     public static final KeyBinding toggleBookmarkOverlay;
+    public static final KeyBinding crafting;
     private static final List<KeyBinding> allBindings;
 
     static {
@@ -41,7 +42,8 @@ public class KeyBindings {
             previousPage = new KeyBinding("key.jfmuy.previousPage", Keyboard.KEY_PRIOR, categoryName),
             nextPage = new KeyBinding("key.jfmuy.nextPage", Keyboard.KEY_NEXT, categoryName),
             bookmark = new KeyBinding("key.jfmuy.bookmark", Keyboard.KEY_A, categoryName),
-            toggleBookmarkOverlay = new KeyBinding("key.jfmuy.toggleBookmarkOverlay", Keyboard.KEY_NONE, categoryName));
+            toggleBookmarkOverlay = new KeyBinding("key.jfmuy.toggleBookmarkOverlay", Keyboard.KEY_NONE, categoryName),
+            crafting = new KeyBinding("key.jfmuy.crafting", Keyboard.KEY_C, categoryName));
     }
 
     public static void init() {

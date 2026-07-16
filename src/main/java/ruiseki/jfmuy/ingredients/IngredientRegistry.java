@@ -11,6 +11,7 @@ import net.minecraft.tileentity.TileEntityFurnace;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import ruiseki.jfmuy.Internal;
@@ -35,6 +36,7 @@ public class IngredientRegistry implements IIngredientRegistry {
     private final ImmutableMap<IIngredientType, IIngredientHelper> ingredientHelperMap;
     private final ImmutableMap<IIngredientType, IIngredientRenderer> ingredientRendererMap;
     private final ImmutableMap<Class, IIngredientType> ingredientTypeMap;
+    private final ImmutableList<IIngredientType> craftableIngredientTypes;
 
     private final NonNullList<ItemStack> fuels = NonNullList.create();
     private final NonNullList<ItemStack> potionIngredients = NonNullList.create();
@@ -42,12 +44,14 @@ public class IngredientRegistry implements IIngredientRegistry {
     public IngredientRegistry(IModIdHelper modIdHelper, IngredientBlacklistInternal blacklist,
         Map<IIngredientType, IngredientSet> ingredientsMap,
         ImmutableMap<IIngredientType, IIngredientHelper> ingredientHelperMap,
-        ImmutableMap<IIngredientType, IIngredientRenderer> ingredientRendererMap) {
+        ImmutableMap<IIngredientType, IIngredientRenderer> ingredientRendererMap,
+        ImmutableList<IIngredientType> craftableIngredientTypes) {
         this.modIdHelper = modIdHelper;
         this.blacklist = blacklist;
         this.ingredientsMap = ingredientsMap;
         this.ingredientHelperMap = ingredientHelperMap;
         this.ingredientRendererMap = ingredientRendererMap;
+        this.craftableIngredientTypes = craftableIngredientTypes;
         ImmutableMap.Builder<Class, IIngredientType> ingredientTypeBuilder = ImmutableMap.builder();
         for (IIngredientType ingredientType : ingredientsMap.keySet()) {
             ingredientTypeBuilder.put(ingredientType.getIngredientClass(), ingredientType);
@@ -57,6 +61,11 @@ public class IngredientRegistry implements IIngredientRegistry {
         for (ItemStack itemStack : getAllIngredients(VanillaTypes.ITEM)) {
             getStackProperties(itemStack);
         }
+    }
+
+    @Override
+    public ImmutableList<IIngredientType> getCraftableIngredientTypes() {
+        return craftableIngredientTypes;
     }
 
     private void getStackProperties(ItemStack itemStack) {
@@ -330,5 +339,9 @@ public class IngredientRegistry implements IIngredientRegistry {
             }
         }
         return false;
+    }
+
+    public String getUniqueId(Object ingredient) {
+        return getIngredientHelper(ingredient).getUniqueId(ingredient);
     }
 }

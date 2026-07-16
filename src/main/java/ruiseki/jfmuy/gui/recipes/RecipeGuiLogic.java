@@ -20,6 +20,7 @@ import ruiseki.jfmuy.api.recipe.IFocus;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
+import ruiseki.jfmuy.autocrafting.favorites.FavoriteRecipes;
 import ruiseki.jfmuy.gui.Focus;
 import ruiseki.jfmuy.gui.ingredients.IngredientLookupState;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
@@ -64,25 +65,41 @@ public class RecipeGuiLogic implements IRecipeGuiLogic {
             history.push(this.state);
         }
 
-        int recipeCategoryIndex = getRecipeCategoryIndexToShowFirst(recipeCategories);
+        int recipeCategoryIndex = getRecipeCategoryIndexToShowFirst(recipeCategories, translatedFocus);
+        int recipeIndex = getRecipeIndexToShowFirst(recipeCategories, recipeCategoryIndex, translatedFocus);
         IngredientLookupState state = new IngredientLookupState(
             translatedFocus,
             recipeCategories,
             recipeCategoryIndex,
-            0);
+            recipeIndex);
         setState(state);
 
         return true;
     }
 
+    private int getRecipeIndexToShowFirst(List<IRecipeCategory> recipeCategories, int recipeCategoryIndex,
+        IFocus<?> focus) {
+        if (focus.getMode() == IFocus.Mode.OUTPUT) {
+            IRecipeCategory<?> recipeCategory = recipeCategories.get(recipeCategoryIndex);
+            IRecipeWrapper favorite = FavoriteRecipes.getFavorite(focus.getValue());
+            if (favorite != null) {
+                int index = recipeRegistry.getRecipeWrappers(recipeCategory, focus)
+                    .indexOf(favorite);
+                if (index >= 0) {
+                    return index;
+                }
+            }
+        }
+        return 0;
+    }
+
     @Nonnegative
-    private int getRecipeCategoryIndexToShowFirst(List<IRecipeCategory> recipeCategories) {
+    private int getRecipeCategoryIndexToShowFirst(List<IRecipeCategory> recipeCategories, IFocus<?> focus) {
         Minecraft minecraft = Minecraft.getMinecraft();
         EntityPlayerSP player = minecraft.thePlayer;
         if (player != null) {
             Container openContainer = player.openContainer;
-            if (openContainer != null) {
-                if (openContainer instanceof ContainerPlayer) return 0;
+            if (openContainer != null && !(openContainer instanceof ContainerPlayer)) {
                 for (int i = 0; i < recipeCategories.size(); i++) {
                     IRecipeCategory recipeCategory = recipeCategories.get(i);
                     IRecipeTransferHandler recipeTransferHandler = recipeRegistry
@@ -91,6 +108,12 @@ public class RecipeGuiLogic implements IRecipeGuiLogic {
                         return i;
                     }
                 }
+            }
+        }
+        if (focus.getMode() == IFocus.Mode.OUTPUT) {
+            IRecipeCategory<?> favorite = FavoriteRecipes.getFavoriteCategory(focus.getValue());
+            if (favorite != null) {
+                return recipeCategories.indexOf(favorite);
             }
         }
         return 0;

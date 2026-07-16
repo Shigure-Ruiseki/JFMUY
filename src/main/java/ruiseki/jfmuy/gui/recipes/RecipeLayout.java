@@ -42,6 +42,8 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
     private static final int RECIPE_BUTTON_SIZE = 13;
     private static final int RECIPE_BORDER_PADDING = 4;
     public static final int recipeTransferButtonIndex = 100;
+    public static final int favoriteButtonIndex = 80;
+    public static final int recipeBookmarkButtonIndex = 60; // There shouldn't be more than 20 recipes on a page.
 
     private final int ingredientCycleOffset = (int) ((Math.random() * 10000) % Integer.MAX_VALUE);
     private final IRecipeCategory recipeCategory;
@@ -50,6 +52,10 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
     private final Map<IIngredientType, GuiIngredientGroup> guiIngredientGroups;
     @Nullable
     private final RecipeTransferButton recipeTransferButton;
+    @Nullable
+    private final RecipeFavoriteButton recipeFavoriteButton;
+    @Nullable
+    private final RecipeBookmarkButton recipeBookmarkButton;
     private final IRecipeWrapper recipeWrapper;
     @Nullable
     private final IFocus<?> focus;
@@ -111,19 +117,47 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
         this.guiIngredientGroups.put(VanillaTypes.FLUID, this.guiFluidStackGroup);
 
         if (index >= 0) {
-            IDrawable icon = Internal.getHelpers()
+            IDrawable transferIcon = Internal.getHelpers()
                 .getGuiHelper()
                 .getRecipeTransfer();
+            IDrawable bookmarkIcon = Internal.getHelpers()
+                .getGuiHelper()
+                .getRecipeBookmarkIcon();
             this.recipeTransferButton = new RecipeTransferButton(
                 recipeTransferButtonIndex + index,
                 0,
                 0,
                 RECIPE_BUTTON_SIZE,
                 RECIPE_BUTTON_SIZE,
-                icon,
+                transferIcon,
+                this);
+            IDrawable favoriteOff = Internal.getHelpers()
+                .getGuiHelper()
+                .getFavoriteDisabled();
+            IDrawable favoriteOn = Internal.getHelpers()
+                .getGuiHelper()
+                .getFavoriteEnabled();
+            this.recipeFavoriteButton = new RecipeFavoriteButton(
+                favoriteButtonIndex + index,
+                RECIPE_BUTTON_SIZE,
+                RECIPE_BUTTON_SIZE,
+                favoriteOff,
+                favoriteOn,
+                recipeWrapper,
+                recipeCategory,
+                this);
+            this.recipeBookmarkButton = new RecipeBookmarkButton(
+                recipeBookmarkButtonIndex + index,
+                RECIPE_BUTTON_SIZE,
+                RECIPE_BUTTON_SIZE,
+                bookmarkIcon,
+                recipeCategory,
+                recipeWrapper,
                 this);
         } else {
             this.recipeTransferButton = null;
+            this.recipeFavoriteButton = null;
+            this.recipeBookmarkButton = null;
         }
 
         setPosition(posX, posY);
@@ -138,14 +172,22 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
     public void setPosition(int posX, int posY) {
         this.posX = posX;
         this.posY = posY;
+        int width = recipeCategory.getBackground()
+            .getWidth();
+        int height = recipeCategory.getBackground()
+            .getHeight();
 
         if (this.recipeTransferButton != null) {
-            int width = recipeCategory.getBackground()
-                .getWidth();
-            int height = recipeCategory.getBackground()
-                .getHeight();
             this.recipeTransferButton.xPosition = posX + width + RECIPE_BORDER_PADDING + 2;
             this.recipeTransferButton.yPosition = posY + height - RECIPE_BUTTON_SIZE;
+        }
+        if (this.recipeFavoriteButton != null) {
+            this.recipeFavoriteButton.xPosition = posX + width + RECIPE_BORDER_PADDING + 2;
+            this.recipeFavoriteButton.yPosition = posY + height - RECIPE_BUTTON_SIZE * 2 - 2;
+        }
+        if (this.recipeBookmarkButton != null) {
+            this.recipeBookmarkButton.xPosition = posX + width + RECIPE_BORDER_PADDING + 2;
+            this.recipeBookmarkButton.yPosition = posY + height - RECIPE_BUTTON_SIZE * 3 - 4;
         }
     }
 
@@ -168,19 +210,11 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
             int height = categoryBackground.getHeight() + (2 * RECIPE_BORDER_PADDING);
             recipeBorder.draw(minecraft, -RECIPE_BORDER_PADDING, -RECIPE_BORDER_PADDING, width, height);
             background.draw(minecraft);
-
-            // defensive push/pop to protect against recipe categories changing the last matrix
-            GlStateManager.pushMatrix();
-            {
-                recipeCategory.drawExtras(minecraft);
-                recipeWrapper
-                    .drawInfo(minecraft, background.getWidth(), background.getHeight(), recipeMouseX, recipeMouseY);
-
-                // drawExtras and drawInfo often render text which messes with the color, this clears it
-                GlStateManager.color(1, 1, 1, 1);
-            }
-            GlStateManager.popMatrix();
-
+            recipeCategory.drawExtras(minecraft);
+            recipeWrapper
+                .drawInfo(minecraft, background.getWidth(), background.getHeight(), recipeMouseX, recipeMouseY);
+            // drawExtras and drawInfo often render text which messes with the color, this clears it
+            GlStateManager.color(1, 1, 1, 1);
             if (shapelessIcon != null) {
                 shapelessIcon.draw(minecraft, background.getWidth());
             }
@@ -192,6 +226,12 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
         }
         if (recipeTransferButton != null) {
             recipeTransferButton.drawButton(minecraft, mouseX, mouseY);
+        }
+        if (recipeFavoriteButton != null) {
+            recipeFavoriteButton.drawButton(minecraft, mouseX, mouseY);
+        }
+        if (recipeBookmarkButton != null) {
+            recipeBookmarkButton.drawButton(minecraft, mouseX, mouseY);
         }
         GlStateManager.disableBlend();
         GlStateManager.disableLighting();
@@ -216,6 +256,12 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
         }
         if (recipeTransferButton != null) {
             recipeTransferButton.drawToolTip(minecraft, mouseX, mouseY);
+        }
+        if (recipeFavoriteButton != null) {
+            recipeFavoriteButton.drawToolTip(minecraft, mouseX, mouseY);
+        }
+        if (recipeBookmarkButton != null) {
+            recipeBookmarkButton.drawToolTip(minecraft, mouseX, mouseY);
         }
         GlStateManager.disableBlend();
         GlStateManager.disableLighting();
@@ -247,7 +293,9 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
         final IDrawable background = recipeCategory.getBackground();
         final Rectangle backgroundRect = new Rectangle(posX, posY, background.getWidth(), background.getHeight());
         return backgroundRect.contains(mouseX, mouseY)
-            || (recipeTransferButton != null && recipeTransferButton.func_146115_a());
+            || (recipeTransferButton != null && recipeTransferButton.func_146115_a())
+            || (recipeFavoriteButton != null && recipeFavoriteButton.func_146115_a())
+            || (recipeBookmarkButton != null && recipeBookmarkButton.func_146115_a());
     }
 
     @Override
@@ -274,6 +322,13 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
 
     public boolean handleClick(Minecraft minecraft, int mouseX, int mouseY, int mouseButton) {
         return recipeWrapper.handleClick(minecraft, mouseX - posX, mouseY - posY, mouseButton);
+    }
+
+    public boolean handleMouseScroll(int mouseX, int mouseY, int scrollAmount) {
+        if (recipeFavoriteButton == null) {
+            return false;
+        }
+        return recipeFavoriteButton.handleMouseScrolled(mouseX, mouseY, scrollAmount);
     }
 
     @Override
@@ -312,6 +367,14 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
             recipeTransferButton.xPosition = posX + this.posX;
             recipeTransferButton.yPosition = posY + this.posY;
         }
+        if (recipeFavoriteButton != null) {
+            recipeFavoriteButton.xPosition = posX + this.posX;
+            recipeFavoriteButton.yPosition = posY + this.posY;
+        }
+        if (recipeBookmarkButton != null) {
+            recipeBookmarkButton.xPosition = posX + this.posX;
+            recipeBookmarkButton.yPosition = posY + this.posY;
+        }
     }
 
     @Override
@@ -330,6 +393,16 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
         return recipeTransferButton;
     }
 
+    @Nullable
+    public RecipeFavoriteButton getRecipeFavoriteButton() {
+        return recipeFavoriteButton;
+    }
+
+    @Nullable
+    public RecipeBookmarkButton getRecipeBookmarkButton() {
+        return recipeBookmarkButton;
+    }
+
     @Override
     public IRecipeCategory getRecipeCategory() {
         return recipeCategory;
@@ -342,4 +415,5 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
     public int getPosY() {
         return posY;
     }
+
 }

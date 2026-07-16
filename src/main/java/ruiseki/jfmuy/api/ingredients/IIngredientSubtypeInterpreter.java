@@ -3,12 +3,12 @@ package ruiseki.jfmuy.api.ingredients;
 import java.util.function.Function;
 
 /**
- * A subtype interpreter tells HEI how to create unique ids for ingredients.
+ * A subtype interpreter tells JFMUY how to create unique ids for ingredients.
  *
  * For example, an ItemStack may have some NBT that is used to create many subtypes,
  * and other NBT that is used for electric charge that can be ignored.
- * You can tell JEI how to interpret these differences by implementing an
- * {@link IIngredientSubtypeInterpreter} and registering it with JEI in
+ * You can tell JFMUY how to interpret these differences by implementing an
+ * {@link IIngredientSubtypeInterpreter} and registering it with JFMUY in
  * {@link ruiseki.jfmuy.api.ISubtypeRegistry}
  */
 @FunctionalInterface

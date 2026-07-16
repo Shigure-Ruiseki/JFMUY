@@ -27,6 +27,9 @@ import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.ingredients.IModIngredientRegistration;
 import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.IRecipeCategoryRegistration;
+import ruiseki.jfmuy.bookmarks.BookmarkIngredientHelper;
+import ruiseki.jfmuy.bookmarks.BookmarkItem;
+import ruiseki.jfmuy.bookmarks.BookmarkItemRender;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.GuiProperties;
@@ -57,6 +60,10 @@ public class JFMUYInternalPlugin implements IModPlugin {
             ingredientRegistration
                 .register(DebugIngredient.TYPE, Collections.emptyList(), ingredientHelper, ingredientRenderer);
         }
+        BookmarkIngredientHelper bookmarkIngredientHelper = new BookmarkIngredientHelper();
+        BookmarkItemRender bookmarkItemRender = new BookmarkItemRender();
+        ingredientRegistration
+            .register(BookmarkItem.TYPE, Collections.emptyList(), bookmarkIngredientHelper, bookmarkItemRender);
     }
 
     @Override

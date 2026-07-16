@@ -32,6 +32,13 @@ public interface IRecipeTransferInfo<C extends Container> {
     boolean canHandle(C container);
 
     /**
+     * Return the output/crafting slot index. Return -1 if there is no output slot or if this is unsupported.
+     */
+    default int getOutputSlot() {
+        return -1;
+    }
+
+    /**
      * Return a list of slots for the recipe area.
      */
     List<Slot> getRecipeSlots(C container);

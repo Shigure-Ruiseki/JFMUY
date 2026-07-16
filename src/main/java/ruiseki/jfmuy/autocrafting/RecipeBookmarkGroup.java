@@ -1,0 +1,120 @@
+package ruiseki.jfmuy.autocrafting;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.api.recipe.transfer.IAutocraftingHandler;
+import ruiseki.jfmuy.bookmarks.BookmarkGroup;
+import ruiseki.jfmuy.bookmarks.BookmarkItem;
+import ruiseki.jfmuy.config.Config;
+import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+
+public class RecipeBookmarkGroup extends BookmarkGroup {
+
+    private final RecipeChain chain = new RecipeChain(this);
+
+    public RecipeBookmarkGroup(int id) {
+        super(id);
+    }
+
+    public void addItemInternal(BookmarkItem<?> item) {
+        super.addItemInternal(item);
+    }
+
+    public boolean addItem(BookmarkItem<?> item) {
+        if (canAddItem(item)) {
+            BookmarkGroup originalGroup = item.getGroup();
+            addItemInternal(item);
+            if (item instanceof RecipeBookmarkItem) {
+                if (chain.addOutput((RecipeBookmarkItem<?>) item)) {
+                    // It returned true since the item was actually already in the chain, so the item's reference was
+                    // not added.
+                    if (originalGroup != null) {
+                        originalGroup.removeItem(item);
+                    }
+                }
+                update();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean canAddItem(BookmarkItem<?> item) {
+        return item instanceof RecipeBookmarkItem;
+    }
+
+    @Override
+    public List<BookmarkItem<?>> getItems() {
+        List<BookmarkItem<?>> list = new ArrayList<>();
+        if (!Config.areRecipeBookmarksEnabled()) {
+            return list;
+        }
+        for (RecipeBookmarkItem<?> item : chain.getDisplayOutputs()) {
+            if (item.secondaryTo == null && item.inputs != null && !item.inputs.isEmpty()) {
+                list.add(item);
+                if (chain.secondaryOutputs.containsKey(item)) {
+                    list.addAll(chain.secondaryOutputs.get(item));
+                }
+                list.addAll(item.getInputs());
+            }
+        }
+        return list;
+    }
+
+    public void finishLoading() {
+        chain.rebuildGraph();
+    }
+
+    public List<IIngredientListElement<?>> getIngredientListElements() {
+        return getItems().stream()
+            .map(this::getIngredientListElement)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean acceptsChanges() {
+        return false;
+    }
+
+    public void update() {
+        chain.calculateCrafting();
+    }
+
+    @Override
+    public void removeItem(BookmarkItem<?> item) {
+        super.removeItem(item);
+        if (item instanceof RecipeBookmarkItem) {
+            chain.removeNode((RecipeBookmarkItem<?>) item);
+            // NOTE: there may be a bug here with removing certain intermediate steps.
+            // I happened upon a glitch like it once, but ten hours later, I can't reproduce it.
+        }
+    }
+
+    public void autocraft() {
+        IAutocraftingHandler handler = Internal.getRuntime()
+            .getAutocraftingHandler();
+        if (!handler.isActive()) {
+            ((AutocraftingHandler) Internal.getRuntime()
+                .getAutocraftingHandler()).start(chain);
+        }
+    }
+
+    public int getColor() {
+        return Config.getRecipeBookmarkGroupColor();
+    }
+
+    public List<IIngredientListElement> getMissingIngredients() {
+        List<BookmarkItem<?>> missing = new ObjectArrayList<>();
+        chain.calculateMissingIngredients(null, missing);
+        return missing.stream()
+            .map(this::getIngredientListElement)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    }
+}

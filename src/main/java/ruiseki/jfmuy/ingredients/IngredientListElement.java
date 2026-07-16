@@ -16,6 +16,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import ruiseki.jfmuy.ClientProxy;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
+import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.startup.IModIdHelper;
@@ -188,11 +189,6 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
     }
 
     @Override
-    public int getOrdinal() {
-        return ingredientHelper.getOrdinal(ingredient);
-    }
-
-    @Override
     public boolean isVisible() {
         if (visible) {
             return true;
@@ -207,5 +203,26 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
     @Override
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    @Override
+    public int getGroupIndex() {
+        if (ingredient instanceof BookmarkItem<?> && ((BookmarkItem<?>) ingredient).getGroup() != null) {
+            return ((BookmarkItem<?>) ingredient).getGroup().id;
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean startsNewRow() {
+        if (ingredient instanceof BookmarkItem) {
+            return ((BookmarkItem<?>) ingredient).startsNewRow();
+        }
+        return false;
+    }
+
+    @Override
+    public int getOrdinal() {
+        return ingredientHelper.getOrdinal(ingredient);
     }
 }

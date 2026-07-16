@@ -3,6 +3,7 @@ package ruiseki.jfmuy.plugins.vanilla.ingredients.fluid;
 import java.awt.Color;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.item.ItemStack;
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.base.Objects;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.color.ColorGetter;
@@ -25,6 +27,8 @@ import ruiseki.okcore.fluid.handler.IFluidHandlerItem;
 import ruiseki.okcore.helper.CapabilityHelpers;
 
 public class FluidStackHelper implements IIngredientHelper<FluidStack> {
+
+    private final Map<FluidStack, Integer> hashCache = new Object2IntOpenHashMap<>();
 
     @Override
     public List<FluidStack> expandSubtypes(List<FluidStack> contained) {
@@ -59,6 +63,22 @@ public class FluidStackHelper implements IIngredientHelper<FluidStack> {
             uniqueId.append(subtype);
         }
         return uniqueId.toString();
+    }
+
+    @Override
+    public int getHash(FluidStack ingredient) {
+        if (ingredient.amount == 0) {
+            return 0;
+        }
+        if (hashCache.containsKey(ingredient)) {
+            return hashCache.get(ingredient);
+        }
+        int hash = ingredient.amount * 31 + ingredient.getFluid()
+            .getName()
+            .hashCode();
+        hash = (hash * 31) + (ingredient.tag == null ? 0 : ingredient.tag.hashCode());
+        hashCache.put(ingredient, hash);
+        return hash;
     }
 
     @Override
@@ -149,7 +169,7 @@ public class FluidStackHelper implements IIngredientHelper<FluidStack> {
     }
 
     @Override
-    public String getErrorInfo(FluidStack ingredient) {
+    public String getErrorInfo(@Nullable FluidStack ingredient) {
         if (ingredient == null) {
             return "null";
         }

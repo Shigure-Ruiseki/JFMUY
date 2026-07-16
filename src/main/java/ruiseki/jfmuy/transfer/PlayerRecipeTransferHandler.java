@@ -16,15 +16,14 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableSet;
 
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.api.gui.IGuiIngredient;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
+import ruiseki.jfmuy.api.recipe.transfer.IRecipeCraftingHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
-import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferInfo;
 import ruiseki.jfmuy.config.ServerInfo;
@@ -34,7 +33,7 @@ import ruiseki.jfmuy.startup.StackHelper;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
 
-public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<ContainerPlayer> {
+public class PlayerRecipeTransferHandler implements IRecipeCraftingHandler<ContainerPlayer> {
 
     private final StackHelper stackHelper;
     private final IRecipeTransferHandlerHelper handlerHelper;
@@ -49,7 +48,7 @@ public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<Conta
             1,
             4,
             9,
-            36);
+            36).setCraftingSlot(0);
     }
 
     @Override
@@ -61,6 +60,11 @@ public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<Conta
     @Override
     public IRecipeTransferError transferRecipe(ContainerPlayer container, IRecipeLayout recipeLayout,
         EntityPlayer player, boolean maxTransfer, boolean doTransfer) {
+        return transferRecipe(container, recipeLayout, player, maxTransfer ? Integer.MAX_VALUE : 1, false, doTransfer);
+    }
+
+    protected IRecipeTransferError transferRecipe(ContainerPlayer container, IRecipeLayout recipeLayout,
+        EntityPlayer player, int maxTransfer, boolean performRecipe, boolean doTransfer) {
         if (!ServerInfo.isJFMUYOnServer()) {
             String tooltipMessage = Translator.translateToLocal("jfmuy.tooltip.error.recipe.transfer.no.server");
             return handlerHelper.createUserErrorWithTooltip(tooltipMessage);
@@ -175,8 +179,9 @@ public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<Conta
         Collections.sort(inventorySlotIndexes);
 
         // check that the slots exist and can be altered
-        for (Int2IntMap.Entry entry : matchingItemsResult.matchingItemsCasted.int2IntEntrySet()) {
-            int slotNumber = craftingSlotIndexes.get(entry.getIntKey());
+        for (Map.Entry<Integer, Integer> entry : matchingItemsResult.matchingItems.entrySet()) {
+            int craftNumber = entry.getKey();
+            int slotNumber = craftingSlotIndexes.get(craftNumber);
             if (slotNumber < 0 || slotNumber >= container.inventorySlots.size()) {
                 Log.get()
                     .error(
@@ -190,15 +195,23 @@ public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<Conta
 
         if (doTransfer) {
             PacketRecipeTransfer packet = new PacketRecipeTransfer(
-                matchingItemsResult.matchingItemsCasted,
+                matchingItemsResult.matchingItems,
                 craftingSlotIndexes,
                 inventorySlotIndexes,
                 maxTransfer,
-                false);
+                performRecipe,
+                false).setOutputSlot(transferHelper.getOutputSlot());
             JFMUY.instance.getPacketHandler()
                 .sendToServer(packet);
         }
 
         return null;
+    }
+
+    @Nullable
+    @Override
+    public IRecipeTransferError craft(ContainerPlayer container, IRecipeLayout recipeLayout, EntityPlayer player,
+        int amount, boolean doTransfer) {
+        return this.transferRecipe(container, recipeLayout, player, amount, true, doTransfer);
     }
 }

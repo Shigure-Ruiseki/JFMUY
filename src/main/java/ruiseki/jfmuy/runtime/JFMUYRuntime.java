@@ -2,6 +2,8 @@ package ruiseki.jfmuy.runtime;
 
 import ruiseki.jfmuy.api.IBookmarkOverlay;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
+import ruiseki.jfmuy.api.recipe.transfer.IAutocraftingHandler;
+import ruiseki.jfmuy.autocrafting.AutocraftingHandler;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
@@ -14,6 +16,7 @@ public class JFMUYRuntime implements IJFMUYRuntime {
     private final IBookmarkOverlay bookmarkOverlay;
     private final RecipesGui recipesGui;
     private final IngredientFilter ingredientFilter;
+    private final IAutocraftingHandler autocraftingHandler;
 
     public JFMUYRuntime(RecipeRegistry recipeRegistry, IngredientListOverlay ingredientListOverlay,
         IBookmarkOverlay bookmarkOverlay, RecipesGui recipesGui, IngredientFilter ingredientFilter) {
@@ -22,6 +25,7 @@ public class JFMUYRuntime implements IJFMUYRuntime {
         this.bookmarkOverlay = bookmarkOverlay;
         this.recipesGui = recipesGui;
         this.ingredientFilter = ingredientFilter;
+        this.autocraftingHandler = new AutocraftingHandler();
     }
 
     public void close() {
@@ -46,6 +50,11 @@ public class JFMUYRuntime implements IJFMUYRuntime {
     @Override
     public IBookmarkOverlay getBookmarkOverlay() {
         return bookmarkOverlay;
+    }
+
+    @Override
+    public IAutocraftingHandler getAutocraftingHandler() {
+        return autocraftingHandler;
     }
 
     @Override

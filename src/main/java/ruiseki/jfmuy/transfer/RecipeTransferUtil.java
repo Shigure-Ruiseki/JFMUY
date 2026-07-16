@@ -8,6 +8,7 @@ import net.minecraft.inventory.Container;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
+import ruiseki.jfmuy.api.recipe.transfer.RecipeTransferErrorInternal;
 import ruiseki.jfmuy.gui.recipes.RecipeLayout;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;

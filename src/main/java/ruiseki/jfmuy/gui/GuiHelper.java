@@ -31,6 +31,9 @@ public class GuiHelper implements IGuiHelper {
     private final IDrawableStatic arrowPrevious;
     private final IDrawableStatic arrowNext;
     private final IDrawableStatic recipeTransfer;
+    private final IDrawableStatic favoriteDisabled;
+    private final IDrawableStatic favoriteEnabled;
+    private final IDrawableStatic recipeBookmarkIcon;
     private final IDrawableStatic configButtonIcon;
     private final IDrawableStatic configButtonCheatIcon;
     private final IDrawableStatic bookmarkButtonDisabledIcon;
@@ -66,6 +69,9 @@ public class GuiHelper implements IGuiHelper {
         this.arrowPrevious = createDrawable(Textures.arrowPrevious);
         this.arrowNext = createDrawable(Textures.arrowNext);
         this.recipeTransfer = createDrawable(Textures.recipeTransfer);
+        this.favoriteDisabled = createDrawable(Textures.favoriteDisabled);
+        this.favoriteEnabled = createDrawable(Textures.favoriteEnabled);
+        this.recipeBookmarkIcon = createDrawable(Textures.recipeBookmarkIcon);
 
         this.configButtonIcon = createDrawable(Textures.configButtonIcon);
         this.configButtonCheatIcon = createDrawable(Textures.configButtonCheatIcon);
@@ -145,6 +151,18 @@ public class GuiHelper implements IGuiHelper {
 
     public IDrawableStatic getRecipeTransfer() {
         return recipeTransfer;
+    }
+
+    public IDrawableStatic getFavoriteDisabled() {
+        return favoriteDisabled;
+    }
+
+    public IDrawableStatic getFavoriteEnabled() {
+        return favoriteEnabled;
+    }
+
+    public IDrawableStatic getRecipeBookmarkIcon() {
+        return recipeBookmarkIcon;
     }
 
     public IDrawableStatic getConfigButtonIcon() {

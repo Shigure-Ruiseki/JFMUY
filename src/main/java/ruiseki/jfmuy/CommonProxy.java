@@ -1,6 +1,7 @@
 package ruiseki.jfmuy;
 
 import ruiseki.jfmuy.network.PacketCheatPermission;
+import ruiseki.jfmuy.network.PacketCraftUpdate;
 import ruiseki.jfmuy.network.PacketDeletePlayerItem;
 import ruiseki.jfmuy.network.PacketGiveItemStack;
 import ruiseki.jfmuy.network.PacketRecipeTransfer;
@@ -21,6 +22,7 @@ public class CommonProxy extends CommonProxyComponent {
     public void registerPacketHandlers(PacketHandler packetHandler) {
         super.registerPacketHandlers(packetHandler);
         packetHandler.register(PacketCheatPermission.class);
+        packetHandler.register(PacketCraftUpdate.class);
         packetHandler.register(PacketDeletePlayerItem.class);
         packetHandler.register(PacketGiveItemStack.class);
         packetHandler.register(PacketRecipeTransfer.class);

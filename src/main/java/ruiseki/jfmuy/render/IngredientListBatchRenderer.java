@@ -1,7 +1,11 @@
 package ruiseki.jfmuy.render;
 
+import static ruiseki.jfmuy.gui.overlay.IngredientGrid.INGREDIENT_HEIGHT;
+import static ruiseki.jfmuy.gui.overlay.IngredientGrid.INGREDIENT_WIDTH;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -21,6 +25,7 @@ import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.input.ClickedIngredient;
@@ -30,16 +35,19 @@ import ruiseki.okcore.client.renderer.GlStateManager;
 
 public class IngredientListBatchRenderer {
 
-    private final List<IngredientListSlot> slots = new ArrayList<>();
+    protected final List<List<IngredientListSlot>> slots = new ObjectArrayList<>();
 
-    private final List<ItemStackFastRenderer> renderItems2d = new ArrayList<>();
-    private final List<ItemStackFastRenderer> renderItems3d = new ArrayList<>();
-    private final List<IngredientRenderer> renderOther = new ArrayList<>();
+    protected final List<ItemStackFastRenderer> renderItems2d = new ArrayList<>();
+    protected final List<ItemStackFastRenderer> renderItems3d = new ArrayList<>();
+    protected final List<IngredientRenderer> renderOther = new ArrayList<>();
 
     @Nullable
     private Framebuffer framebuffer = null;
     private boolean refreshBuffer = true;
-    private int blocked = 0;
+    protected int size = 0;
+    private int width;
+    private int maxWidth;
+    private int height;
 
     public void clear() {
         slots.clear();
@@ -47,39 +55,61 @@ public class IngredientListBatchRenderer {
         renderItems2d.clear();
         renderItems3d.clear();
         renderOther.clear();
-        blocked = 0;
+        size = 0;
+
+        width = 0;
+        maxWidth = 0;
+        height = 0;
     }
 
     public int size() {
-        return slots.size() - blocked;
+        return size;
     }
 
-    public void add(IngredientListSlot ingredientListSlot) {
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void add(List<IngredientListSlot> ingredientListSlot) {
         slots.add(ingredientListSlot);
     }
 
     public List<IngredientListSlot> getAllGuiIngredientSlots() {
-        return slots;
+        return slots.stream()
+            .flatMap(List::stream)
+            .collect(Collectors.toList());
     }
 
     public void set(final int startIndex, List<IIngredientListElement> ingredientList) {
         renderItems2d.clear();
         renderItems3d.clear();
         renderOther.clear();
-        blocked = 0;
+        size = 0;
+
+        // We need to clear all of them anyway.
+        for (List<IngredientListSlot> row : slots) {
+            for (IngredientListSlot slot : row) {
+                slot.clear();
+            }
+        }
 
         int i = startIndex;
-        for (IngredientListSlot ingredientListSlot : slots) {
-            if (ingredientListSlot.isBlocked()) {
-                ingredientListSlot.clear();
-                blocked++;
-            } else {
+        for (List<IngredientListSlot> row : slots) {
+            for (int column = 0; column < row.size(); column++) {
                 if (i >= ingredientList.size()) {
-                    ingredientListSlot.clear();
-                } else {
-                    IIngredientListElement<?> element = ingredientList.get(i);
-                    set(ingredientListSlot, element);
+                    break;
                 }
+                IIngredientListElement<?> element = ingredientList.get(i);
+                IngredientListSlot ingredientListSlot = row.get(column);
+                if (ingredientListSlot.isBlocked()) {
+                    continue;
+                }
+                set(ingredientListSlot, element);
+                size++;
                 i++;
             }
         }
@@ -91,7 +121,7 @@ public class IngredientListBatchRenderer {
         refreshBuffer = true;
     }
 
-    private <V> void set(IngredientListSlot ingredientListSlot, IIngredientListElement<V> element) {
+    protected <V> void set(IngredientListSlot ingredientListSlot, IIngredientListElement<V> element) {
         ingredientListSlot.clear();
 
         V ingredient = element.getIngredient();
@@ -138,6 +168,38 @@ public class IngredientListBatchRenderer {
         renderOther.add(renderer);
     }
 
+    /**
+     * Moves the slots around to fit the given width. Used for tooltip rendering, which can have width resizing.
+     *
+     * @param maxWidth The maximum width allowed for the grid.
+     */
+    public void moveSlotsToFit(int maxWidth) {
+        if (this.maxWidth / INGREDIENT_WIDTH == maxWidth / INGREDIENT_WIDTH) {
+            return;
+        }
+        int xPos = 0;
+        int yPos = 0;
+        this.maxWidth = maxWidth;
+        width = 0;
+        for (List<IngredientListSlot> row : slots) {
+            for (IngredientListSlot slot : row) {
+                if (xPos >= maxWidth) {
+                    xPos = 0;
+                    yPos += INGREDIENT_HEIGHT;
+                }
+                slot.getArea()
+                    .setLocation(xPos, yPos);
+                xPos += INGREDIENT_WIDTH;
+                if (xPos > width) {
+                    width = xPos;
+                }
+            }
+            xPos = 0;
+            yPos += INGREDIENT_HEIGHT;
+        }
+        this.height = yPos;
+    }
+
     @Nullable
     public ClickedIngredient<?> getIngredientUnderMouse(int mouseX, int mouseY) {
         IngredientRenderer hovered = getHovered(mouseX, mouseY);
@@ -150,11 +212,8 @@ public class IngredientListBatchRenderer {
 
     @Nullable
     public IngredientRenderer getHovered(int mouseX, int mouseY) {
-        for (IngredientListSlot slot : slots) {
-            if (slot.isMouseOver(mouseX, mouseY)) {
-                return slot.getIngredientRenderer();
-            }
-        }
+        for (List<IngredientListSlot> row : slots) for (IngredientListSlot slot : row)
+            if (slot.isMouseOver(mouseX, mouseY)) return slot.getIngredientRenderer();
         return null;
     }
 

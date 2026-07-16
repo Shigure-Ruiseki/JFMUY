@@ -11,7 +11,7 @@ import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 /**
  * This holds a recipe's inputs and outputs in a standardized format.
  * <p>
- * It is filled out by {@link IRecipeWrapper#getIngredients(IIngredients)}, and then used by JEI to figure out
+ * It is filled out by {@link IRecipeWrapper#getIngredients(IIngredients)}, and then used by JFMUY to figure out
  * what items are in the recipe, for lookups.
  * It is also passed back to {@link IRecipeCategory#setRecipe(IRecipeLayout, IRecipeWrapper, IIngredients)}
  * where it can be used to set ingredient groups in the recipe layout with {@link IGuiIngredientGroup#set(IIngredients)}

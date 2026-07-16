@@ -18,6 +18,7 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -33,6 +34,7 @@ import ruiseki.jfmuy.runtime.JFMUYRuntime;
 import ruiseki.jfmuy.startup.AnnotatedInstanceUtil;
 import ruiseki.jfmuy.startup.JFMUYStarter;
 import ruiseki.jfmuy.startup.PlayerJoinedWorldEvent;
+import ruiseki.jfmuy.transfer.BasicRecipeTransferHandlerServer;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.event.recipes.RecipesUpdatedEvent;
@@ -107,11 +109,11 @@ public class JFMUYHandler {
                     if (Config.isDebugModeEnabled()) {
                         Log.get()
                             .info(
-                                "Reloading HEI ingredient filter.",
+                                "Reloading JFMUY ingredient filter.",
                                 new RuntimeException("Stack trace for debugging"));
                     } else {
                         Log.get()
-                            .info("Reloading HEI ingredient filter.");
+                            .info("Reloading JFMUY ingredient filter.");
                     }
                     // force search tree to reload
                     Config.needToRebuildSearchTree = true;
@@ -174,5 +176,10 @@ public class JFMUYHandler {
                 .info("Recipes updated from server. Reloading JFMUY...");
             this.starter.start(this.plugins);
         }
+    }
+
+    @SubscribeEvent
+    public void onItemCrafted(PlayerEvent.ItemCraftedEvent event) {
+        BasicRecipeTransferHandlerServer.itemsCrafted += event.crafting.stackSize;
     }
 }

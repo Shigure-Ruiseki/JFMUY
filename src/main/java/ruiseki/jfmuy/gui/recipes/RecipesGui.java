@@ -71,8 +71,6 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
 
     private HoverChecker titleHoverChecker = new HoverChecker(0, 0, 0, 0, 0);
 
-    private final List<RecipeTransferButton> recipeTransferButtons = new ArrayList<>();
-
     private final GuiButton nextRecipeCategory;
     private final GuiButton previousRecipeCategory;
     private final GuiButton nextPage;
@@ -151,10 +149,6 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         }
         this.xSize = 198;
         this.ySize = this.height - 68;
-        if (this.ySize < Config.minRecipeGuiHeight) {
-            this.ySize = Config.minRecipeGuiHeight;
-        }
-
         int extraSpace = 0;
         final int maxHeight = Config.getMaxRecipeGuiHeight();
         if (this.ySize > maxHeight) {
@@ -187,21 +181,6 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
 
         this.init = true;
         updateLayout();
-    }
-
-    @Override
-    public void updateScreen() {
-        super.updateScreen();
-
-        if (mc != null) {
-            EntityPlayerSP player = mc.thePlayer;
-            if (player != null) {
-                Container container = getParentContainer();
-                for (RecipeTransferButton button : this.recipeTransferButtons) {
-                    button.update(container, player);
-                }
-            }
-        }
     }
 
     private void addButtons() {
@@ -269,7 +248,7 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
             recipeLayout.drawRecipe(mc, mouseX, mouseY);
         }
 
-        GuiIngredient<?> hoveredRecipeCatalyst = recipeCatalysts.draw(mc, mouseX, mouseY);
+        GuiIngredient hoveredRecipeCatalyst = recipeCatalysts.draw(mc, mouseX, mouseY);
 
         recipeGuiTabs.draw(mc, mouseX, mouseY);
 
@@ -339,23 +318,21 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         final int x = Mouse.getEventX() * width / mc.displayWidth;
         final int y = height - Mouse.getEventY() * height / mc.displayHeight - 1;
         if (isMouseOver(x, y)) {
+
             int scrollDelta = Mouse.getEventDWheel();
-            if (GuiScreen.isShiftKeyDown()) {
-                if (scrollDelta < 0) {
-                    logic.nextRecipeCategory();
-                    return;
-                } else if (scrollDelta > 0) {
-                    logic.previousRecipeCategory();
-                    return;
+            if (scrollDelta != 0) {
+                for (RecipeLayout recipeLayout : recipeLayouts) {
+                    if (recipeLayout.handleMouseScroll(x, y, scrollDelta)) {
+                        return;
+                    }
                 }
-            } else {
-                if (scrollDelta < 0) {
-                    logic.nextPage();
-                    return;
-                } else if (scrollDelta > 0) {
-                    logic.previousPage();
-                    return;
-                }
+            }
+            if (scrollDelta < 0) {
+                logic.nextPage();
+                return;
+            } else if (scrollDelta > 0) {
+                logic.previousPage();
+                return;
             }
         }
         super.handleMouseInput();
@@ -364,9 +341,6 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         if (mc == null) {
-            return;
-        }
-        if (handleButtonClick(mouseX, mouseY, mouseButton)) {
             return;
         }
         if (isMouseOver(mouseX, mouseY)) {
@@ -396,27 +370,11 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
-    private boolean handleButtonClick(int mouseX, int mouseY, int mouseButton) {
-        if (mouseButton != 0) {
-            return false;
-        }
-        for (GuiButton button : this.buttonList) {
-            if (button.mousePressed(mc, mouseX, mouseY)) {
-                button.func_146113_a(mc.getSoundHandler());
-                this.actionPerformed(button);
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     protected void keyTyped(char typedChar, int keyCode) {
         if (handleKeybinds(keyCode) && this instanceof IGuiInputHandle handle) {
             handle.setKeyHandled(true);
-            return;
         }
-        super.keyTyped(typedChar, keyCode); // Hỗ trợ ESC thoát GUI chuẩn 1.7.10
     }
 
     private boolean handleKeybinds(int eventKey) {
@@ -434,8 +392,7 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
                     if (KeyBindings.nextPage.getKeyCode() == eventKey) {
                         logic.nextPage();
                         return true;
-                    } else if (KeyBindings.previousPage.getKeyCode() == eventKey) { // Sửa lỗi gọi hàm getKeyCode dư
-                                                                                    // thừa tham số ở đây
+                    } else if (KeyBindings.previousPage.getKeyCode() == eventKey) {
                         logic.previousPage();
                         return true;
                     }
@@ -464,8 +421,15 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
             return;
         }
         if (isOpen()) {
-            mc.displayGuiScreen(parentScreen);
-            parentScreen = null;
+            if (parentScreen != null) {
+                mc.displayGuiScreen(parentScreen);
+                parentScreen = null;
+            } else {
+                EntityPlayerSP player = mc.thePlayer;
+                if (player != null) {
+                    player.closeScreen();
+                }
+            }
             logic.clearHistory();
         }
     }
@@ -529,7 +493,7 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         if (!init || mc == null) {
             return;
         }
-        IRecipeCategory<?> recipeCategory = logic.getSelectedRecipeCategory();
+        IRecipeCategory recipeCategory = logic.getSelectedRecipeCategory();
         IDrawable recipeBackground = recipeCategory.getBackground();
 
         int availableHeight = ySize - headerHeight;
@@ -568,7 +532,7 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
 
         recipeLayouts.clear();
         recipeLayouts.addAll(logic.getRecipeLayouts(recipeXOffset, guiTop + headerHeight + recipeSpacing, spacingY));
-        addRecipeTransferButtons(mc, recipeLayouts);
+        addRecipeSpecificButtons(mc, recipeLayouts);
 
         nextPage.enabled = previousPage.enabled = logic.hasMultiplePages();
         nextRecipeCategory.enabled = previousRecipeCategory.enabled = logic.hasMultipleCategories();
@@ -580,9 +544,8 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         recipeGuiTabs.initLayout(this);
     }
 
-    private void addRecipeTransferButtons(Minecraft minecraft, List<RecipeLayout> recipeLayouts) {
+    private void addRecipeSpecificButtons(Minecraft minecraft, List<RecipeLayout> recipeLayouts) {
         buttonList.clear();
-        recipeTransferButtons.clear();
         addButtons();
 
         EntityPlayer player = minecraft.thePlayer;
@@ -592,9 +555,18 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
             for (RecipeLayout recipeLayout : recipeLayouts) {
                 RecipeTransferButton button = recipeLayout.getRecipeTransferButton();
                 if (button != null) {
-                    button.update(container, player);
+                    button.init(container, player);
                     buttonList.add(button);
-                    recipeTransferButtons.add(button);
+                }
+                RecipeFavoriteButton favoriteButton = recipeLayout.getRecipeFavoriteButton();
+                if (favoriteButton != null) {
+                    favoriteButton.init(recipeLayout);
+                    buttonList.add(favoriteButton);
+                }
+                RecipeBookmarkButton bookmarkButton = recipeLayout.getRecipeBookmarkButton();
+                if (bookmarkButton != null) {
+                    bookmarkButton.init(recipeLayout);
+                    buttonList.add(bookmarkButton);
                 }
             }
         }

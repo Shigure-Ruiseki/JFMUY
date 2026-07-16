@@ -18,5 +18,5 @@ A backport of the modern JEI item utility system to Minecraft 1.7.10 for learnin
 
 ## Original Mod
 
-Check out the modern JEI project here:
+Check out the modern JFMUY project here:
 https://www.curseforge.com/minecraft/mc-mods/jei

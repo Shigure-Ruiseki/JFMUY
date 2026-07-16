@@ -1,9 +1,8 @@
-package ruiseki.jfmuy.transfer;
+package ruiseki.jfmuy.api.recipe.transfer;
 
 import net.minecraft.client.Minecraft;
 
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
-import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
 
 public class RecipeTransferErrorInternal implements IRecipeTransferError {
 

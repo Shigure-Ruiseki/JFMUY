@@ -1,10 +1,13 @@
 package ruiseki.jfmuy.startup;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
@@ -18,6 +21,7 @@ import ruiseki.jfmuy.util.IngredientSet;
 public class ModIngredientRegistration implements IModIngredientRegistration {
 
     private final Map<IIngredientType, Collection> allIngredientsMap = new Reference2ObjectOpenHashMap<>();
+    public static final List<IIngredientType> CRAFTABLE_INGREDIENTS = new ObjectArrayList<>();
     private final Map<IIngredientType, IIngredientHelper> ingredientHelperMap = new Reference2ObjectOpenHashMap<>();
     private final Map<IIngredientType, IIngredientRenderer> ingredientRendererMap = new Reference2ObjectOpenHashMap<>();
 
@@ -32,6 +36,11 @@ public class ModIngredientRegistration implements IModIngredientRegistration {
         allIngredientsMap.put(ingredientType, allIngredients);
         ingredientHelperMap.put(ingredientType, ingredientHelper);
         ingredientRendererMap.put(ingredientType, ingredientRenderer);
+    }
+
+    @Override
+    public <V> void markAsCraftable(IIngredientType<V> ingredientType) {
+        CRAFTABLE_INGREDIENTS.add(ingredientType);
     }
 
     public IngredientRegistry createIngredientRegistry(IModIdHelper modIdHelper,
@@ -49,7 +58,8 @@ public class ModIngredientRegistration implements IModIngredientRegistration {
             blacklist,
             ingredientsMap,
             ImmutableMap.copyOf(ingredientHelperMap),
-            ImmutableMap.copyOf(ingredientRendererMap));
+            ImmutableMap.copyOf(ingredientRendererMap),
+            ImmutableList.copyOf(CRAFTABLE_INGREDIENTS));
     }
 
     private <T> IngredientSet<T> createIngredientSet(IIngredientType<T> ingredientType, Collection<T> ingredients) {

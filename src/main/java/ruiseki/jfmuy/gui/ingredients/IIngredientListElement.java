@@ -33,11 +33,15 @@ public interface IIngredientListElement<V> {
 
     String getResourceId();
 
-    default int getOrdinal() {
-        return 0;
-    }
-
     boolean isVisible();
 
     void setVisible(boolean visible);
+
+    int getGroupIndex();
+
+    boolean startsNewRow();
+
+    default int getOrdinal() {
+        return 0; // Preserve compatibility
+    }
 }

@@ -16,7 +16,7 @@ import ruiseki.jfmuy.api.gui.IRecipeLayout;
  * Useful functions for implementing a recipe transfer handler can be found in {@link IRecipeTransferHandlerHelper}.
  * <p>
  * To register your recipe transfer handler, use
- * {@link IRecipeTransferRegistry#addRecipeTransferHandler(IRecipeTransferHandler, String)}.
+ * {@link IRecipeTransferRegistry#addRecipeTransferHandlerWithOutput(IRecipeTransferHandler, String)}.
  */
 public interface IRecipeTransferHandler<C extends Container> {
 

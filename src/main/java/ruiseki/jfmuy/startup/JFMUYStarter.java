@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import cpw.mods.fml.common.ProgressManager;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
 import ruiseki.jfmuy.api.IModPlugin;
@@ -24,6 +25,7 @@ import ruiseki.jfmuy.gui.overlay.bookmarks.LeftAreaDispatcher;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.ingredients.IngredientBlacklistInternal;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
+import ruiseki.jfmuy.ingredients.IngredientListElement;
 import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.input.InputHandler;
@@ -44,6 +46,8 @@ public class JFMUYStarter {
     public void start(List<IModPlugin> plugins) {
         LoggedTimer totalTime = new LoggedTimer();
         totalTime.start("Starting JFMUY");
+
+        IngredientListElement.canonicalizedStringArrays = new ObjectOpenHashSet<>();
 
         IModIdHelper modIdHelper = ForgeModIdHelper.getInstance();
         ErrorUtil.setModIdHelper(modIdHelper);
@@ -152,6 +156,8 @@ public class JFMUYStarter {
         Internal.setInputHandler(inputHandler);
 
         Config.checkForModNameFormatOverride();
+
+        IngredientListElement.canonicalizedStringArrays = new ObjectOpenHashSet<>();
 
         started = true;
         totalTime.stop();

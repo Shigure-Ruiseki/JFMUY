@@ -1,18 +1,19 @@
 package ruiseki.jfmuy.ingredients;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableSet;
 
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
@@ -23,16 +24,18 @@ import ruiseki.jfmuy.util.Translator;
 
 public class IngredientListElement<V> implements IIngredientListElement<V> {
 
+    public static ObjectOpenHashSet<String[]> canonicalizedStringArrays = new ObjectOpenHashSet<>();
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s");
 
     private final V ingredient;
     private final int orderIndex;
     private final IIngredientHelper<V> ingredientHelper;
     private final IIngredientRenderer<V> ingredientRenderer;
+    private final Object modIds; // Can be String or String[]
+    private final Object modNames; // Can be String or String[]
     private final String displayName;
-    private final List<String> modIds;
-    private final List<String> modNames;
     private final String resourceId;
+
     private boolean visible = true;
 
     @Nullable
@@ -66,14 +69,10 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
         this.ingredientRenderer = ingredientRenderer;
         String displayModId = ingredientHelper.getDisplayModId(ingredient);
         String modId = ingredientHelper.getModId(ingredient);
-        this.modIds = new ArrayList<>();
-        this.modIds.add(displayModId);
-        if (!modId.equals(displayModId)) {
-            this.modIds.add(modId);
-        }
-        this.modNames = this.modIds.stream()
-            .map(modIdHelper::getModNameForModId)
-            .collect(Collectors.toList());
+        this.modIds = modId.equals(displayModId) ? displayModId.intern() : canonicalizedStringArrays.addOrGet(new String[] { modId.intern(), displayModId.intern() });
+        this.modNames = this.modIds instanceof String ?
+            modIdHelper.getModNameForModId((String) this.modIds).intern() :
+            canonicalizedStringArrays.addOrGet(Arrays.stream((String[]) this.modIds).map(modIdHelper::getModNameForModId).map(String::intern).toArray(String[]::new));
         this.displayName = IngredientInformation.getDisplayName(ingredient, ingredientHelper);
         this.resourceId = LegacyUtil.getResourceId(ingredient, ingredientHelper);
     }
@@ -105,16 +104,21 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
 
     @Override
     public String getModNameForSorting() {
-        return modNames.get(0);
+        return this.modNames instanceof String ? (String) this.modNames : ((String[]) this.modNames)[0];
     }
 
     @Override
     public Set<String> getModNameStrings() {
-        Set<String> modNameStrings = new HashSet<>();
-        for (int i = 0; i < modIds.size(); i++) {
-            String modId = modIds.get(i);
-            String modName = modNames.get(i);
-            addModNameStrings(modNameStrings, modId, modName);
+        Set<String> modNameStrings = new ObjectArraySet<>();
+        if (modIds instanceof String[]modIdsCasted) {
+            String[] modNamesCasted = (String[]) modNames;
+            for (int i = 0; i < modIdsCasted.length; i++) {
+                String modId = modIdsCasted[i];
+                String modName = modNamesCasted[i];
+                addModNameStrings(modNameStrings, modId, modName);
+            }
+        } else {
+            addModNameStrings(modNameStrings, (String) modIds, (String) modNames);
         }
         return modNameStrings;
     }
@@ -132,8 +136,8 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
 
     @Override
     public final List<String> getTooltipStrings() {
-        String modName = this.modNames.get(0);
-        String modId = this.modIds.get(0);
+        String modId = this.modIds instanceof String ? (String) this.modIds : ((String[]) this.modIds)[0];
+        String modName = this.modNames instanceof String ? (String) this.modNames : ((String[]) this.modNames)[0];
         String modNameLowercase = modName.toLowerCase(Locale.ENGLISH);
         String displayNameLowercase = Translator.toLowercaseWithLocale(this.displayName);
         return IngredientInformation.getTooltipStrings(

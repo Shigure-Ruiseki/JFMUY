@@ -83,10 +83,15 @@ public interface ISubtypeRegistry {
 
         @Deprecated
         String NONE = IIngredientSubtypeInterpreter.NONE;
+
+        @Override
+        String apply(ItemStack itemStack);
     }
 
     @FunctionalInterface
     interface IFluidSubtypeInterpreter extends IIngredientSubtypeInterpreter<FluidStack> {
 
+        @Override
+        String apply(FluidStack itemStack);
     }
 }

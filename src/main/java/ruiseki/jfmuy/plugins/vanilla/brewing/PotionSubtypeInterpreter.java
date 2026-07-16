@@ -8,9 +8,9 @@ import net.minecraft.potion.PotionEffect;
 
 import org.jetbrains.annotations.NotNull;
 
-import ruiseki.jfmuy.api.ISubtypeRegistry;
+import ruiseki.jfmuy.api.ISubtypeRegistry.ISubtypeInterpreter;
 
-public class PotionSubtypeInterpreter implements ISubtypeRegistry.ISubtypeInterpreter {
+public class PotionSubtypeInterpreter implements ISubtypeInterpreter {
 
     public static final PotionSubtypeInterpreter INSTANCE = new PotionSubtypeInterpreter();
 

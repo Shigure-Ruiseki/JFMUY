@@ -34,6 +34,7 @@ import ruiseki.jfmuy.startup.AnnotatedInstanceUtil;
 import ruiseki.jfmuy.startup.JFMUYStarter;
 import ruiseki.jfmuy.startup.PlayerJoinedWorldEvent;
 import ruiseki.jfmuy.util.Log;
+import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.event.recipes.RecipesUpdatedEvent;
 import ruiseki.okcore.helper.MinecraftHelpers;
 

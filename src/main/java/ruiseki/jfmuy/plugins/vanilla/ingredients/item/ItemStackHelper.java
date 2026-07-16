@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
@@ -164,11 +163,10 @@ public class ItemStackHelper implements IIngredientHelper<ItemStack> {
 
     @Override
     public Collection<String> getOreDictNames(ItemStack ingredient) {
-        Collection<String> names = new ArrayList<>();
-        for (int oreId : OreDictionary.getOreIDs(ingredient)) {
-            String oreNameLowercase = OreDictionary.getOreName(oreId)
-                .toLowerCase(Locale.ENGLISH);
-            names.add(oreNameLowercase);
+        int[] oreIds = OreDictionary.getOreIDs(ingredient);
+        Collection<String> names = new ArrayList<>(oreIds.length);
+        for (int oreId : oreIds) {
+            names.add(OreDictionary.getOreName(oreId));
         }
         return names;
     }

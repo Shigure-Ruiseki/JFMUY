@@ -5,12 +5,19 @@ import java.util.regex.Pattern;
 
 import net.minecraft.client.gui.FontRenderer;
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+
 public final class StringUtil {
 
     private static final Pattern COMBINING_DIACRITICAL_MARKS = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+    private static final ObjectOpenHashSet<String> INTERNER = new ObjectOpenHashSet<>(64);
 
     private StringUtil() {
 
+    }
+
+    public static String intern(String string) {
+        return INTERNER.addOrGet(string);
     }
 
     public static String truncateStringToWidth(String string, int width, FontRenderer fontRenderer) {

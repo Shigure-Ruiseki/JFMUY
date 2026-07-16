@@ -2,6 +2,8 @@ package ruiseki.jfmuy.config;
 
 import java.awt.Color;
 import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -9,8 +11,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.settings.GameSettings;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -21,6 +21,7 @@ import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.base.Preconditions;
@@ -28,7 +29,6 @@ import com.google.common.collect.ImmutableMap;
 
 import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameData;
 import ruiseki.jfmuy.Internal;
@@ -47,7 +47,6 @@ import ruiseki.jfmuy.startup.ForgeModIdHelper;
 import ruiseki.jfmuy.startup.IModIdHelper;
 import ruiseki.jfmuy.util.GiveMode;
 import ruiseki.jfmuy.util.Log;
-import ruiseki.jfmuy.util.ReflectionUtil;
 import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.fluid.capability.CapabilityFluidHandler;
 import ruiseki.okcore.fluid.handler.IFluidHandlerItem;
@@ -62,14 +61,13 @@ public final class Config {
     public static final String CATEGORY_SEARCH_COLORS = "searchColors";
     public static final String CATEGORY_RENDERING = "rendering";
     public static final String CATEGORY_MISC = "misc";
+    public static final String CATEGORY_CATEGORY = "category";
 
     public static final String defaultModNameFormatFriendly = "blue italic";
     public static final int smallestNumColumns = 4;
     public static final int largestNumColumns = 100;
     public static final int minRecipeGuiHeight = 175;
     public static final int maxRecipeGuiHeight = 5000;
-
-    private static final boolean isOptifineInstalled = ReflectionUtil.isClassLoaded("optifine.OptiFineForgeTweaker");
 
     @Nullable
     private static LocalizedConfiguration config;
@@ -333,12 +331,7 @@ public final class Config {
     }
 
     public static boolean bufferIngredientRenders() {
-        boolean fastRender = false;
-        if (isOptifineInstalled) {
-            fastRender = ObfuscationReflectionHelper
-                .getPrivateValue(GameSettings.class, Minecraft.getMinecraft().gameSettings, "ofFastRender");
-        }
-        return !fastRender && values.bufferIngredientRenders;
+        return values.bufferIngredientRenders;
     }
 
     public static boolean mouseClickToSeeRecipe() {
@@ -355,6 +348,14 @@ public final class Config {
 
     public static boolean skipShowingProgressBar() {
         return values.skipShowingProgressBar;
+    }
+
+    public static boolean hideBottomRightCornerConfigButton() {
+        return values.hideBottomRightCornerConfigButton;
+    }
+
+    public static List<String> categoryUidOrder() {
+        return values.categoryUidOrder;
     }
 
     @Nullable
@@ -395,14 +396,10 @@ public final class Config {
                 .getParent());
         bookmarkFile = new File(minecraftDir, "jfmuy_bookmarks.ini");
         File oldBookmarkFile = new File(jfmuyConfigurationDir, "bookmarks.ini");
-        if (!bookmarkFile.exists() && oldBookmarkFile.exists()) {
+        if (oldBookmarkFile.exists() && !bookmarkFile.exists()) {
             try {
-                if (!oldBookmarkFile.renameTo(bookmarkFile)) {
-                    Log.get()
-                        .error("Could not move the old bookmark file from {} to {}", jfmuyConfigurationDir, "./");
-                    return;
-                }
-            } catch (SecurityException e) {
+                FileUtils.moveFile(oldBookmarkFile, bookmarkFile);
+            } catch (IOException e) {
                 Log.get()
                     .error("Could not move the old bookmark file from {} to {}", jfmuyConfigurationDir, "./", e);
                 return;
@@ -565,9 +562,20 @@ public final class Config {
         values.skipShowingProgressBar = config
             .getBoolean(CATEGORY_MISC, "skipShowingProgressBar", defaultValues.skipShowingProgressBar);
 
+        values.hideBottomRightCornerConfigButton = config.getBoolean(
+            CATEGORY_MISC,
+            "hideBottomRightCornerConfigButton",
+            defaultValues.hideBottomRightCornerConfigButton);
+
         Property property = config.get(CATEGORY_ADVANCED, "debugModeEnabled", defaultValues.debugModeEnabled);
         property.setShowInGui(false);
         values.debugModeEnabled = property.getBoolean();
+
+        String[] categoryUidOrder = config.getStringList(
+            "categoryUidOrder",
+            CATEGORY_CATEGORY,
+            defaultValues.categoryUidOrder.toArray(new String[] {}));
+        values.categoryUidOrder = Arrays.asList(categoryUidOrder);
 
         if (!needToRebuildSearchTree) {
             needToRebuildSearchTree = categoryAdvanced.get("ultraLowMemoryUsage")

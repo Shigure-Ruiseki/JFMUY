@@ -42,8 +42,7 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     public static boolean firstBuild = true;
     public static boolean rebuild = false;
 
-    private final IngredientBlacklistInternal blacklist;
-
+    protected IngredientBlacklistInternal blacklist;
     private IElementSearch elementSearch;
     private final List<IIngredientGridSource.Listener> listeners = new ArrayList<>();
 
@@ -310,6 +309,10 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     @Override
     public void addListener(IIngredientGridSource.Listener listener) {
         listeners.add(listener);
+    }
+
+    public void replaceBlacklist(IngredientBlacklistInternal blacklist) {
+        this.blacklist = blacklist;
     }
 
     private void notifyListenersOfChange() {

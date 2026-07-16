@@ -1,5 +1,8 @@
 package ruiseki.jfmuy.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 
@@ -44,4 +47,8 @@ public class ConfigValues {
     public boolean tooltipShowRecipeBy = true;
     public boolean showHiddenIngredientsInCreative = false;
     public boolean skipShowingProgressBar = false;
+    public boolean hideBottomRightCornerConfigButton = false;
+
+    // category
+    public List<String> categoryUidOrder = new ArrayList<>();
 }

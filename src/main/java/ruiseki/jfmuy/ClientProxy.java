@@ -3,6 +3,8 @@ package ruiseki.jfmuy;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.client.Minecraft;
+
 import ruiseki.jfmuy.api.IModPlugin;
 import ruiseki.jfmuy.config.KeyBindings;
 import ruiseki.jfmuy.startup.JFMUYStarter;
@@ -28,5 +30,10 @@ public class ClientProxy extends ClientProxyComponent {
     public void registerKeyBindings(IKeyRegistry keyRegistry) {
         super.registerKeyBindings(keyRegistry);
         KeyBindings.init();
+    }
+
+    public static boolean isCreative() {
+        return Minecraft.getMinecraft().thePlayer != null
+            && Minecraft.getMinecraft().thePlayer.capabilities.isCreativeMode;
     }
 }

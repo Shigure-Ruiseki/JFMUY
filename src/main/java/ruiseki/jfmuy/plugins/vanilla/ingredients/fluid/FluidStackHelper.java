@@ -55,8 +55,7 @@ public class FluidStackHelper implements IIngredientHelper<FluidStack> {
                 .getName());
         String subtype = Internal.getSubtypeRegistry()
             .getSubtypeInfo(ingredient);
-        if (subtype != null && !subtype.isEmpty()) {
-            uniqueId.append(":");
+        if (subtype != null) {
             uniqueId.append(subtype);
         }
         return uniqueId.toString();

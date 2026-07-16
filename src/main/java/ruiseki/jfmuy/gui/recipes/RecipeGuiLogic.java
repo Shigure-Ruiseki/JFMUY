@@ -10,6 +10,7 @@ import javax.annotation.Nonnegative;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.inventory.Container;
+import net.minecraft.inventory.ContainerPlayer;
 
 import com.google.common.collect.ImmutableList;
 
@@ -81,6 +82,7 @@ public class RecipeGuiLogic implements IRecipeGuiLogic {
         if (player != null) {
             Container openContainer = player.openContainer;
             if (openContainer != null) {
+                if (openContainer instanceof ContainerPlayer) return 0;
                 for (int i = 0; i < recipeCategories.size(); i++) {
                     IRecipeCategory recipeCategory = recipeCategories.get(i);
                     IRecipeTransferHandler recipeTransferHandler = recipeRegistry

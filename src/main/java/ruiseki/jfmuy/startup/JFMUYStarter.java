@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import cpw.mods.fml.common.ProgressManager;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
 import ruiseki.jfmuy.api.IModPlugin;
@@ -24,7 +23,6 @@ import ruiseki.jfmuy.gui.overlay.bookmarks.LeftAreaDispatcher;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.ingredients.IngredientBlacklistInternal;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
-import ruiseki.jfmuy.ingredients.IngredientListElement;
 import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.input.InputHandler;
@@ -42,10 +40,12 @@ public class JFMUYStarter {
     private boolean started;
 
     public void start(List<IModPlugin> plugins) {
+        load(plugins, false);
+    }
+
+    public void load(List<IModPlugin> plugins, boolean recipesOnly) {
         LoggedTimer totalTime = new LoggedTimer();
         totalTime.start("Starting JFMUY");
-
-        IngredientListElement.canonicalizedStringArrays = new ObjectOpenHashSet<>();
 
         IModIdHelper modIdHelper = ForgeModIdHelper.getInstance();
         ErrorUtil.setModIdHelper(modIdHelper);
@@ -83,12 +83,18 @@ public class JFMUYStarter {
         RecipeRegistry recipeRegistry = modRegistry.createRecipeRegistry(ingredientRegistry);
         timer.stop();
 
-        timer.start("Building ingredient filter and search trees");
-        IngredientFilter ingredientFilter = new IngredientFilter(
-            blacklist,
-            IngredientListElementFactory.createBaseList(ingredientRegistry, modIdHelper));
-        Internal.setIngredientFilter(ingredientFilter);
-        timer.stop();
+        IngredientFilter ingredientFilter;
+        if (recipesOnly && Internal.hasIngredientFilter()) {
+            ingredientFilter = Internal.getIngredientFilter();
+            ingredientFilter.replaceBlacklist(blacklist);
+        } else {
+            timer.start("Building ingredient filter and search trees");
+            ingredientFilter = new IngredientFilter(
+                blacklist,
+                IngredientListElementFactory.createBaseList(ingredientRegistry, modIdHelper));
+            Internal.setIngredientFilter(ingredientFilter);
+            timer.stop();
+        }
 
         timer.start("Building bookmarks");
         BookmarkList bookmarkList = new BookmarkList(ingredientRegistry);
@@ -149,8 +155,6 @@ public class JFMUYStarter {
         Internal.setInputHandler(inputHandler);
 
         Config.checkForModNameFormatOverride();
-
-        IngredientListElement.canonicalizedStringArrays = new ObjectOpenHashSet<>();
 
         started = true;
         totalTime.stop();

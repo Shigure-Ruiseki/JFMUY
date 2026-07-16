@@ -154,6 +154,12 @@ description.jfmuy.wooden.door.3=Wooden doors can be opened/closed via redstone c
 config.jfmuy.interface.defaultFluidContainerItem=Default Fluid Container Item
 config.jfmuy.interface.defaultFluidContainerItem.comment=Default item to use to fill up fluids when clicking on a fluid ingredient in the menu, (format: item_name@meta)
 
+config.jfmuy.misc.hideBottomRightCornerConfigButton=Hide Bottom-Right Corner Config Button
+config.jfmuy.misc.hideBottomRightCornerConfigButton.comment=Whether to hide the bottom-right corner config button
+
+config.jfmuy.category.categoryUidOrder=Category UID Order
+config.jfmuy.category.categoryUidOrder.comment=Determines the display order of recipe categories in JEI. Categories listed earlier appear first in the JEI interface.
+
 jfmuy.generic.ticks=%d Ticks
 
 jfmuy.command.load_bookmarks.failure=Bookmark List not found, something went horribly wrong.

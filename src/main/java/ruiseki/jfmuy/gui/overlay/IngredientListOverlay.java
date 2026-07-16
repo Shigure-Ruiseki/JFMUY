@@ -134,15 +134,27 @@ public class IngredientListOverlay implements IIngredientListOverlay, IMouseHand
                 displayArea.x = contentsArea.x;
                 displayArea.width = contentsArea.width;
 
-                if (searchBarCentered && isListDisplayed()) {
-                    searchField.updateBounds(
+                if (Config.hideBottomRightCornerConfigButton()) {
+                    if (searchBarCentered && isListDisplayed()) searchField.updateBounds(
+                        new Rectangle(
+                            guiProperties.getGuiLeft(),
+                            guiProperties.getScreenHeight() - SEARCH_HEIGHT - BORDER_PADDING,
+                            guiProperties.getGuiXSize() + 1,
+                            SEARCH_HEIGHT));
+                    else searchField.updateBounds(
+                        new Rectangle(
+                            displayArea.x,
+                            displayArea.y + displayArea.height - SEARCH_HEIGHT - BORDER_PADDING,
+                            displayArea.width + 1,
+                            SEARCH_HEIGHT));
+                } else {
+                    if (searchBarCentered && isListDisplayed()) searchField.updateBounds(
                         new Rectangle(
                             guiProperties.getGuiLeft(),
                             guiProperties.getScreenHeight() - SEARCH_HEIGHT - BORDER_PADDING,
                             guiProperties.getGuiXSize() - BUTTON_SIZE + 1,
                             SEARCH_HEIGHT));
-                } else {
-                    searchField.updateBounds(
+                    else searchField.updateBounds(
                         new Rectangle(
                             displayArea.x,
                             displayArea.y + displayArea.height - SEARCH_HEIGHT - BORDER_PADDING,
@@ -150,7 +162,9 @@ public class IngredientListOverlay implements IIngredientListOverlay, IMouseHand
                             SEARCH_HEIGHT));
                 }
 
-                this.configButton.updateBounds(
+                if (Config.hideBottomRightCornerConfigButton()) this.configButton.updateBounds(
+                    new Rectangle(searchField.xPosition + searchField.width - 1, searchField.yPosition, 0, 0));
+                else this.configButton.updateBounds(
                     new Rectangle(
                         searchField.xPosition + searchField.width - 1,
                         searchField.yPosition,

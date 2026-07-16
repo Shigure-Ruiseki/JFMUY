@@ -207,7 +207,7 @@ public class IngredientListBatchRenderer {
 
         if (!Config.isEditModeEnabled() && Config.bufferIngredientRenders()
             && refreshBuffer
-            && OpenGlHelper.framebufferSupported) {
+            && OpenGlHelper.isFramebufferEnabled()) {
             refreshBuffer = false;
             minecraft.getFramebuffer()
                 .bindFramebuffer(false);

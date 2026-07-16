@@ -42,8 +42,17 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
             itemRender
                 .renderItemAndEffectIntoGUI(font, minecraft.getTextureManager(), ingredient, xPosition, yPosition);
-            itemRender
-                .renderItemOverlayIntoGUI(font, minecraft.getTextureManager(), ingredient, xPosition, yPosition, null);
+            if (ingredient.stackSize > 64) {
+                renderCustomStackSize(font, ingredient, xPosition, yPosition);
+            } else {
+                itemRender.renderItemOverlayIntoGUI(
+                    font,
+                    minecraft.getTextureManager(),
+                    ingredient,
+                    xPosition,
+                    yPosition,
+                    null);
+            }
 
             RenderHelper.disableStandardItemLighting();
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
@@ -51,6 +60,66 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
             GL11.glPopMatrix();
         }
+    }
+
+    /**
+     * Custom method for rendering item stack count
+     *
+     * @param font      The font renderer
+     * @param stack     The item stack
+     * @param xPosition X coordinate
+     * @param yPosition Y coordinate
+     */
+    private void renderCustomStackSize(FontRenderer font, ItemStack stack, int xPosition, int yPosition) {
+        int count = stack.stackSize;
+        String countText = formatStackCount(count);
+
+        GlStateManager.pushMatrix();
+        GlStateManager.disableLighting();
+        GlStateManager.disableDepth();
+        GlStateManager.disableBlend();
+
+        boolean shouldScale = count > 99;
+        if (shouldScale) {
+            GlStateManager.scale(0.5F, 0.5F, 1.0F);
+        }
+
+        int x = shouldScale ? (xPosition + 16) * 2 - font.getStringWidth(countText)
+            : xPosition + 17 - font.getStringWidth(countText);
+        int y = shouldScale ? (yPosition + 16) * 2 - 8 : yPosition + 17 - 8;
+
+        font.drawStringWithShadow(countText, x, y, 0xFFFFFF);
+
+        GlStateManager.popMatrix();
+        GlStateManager.enableLighting();
+        GlStateManager.enableDepth();
+        GlStateManager.enableBlend();
+    }
+
+    /**
+     * Formats the stack count for display
+     */
+    private String formatStackCount(int count) {
+        if (count <= 99) {
+            return String.valueOf(count);
+        }
+
+        if (count <= 9999) {
+            return String.valueOf(count);
+        }
+
+        if (count <= 999999) {
+            float k = count / 1000f;
+            return String.format(k % 1 == 0 ? "%.0fk" : "%.1fk", k);
+        }
+
+        if (count <= 999999999) {
+            float m = count / 1000000f;
+            return String.format(m % 1 == 0 ? "%.0fm" : "%.1fm", m);
+        }
+
+        float g = count / 1000000000f;
+        return String.format(g % 1 == 0 ? "%.0fg" : "%.1fg", g);
     }
 
     @Override

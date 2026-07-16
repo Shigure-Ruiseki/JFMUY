@@ -1,6 +1,5 @@
 package ruiseki.jfmuy.ingredients;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -8,16 +7,13 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import net.minecraft.client.Minecraft;
-
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableSet;
 
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.ClientProxy;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.config.Config;
@@ -25,11 +21,11 @@ import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.startup.IModIdHelper;
 import ruiseki.jfmuy.util.LegacyUtil;
 import ruiseki.jfmuy.util.Log;
+import ruiseki.jfmuy.util.StringUtil;
 import ruiseki.jfmuy.util.Translator;
 
 public class IngredientListElement<V> implements IIngredientListElement<V> {
 
-    public static ObjectOpenHashSet<String[]> canonicalizedStringArrays = new ObjectOpenHashSet<>();
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s");
 
     private final V ingredient;
@@ -38,9 +34,6 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
     private final IIngredientRenderer<V> ingredientRenderer;
     private final Object modIds; // Can be String or String[]
     private final Object modNames; // Can be String or String[]
-    private final String displayName;
-    private final String resourceId;
-    private final int ordinal;
 
     private boolean visible = true;
 
@@ -75,18 +68,19 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
         this.ingredientRenderer = ingredientRenderer;
         String displayModId = ingredientHelper.getDisplayModId(ingredient);
         String modId = ingredientHelper.getModId(ingredient);
-        this.modIds = modId.equals(displayModId) ? displayModId.intern()
-            : canonicalizedStringArrays.addOrGet(new String[] { modId.intern(), displayModId.intern() });
-        this.modNames = this.modIds instanceof String ? modIdHelper.getModNameForModId((String) this.modIds)
-            .intern()
-            : canonicalizedStringArrays.addOrGet(
-                Arrays.stream((String[]) this.modIds)
-                    .map(modIdHelper::getModNameForModId)
-                    .map(String::intern)
-                    .toArray(String[]::new));
-        this.displayName = IngredientInformation.getDisplayName(ingredient, ingredientHelper);
-        this.resourceId = LegacyUtil.getResourceId(ingredient, ingredientHelper);
-        this.ordinal = ingredientHelper.getOrdinal(ingredient);
+        if (modId.equals(displayModId)) {
+            this.modIds = StringUtil.intern(modId);
+            this.modNames = StringUtil.intern(modIdHelper.getModNameForModId(modId));
+        } else {
+            this.modIds = new String[] { StringUtil.intern(modId), StringUtil.intern(displayModId) };
+            String modIdName = modIdHelper.getModNameForModId(modId);
+            String displayModIdName = modIdHelper.getModNameForModId(displayModId);
+            if (modIdName.equals(displayModIdName)) {
+                this.modNames = StringUtil.intern(modIdName);
+            } else {
+                this.modNames = new String[] { StringUtil.intern(modIdName), StringUtil.intern(displayModIdName) };
+            }
+        }
     }
 
     @Override
@@ -111,7 +105,7 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
 
     @Override
     public final String getDisplayName() {
-        return displayName;
+        return IngredientInformation.getDisplayName(ingredient, ingredientHelper);
     }
 
     @Override
@@ -122,28 +116,37 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
     @Override
     public Set<String> getModNameStrings() {
         Set<String> modNameStrings = new ObjectArraySet<>();
-        if (modIds instanceof String[]modIdsCasted) {
-            String[] modNamesCasted = (String[]) modNames;
-            for (int i = 0; i < modIdsCasted.length; i++) {
-                String modId = modIdsCasted[i];
-                String modName = modNamesCasted[i];
-                addModNameStrings(modNameStrings, modId, modName);
-            }
+        if (this.modIds instanceof String) {
+            addModIdStrings(modNameStrings, (String) this.modIds);
         } else {
-            addModNameStrings(modNameStrings, (String) modIds, (String) modNames);
+            String[] modIdsCasted = (String[]) this.modIds;
+            for (String modId : modIdsCasted) {
+                addModIdStrings(modNameStrings, modId);
+            }
+        }
+        if (this.modNames instanceof String) {
+            addModNameStrings(modNameStrings, (String) this.modNames);
+        } else {
+            String[] modNamesCasted = (String[]) this.modNames;
+            for (String modName : modNamesCasted) {
+                addModNameStrings(modNameStrings, modName);
+            }
         }
         return modNameStrings;
     }
 
-    private static void addModNameStrings(Set<String> modNames, String modId, String modName) {
-        String modNameLowercase = modName.toLowerCase(Locale.ENGLISH);
-        String modNameNoSpaces = SPACE_PATTERN.matcher(modNameLowercase)
-            .replaceAll("");
+    private static void addModIdStrings(Set<String> modNames, String modId) {
         String modIdNoSpaces = SPACE_PATTERN.matcher(modId)
             .replaceAll("");
         modNames.add(modId);
-        modNames.add(modNameNoSpaces);
         modNames.add(modIdNoSpaces);
+    }
+
+    private static void addModNameStrings(Set<String> modNames, String modName) {
+        String modNameLowercase = modName.toLowerCase(Locale.ENGLISH);
+        String modNameNoSpaces = SPACE_PATTERN.matcher(modNameLowercase)
+            .replaceAll("");
+        modNames.add(modNameNoSpaces);
     }
 
     @Override
@@ -151,11 +154,11 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
         String modId = this.modIds instanceof String ? (String) this.modIds : ((String[]) this.modIds)[0];
         String modName = this.modNames instanceof String ? (String) this.modNames : ((String[]) this.modNames)[0];
         String modNameLowercase = modName.toLowerCase(Locale.ENGLISH);
-        String displayNameLowercase = Translator.toLowercaseWithLocale(this.displayName);
+        String displayNameLowercase = Translator.toLowercaseWithLocale(this.getDisplayName());
         return IngredientInformation.getTooltipStrings(
             ingredient,
             ingredientRenderer,
-            ImmutableSet.of(modId, modNameLowercase, displayNameLowercase, resourceId));
+            ImmutableSet.of(modId, modNameLowercase, displayNameLowercase, this.getResourceId()));
     }
 
     @Override
@@ -181,12 +184,12 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
 
     @Override
     public String getResourceId() {
-        return resourceId;
+        return LegacyUtil.getResourceId(ingredient, ingredientHelper);
     }
 
     @Override
     public int getOrdinal() {
-        return ordinal;
+        return ingredientHelper.getOrdinal(ingredient);
     }
 
     @Override
@@ -196,11 +199,7 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
         }
         if (FMLLaunchHandler.side()
             .isClient()) {
-            return Config.getShowHiddenIngredientsInCreative() && Minecraft.getMinecraft().thePlayer != null
-                && Minecraft.getMinecraft().thePlayer.capabilities.isCreativeMode
-                && !Internal.getHelpers()
-                    .getIngredientBlacklist()
-                    .isIngredientBlacklistedByApi(ingredient);
+            return Config.getShowHiddenIngredientsInCreative() && ClientProxy.isCreative();
         }
         return false;
     }

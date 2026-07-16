@@ -2,16 +2,16 @@ package ruiseki.jfmuy.util;
 
 public class Substring {
 
-    private final String string;
-    private final int offset;
-    private final int length;
+    private String string;
+    private int offset;
+    private int length;
 
     public Substring(String string) {
-        this(string, 0, string.length());
+        this(string, 0, string.length(), false);
     }
 
     public Substring(Substring subString) {
-        this(subString.string, subString.offset, subString.length);
+        this(subString.string, subString.offset, subString.length, true);
     }
 
     public Substring(String string, int offset) {
@@ -19,26 +19,30 @@ public class Substring {
     }
 
     public Substring(String string, int offset, int length) {
+        this(string, offset, length, false);
+    }
+
+    public Substring(String string, int offset, int length, boolean fromSubstring) {
         assert length >= 0;
         assert offset >= 0;
         assert offset + length <= string.length();
-        this.string = string;
+        this.string = fromSubstring ? string : StringUtil.intern(string);
         this.offset = offset;
         this.length = length;
     }
 
     public Substring substring(int offset) {
-        return new Substring(string, this.offset + offset, this.length - offset);
+        return new Substring(string, this.offset + offset, this.length - offset, true);
     }
 
     public Substring shorten(int amount) {
-        return new Substring(string, this.offset, this.length - amount);
+        return new Substring(string, this.offset, this.length - amount, true);
     }
 
     public Substring append(char newChar) {
         assert this.offset + this.length < this.string.length();
         assert charAt(this.length) == newChar;
-        return new Substring(string, this.offset, this.length + 1);
+        return new Substring(string, this.offset, this.length + 1, true);
     }
 
     public boolean isEmpty() {
@@ -78,7 +82,14 @@ public class Substring {
         return length;
     }
 
-    public String commit() {
+    public void set(Substring other) {
+        string = other.string;
+        offset = other.offset;
+        length = other.length;
+    }
+
+    @Override
+    public String toString() {
         return string.substring(offset, offset + length);
     }
 

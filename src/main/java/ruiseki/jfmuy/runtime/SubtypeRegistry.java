@@ -1,6 +1,5 @@
 package ruiseki.jfmuy.runtime;
 
-import java.util.IdentityHashMap;
 import java.util.Map;
 
 import net.minecraft.item.Item;
@@ -9,13 +8,14 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import org.jetbrains.annotations.Nullable;
 
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import ruiseki.jfmuy.api.ISubtypeRegistry;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 
 public class SubtypeRegistry implements ISubtypeRegistry {
 
-    private final Map<Item, ISubtypeInterpreter> interpreters = new IdentityHashMap<>();
+    private final Map<Item, ISubtypeInterpreter> interpreters = new Reference2ObjectOpenHashMap<>();
 
     @Override
     public void useNbtForSubtypes(Item... items) {

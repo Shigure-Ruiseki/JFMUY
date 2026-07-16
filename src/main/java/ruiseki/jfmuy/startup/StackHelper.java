@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +20,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.oredict.OreDictionary;
 
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import ruiseki.jfmuy.api.ISubtypeRegistry;
 import ruiseki.jfmuy.api.gui.IGuiIngredient;
 import ruiseki.jfmuy.api.recipe.IStackHelper;
@@ -42,7 +42,7 @@ public class StackHelper implements IStackHelper {
     public StackHelper(ISubtypeRegistry subtypeRegistry) {
         this.subtypeRegistry = subtypeRegistry;
         for (UidMode mode : UidMode.values()) {
-            uidCache.put(mode, new IdentityHashMap<>());
+            uidCache.put(mode, new Reference2ObjectOpenHashMap<>());
         }
     }
 
@@ -52,7 +52,7 @@ public class StackHelper implements IStackHelper {
 
     public void disableUidCache() {
         for (UidMode mode : UidMode.values()) {
-            uidCache.put(mode, new IdentityHashMap<>());
+            uidCache.put(mode, new Reference2ObjectOpenHashMap<>());
         }
         uidCacheEnabled = false;
     }

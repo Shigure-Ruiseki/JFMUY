@@ -1,15 +1,15 @@
 package ruiseki.jfmuy.ingredients;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.config.Config;
 
 public class IngredientBlacklistInternal {
 
-    private final Set<String> ingredientBlacklist = new HashSet<>();
+    private final Set<String> ingredientBlacklist = new ObjectOpenHashSet<>();
 
     public <V> void addIngredientToBlacklist(V ingredient, IIngredientHelper<V> ingredientHelper) {
         String uniqueName = ingredientHelper.getUniqueId(ingredient);

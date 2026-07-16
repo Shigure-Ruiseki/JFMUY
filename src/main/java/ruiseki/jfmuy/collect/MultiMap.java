@@ -1,7 +1,6 @@
 package ruiseki.jfmuy.collect;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -9,13 +8,15 @@ import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableMultimap;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+
 public class MultiMap<K, V, T extends Collection<V>> {
 
     protected final Map<K, T> map;
     private final Function<K, T> collectionMappingFunction;
 
     public MultiMap(Supplier<T> collectionSupplier) {
-        this(new HashMap<>(), collectionSupplier);
+        this(new Object2ObjectOpenHashMap<>(), collectionSupplier);
     }
 
     public MultiMap(Map<K, T> map, Supplier<T> collectionSupplier) {

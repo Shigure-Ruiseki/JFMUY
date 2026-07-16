@@ -1,13 +1,13 @@
 package ruiseki.jfmuy.ingredients;
 
-import java.util.HashMap;
 import java.util.Map;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 
 public class IngredientOrderTracker {
 
-    private final Map<String, Integer> wildcardAddedOrder = new HashMap<>();
+    private final Map<String, Integer> wildcardAddedOrder = new Object2IntOpenHashMap<>();
     private int addedIndex = 0;
 
     public <V> int getOrderIndex(V ingredient, IIngredientHelper<V> ingredientHelper) {

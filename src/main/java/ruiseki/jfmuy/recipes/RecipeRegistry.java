@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +23,9 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableTable;
 
 import cpw.mods.fml.common.ProgressManager;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.IRecipeRegistry;
@@ -52,7 +53,7 @@ public class RecipeRegistry implements IRecipeRegistry {
 
     private final IngredientRegistry ingredientRegistry;
     private final ImmutableList<IRecipeCategory> recipeCategories;
-    private final Set<String> hiddenRecipeCategoryUids = new java.util.HashSet<>();
+    private final Set<String> hiddenRecipeCategoryUids = new ObjectOpenHashSet<>();
     private final List<IRecipeCategory> recipeCategoriesVisibleCache = new ArrayList<>();
     private final ImmutableTable<Class, String, IRecipeTransferHandler> recipeTransferHandlers;
     private final ImmutableMultimap<Class<? extends GuiContainer>, RecipeClickableArea> recipeClickableAreasMap;
@@ -60,14 +61,14 @@ public class RecipeRegistry implements IRecipeRegistry {
     private final ImmutableMap<String, IRecipeCategory> recipeCategoriesMap;
     private final RecipeCategoryComparator recipeCategoryComparator;
     private final Table<String, Object, IRecipeWrapper> wrapperMaps = new Table<>(
-        new HashMap<>(),
-        IdentityHashMap::new);
+        new Object2ObjectOpenHashMap<>(),
+        Reference2ObjectOpenHashMap::new);
     private final ListMultiMap<IRecipeCategory, IRecipeWrapper> recipeWrappersForCategories = new ListMultiMap<>();
     private final RecipeMap recipeInputMap;
     private final RecipeMap recipeOutputMap;
     private final List<RecipeRegistryPluginSafeWrapper> plugins = new ArrayList<>();
     private final SetMultiMap<String, IRecipeWrapper> hiddenRecipes = new SetMultiMap<>(
-        () -> Collections.newSetFromMap(new IdentityHashMap<>()));
+        () -> Collections.newSetFromMap(new Reference2ObjectOpenHashMap<>()));
 
     public RecipeRegistry(List<IRecipeCategory> recipeCategories,
         ImmutableTable<Class, String, IRecipeTransferHandler> recipeTransferHandlers,

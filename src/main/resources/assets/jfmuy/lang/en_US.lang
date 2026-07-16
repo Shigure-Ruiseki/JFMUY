@@ -115,6 +115,9 @@ config.jfmuy.rendering=Rendering
 config.jfmuy.rendering.comment=Rendering config options
 config.jfmuy.rendering.bufferIngredientRenders=Buffer Ingredient Renders
 config.jfmuy.rendering.bufferIngredientRenders.comment=Stops extremely frequent ingredient draw calls by using a render buffer, improves FPS in menus by up to 2-3x. But animations and glint will not be applied correctly.
+config.jfmuy.search.searchAdvancedTooltips.comment=Includes advanced tooltips in search trees
+config.jfmuy.search.searchStrippedDiacritics=Search Stripped Diacritics
+config.jfmuy.search.searchStrippedDiacritics.comment=Includes stripped diacritics version of strings in search trees
 config.jfmuy.advanced.asyncSearchTreeBuilding=Async Search Tree Building
 config.jfmuy.advanced.asyncSearchTreeBuilding.comment=Builds search trees on multiple threads concurrently, turn this off if you're experiencing extremely high load on your CPU when loading JFMUY
 

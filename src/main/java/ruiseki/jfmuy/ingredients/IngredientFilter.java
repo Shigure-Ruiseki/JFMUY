@@ -39,18 +39,24 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     public static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
     public static final Pattern FILTER_SPLIT_PATTERN = Pattern.compile("(-?\".*?(?:\"|$)|\\S+)");
 
+    public static boolean firstBuild = true;
+    public static boolean rebuild = false;
+
     private final IngredientBlacklistInternal blacklist;
 
-    private final IElementSearch elementSearch;
+    private IElementSearch elementSearch;
     private final List<IIngredientGridSource.Listener> listeners = new ArrayList<>();
 
     private List<IIngredientListElement> ingredientListCached = Collections.emptyList();
     @Nullable
     private String filterCached;
 
-    public IngredientFilter(IngredientBlacklistInternal blacklist) {
+    public IngredientFilter(IngredientBlacklistInternal blacklist, NonNullList<IIngredientListElement> ingredients) {
         this.blacklist = blacklist;
         this.elementSearch = Config.isUltraLowMemoryMode() ? new ElementSearchLowMem() : new ElementSearch();
+        ingredients.sort(IngredientListElementComparator.INSTANCE);
+        this.elementSearch.addAll(ingredients);
+        firstBuild = false;
     }
 
     public void logStatistics() {
@@ -101,7 +107,20 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     }
 
     public void modesChanged() {
-        this.filterCached = null;
+        this.invalidateCache();
+        if (Config.doesSearchTreeNeedReload()) {
+            firstBuild = true;
+            rebuild = true;
+            NonNullList<IIngredientListElement> ingredients = NonNullList.from(
+                null,
+                this.elementSearch.getAllIngredients()
+                    .toArray(new IIngredientListElement[0]));
+            this.elementSearch = Config.isUltraLowMemoryMode() ? new ElementSearchLowMem() : new ElementSearch();
+            ingredients.sort(IngredientListElementComparator.INSTANCE);
+            this.elementSearch.addAll(ingredients);
+            firstBuild = false;
+            rebuild = false;
+        }
     }
 
     @SubscribeEvent
@@ -144,7 +163,6 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         filterText = Translator.toLowercaseWithLocale(filterText);
         if (!filterText.equals(filterCached)) {
             List<IIngredientListElement<?>> ingredientList = getIngredientListUncached(filterText);
-            ingredientList.sort(IngredientListElementComparator.INSTANCE);
             ingredientListCached = Collections.unmodifiableList(ingredientList);
             filterCached = filterText;
         }

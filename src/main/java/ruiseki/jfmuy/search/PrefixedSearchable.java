@@ -7,6 +7,7 @@ import java.util.Set;
 import cpw.mods.fml.common.ProgressManager;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.util.LoggedTimer;
 import ruiseki.okcore.datastructure.NonNullList;
 
@@ -44,24 +45,37 @@ public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>
 
     @Override
     public void submitAll(NonNullList<IIngredientListElement> ingredients) {
-        start();
-        long modNameCount = ingredients.stream()
-            .map(IIngredientListElement::getModNameForSorting)
-            .distinct()
-            .count();
-        ProgressManager.ProgressBar progressBar = ProgressManager
-            .push("Indexing ingredients for " + prefixInfo.getDesc() + " search tree", (int) modNameCount);
-        String currentModName = null;
-        for (IIngredientListElement ingredient : ingredients) {
-            String modname = ingredient.getModNameForSorting();
-            if (!Objects.equals(currentModName, modname)) {
-                currentModName = modname;
-                progressBar.step(modname);
+        if (IngredientFilter.firstBuild) {
+            start();
+            ProgressManager.ProgressBar progressBar = null;
+            if (!IngredientFilter.rebuild) {
+                long modNameCount = ingredients.stream()
+                    .map(IIngredientListElement::getModNameForSorting)
+                    .distinct()
+                    .count();
+                progressBar = ProgressManager.push("Indexing ingredients", (int) modNameCount);
             }
-            submit(ingredient);
+            String currentModName = null;
+            for (IIngredientListElement ingredient : ingredients) {
+                String modname = ingredient.getModNameForSorting();
+                if (!Objects.equals(currentModName, modname)) {
+                    currentModName = modname;
+                    progressBar.step(modname);
+                }
+                submit(ingredient);
+            }
+            if (progressBar != null) {
+                ProgressManager.pop(progressBar);
+            }
+            stop();
+        } else {
+            ProgressManager.ProgressBar progressBar = ProgressManager
+                .push("Adding ingredients at runtime", ingredients.size());
+            for (IIngredientListElement ingredient : ingredients) {
+                progressBar.step(ingredient.getDisplayName());
+                submit(ingredient);
+            }
         }
-        ProgressManager.pop(progressBar);
-        stop();
     }
 
     @Override

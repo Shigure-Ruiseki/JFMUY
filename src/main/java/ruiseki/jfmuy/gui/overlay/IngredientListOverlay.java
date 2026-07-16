@@ -81,7 +81,7 @@ public class IngredientListOverlay implements IIngredientListOverlay, IMouseHand
         long start_time = System.currentTimeMillis();
         this.ingredientFilter.modesChanged();
         Log.get()
-            .info("Updated  ingredient filter in {} ms", System.currentTimeMillis() - start_time);
+            .info("Updated ingredient filter in {} ms", System.currentTimeMillis() - start_time);
         updateLayout(true);
     }
 

@@ -196,6 +196,7 @@ public class IngredientRegistry implements IIngredientRegistry {
 
         NonNullList<IIngredientListElement<V>> ingredientListElements = IngredientListElementFactory
             .createList(this, ingredientType, ingredients, modIdHelper);
+        NonNullList<IIngredientListElement> ingredientsToAdd = NonNullList.create();
         for (IIngredientListElement<V> element : ingredientListElements) {
             List<IIngredientListElement<V>> matchingElements = ingredientFilter.findMatchingElements(element);
             if (!matchingElements.isEmpty()) {
@@ -209,12 +210,15 @@ public class IngredientRegistry implements IIngredientRegistry {
                 }
             } else {
                 blacklist.removeIngredientFromBlacklist(element.getIngredient(), ingredientHelper);
-                ingredientFilter.addIngredient(element);
+                ingredientsToAdd.add(element);
                 if (Config.isDebugModeEnabled()) {
                     Log.get()
                         .debug("Added ingredient: {}", ingredientHelper.getErrorInfo(element.getIngredient()));
                 }
             }
+        }
+        if (!ingredientsToAdd.isEmpty()) {
+            ingredientFilter.addIngredients(ingredientsToAdd);
         }
         ingredientFilter.invalidateCache();
     }

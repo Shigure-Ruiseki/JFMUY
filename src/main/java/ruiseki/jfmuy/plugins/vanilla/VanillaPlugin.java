@@ -69,7 +69,7 @@ public class VanillaPlugin implements IModPlugin {
     private ISubtypeRegistry subtypeRegistry;
 
     @Override
-    public void registerItemSubtypes(ISubtypeRegistry subtypeRegistry) {
+    public void registerSubtypes(ISubtypeRegistry subtypeRegistry) {
         this.subtypeRegistry = subtypeRegistry;
 
         subtypeRegistry.registerSubtypeInterpreter(Items.potionitem, PotionSubtypeInterpreter.INSTANCE);

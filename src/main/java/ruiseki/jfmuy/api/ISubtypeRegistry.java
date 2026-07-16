@@ -1,11 +1,13 @@
 package ruiseki.jfmuy.api;
 
-import java.util.function.Function;
-
 import javax.annotation.Nullable;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidStack;
+
+import ruiseki.jfmuy.api.ingredients.IIngredientSubtypeInterpreter;
 
 /**
  * Tell JFMUY how to interpret NBT tags and capabilities when comparing and looking up items.
@@ -28,14 +30,29 @@ public interface ISubtypeRegistry {
     void useNbtForSubtypes(Item... items);
 
     /**
+     * Tells JFMUY to treat all NBT as relevant to these fluids' subtypes.
+     */
+    void useNbtForSubtypes(Fluid... fluids);
+
+    /**
      * Add an interpreter to compare item subtypes.
-     * This interpreter should account for meta, nbt, and anything else that's relevant to differentiating the item's
+     * This interpreter should account for meta, nbt and anything else that's relevant to differentiating the item's
      * subtypes.
      *
      * @param item        the item that has subtypes.
      * @param interpreter the interpreter for the item.
      */
     void registerSubtypeInterpreter(Item item, ISubtypeInterpreter interpreter);
+
+    /**
+     * Add an interpreter to compare fluid subtypes.
+     * This interpreter should account for nbt and anything else that's relevant to differentiating the fluid's
+     * subtypes.
+     *
+     * @param fluid       the fluid that has subtypes.
+     * @param interpreter the interpreter for the ingredient.
+     */
+    void registerSubtypeInterpreter(Fluid fluid, IFluidSubtypeInterpreter interpreter);
 
     /**
      * Get the data from an itemStack that is relevant to comparing and telling subtypes apart.
@@ -45,21 +62,31 @@ public interface ISubtypeRegistry {
     String getSubtypeInfo(ItemStack itemStack);
 
     /**
+     * Get the data from a fluidStack that is relevant to comparing and telling subtypes apart.
+     * Returns null if the fluidStack has no information used for subtypes.
+     */
+    @Nullable
+    String getSubtypeInfo(FluidStack fluidStack);
+
+    /**
      * Returns whether an {@link ISubtypeInterpreter} has been registered for this item.
      */
     boolean hasSubtypeInterpreter(ItemStack itemStack);
 
+    /**
+     * Returns whether an {@link ISubtypeInterpreter} has been registered for this fluid.
+     */
+    boolean hasSubtypeInterpreter(FluidStack fluidStack);
+
     @FunctionalInterface
-    interface ISubtypeInterpreter extends Function<ItemStack, String> {
+    interface ISubtypeInterpreter extends IIngredientSubtypeInterpreter<ItemStack> {
 
-        String NONE = "";
+        @Deprecated
+        String NONE = IIngredientSubtypeInterpreter.NONE;
+    }
 
-        /**
-         * Get the data from an itemStack that is relevant to telling subtypes apart.
-         * This should account for meta, nbt, and anything else that's relevant.
-         * Return {@link #NONE} if there is no data used for subtypes.
-         */
-        @Override
-        String apply(ItemStack itemStack);
+    @FunctionalInterface
+    interface IFluidSubtypeInterpreter extends IIngredientSubtypeInterpreter<FluidStack> {
+
     }
 }

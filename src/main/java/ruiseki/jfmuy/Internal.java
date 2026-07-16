@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.base.Preconditions;
 
+import ruiseki.jfmuy.api.ISubtypeRegistry;
 import ruiseki.jfmuy.color.ColorNamer;
 import ruiseki.jfmuy.gui.GuiEventHandler;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
@@ -13,11 +14,14 @@ import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.input.InputHandler;
 import ruiseki.jfmuy.runtime.JFMUYHelpers;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
+import ruiseki.jfmuy.runtime.SubtypeRegistry;
 import ruiseki.jfmuy.startup.StackHelper;
 
 /** For JFMUY internal use only, these are normally accessed from the API. */
 public final class Internal {
 
+    @Nullable
+    private static SubtypeRegistry subtypeRegistry;
     @Nullable
     private static StackHelper stackHelper;
     @Nullable
@@ -37,6 +41,15 @@ public final class Internal {
 
     private Internal() {
 
+    }
+
+    public static ISubtypeRegistry getSubtypeRegistry() {
+        Preconditions.checkState(subtypeRegistry != null, "SubtypeRegistry has not been created yet.");
+        return subtypeRegistry;
+    }
+
+    public static void setSubtypeRegistry(SubtypeRegistry subtypeRegistry) {
+        Internal.subtypeRegistry = subtypeRegistry;
     }
 
     public static StackHelper getStackHelper() {

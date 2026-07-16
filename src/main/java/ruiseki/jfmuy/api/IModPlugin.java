@@ -11,10 +11,10 @@ import ruiseki.jfmuy.api.recipe.IRecipeCategoryRegistration;
 public interface IModPlugin {
 
     /**
-     * If your item has subtypes that depend on NBT or capabilities, use this to help JFMUY identify those subtypes
-     * correctly.
+     * If your item or fluid has subtypes that depend on NBT or capabilities, use this to help JFMUY identify those
+     * subtypes correctly.
      */
-    default void registerItemSubtypes(ISubtypeRegistry subtypeRegistry) {
+    default void registerSubtypes(ISubtypeRegistry subtypeRegistry) {
 
     }
 

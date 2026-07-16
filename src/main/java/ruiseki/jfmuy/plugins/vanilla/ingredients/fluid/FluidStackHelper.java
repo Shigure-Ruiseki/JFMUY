@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.base.Objects;
 
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.color.ColorGetter;
 import ruiseki.jfmuy.config.Config;
@@ -48,12 +49,17 @@ public class FluidStackHelper implements IIngredientHelper<FluidStack> {
 
     @Override
     public String getUniqueId(FluidStack ingredient) {
-        if (ingredient.tag != null) {
-            return "fluid:" + ingredient.getFluid()
-                .getName() + ":" + ingredient.tag;
+        StringBuilder uniqueId = new StringBuilder("fluid:");
+        uniqueId.append(
+            ingredient.getFluid()
+                .getName());
+        String subtype = Internal.getSubtypeRegistry()
+            .getSubtypeInfo(ingredient);
+        if (subtype != null && !subtype.isEmpty()) {
+            uniqueId.append(":");
+            uniqueId.append(subtype);
         }
-        return "fluid:" + ingredient.getFluid()
-            .getName();
+        return uniqueId.toString();
     }
 
     @Override

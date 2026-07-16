@@ -1,10 +1,6 @@
 package ruiseki.jfmuy.transfer;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -13,6 +9,11 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.api.gui.IGuiIngredient;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
@@ -58,12 +59,12 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
             return handlerHelper.createInternalError();
         }
 
-        Map<Integer, Slot> inventorySlots = new HashMap<>();
+        Int2ObjectMap<Slot> inventorySlots = new Int2ObjectArrayMap<>();
         for (Slot slot : transferHelper.getInventorySlots(container)) {
             inventorySlots.put(slot.slotNumber, slot);
         }
 
-        Map<Integer, Slot> craftingSlots = new HashMap<>();
+        Int2ObjectMap<Slot> craftingSlots = new Int2ObjectArrayMap<>();
         for (Slot slot : transferHelper.getRecipeSlots(container)) {
             craftingSlots.put(slot.slotNumber, slot);
         }
@@ -90,7 +91,7 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
             return handlerHelper.createInternalError();
         }
 
-        Map<Integer, ItemStack> availableItemStacks = new HashMap<>();
+        Int2ObjectMap<ItemStack> availableItemStacks = new Int2ObjectArrayMap<>();
         int filledCraftSlotCount = 0;
         int emptySlotCount = 0;
 
@@ -134,16 +135,15 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
             return handlerHelper.createUserErrorForSlots(message, matchingItemsResult.missingItems);
         }
 
-        List<Integer> craftingSlotIndexes = new ArrayList<>(craftingSlots.keySet());
+        IntList craftingSlotIndexes = new IntArrayList(craftingSlots.keySet());
         Collections.sort(craftingSlotIndexes);
 
-        List<Integer> inventorySlotIndexes = new ArrayList<>(inventorySlots.keySet());
+        IntList inventorySlotIndexes = new IntArrayList(inventorySlots.keySet());
         Collections.sort(inventorySlotIndexes);
 
         // check that the slots exist and can be altered
-        for (Map.Entry<Integer, Integer> entry : matchingItemsResult.matchingItems.entrySet()) {
-            int craftNumber = entry.getKey();
-            int slotNumber = craftingSlotIndexes.get(craftNumber);
+        for (Int2IntMap.Entry entry : matchingItemsResult.matchingItemsCasted.int2IntEntrySet()) {
+            int slotNumber = craftingSlotIndexes.get(entry.getIntKey());
             if (slotNumber < 0 || slotNumber >= container.inventorySlots.size()) {
                 Log.get()
                     .error(
@@ -158,7 +158,7 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
         if (doTransfer) {
             PacketRecipeTransfer packet = new PacketRecipeTransfer(
                 matchingItemsResult.matchingItems,
-                matchingItemsResult.matchingItemCounts,
+                matchingItemsResult.matchingItemsCasted,
                 craftingSlotIndexes,
                 inventorySlotIndexes,
                 maxTransfer,

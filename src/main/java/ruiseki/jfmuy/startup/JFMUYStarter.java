@@ -4,8 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Stopwatch;
-
 import cpw.mods.fml.common.ProgressManager;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
@@ -36,6 +34,7 @@ import ruiseki.jfmuy.runtime.JFMUYRuntime;
 import ruiseki.jfmuy.runtime.SubtypeRegistry;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
+import ruiseki.jfmuy.util.LoggedTimer;
 import ruiseki.okcore.datastructure.NonNullList;
 
 public class JFMUYStarter {
@@ -44,7 +43,7 @@ public class JFMUYStarter {
 
     public void start(List<IModPlugin> plugins) {
         LoggedTimer totalTime = new LoggedTimer();
-        totalTime.start("Starting JEI");
+        totalTime.start("Starting JFMUY");
 
         IModIdHelper modIdHelper = ForgeModIdHelper.getInstance();
         ErrorUtil.setModIdHelper(modIdHelper);
@@ -87,7 +86,7 @@ public class JFMUYStarter {
             .createBaseList(ingredientRegistry, modIdHelper);
         timer.stop();
 
-        timer.start("Building ingredient filter");
+        timer.start("Building ingredient filter and dispatching async search tree building");
         IngredientFilter ingredientFilter = new IngredientFilter(blacklist);
         ingredientFilter.addIngredients(ingredientList);
         Internal.setIngredientFilter(ingredientFilter);
@@ -129,6 +128,8 @@ public class JFMUYStarter {
         timer.stop();
 
         stackHelper.disableUidCache();
+
+        ingredientFilter.notifyStopBuilding();
 
         sendRuntime(plugins, jfmuyRuntime);
 
@@ -304,25 +305,5 @@ public class JFMUYStarter {
             }
         }
         ProgressManager.pop(progressBar);
-    }
-
-    private static class LoggedTimer {
-
-        private final Stopwatch stopWatch = Stopwatch.createUnstarted();
-        private String message = "";
-
-        public void start(String message) {
-            this.message = message;
-            Log.get()
-                .info("{}...", message);
-            stopWatch.reset();
-            stopWatch.start();
-        }
-
-        public void stop() {
-            stopWatch.stop();
-            Log.get()
-                .info("{} took {}", message, stopWatch);
-        }
     }
 }

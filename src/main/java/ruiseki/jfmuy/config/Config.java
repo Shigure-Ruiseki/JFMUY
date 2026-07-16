@@ -202,8 +202,8 @@ public final class Config {
         return values.centerSearchBarEnabled;
     }
 
-    public static boolean isOptimizeMemoryUsage() {
-        return true; // For compatibility sake
+    public static boolean isSearchTreeBuildingAsync() {
+        return values.asyncSearchTreeBuilding;
     }
 
     public static boolean isUltraLowMemoryMode() {
@@ -483,6 +483,9 @@ public final class Config {
 
         values.ultraLowMemoryUsage = config
             .getBoolean(CATEGORY_ADVANCED, "ultraLowMemoryUsage", defaultValues.ultraLowMemoryUsage);
+
+        values.asyncSearchTreeBuilding = config
+            .getBoolean(CATEGORY_ADVANCED, "asyncSearchTreeBuilding", defaultValues.asyncSearchTreeBuilding);
 
         values.addBookmarksToFront = config
             .getBoolean(CATEGORY_ADVANCED, "addBookmarksToFront", defaultValues.addBookmarksToFront);

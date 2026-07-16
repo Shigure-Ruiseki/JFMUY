@@ -1,6 +1,5 @@
 package ruiseki.jfmuy.search;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Supplier;
@@ -11,60 +10,69 @@ import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.util.Translator;
 
-public class PrefixInfo {
+public class PrefixInfo implements Comparable<PrefixInfo> {
 
-    public static final PrefixInfo NO_PREFIX = new PrefixInfo(
-        '\0',
-        "none",
-        () -> Config.SearchMode.ENABLED,
-        i -> Collections.singleton(Translator.toLowercaseWithLocale(i.getDisplayName())),
-        GeneralizedSuffixTree::new);
+    public static final PrefixInfo NO_PREFIX;
 
     private static final Char2ObjectMap<PrefixInfo> instances = new Char2ObjectArrayMap<>(6);
 
     static {
         addPrefix(
             new PrefixInfo(
-                '@',
-                "mod_name",
-                Config::getModNameSearchMode,
-                IIngredientListElement::getModNameStrings,
-                LimitedStringStorage::new));
-        addPrefix(
-            new PrefixInfo(
                 '#',
+                0,
                 "tooltip",
                 Config::getTooltipSearchMode,
                 IIngredientListElement::getTooltipStrings,
                 GeneralizedSuffixTree::new));
         addPrefix(
-            new PrefixInfo(
-                '$',
-                "oredict",
-                Config::getOreDictSearchMode,
-                IIngredientListElement::getOreDictStrings,
-                LimitedStringStorage::new));
+            NO_PREFIX = new PrefixInfo(
+                '\0',
+                1,
+                "default",
+                () -> Config.SearchMode.ENABLED,
+                i -> Collections.singleton(Translator.toLowercaseWithLocale(i.getDisplayName())),
+                GeneralizedSuffixTree::new));
         addPrefix(
             new PrefixInfo(
-                '%',
-                "creative_tab",
-                Config::getCreativeTabSearchMode,
-                IIngredientListElement::getCreativeTabsStrings,
-                LimitedStringStorage::new));
+                '&',
+                2,
+                "resource_id",
+                Config::getResourceIdSearchMode,
+                e -> Collections.singleton(e.getResourceId()),
+                GeneralizedSuffixTree::new));
         addPrefix(
             new PrefixInfo(
                 '^',
+                3,
                 "color",
                 Config::getColorSearchMode,
                 IIngredientListElement::getColorStrings,
                 LimitedStringStorage::new));
         addPrefix(
             new PrefixInfo(
-                '&',
-                "resource_id",
-                Config::getResourceIdSearchMode,
-                e -> Collections.singleton(e.getResourceId()),
-                GeneralizedSuffixTree::new));
+                '$',
+                4,
+                "oredict",
+                Config::getOreDictSearchMode,
+                IIngredientListElement::getOreDictStrings,
+                LimitedStringStorage::new));
+        addPrefix(
+            new PrefixInfo(
+                '@',
+                5,
+                "mod_name",
+                Config::getModNameSearchMode,
+                IIngredientListElement::getModNameStrings,
+                LimitedStringStorage::new));
+        addPrefix(
+            new PrefixInfo(
+                '%',
+                6,
+                "creative_tab",
+                Config::getCreativeTabSearchMode,
+                IIngredientListElement::getCreativeTabsStrings,
+                LimitedStringStorage::new));
     }
 
     private static void addPrefix(PrefixInfo info) {
@@ -72,9 +80,7 @@ public class PrefixInfo {
     }
 
     public static Collection<PrefixInfo> all() {
-        Collection<PrefixInfo> values = new ArrayList<>(instances.values());
-        values.add(PrefixInfo.NO_PREFIX);
-        return values;
+        return Collections.unmodifiableCollection(instances.values());
     }
 
     public static PrefixInfo get(char ch) {
@@ -82,22 +88,29 @@ public class PrefixInfo {
     }
 
     private final char prefix;
+    private final int priority;
     private final String desc;
     private final IModeGetter modeGetter;
     private final IStringsGetter stringsGetter;
-    private final Supplier<ISearchStorage<IIngredientListElement<?>>> storageSupplier;
+    private final Supplier<ISearchStorage<IIngredientListElement<?>>> storage;
 
-    public PrefixInfo(char prefix, String desc, IModeGetter modeGetter, IStringsGetter stringsGetter,
-        Supplier<ISearchStorage<IIngredientListElement<?>>> storageSupplier) {
+    public PrefixInfo(char prefix, int priority, String desc, IModeGetter modeGetter, IStringsGetter stringsGetter,
+        Supplier<ISearchStorage<IIngredientListElement<?>>> storage) {
         this.prefix = prefix;
+        this.priority = priority;
         this.desc = desc;
         this.modeGetter = modeGetter;
         this.stringsGetter = stringsGetter;
-        this.storageSupplier = storageSupplier;
+        this.storage = storage;
+
     }
 
     public char getPrefix() {
         return prefix;
+    }
+
+    public int getPriority() {
+        return priority;
     }
 
     public String getDesc() {
@@ -109,11 +122,16 @@ public class PrefixInfo {
     }
 
     public ISearchStorage<IIngredientListElement<?>> createStorage() {
-        return this.storageSupplier.get();
+        return this.storage.get();
     }
 
     public Collection<String> getStrings(IIngredientListElement<?> element) {
         return this.stringsGetter.getStrings(element);
+    }
+
+    @Override
+    public int compareTo(PrefixInfo o) {
+        return Integer.compare(o.priority, this.priority);
     }
 
     @FunctionalInterface

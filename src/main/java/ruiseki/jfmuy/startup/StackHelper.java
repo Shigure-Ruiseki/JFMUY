@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +19,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.oredict.OreDictionary;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import ruiseki.jfmuy.api.ISubtypeRegistry;
 import ruiseki.jfmuy.api.gui.IGuiIngredient;
@@ -110,7 +112,7 @@ public class StackHelper implements IStackHelper {
                     availableItemStacks.remove(matching.slotIndex);
                 }
                 matchingItemResult.matchingItems.put(recipeSlotNumber, matching.slotIndex);
-                matchingItemResult.matchingItemCounts.put(recipeSlotNumber, matching.count);
+                matchingItemResult.matchingItemsCasted.put(recipeSlotNumber, matching.count);
             }
         }
 
@@ -482,9 +484,9 @@ public class StackHelper implements IStackHelper {
 
     public static class MatchingItemsResult {
 
-        public final Map<Integer, Integer> matchingItems = new HashMap<>();
-        public final Map<Integer, Integer> matchingItemCounts = new HashMap<>();
-        public final List<Integer> missingItems = new ArrayList<>();
+        public final Map<Integer, Integer> matchingItems = new Int2IntOpenHashMap();
+        public final Int2IntMap matchingItemsCasted = (Int2IntMap) matchingItems;
+        public final List<Integer> missingItems = new IntArrayList();
     }
 
     private static class MatchingItem {

@@ -3,7 +3,6 @@ package ruiseki.jfmuy.util;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -12,6 +11,7 @@ import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.Nullable;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.VanillaTypes;
@@ -38,7 +38,7 @@ public class IngredientSet<V> extends AbstractSet<V> {
 
     private IngredientSet(Function<V, String> uidGenerator) {
         this.uidGenerator = uidGenerator;
-        this.ingredients = new LinkedHashMap<>();
+        this.ingredients = new Object2ObjectLinkedOpenHashMap<>();
     }
 
     @Override

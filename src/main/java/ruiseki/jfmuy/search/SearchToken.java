@@ -76,7 +76,7 @@ public class SearchToken {
         Set<T> smallestSet = sets.stream()
             .min(Comparator.comparing(Set::size))
             .orElseGet(Collections::emptySet);
-        Set<T> results = new ReferenceOpenHashSet<>();
+        Set<T> results = new ReferenceOpenHashSet<>(smallestSet);
         results.addAll(smallestSet);
         for (Set<T> set : sets) {
             if (set == smallestSet) {

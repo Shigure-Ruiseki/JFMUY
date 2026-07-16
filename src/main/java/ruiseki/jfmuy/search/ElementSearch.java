@@ -2,33 +2,42 @@ package ruiseki.jfmuy.search;
 
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.util.Log;
+import ruiseki.okcore.datastructure.NonNullList;
 
 public class ElementSearch implements IElementSearch {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    private final Map<PrefixInfo, PrefixedSearchable> prefixedSearchables = new Reference2ObjectOpenHashMap<>();
+    private final Map<PrefixInfo, PrefixedSearchable> prefixedSearchables = new Reference2ObjectArrayMap<>();
     private final CombinedSearchables<IIngredientListElement<?>> combinedSearchables = new CombinedSearchables<>();
 
     public ElementSearch() {
         for (PrefixInfo prefixInfo : PrefixInfo.all()) {
             ISearchStorage<IIngredientListElement<?>> storage = prefixInfo.createStorage();
-            PrefixedSearchable prefixedSearchable = new PrefixedSearchable(storage, prefixInfo);
-            this.prefixedSearchables.put(prefixInfo, prefixedSearchable);
-            this.combinedSearchables.addSearchable(prefixedSearchable);
+            PrefixedSearchable searchable = Config.isSearchTreeBuildingAsync()
+                ? new AsyncPrefixedSearchable(storage, prefixInfo)
+                : new PrefixedSearchable(storage, prefixInfo);
+            this.prefixedSearchables.put(prefixInfo, searchable);
+            this.combinedSearchables.addSearchable(searchable);
         }
+    }
+
+    public void stopBuilding() {
+        PrefixInfo.all()
+            .stream()
+            .sorted(Comparator.reverseOrder())
+            .map(this.prefixedSearchables::get)
+            .filter(AsyncPrefixedSearchable.class::isInstance)
+            .map(AsyncPrefixedSearchable.class::cast)
+            .forEach(AsyncPrefixedSearchable::stop);
     }
 
     @Override
@@ -53,16 +62,16 @@ public class ElementSearch implements IElementSearch {
     }
 
     @Override
-    public void add(IIngredientListElement<?> info) {
+    public void add(IIngredientListElement<?> ingredient) {
         for (PrefixedSearchable prefixedSearchable : this.prefixedSearchables.values()) {
-            Config.SearchMode searchMode = prefixedSearchable.getMode();
-            if (searchMode != Config.SearchMode.DISABLED) {
-                Collection<String> strings = prefixedSearchable.getStrings(info);
-                ISearchStorage<IIngredientListElement<?>> searchable = prefixedSearchable.getSearchStorage();
-                for (String string : strings) {
-                    searchable.put(string, info);
-                }
-            }
+            prefixedSearchable.submit(ingredient);
+        }
+    }
+
+    @Override
+    public void addAll(NonNullList<IIngredientListElement> ingredients) {
+        for (PrefixedSearchable prefixedSearchable : this.prefixedSearchables.values()) {
+            prefixedSearchable.submitAll(ingredients);
         }
     }
 
@@ -81,7 +90,8 @@ public class ElementSearch implements IElementSearch {
             if (prefixInfo.getMode() != Config.SearchMode.DISABLED) {
                 ISearchStorage<IIngredientListElement<?>> storage = entry.getValue()
                     .getSearchStorage();
-                LOGGER.info("ElementSearch {} Storage Stats: {}", prefixInfo, storage.statistics());
+                Log.get()
+                    .info("ElementSearch {} Storage Stats: {}", prefixInfo, storage.statistics());
                 try {
                     FileWriter fileWriter = new FileWriter("GeneralizedSuffixTree-" + prefixInfo + ".dot");
                     try (PrintWriter out = new PrintWriter(fileWriter)) {

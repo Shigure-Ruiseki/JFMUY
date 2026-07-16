@@ -6,15 +6,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.util.Log;
 import ruiseki.okcore.datastructure.NonNullList;
 
 public class ElementSearchLowMem implements IElementSearch {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private final NonNullList<IIngredientListElement<?>> elementInfoList;
 
@@ -47,8 +43,15 @@ public class ElementSearchLowMem implements IElementSearch {
     }
 
     @Override
-    public void add(IIngredientListElement<?> info) {
-        this.elementInfoList.add(info);
+    public void add(IIngredientListElement<?> ingredient) {
+        this.elementInfoList.add(ingredient);
+    }
+
+    @Override
+    public void addAll(NonNullList<IIngredientListElement> ingredients) {
+        for (IIngredientListElement ingredient : ingredients) {
+            add(ingredient);
+        }
     }
 
     @Override
@@ -58,6 +61,7 @@ public class ElementSearchLowMem implements IElementSearch {
 
     @Override
     public void logStatistics() {
-        LOGGER.info("ElementSearchLowMem Element Count: {}", this.elementInfoList.size());
+        Log.get()
+            .info("ElementSearchLowMem Element Count: {}", this.elementInfoList.size());
     }
 }

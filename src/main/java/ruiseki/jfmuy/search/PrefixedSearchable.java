@@ -5,11 +5,14 @@ import java.util.Set;
 
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.util.LoggedTimer;
+import ruiseki.okcore.datastructure.NonNullList;
 
-public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>> {
+public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>>, IBuildable {
 
-    private final ISearchStorage<IIngredientListElement<?>> searchStorage;
-    private final PrefixInfo prefixInfo;
+    protected final ISearchStorage<IIngredientListElement<?>> searchStorage;
+    protected final PrefixInfo prefixInfo;
+    protected LoggedTimer timer;
 
     public PrefixedSearchable(ISearchStorage<IIngredientListElement<?>> searchStorage, PrefixInfo prefixInfo) {
         this.searchStorage = searchStorage;
@@ -30,6 +33,23 @@ public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>
     }
 
     @Override
+    public void submit(IIngredientListElement<?> ingredient) {
+        Collection<String> strings = prefixInfo.getStrings(ingredient);
+        for (String string : strings) {
+            searchStorage.put(string, ingredient);
+        }
+    }
+
+    @Override
+    public void submitAll(NonNullList<IIngredientListElement> ingredients) {
+        start();
+        for (IIngredientListElement ingredient : ingredients) {
+            submit(ingredient);
+        }
+        stop();
+    }
+
+    @Override
     public void getSearchResults(String token, Set<IIngredientListElement<?>> results) {
         searchStorage.getSearchResults(token, results);
     }
@@ -37,5 +57,17 @@ public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>
     @Override
     public void getAllElements(Set<IIngredientListElement<?>> results) {
         searchStorage.getAllElements(results);
+    }
+
+    @Override
+    public void start() {
+        this.timer = new LoggedTimer();
+        this.timer.start("Building [" + prefixInfo.getDesc() + "] search tree");
+    }
+
+    @Override
+    public void stop() {
+        this.timer.stop();
+        this.timer = null;
     }
 }

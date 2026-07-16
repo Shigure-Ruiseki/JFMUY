@@ -43,7 +43,6 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     private final IngredientBlacklistInternal blacklist;
 
     private final IElementSearch elementSearch;
-    // private final Set<String> modNamesForSorting = new ObjectOpenHashSet<>(); // TODO
 
     @Nullable
     private String filterCached;
@@ -59,8 +58,6 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         this.elementSearch.logStatistics();
     }
 
-    public void trimToSize() {}
-
     public void addIngredients(NonNullList<IIngredientListElement> ingredients) {
         ingredients.sort(IngredientListElementComparator.INSTANCE);
         long modNameCount = ingredients.stream()
@@ -68,10 +65,10 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
             .distinct()
             .count();
         ProgressManager.ProgressBar progressBar = ProgressManager
-            .push("Indexing ingredients from " + modNameCount + " mods", 0, true);
-        for (IIngredientListElement<?> element : ingredients) {
-            addIngredient(element);
-        }
+            .push("Indexing ingredients from " + modNameCount + " mods", 1, false);
+        progressBar.step("");
+        this.elementSearch.addAll(ingredients);
+        this.filterCached = null;
         ProgressManager.pop(progressBar);
     }
 
@@ -79,6 +76,12 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         updateHiddenState(element);
         this.elementSearch.add(element);
         this.filterCached = null;
+    }
+
+    public void notifyStopBuilding() {
+        if (this.elementSearch instanceof ElementSearch) {
+            ((ElementSearch) this.elementSearch).stopBuilding();
+        }
     }
 
     public void invalidateCache() {
@@ -107,7 +110,6 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     }
 
     public void modesChanged() {
-        // this.elementSearch.start();
         this.filterCached = null;
     }
 
@@ -198,11 +200,12 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         } else {
             stream = tokens.stream()
                 .map(token -> token.getSearchResults(this.elementSearch))
-                .flatMap(Set::stream)
-                .distinct();
+                .flatMap(Set::stream);
         }
         return stream.filter(IIngredientListElement::isVisible)
-            .collect(Collectors.toList()); // TODO: sort
+            .distinct()
+            .sorted(IngredientListElementComparator.INSTANCE)
+            .collect(Collectors.toList());
     }
 
     /**

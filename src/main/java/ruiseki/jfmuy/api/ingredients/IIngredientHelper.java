@@ -103,6 +103,17 @@ public interface IIngredientHelper<V> {
     }
 
     /**
+     * Called when a player is in cheat mode and clicks an ingredient in the list with an item.
+     *
+     * @param ingredient  The ingredient to cheat in. Do not edit this ingredient.
+     * @param clickedWith The non-empty ItemStack that clicked on the ingredient.
+     * @return an ItemStack for HEI to give the player, or an empty stack if there is nothing that can be given.
+     */
+    default ItemStack replaceWithCheatItemStack(V ingredient, ItemStack clickedWith) {
+        return getCheatItemStack(ingredient);
+    }
+
+    /**
      * Makes a copy of the given ingredient.
      * Used by JFMUY to protect against mutation of ingredients.
      *

@@ -17,11 +17,11 @@ import ruiseki.okcore.helper.ItemStackHelpers;
 
 public class ShapedRecipesWrapper implements IShapedCraftingRecipeWrapper {
 
-    private final IJFMUYHelpers jeiHelpers;
+    private final IJFMUYHelpers jfmuyHelpers;
     private final ShapedRecipes recipe;
 
-    public ShapedRecipesWrapper(IJFMUYHelpers jeiHelpers, ShapedRecipes recipe) {
-        this.jeiHelpers = jeiHelpers;
+    public ShapedRecipesWrapper(IJFMUYHelpers jfmuyHelpers, ShapedRecipes recipe) {
+        this.jfmuyHelpers = jfmuyHelpers;
         this.recipe = recipe;
     }
 
@@ -38,7 +38,7 @@ public class ShapedRecipesWrapper implements IShapedCraftingRecipeWrapper {
     @Override
     public void getIngredients(IIngredients ingredients) {
         ItemStack recipeOutput = recipe.getRecipeOutput();
-        IStackHelper stackHelper = jeiHelpers.getStackHelper();
+        IStackHelper stackHelper = jfmuyHelpers.getStackHelper();
 
         List<Object> rawInputs = new ArrayList<>();
         ItemStack[] inputs = recipe.recipeItems;

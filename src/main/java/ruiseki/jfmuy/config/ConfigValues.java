@@ -1,5 +1,8 @@
 package ruiseki.jfmuy.config;
 
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+
 import ruiseki.jfmuy.util.GiveMode;
 
 public class ConfigValues {
@@ -29,4 +32,5 @@ public class ConfigValues {
     public boolean editModeEnabled = false;
     public boolean bookmarkOverlayEnabled = true;
     public String filterText = "";
+    public ItemStack defaultFluidContainerItem = new ItemStack(Items.bucket);
 }

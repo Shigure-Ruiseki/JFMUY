@@ -63,10 +63,10 @@ public class JFMUYStarter {
         Internal.setIngredientRegistry(ingredientRegistry);
 
         GuiHelper guiHelper = new GuiHelper(ingredientRegistry);
-        JFMUYHelpers jeiHelpers = new JFMUYHelpers(guiHelper, ingredientRegistry, blacklist, stackHelper);
-        Internal.setHelpers(jeiHelpers);
+        JFMUYHelpers jfmuyHelpers = new JFMUYHelpers(guiHelper, ingredientRegistry, blacklist, stackHelper);
+        Internal.setHelpers(jfmuyHelpers);
 
-        ModRegistry modRegistry = new ModRegistry(jeiHelpers, ingredientRegistry);
+        ModRegistry modRegistry = new ModRegistry(jfmuyHelpers, ingredientRegistry);
 
         LoggedTimer timer = new LoggedTimer();
         timer.start("Registering recipe categories");
@@ -113,20 +113,23 @@ public class JFMUYStarter {
             ingredientRegistry,
             guiScreenHelper);
 
-        BookmarkOverlay bookmarkOverlay = new BookmarkOverlay(bookmarkList, jeiHelpers.getGuiHelper(), guiScreenHelper);
+        BookmarkOverlay bookmarkOverlay = new BookmarkOverlay(
+            bookmarkList,
+            jfmuyHelpers.getGuiHelper(),
+            guiScreenHelper);
         RecipesGui recipesGui = new RecipesGui(recipeRegistry, ingredientRegistry);
-        JFMUYRuntime jeiRuntime = new JFMUYRuntime(
+        JFMUYRuntime jfmuyRuntime = new JFMUYRuntime(
             recipeRegistry,
             ingredientListOverlay,
             bookmarkOverlay,
             recipesGui,
             ingredientFilter);
-        Internal.setRuntime(jeiRuntime);
+        Internal.setRuntime(jfmuyRuntime);
         timer.stop();
 
         stackHelper.disableUidCache();
 
-        sendRuntime(plugins, jeiRuntime);
+        sendRuntime(plugins, jfmuyRuntime);
 
         timer.start("Optimizing memory usage");
         ingredientFilter.trimToSize();
@@ -142,7 +145,7 @@ public class JFMUYStarter {
             recipeRegistry);
         Internal.setGuiEventHandler(guiEventHandler);
         InputHandler inputHandler = new InputHandler(
-            jeiRuntime,
+            jfmuyRuntime,
             ingredientRegistry,
             ingredientListOverlay,
             guiScreenHelper,
@@ -272,7 +275,7 @@ public class JFMUYStarter {
         ProgressManager.pop(progressBar);
     }
 
-    private static void sendRuntime(List<IModPlugin> plugins, IJFMUYRuntime jeiRuntime) {
+    private static void sendRuntime(List<IModPlugin> plugins, IJFMUYRuntime jfmuyRuntime) {
         ProgressManager.ProgressBar progressBar = ProgressManager.push("Sending Runtime", plugins.size());
         Iterator<IModPlugin> iterator = plugins.iterator();
         while (iterator.hasNext()) {
@@ -287,7 +290,7 @@ public class JFMUYStarter {
                         "Sending runtime to plugin: {} ...",
                         plugin.getClass()
                             .getName());
-                plugin.onRuntimeAvailable(jeiRuntime);
+                plugin.onRuntimeAvailable(jfmuyRuntime);
                 long timeElapsedMs = System.currentTimeMillis() - start_time;
                 if (timeElapsedMs > 100) {
                     Log.get()

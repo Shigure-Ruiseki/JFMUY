@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.MinecraftForge;
@@ -24,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.registry.GameData;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.Reference;
@@ -41,10 +45,13 @@ import ruiseki.jfmuy.startup.IModIdHelper;
 import ruiseki.jfmuy.util.GiveMode;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
+import ruiseki.okcore.fluid.capability.CapabilityFluidHandler;
+import ruiseki.okcore.fluid.handler.IFluidHandlerItem;
+import ruiseki.okcore.helper.CapabilityHelpers;
 
 public final class Config {
 
-    private static final String configKeyPrefix = "config.jei";
+    private static final String configKeyPrefix = "config.jfmuy";
 
     public static final String CATEGORY_SEARCH = "search";
     public static final String CATEGORY_ADVANCED = "advanced";
@@ -298,6 +305,10 @@ public final class Config {
         }
     }
 
+    public static ItemStack getDefaultFluidContainerItem() {
+        return values.defaultFluidContainerItem.copy();
+    }
+
     @Nullable
     public static LocalizedConfiguration getConfig() {
         return config;
@@ -315,17 +326,17 @@ public final class Config {
 
     public static void preInit(FMLPreInitializationEvent event) {
 
-        File jeiConfigurationDir = new File(event.getModConfigurationDirectory(), Reference.MOD_ID);
-        if (!jeiConfigurationDir.exists()) {
+        File jfmuyConfigurationDir = new File(event.getModConfigurationDirectory(), Reference.MOD_ID);
+        if (!jfmuyConfigurationDir.exists()) {
             try {
-                if (!jeiConfigurationDir.mkdir()) {
+                if (!jfmuyConfigurationDir.mkdir()) {
                     Log.get()
-                        .error("Could not create config directory {}", jeiConfigurationDir);
+                        .error("Could not create config directory {}", jfmuyConfigurationDir);
                     return;
                 }
             } catch (SecurityException e) {
                 Log.get()
-                    .error("Could not create config directory {}", jeiConfigurationDir, e);
+                    .error("Could not create config directory {}", jfmuyConfigurationDir, e);
                 return;
             }
         }
@@ -334,26 +345,26 @@ public final class Config {
             Loader.instance()
                 .getConfigDir()
                 .getParent());
-        bookmarkFile = new File(minecraftDir, "jei_bookmarks.ini");
-        File oldBookmarkFile = new File(jeiConfigurationDir, "bookmarks.ini");
+        bookmarkFile = new File(minecraftDir, "jfmuy_bookmarks.ini");
+        File oldBookmarkFile = new File(jfmuyConfigurationDir, "bookmarks.ini");
         if (!bookmarkFile.exists() && oldBookmarkFile.exists()) {
             try {
                 if (!oldBookmarkFile.renameTo(bookmarkFile)) {
                     Log.get()
-                        .error("Could not move the old bookmark file from {} to {}", jeiConfigurationDir, "./");
+                        .error("Could not move the old bookmark file from {} to {}", jfmuyConfigurationDir, "./");
                     return;
                 }
             } catch (SecurityException e) {
                 Log.get()
-                    .error("Could not move the old bookmark file from {} to {}", jeiConfigurationDir, "./", e);
+                    .error("Could not move the old bookmark file from {} to {}", jfmuyConfigurationDir, "./", e);
                 return;
             }
         }
 
-        final File configFile = new File(jeiConfigurationDir, "jfmuy.cfg");
-        final File itemBlacklistConfigFile = new File(jeiConfigurationDir, "itemBlacklist.cfg");
-        final File searchColorsConfigFile = new File(jeiConfigurationDir, "searchColors.cfg");
-        final File worldConfigFile = new File(jeiConfigurationDir, "worldSettings.cfg");
+        final File configFile = new File(jfmuyConfigurationDir, "jfmuy.cfg");
+        final File itemBlacklistConfigFile = new File(jfmuyConfigurationDir, "itemBlacklist.cfg");
+        final File searchColorsConfigFile = new File(jfmuyConfigurationDir, "searchColors.cfg");
+        final File worldConfigFile = new File(jfmuyConfigurationDir, "worldSettings.cfg");
         worldConfig = new Configuration(worldConfigFile, "0.1.0");
         config = new LocalizedConfiguration(configKeyPrefix, configFile, "0.4.0");
         itemBlacklistConfig = new LocalizedConfiguration(configKeyPrefix, itemBlacklistConfigFile, "0.1.0");
@@ -585,6 +596,48 @@ public final class Config {
         property = worldConfig.get(worldCategory, "filterText", defaultValues.filterText);
         property.setShowInGui(false);
         values.filterText = property.getString();
+
+        property = worldConfig.get(worldCategory, "defaultFluidContainerItem", "");
+        property.setLanguageKey("config.jfmuy.interface.defaultFluidContainerItem");
+        property.comment = Translator.translateToLocal("config.jfmuy.interface.defaultFluidContainerItem.comment");
+        String defaultFluidContainerItem = property.getString();
+        if (!defaultFluidContainerItem.isEmpty()) {
+            String[] defaultFluidContainerItemFormatted = defaultFluidContainerItem.split("@");
+            defaultFluidContainerItem = defaultFluidContainerItemFormatted[0];
+            Item item = GameData.getItemRegistry()
+                .getObject(defaultFluidContainerItem);
+            if (item != null) {
+                ItemStack stack = new ItemStack(Items.bucket);
+                if (defaultFluidContainerItemFormatted.length > 1) {
+                    try {
+                        int meta = Integer.decode(defaultFluidContainerItemFormatted[1]);
+                        stack = new ItemStack(item, 1, meta);
+                    } catch (NumberFormatException e) {
+                        new IllegalArgumentException(
+                            String.format("%s is not a valid meta", defaultFluidContainerItemFormatted[1]))
+                                .printStackTrace();
+                    }
+                } else {
+                    stack = new ItemStack(item);
+                }
+                IFluidHandlerItem container = CapabilityHelpers
+                    .getCapability(stack, CapabilityFluidHandler.FLUID_HANDLER_ITEM)
+                    .getOrNull();
+                if (container == null) {
+                    new IllegalArgumentException(
+                        String.format("%s is not a fluid container", defaultFluidContainerItem)).printStackTrace();
+                    values.defaultFluidContainerItem = new ItemStack(Items.bucket);
+                } else {
+                    values.defaultFluidContainerItem = stack;
+                }
+            } else {
+                new IllegalArgumentException(String.format("%s isn't a valid item ID", defaultFluidContainerItem))
+                    .printStackTrace();
+                values.defaultFluidContainerItem = new ItemStack(Items.bucket);
+            }
+        } else {
+            values.defaultFluidContainerItem = new ItemStack(Items.bucket);
+        }
 
         final boolean configChanged = worldConfig.hasChanged();
         if (configChanged) {

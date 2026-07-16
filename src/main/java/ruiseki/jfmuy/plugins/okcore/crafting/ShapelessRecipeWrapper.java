@@ -16,7 +16,7 @@ public class ShapelessRecipeWrapper implements ICraftingRecipeWrapper {
     private final ShapelessRecipe recipe;
     private final List<List<ItemStack>> inputs;
 
-    public ShapelessRecipeWrapper(IJFMUYHelpers jeiHelpers, ShapelessRecipe recipe) {
+    public ShapelessRecipeWrapper(IJFMUYHelpers jfmuyHelpers, ShapelessRecipe recipe) {
         this.recipe = recipe;
         this.inputs = new ArrayList<>();
 

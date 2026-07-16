@@ -23,8 +23,8 @@ public final class ServerInfo {
         return jfmuyOnServer;
     }
 
-    public static void onConnectedToServer(boolean jeiOnServer) {
-        ServerInfo.jfmuyOnServer = jeiOnServer;
+    public static void onConnectedToServer(boolean jfmuyOnServer) {
+        ServerInfo.jfmuyOnServer = jfmuyOnServer;
         ServerInfo.worldUid = null;
     }
 

@@ -49,7 +49,7 @@ public final class Internal {
     }
 
     public static JFMUYHelpers getHelpers() {
-        Preconditions.checkState(helpers != null, "JeiHelpers has not been created yet.");
+        Preconditions.checkState(helpers != null, "JMFUYHelpers has not been created yet.");
         return helpers;
     }
 
@@ -63,9 +63,9 @@ public final class Internal {
     }
 
     public static void setRuntime(JFMUYRuntime runtime) {
-        JFMUYRuntime jeiRuntime = Internal.runtime;
-        if (jeiRuntime != null) {
-            jeiRuntime.close();
+        JFMUYRuntime jfmuyRuntime = Internal.runtime;
+        if (jfmuyRuntime != null) {
+            jfmuyRuntime.close();
         }
         Internal.runtime = runtime;
     }

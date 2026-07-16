@@ -59,10 +59,10 @@ public class JFMUYHandler {
             this.plugins.addFirst(vanillaPlugin);
         }
 
-        IModPlugin jeiInternalPlugin = getJFMUYInternalPlugin(this.plugins);
-        if (jeiInternalPlugin != null) {
-            this.plugins.remove(jeiInternalPlugin);
-            this.plugins.add(jeiInternalPlugin);
+        IModPlugin jfmuyInternalPlugin = getJFMUYInternalPlugin(this.plugins);
+        if (jfmuyInternalPlugin != null) {
+            this.plugins.remove(jfmuyInternalPlugin);
+            this.plugins.add(jfmuyInternalPlugin);
         }
 
         MinecraftForge.EVENT_BUS.register(this);

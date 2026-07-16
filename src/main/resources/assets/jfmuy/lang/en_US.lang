@@ -132,3 +132,7 @@ key.jfmuy.ctrl.mac=CMD
 description.jfmuy.wooden.door.1=Wooden doors allow you to block monsters from entering your building.\nTesting sentences.
 description.jfmuy.wooden.door.2=Clicking on a door changes its state from open to closed and vice versa.
 description.jfmuy.wooden.door.3=Wooden doors can be opened/closed via redstone circuits.
+
+# New HEI lang keys
+config.jfmuy.interface.defaultFluidContainerItem=Default Fluid Container Item
+config.jfmuy.interface.defaultFluidContainerItem.comment=Default item to use to fill up fluids when clicking on a fluid ingredient in the menu, (format: item_name@meta)

@@ -18,7 +18,7 @@ public class ShapedRecipeWrapper implements IShapedCraftingRecipeWrapper {
     private final ShapedRecipe recipe;
     private final List<List<ItemStack>> inputs;
 
-    public ShapedRecipeWrapper(IJFMUYHelpers jeiHelpers, ShapedRecipe recipe) {
+    public ShapedRecipeWrapper(IJFMUYHelpers jfmuyHelpers, ShapedRecipe recipe) {
         this.recipe = recipe;
         this.inputs = new ArrayList<>();
 

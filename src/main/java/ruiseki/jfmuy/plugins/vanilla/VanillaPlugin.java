@@ -115,8 +115,8 @@ public class VanillaPlugin implements IModPlugin {
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registry) {
-        JFMUYHelpers jeiHelpers = Internal.getHelpers();
-        GuiHelper guiHelper = jeiHelpers.getGuiHelper();
+        JFMUYHelpers jfmuyHelpers = Internal.getHelpers();
+        GuiHelper guiHelper = jfmuyHelpers.getGuiHelper();
         registry.addRecipeCategories(
             new CraftingRecipeCategory(guiHelper),
             new FurnaceFuelCategory(guiHelper),

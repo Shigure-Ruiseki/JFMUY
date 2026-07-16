@@ -363,15 +363,15 @@ public final class ErrorUtil {
             }
         });
 
-        CrashReportCategory jeiCategory = crashreport.makeCategory("JEI render details");
-        jeiCategory.addCrashSectionCallable("Unique Id (for Blacklist)", new Callable<String>() {
+        CrashReportCategory jfmuyCategory = crashreport.makeCategory("JEI render details");
+        jfmuyCategory.addCrashSectionCallable("Unique Id (for Blacklist)", new Callable<String>() {
 
             @Override
             public String call() {
                 return ingredientHelper.getUniqueId(ingredient);
             }
         });
-        jeiCategory.addCrashSectionCallable("Ingredient Type", new Callable<String>() {
+        jfmuyCategory.addCrashSectionCallable("Ingredient Type", new Callable<String>() {
 
             @Override
             public String call() {
@@ -379,28 +379,28 @@ public final class ErrorUtil {
                     .toString();
             }
         });
-        jeiCategory.addCrashSectionCallable("Error Info", new Callable<String>() {
+        jfmuyCategory.addCrashSectionCallable("Error Info", new Callable<String>() {
 
             @Override
             public String call() {
                 return ingredientHelper.getErrorInfo(ingredient);
             }
         });
-        jeiCategory.addCrashSectionCallable("Filter Text", new Callable<String>() {
+        jfmuyCategory.addCrashSectionCallable("Filter Text", new Callable<String>() {
 
             @Override
             public String call() {
                 return Config.getFilterText();
             }
         });
-        jeiCategory.addCrashSectionCallable("Edit Mode Enabled", new Callable<String>() {
+        jfmuyCategory.addCrashSectionCallable("Edit Mode Enabled", new Callable<String>() {
 
             @Override
             public String call() {
                 return Boolean.toString(Config.isEditModeEnabled());
             }
         });
-        jeiCategory.addCrashSectionCallable("Debug Mode Enabled", new Callable<String>() {
+        jfmuyCategory.addCrashSectionCallable("Debug Mode Enabled", new Callable<String>() {
 
             @Override
             public String call() {

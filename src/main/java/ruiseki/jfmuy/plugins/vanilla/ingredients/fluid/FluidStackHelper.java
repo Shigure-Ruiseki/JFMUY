@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
@@ -19,6 +18,10 @@ import com.google.common.base.Objects;
 
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.color.ColorGetter;
+import ruiseki.jfmuy.config.Config;
+import ruiseki.okcore.fluid.capability.CapabilityFluidHandler;
+import ruiseki.okcore.fluid.handler.IFluidHandlerItem;
+import ruiseki.okcore.helper.CapabilityHelpers;
 
 public class FluidStackHelper implements IIngredientHelper<FluidStack> {
 
@@ -93,16 +96,45 @@ public class FluidStackHelper implements IIngredientHelper<FluidStack> {
     }
 
     @Override
+    @Nullable
     public ItemStack getCheatItemStack(FluidStack ingredient) {
-        Fluid fluid = ingredient.getFluid();
-        if (fluid == FluidRegistry.WATER) {
-            return new ItemStack(Items.water_bucket);
-        } else if (fluid == FluidRegistry.LAVA) {
-            return new ItemStack(Items.lava_bucket);
-        } else if (fluid.getName()
-            .equals("milk")) {
-                return new ItemStack(Items.milk_bucket);
+        final FluidStack ingredientCopy = ingredient.copy();
+        ingredientCopy.amount = Integer.MAX_VALUE;
+
+        return CapabilityHelpers
+            .getCapability(Config.getDefaultFluidContainerItem(), CapabilityFluidHandler.FLUID_HANDLER_ITEM)
+            .map(handler -> {
+                handler.fill(ingredientCopy, true);
+                return handler.getContainer();
+            })
+            .orElse(null);
+    }
+
+    @Override
+    @Nullable
+    public ItemStack replaceWithCheatItemStack(FluidStack ingredient, ItemStack clickedWith) {
+        IFluidHandlerItem lazyHandler = CapabilityHelpers
+            .getCapability(clickedWith, CapabilityFluidHandler.FLUID_HANDLER_ITEM)
+            .getOrNull();
+
+        if (lazyHandler != null) {
+            ItemStack clickedWithCopy = clickedWith.copy();
+            clickedWithCopy.stackSize = 1;
+
+            final FluidStack ingredientCopy = ingredient.copy();
+            ingredientCopy.amount = Integer.MAX_VALUE;
+
+            IFluidHandlerItem handler = CapabilityHelpers
+                .getCapability(clickedWithCopy, CapabilityFluidHandler.FLUID_HANDLER_ITEM)
+                .getOrNull();
+            if (handler != null) {
+                ingredient = ingredient.copy();
+                ingredient.amount = Integer.MAX_VALUE;
+                if (handler.fill(ingredient, true) > 0) {
+                    return handler.getContainer();
+                }
             }
+        }
         return null;
     }
 

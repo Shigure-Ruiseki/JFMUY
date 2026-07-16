@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableMultimap;
 
@@ -48,6 +49,12 @@ public class MultiMap<K, V, T extends Collection<V>> {
 
     public Set<Map.Entry<K, T>> entrySet() {
         return map.entrySet();
+    }
+
+    public Stream<V> valueStream() {
+        return map.values()
+            .stream()
+            .flatMap(Collection::stream);
     }
 
     public int getTotalSize() {

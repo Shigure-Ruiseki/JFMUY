@@ -110,7 +110,7 @@ public interface IIngredientHelper<V> {
      * @return an ItemStack for HEI to give the player, or an empty stack if there is nothing that can be given.
      */
     default ItemStack replaceWithCheatItemStack(V ingredient, ItemStack clickedWith) {
-        return getCheatItemStack(ingredient);
+        return null;
     }
 
     /**

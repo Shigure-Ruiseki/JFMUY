@@ -1,13 +1,16 @@
 package ruiseki.jfmuy.search;
 
-import it.unimi.dsi.fastutil.ints.IntSet;
-import ruiseki.jfmuy.config.Config.SearchMode;
+import java.util.Set;
 
-public interface ISearchable {
+import ruiseki.jfmuy.config.Config;
 
-    IntSet search(String word);
+public interface ISearchable<T> {
 
-    default SearchMode getMode() {
-        return SearchMode.ENABLED;
+    void getSearchResults(String token, Set<T> results);
+
+    void getAllElements(Set<T> results);
+
+    default Config.SearchMode getMode() {
+        return Config.SearchMode.ENABLED;
     }
 }

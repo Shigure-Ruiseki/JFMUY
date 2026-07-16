@@ -1,36 +1,24 @@
 package ruiseki.jfmuy.search;
 
+import ruiseki.jfmuy.util.Substring;
+
 /**
  * Represents an Edge in the Suffix Tree.
  * It has a label and a destination Node
  * <p>
  * Edited by mezz:
- * - formatting
+ * - optimized with SubString
  */
-class Edge {
+public class Edge<T> extends Substring {
 
-    private String label;
-    private final Node dest;
+    private final Node<T> dest;
 
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public Node getDest() {
-        return dest;
-    }
-
-    public Edge(String label, Node dest) {
-        this.label = label;
+    public Edge(Substring subString, Node<T> dest) {
+        super(subString);
         this.dest = dest;
     }
 
-    @Override
-    public String toString() {
-        return "Edge: " + label;
+    public Node<T> getDest() {
+        return dest;
     }
 }

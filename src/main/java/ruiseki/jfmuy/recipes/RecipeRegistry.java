@@ -26,6 +26,7 @@ import cpw.mods.fml.common.ProgressManager;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.IRecipeRegistry;
@@ -67,8 +68,7 @@ public class RecipeRegistry implements IRecipeRegistry {
     private final RecipeMap recipeInputMap;
     private final RecipeMap recipeOutputMap;
     private final List<RecipeRegistryPluginSafeWrapper> plugins = new ArrayList<>();
-    private final SetMultiMap<String, IRecipeWrapper> hiddenRecipes = new SetMultiMap<>(
-        () -> Collections.newSetFromMap(new Reference2ObjectOpenHashMap<>()));
+    private final SetMultiMap<String, IRecipeWrapper> hiddenRecipes = new SetMultiMap<>(ReferenceOpenHashSet::new);
 
     public RecipeRegistry(List<IRecipeCategory> recipeCategories,
         ImmutableTable<Class, String, IRecipeTransferHandler> recipeTransferHandlers,

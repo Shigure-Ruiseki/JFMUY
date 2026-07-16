@@ -1,5 +1,6 @@
 package ruiseki.jfmuy;
 
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.ResourceLocation;
 
 public class Reference {
@@ -24,4 +25,6 @@ public class Reference {
     public static final String UNIVERSAL_RECIPE_TRANSFER_UID = "universal recipe transfer handler";
 
     public static final String MINECRAFT_NAME = "minecraft";
+
+    public static final boolean DEOBFUSCATED = (boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
 }

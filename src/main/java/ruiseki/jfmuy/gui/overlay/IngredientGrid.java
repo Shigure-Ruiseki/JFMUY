@@ -142,7 +142,7 @@ public class IngredientGrid implements IShowsRecipeFocuses {
                                         return false;
                                     }
                                 }
-                                return ingredientUnderMouse.replaceWithCheatItemStack(itemStack.copy()) == null;
+                                return ingredientUnderMouse.replaceWithCheatItemStack(itemStack) == null;
                             }
                         }
                         return true;

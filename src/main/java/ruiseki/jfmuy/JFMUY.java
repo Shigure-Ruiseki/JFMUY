@@ -72,6 +72,10 @@ public class JFMUY extends ModBase {
         if (MinecraftHelpers.isClientSide()) {
             JFMUYHandler.INSTANCE.postInit(event);
         }
+        if (Reference.DEOBFUSCATED) {
+            Internal.getIngredientFilter()
+                .logStatistics();
+        }
     }
 
     @Override

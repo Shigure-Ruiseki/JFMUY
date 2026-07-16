@@ -1,39 +1,38 @@
 package ruiseki.jfmuy.search;
 
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.IntSummaryStatistics;
+import java.util.Set;
+import java.util.stream.IntStream;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Nullable;
 
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMaps;
-import it.unimi.dsi.fastutil.ints.IntArrays;
-import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.objects.ObjectCollection;
+import ruiseki.jfmuy.util.Substring;
 
 /**
  * Represents a node of the generalized suffix tree graph
  *
  * @see GeneralizedSuffixTree
- *      <p>
- *      Edited by mezz:
- *      - Use Java 6 features
- *      - improve performance of search by passing a set around instead of creating new ones and using addAll
- *      - only allow full searches
- *      - add nullable/nonnull annotations
- *      - formatting
  */
-class Node {
+public class Node<T> {
 
     /**
      * The payload array used to store the data (indexes) associated with this node.
      * In this case, it is used to store all property indexes.
      */
-    private int[] data;
+    @Nullable
+    private T[] data;
 
     /**
      * The set of edges starting from this node
      */
-    private Char2ObjectMap<Edge> edges;
+    @Nullable
+    private Char2ObjectMap<Edge<T>> edges;
 
     /**
      * The suffix link as described in Ukkonen's paper.
@@ -41,14 +40,11 @@ class Node {
      * is the node denoted by the path that corresponds to str without the first char.
      */
     @Nullable
-    private Node suffix;
+    private Node<T> suffix;
 
-    /**
-     * Creates a new Node
-     */
     Node() {
-        this.data = IntArrays.EMPTY_ARRAY;
-        this.edges = Char2ObjectMaps.emptyMap();
+        this.data = null;
+        this.edges = null;
         this.suffix = null;
     }
 
@@ -56,14 +52,15 @@ class Node {
      * Gets data from the payload of both this node and its children, the string representation
      * of the path to this node is a substring of the one of the children nodes.
      */
-    void getData(final IntSet ret) {
-        for (int id : data) {
-            ret.add(id);
+    void getData(final Set<T> ret) {
+        if (data != null) {
+            ret.addAll(Arrays.asList(data));
         }
-
-        for (Edge e : edges.values()) {
-            e.getDest()
-                .getData(ret);
+        if (edges != null) {
+            for (Edge<T> e : edges.values()) {
+                e.getDest()
+                    .getData(ret);
+            }
         }
     }
 
@@ -71,24 +68,20 @@ class Node {
      * Adds the given <tt>index</tt> to the set of indexes associated with <tt>this</tt>
      * returns false if this node already contains the ref
      */
-    boolean addRef(int index) {
+    boolean addRef(T index) {
         if (contains(index)) {
             return false;
         }
-
-        addIndex(index);
-
-        // add this reference to all the suffixes as well
-        Node iter = this.suffix;
+        addValue(index);
+        Node<T> iter = this.suffix;
         while (iter != null) {
             if (!iter.contains(index)) {
-                iter.addIndex(index);
+                iter.addValue(index);
                 iter = iter.suffix;
             } else {
                 break;
             }
         }
-
         return true;
     }
 
@@ -98,8 +91,11 @@ class Node {
      * @param index the index to look for
      * @return true <tt>this</tt> contains a reference to index
      */
-    private boolean contains(int index) {
-        for (int id : data) {
+    protected boolean contains(T index) {
+        if (data == null) {
+            return false;
+        }
+        for (T id : data) {
             if (id == index) {
                 return true;
             }
@@ -107,45 +103,193 @@ class Node {
         return false;
     }
 
-    void addEdge(char ch, Edge e) {
-        if (this.edges == Char2ObjectMaps.EMPTY_MAP) {
-            this.edges = Char2ObjectMaps.singleton(ch, e);
+    protected void addEdge(Edge<T> e) {
+        if (this.edges == null) {
+            this.edges = Char2ObjectMaps.singleton(e.charAt(0), e);
         } else if (this.edges instanceof Char2ObjectMaps.Singleton) {
-            Char2ObjectMap.Entry<Edge> existingEdge = edges.char2ObjectEntrySet()
+            Char2ObjectMap.Entry<Edge<T>> existingEdge = edges.char2ObjectEntrySet()
                 .iterator()
                 .next();
             this.edges = new Char2ObjectArrayMap<>(2);
             this.edges.put(existingEdge.getCharKey(), existingEdge.getValue());
-            this.edges.put(ch, e);
+            this.edges.put(e.charAt(0), e);
         } else {
-            this.edges.put(ch, e);
+            this.edges.put(e.charAt(0), e);
         }
     }
 
     @Nullable
-    Edge getEdge(char ch) {
-        return edges.get(ch);
+    Edge<T> getEdge(char ch) {
+        return edges == null ? null : edges.get(ch);
     }
 
     @Nullable
-    Node getSuffix() {
+    Edge<T> getEdge(Substring substring) {
+        if (substring.isEmpty()) {
+            return null;
+        }
+        return edges == null ? null : edges.get(substring.charAt(0));
+    }
+
+    @Nullable
+    Node<T> getSuffix() {
         return suffix;
     }
 
-    void setSuffix(Node suffix) {
+    void setSuffix(Node<T> suffix) {
         this.suffix = suffix;
     }
 
-    private void addIndex(int index) {
-        this.data = ArrayUtils.add(this.data, index);
+    protected void addValue(T index) {
+        if (this.data == null) {
+            this.data = (T[]) new Object[] { index };
+        } else {
+            this.data = ArrayUtils.add(this.data, index);
+        }
     }
 
     @Override
     public String toString() {
-        return "Node: size:" + data.length + " Edges: " + edges;
+        return "Node: size:" + (data == null ? "nil" : data.length) + " Edges: " + edges;
     }
 
-    ObjectCollection<Edge> edges() {
-        return edges.values();
+    public IntSummaryStatistics nodeSizeStats() {
+        return nodeSizes().summaryStatistics();
     }
+
+    private IntStream nodeSizes() {
+        return IntStream.concat(
+            IntStream.of(data == null ? 0 : data.length),
+            edges == null ? IntStream.of(0)
+                : edges.values()
+                    .stream()
+                    .flatMapToInt(
+                        e -> e.getDest()
+                            .nodeSizes()));
+    }
+
+    public String nodeEdgeStats() {
+        IntSummaryStatistics edgeCounts = nodeEdgeCounts().summaryStatistics();
+        IntSummaryStatistics edgeLengths = nodeEdgeLengths().summaryStatistics();
+        return "Edge counts: " + edgeCounts + "\nEdge lengths: " + edgeLengths;
+    }
+
+    private IntStream nodeEdgeCounts() {
+        return edges == null ? IntStream.of()
+            : IntStream.concat(
+                IntStream.of(edges.size()),
+                edges.values()
+                    .stream()
+                    .map(Edge::getDest)
+                    .flatMapToInt(Node::nodeEdgeCounts));
+    }
+
+    private IntStream nodeEdgeLengths() {
+        return edges == null ? IntStream.of()
+            : IntStream.concat(
+                edges.values()
+                    .stream()
+                    .mapToInt(Edge::length),
+                edges.values()
+                    .stream()
+                    .map(Edge::getDest)
+                    .flatMapToInt(Node::nodeEdgeLengths));
+    }
+
+    public void printTree(PrintWriter out, boolean includeSuffixLinks) {
+        out.println("digraph {");
+        out.println("\trankdir = LR;");
+        out.println("\tordering = out;");
+        out.println("\tedge [arrowsize=0.4,fontsize=10]");
+        out.println(
+            "\t" + nodeId(this) + " [label=\"\",style=filled,fillcolor=lightgrey,shape=circle,width=.1,height=.1];");
+        out.println("//------leaves------");
+        printLeaves(out);
+        out.println("//------internal nodes------");
+        printInternalNodes(this, out);
+        out.println("//------edges------");
+        printEdges(out);
+        if (includeSuffixLinks) {
+            out.println("//------suffix links------");
+            printSLinks(out);
+        }
+        out.println("}");
+    }
+
+    private void printLeaves(PrintWriter out) {
+        if (edges == null) {
+            out.println(
+                "\t" + nodeId(this)
+                    + " [label=\""
+                    + data
+                    + "\",shape=point,style=filled,fillcolor=lightgrey,shape=circle,width=.07,height=.07]");
+        } else {
+            for (Edge<T> edge : edges.values()) {
+                edge.getDest()
+                    .printLeaves(out);
+            }
+        }
+    }
+
+    private void printInternalNodes(Node<T> root, PrintWriter out) {
+        if (this != root && edges != null) {
+            out.println(
+                "\t" + nodeId(this)
+                    + " [label=\""
+                    + data
+                    + "\",style=filled,fillcolor=lightgrey,shape=circle,width=.07,height=.07]");
+        }
+        if (edges != null) {
+            for (Edge<T> edge : edges.values()) {
+                edge.getDest()
+                    .printInternalNodes(root, out);
+            }
+        }
+    }
+
+    private void printEdges(PrintWriter out) {
+        if (edges != null) {
+            for (Edge<T> edge : edges.values()) {
+                Node<T> child = edge.getDest();
+                out.println(
+                    "\t" + nodeId(this) + " -> " + nodeId(child) + " [label=\"" + edge.commit() + "\",weight=10]");
+                child.printEdges(out);
+            }
+        }
+    }
+
+    private void printSLinks(PrintWriter out) {
+        if (suffix != null) {
+            out.println("\t" + nodeId(this) + " -> " + nodeId(suffix) + " [label=\"\",weight=0,style=dotted]");
+        }
+        if (edges != null) {
+            for (Edge<T> edge : edges.values()) {
+                edge.getDest()
+                    .printSLinks(out);
+            }
+        }
+    }
+
+    private static <T> String nodeId(Node<T> node) {
+        return "node" + Integer.toHexString(node.hashCode())
+            .toUpperCase();
+    }
+
+    /**
+     * The root node can have a lot of values added to it because so many suffix links point to it.
+     * The values are never read from here though.
+     * This class makes sure we don't accumulate a ton of useless values in the root node.
+     */
+    public static class Root<T> extends Node<T> {
+
+        @Override
+        protected boolean contains(T value) {
+            return true;
+        }
+
+        @Override
+        protected void addValue(T index) {}
+
+    }
+
 }

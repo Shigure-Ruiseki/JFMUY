@@ -131,10 +131,6 @@ public class JFMUYStarter {
 
         sendRuntime(plugins, jfmuyRuntime);
 
-        timer.start("Optimizing memory usage");
-        ingredientFilter.trimToSize();
-        timer.stop();
-
         LeftAreaDispatcher leftAreaDispatcher = new LeftAreaDispatcher(guiScreenHelper);
         leftAreaDispatcher.addContent(bookmarkOverlay);
 

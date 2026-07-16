@@ -1,23 +1,23 @@
 package ruiseki.jfmuy.search;
 
 import java.util.Collection;
+import java.util.Set;
 
-import it.unimi.dsi.fastutil.ints.IntSet;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 
-public class PrefixedSearchable<T extends ISearchable> implements ISearchable {
+public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>> {
 
-    private final T searchable;
+    private final ISearchStorage<IIngredientListElement<?>> searchStorage;
     private final PrefixInfo prefixInfo;
 
-    public PrefixedSearchable(T searchable, PrefixInfo prefixInfo) {
-        this.searchable = searchable;
+    public PrefixedSearchable(ISearchStorage<IIngredientListElement<?>> searchStorage, PrefixInfo prefixInfo) {
+        this.searchStorage = searchStorage;
         this.prefixInfo = prefixInfo;
     }
 
-    public T getSearchable() {
-        return searchable;
+    public ISearchStorage<IIngredientListElement<?>> getSearchStorage() {
+        return searchStorage;
     }
 
     public Collection<String> getStrings(IIngredientListElement<?> element) {
@@ -30,7 +30,12 @@ public class PrefixedSearchable<T extends ISearchable> implements ISearchable {
     }
 
     @Override
-    public IntSet search(String word) {
-        return searchable.search(word);
+    public void getSearchResults(String token, Set<IIngredientListElement<?>> results) {
+        searchStorage.getSearchResults(token, results);
+    }
+
+    @Override
+    public void getAllElements(Set<IIngredientListElement<?>> results) {
+        searchStorage.getAllElements(results);
     }
 }

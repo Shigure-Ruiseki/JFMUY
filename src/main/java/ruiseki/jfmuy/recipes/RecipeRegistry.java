@@ -41,6 +41,7 @@ import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
 import ruiseki.jfmuy.collect.ListMultiMap;
 import ruiseki.jfmuy.collect.SetMultiMap;
 import ruiseki.jfmuy.collect.Table;
+import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.Focus;
 import ruiseki.jfmuy.gui.recipes.RecipeClickableArea;
 import ruiseki.jfmuy.gui.recipes.RecipeLayout;
@@ -142,21 +143,34 @@ public class RecipeRegistry implements IRecipeRegistry {
 
     private void addRecipes(ListMultiMap<String, Object> recipes) {
         Collection<Map.Entry<String, List<Object>>> entries = recipes.entrySet();
-        ProgressManager.ProgressBar progressBar = ProgressManager.push("Loading recipes", recipes.getTotalSize());
-        for (Map.Entry<String, List<Object>> entry : entries) {
-            String recipeCategoryUid = entry.getKey();
-            for (Object recipe : entry.getValue()) {
-                progressBar.step("");
-                if (recipe instanceof IRecipeWrapper) {
-                    IRecipeWrapper recipeWrapper = (IRecipeWrapper) recipe;
-                    IRecipeCategory recipeCategory = getRecipeCategory(recipeCategoryUid);
-                    if (recipeCategory != null) {
-                        addRecipe(recipe, recipeWrapper, recipeCategory);
+        if (Config.skipShowingProgressBar()) {
+            for (Map.Entry<String, List<Object>> entry : entries) {
+                String recipeCategoryUid = entry.getKey();
+                for (Object recipe : entry.getValue()) {
+                    if (recipe instanceof IRecipeWrapper recipeWrapper) {
+                        IRecipeCategory recipeCategory = getRecipeCategory(recipeCategoryUid);
+                        if (recipeCategory != null) {
+                            addRecipe(recipe, recipeWrapper, recipeCategory);
+                        }
                     }
                 }
             }
+        } else {
+            ProgressManager.ProgressBar progressBar = ProgressManager.push("Loading recipes", recipes.getTotalSize());
+            for (Map.Entry<String, List<Object>> entry : entries) {
+                String recipeCategoryUid = entry.getKey();
+                for (Object recipe : entry.getValue()) {
+                    progressBar.step("");
+                    if (recipe instanceof IRecipeWrapper recipeWrapper) {
+                        IRecipeCategory recipeCategory = getRecipeCategory(recipeCategoryUid);
+                        if (recipeCategory != null) {
+                            addRecipe(recipe, recipeWrapper, recipeCategory);
+                        }
+                    }
+                }
+            }
+            ProgressManager.pop(progressBar);
         }
-        ProgressManager.pop(progressBar);
     }
 
     @Override

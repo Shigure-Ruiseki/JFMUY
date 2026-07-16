@@ -115,6 +115,8 @@ config.jfmuy.rendering=Rendering
 config.jfmuy.rendering.comment=Rendering config options
 config.jfmuy.misc.showHiddenIngredientsInCreative=Show Hidden Ingredients in Creative Mode
 config.jfmuy.misc.showHiddenIngredientsInCreative.comment=Show user-hidden ingredients when the player is in creative mode
+config.jfmuy.misc.skipShowingProgressBar=Skip Showing Progress Bar
+config.jfmuy.misc.skipShowingProgressBar.comment=Skip showing JFMUY's progress bars on load, can save up to a few seconds when loading
 config.jfmuy.rendering.bufferIngredientRenders=Buffer Ingredient Renders
 config.jfmuy.rendering.bufferIngredientRenders.comment=Stops extremely frequent ingredient draw calls by using a render buffer, improves FPS in menus by up to 2-3x. But animations and glint will not be applied correctly.
 config.jfmuy.search.searchAdvancedTooltips.comment=Includes advanced tooltips in search trees
@@ -148,7 +150,7 @@ description.jfmuy.wooden.door.1=Wooden doors allow you to block monsters from en
 description.jfmuy.wooden.door.2=Clicking on a door changes its state from open to closed and vice versa.
 description.jfmuy.wooden.door.3=Wooden doors can be opened/closed via redstone circuits.
 
-# New HEI lang keys
+# New JFMUY lang keys
 config.jfmuy.interface.defaultFluidContainerItem=Default Fluid Container Item
 config.jfmuy.interface.defaultFluidContainerItem.comment=Default item to use to fill up fluids when clicking on a fluid ingredient in the menu, (format: item_name@meta)
 

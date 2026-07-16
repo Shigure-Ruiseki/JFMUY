@@ -56,6 +56,7 @@ public final class Config {
     public static final String CATEGORY_SEARCH = "search";
     public static final String CATEGORY_ADVANCED = "advanced";
     public static final String CATEGORY_SEARCH_COLORS = "searchColors";
+    public static final String CATEGORY_RENDERING = "rendering";
     public static final String CATEGORY_MISC = "misc";
 
     public static final String defaultModNameFormatFriendly = "blue italic";
@@ -310,6 +311,10 @@ public final class Config {
         return values.defaultFluidContainerItem.copy();
     }
 
+    public static boolean bufferIngredientRenders() {
+        return values.bufferIngredientRenders;
+    }
+
     public static boolean mouseClickToSeeRecipe() {
         return values.mouseClickToSeeRecipes;
     }
@@ -495,6 +500,8 @@ public final class Config {
             maxRecipeGuiHeight);
 
         updateModNameFormat(config);
+
+        values.bufferIngredientRenders = config.getBoolean(CATEGORY_RENDERING, "bufferIngredientRenders", defaultValues.bufferIngredientRenders);
 
         values.mouseClickToSeeRecipes = config
             .getBoolean(CATEGORY_MISC, "mouseClickToSeeRecipes", defaultValues.mouseClickToSeeRecipes);

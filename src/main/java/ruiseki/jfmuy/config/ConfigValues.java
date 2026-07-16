@@ -34,6 +34,9 @@ public class ConfigValues {
     public String filterText = "";
     public ItemStack defaultFluidContainerItem = new ItemStack(Items.bucket);
 
+    // rendering
+    public boolean bufferIngredientRenders = false;
+
     // misc
     public boolean mouseClickToSeeRecipes = true;
 }

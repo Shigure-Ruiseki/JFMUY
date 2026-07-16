@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -198,22 +197,28 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     }
 
     private List<IIngredientListElement<?>> getIngredientListUncached(String filterText) {
-        String[] filters = filterText.split("\\|");
-        List<SearchToken> tokens = Arrays.stream(filters)
+        if (filterText.isEmpty()) {
+            return this.elementSearch.getAllIngredients()
+                .stream()
+                .filter(IIngredientListElement::isVisible)
+                .sorted(IngredientListElementComparator.INSTANCE)
+                .collect(Collectors.toList());
+        }
+        List<SearchToken> tokens = Arrays.stream(filterText.split("\\|"))
             .map(SearchToken::parseSearchToken)
             .filter(s -> !s.search.isEmpty())
             .collect(Collectors.toList());
-        Stream<IIngredientListElement<?>> stream;
         if (tokens.isEmpty()) {
-            stream = this.elementSearch.getAllIngredients()
-                .parallelStream();
-        } else {
-            stream = tokens.stream()
-                .map(token -> token.getSearchResults(this.elementSearch))
-                .flatMap(Set::stream);
+            return this.elementSearch.getAllIngredients()
+                .stream()
+                .filter(IIngredientListElement::isVisible)
+                .sorted(IngredientListElementComparator.INSTANCE)
+                .collect(Collectors.toList());
         }
-        return stream.filter(IIngredientListElement::isVisible)
-            .distinct()
+        return tokens.stream()
+            .map(token -> token.getSearchResults(this.elementSearch))
+            .flatMap(Set::stream)
+            .filter(IIngredientListElement::isVisible)
             .sorted(IngredientListElementComparator.INSTANCE)
             .collect(Collectors.toList());
     }

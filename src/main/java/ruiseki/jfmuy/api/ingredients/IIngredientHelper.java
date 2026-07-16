@@ -93,13 +93,13 @@ public interface IIngredientHelper<V> {
     String getResourceId(V ingredient);
 
     /**
-     * Return the metadata value for the item
+     * Return the ordinal for the ingredient
      *
-     * @return the metadata value for an ingredient
+     * @return the ordinal for an ingredient
      */
-    default int getMetadata(V ingredient) {
+    default int getOrdinal(V ingredient) {
         return 0;
-    };
+    }
 
     /**
      * Called when a player is in cheat mode and clicks an ingredient in the list.

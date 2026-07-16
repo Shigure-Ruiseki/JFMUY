@@ -35,7 +35,7 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
     private final Object modNames; // Can be String or String[]
     private final String displayName;
     private final String resourceId;
-    private final int metadata;
+    private final int ordinal;
 
     private boolean visible = true;
 
@@ -81,7 +81,7 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
                     .toArray(String[]::new));
         this.displayName = IngredientInformation.getDisplayName(ingredient, ingredientHelper);
         this.resourceId = LegacyUtil.getResourceId(ingredient, ingredientHelper);
-        this.metadata = ingredientHelper.getMetadata(ingredient);
+        this.ordinal = ingredientHelper.getOrdinal(ingredient);
     }
 
     @Override
@@ -180,8 +180,8 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
     }
 
     @Override
-    public int getMetadata() {
-        return metadata;
+    public int getOrdinal() {
+        return ordinal;
     }
 
     @Override

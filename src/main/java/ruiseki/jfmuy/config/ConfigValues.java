@@ -41,4 +41,5 @@ public class ConfigValues {
 
     // misc
     public boolean mouseClickToSeeRecipes = true;
+    public boolean tooltipShowRecipeBy = true;
 }

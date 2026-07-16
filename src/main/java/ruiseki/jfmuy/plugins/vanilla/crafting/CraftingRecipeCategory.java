@@ -2,8 +2,11 @@ package ruiseki.jfmuy.plugins.vanilla.crafting;
 
 import java.util.List;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
 
 import ruiseki.jfmuy.Reference;
@@ -17,9 +20,13 @@ import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
+import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.wrapper.ICustomCraftingRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
+import ruiseki.jfmuy.config.Config;
+import ruiseki.jfmuy.startup.ForgeModIdHelper;
 import ruiseki.jfmuy.util.Translator;
+import ruiseki.okcore.helper.Helpers;
 
 public class CraftingRecipeCategory implements IRecipeCategory<IRecipeWrapper> {
 
@@ -95,9 +102,45 @@ public class CraftingRecipeCategory implements IRecipeCategory<IRecipeWrapper> {
             craftingGridHelper.setInputs(guiItemStacks, inputs);
             recipeLayout.setShapeless();
         }
-
         if (!outputs.isEmpty()) {
             guiItemStacks.set(craftOutputSlot, outputs.getFirst());
+        }
+
+        if (recipeWrapper instanceof ICraftingRecipeWrapper) {
+            ICraftingRecipeWrapper craftingRecipeWrapper = (ICraftingRecipeWrapper) recipeWrapper;
+            ResourceLocation registryName = craftingRecipeWrapper.getRegistryName();
+            if (registryName != null) {
+                guiItemStacks.addTooltipCallback((slotIndex, input, ingredient, tooltip) -> {
+                    if (slotIndex == craftOutputSlot) {
+                        String recipeModId = registryName.getResourceDomain();
+
+                        boolean modIdDifferent = false;
+                        ResourceLocation itemRegistryName = Helpers.getLocation(ingredient.getItem());
+                        if (itemRegistryName != null) {
+                            String itemModId = itemRegistryName.getResourceDomain();
+                            modIdDifferent = !recipeModId.equals(itemModId);
+                        }
+
+                        if (modIdDifferent && Config.getTooltipShowRecipeBy()) {
+                            String modName = ForgeModIdHelper.getInstance()
+                                .getFormattedModNameForModId(recipeModId);
+                            if (modName != null) {
+                                tooltip.add(
+                                    EnumChatFormatting.GRAY
+                                        + Translator.translateToLocalFormatted("jei.tooltip.recipe.by", modName));
+                            }
+                        }
+
+                        boolean showAdvanced = Minecraft.getMinecraft().gameSettings.advancedItemTooltips
+                            || GuiScreen.isShiftKeyDown();
+                        if (showAdvanced) {
+                            tooltip.add(
+                                EnumChatFormatting.DARK_GRAY + Translator
+                                    .translateToLocalFormatted("jei.tooltip.recipe.id", registryName.toString()));
+                        }
+                    }
+                });
+            }
         }
     }
 

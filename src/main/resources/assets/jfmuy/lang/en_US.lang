@@ -149,3 +149,5 @@ description.jfmuy.wooden.door.3=Wooden doors can be opened/closed via redstone c
 # New HEI lang keys
 config.jfmuy.interface.defaultFluidContainerItem=Default Fluid Container Item
 config.jfmuy.interface.defaultFluidContainerItem.comment=Default item to use to fill up fluids when clicking on a fluid ingredient in the menu, (format: item_name@meta)
+
+jfmuy.generic.ticks=%d Ticks

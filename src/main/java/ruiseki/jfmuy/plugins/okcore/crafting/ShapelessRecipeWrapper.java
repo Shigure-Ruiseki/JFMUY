@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+
+import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.ingredients.VanillaTypes;
@@ -31,5 +34,10 @@ public class ShapelessRecipeWrapper implements ICraftingRecipeWrapper {
     public void getIngredients(ruiseki.jfmuy.api.ingredients.IIngredients ingredients) {
         ingredients.setInputLists(VanillaTypes.ITEM, inputs);
         ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
+    }
+
+    @Override
+    public @Nullable ResourceLocation getRegistryName() {
+        return recipe.getId();
     }
 }

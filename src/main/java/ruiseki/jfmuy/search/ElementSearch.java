@@ -8,6 +8,7 @@ import java.util.Set;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.util.Log;
@@ -17,6 +18,8 @@ public class ElementSearch implements IElementSearch {
 
     private final Map<PrefixInfo, PrefixedSearchable> prefixedSearchables = new Reference2ObjectArrayMap<>();
     private final CombinedSearchables<IIngredientListElement<?>> combinedSearchables = new CombinedSearchables<>();
+
+    private boolean loggedStatistics = false;
 
     public ElementSearch() {
         if (Config.isSearchTreeBuildingAsync()) {
@@ -42,6 +45,10 @@ public class ElementSearch implements IElementSearch {
             for (PrefixedSearchable prefixedSearchable : this.prefixedSearchables.values()) {
                 prefixedSearchable.stop();
             }
+        }
+        if (!this.loggedStatistics && Reference.DEOBFUSCATED) {
+            this.loggedStatistics = true;
+            this.logStatistics();
         }
     }
 

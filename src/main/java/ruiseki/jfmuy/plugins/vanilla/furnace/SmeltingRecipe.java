@@ -16,32 +16,30 @@ import ruiseki.jfmuy.util.Translator;
 
 public class SmeltingRecipe implements IRecipeWrapper {
 
-    private final List<List<ItemStack>> inputs;
+    private final List<ItemStack> input;
     private final ItemStack output;
+    private float experience = -1;
 
-    public SmeltingRecipe(List<ItemStack> inputs, ItemStack output) {
-        this.inputs = Collections.singletonList(inputs);
+    public SmeltingRecipe(List<ItemStack> input, ItemStack output) {
+        this.input = input;
         this.output = output;
     }
 
     @Override
     public void getIngredients(IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, inputs);
+        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(this.input));
         ingredients.setOutput(VanillaTypes.ITEM, output);
     }
 
     @Override
     public void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
         FurnaceRecipes furnaceRecipes = FurnaceRecipes.smelting();
-        float experience;
-        try {
-            experience = furnaceRecipes.func_151398_b(output);
-        } catch (RuntimeException ignored) {
-            experience = 0;
+        if (this.experience == -1) {
+            this.experience = furnaceRecipes.func_151398_b(output);
         }
-        if (experience > 0) {
+        if (this.experience > 0) {
             String experienceString = Translator
-                .translateToLocalFormatted("gui.jfmuy.category.smelting.experience", experience);
+                .translateToLocalFormatted("gui.jei.category.smelting.experience", experience);
             FontRenderer fontRenderer = minecraft.fontRenderer;
             int stringWidth = fontRenderer.getStringWidth(experienceString);
             fontRenderer.drawString(experienceString, recipeWidth - stringWidth, 0, Color.gray.getRGB());

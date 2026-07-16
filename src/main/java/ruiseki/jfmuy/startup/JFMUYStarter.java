@@ -79,15 +79,15 @@ public class JFMUYStarter {
         registerPlugins(plugins, modRegistry);
         timer.stop();
 
-        timer.start("Building recipe registry");
-        RecipeRegistry recipeRegistry = modRegistry.createRecipeRegistry(ingredientRegistry);
-        timer.stop();
-
         timer.start("Building ingredient filter and search trees");
         IngredientFilter ingredientFilter = new IngredientFilter(
             blacklist,
             IngredientListElementFactory.createBaseList(ingredientRegistry, modIdHelper));
         Internal.setIngredientFilter(ingredientFilter);
+        timer.stop();
+
+        timer.start("Building recipe registry");
+        RecipeRegistry recipeRegistry = modRegistry.createRecipeRegistry(ingredientRegistry);
         timer.stop();
 
         timer.start("Building bookmarks");

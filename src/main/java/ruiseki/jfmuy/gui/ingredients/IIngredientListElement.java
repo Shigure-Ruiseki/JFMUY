@@ -36,6 +36,7 @@ public interface IIngredientListElement<V> {
     default int getOrdinal() {
         return 0;
     }
+
     boolean isVisible();
 
     void setVisible(boolean visible);

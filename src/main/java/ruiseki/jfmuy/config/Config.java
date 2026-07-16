@@ -44,6 +44,7 @@ import ruiseki.jfmuy.startup.ForgeModIdHelper;
 import ruiseki.jfmuy.startup.IModIdHelper;
 import ruiseki.jfmuy.util.GiveMode;
 import ruiseki.jfmuy.util.Log;
+import ruiseki.jfmuy.util.ReflectionUtil;
 import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.fluid.capability.CapabilityFluidHandler;
 import ruiseki.okcore.fluid.handler.IFluidHandlerItem;
@@ -64,6 +65,8 @@ public final class Config {
     public static final int largestNumColumns = 100;
     public static final int minRecipeGuiHeight = 175;
     public static final int maxRecipeGuiHeight = 5000;
+
+    private static final boolean isOptifineInstalled = ReflectionUtil.isClassLoaded("optifine.OptiFineForgeTweaker");
 
     @Nullable
     private static LocalizedConfiguration config;
@@ -327,11 +330,15 @@ public final class Config {
     }
 
     public static boolean bufferIngredientRenders() {
-        return values.bufferIngredientRenders;
+        return !isOptifineInstalled && values.bufferIngredientRenders;
     }
 
     public static boolean mouseClickToSeeRecipe() {
         return values.mouseClickToSeeRecipes;
+    }
+
+    public static boolean getTooltipShowRecipeBy() {
+        return values.tooltipShowRecipeBy;
     }
 
     @Nullable
@@ -530,6 +537,9 @@ public final class Config {
 
         values.mouseClickToSeeRecipes = config
             .getBoolean(CATEGORY_MISC, "mouseClickToSeeRecipes", defaultValues.mouseClickToSeeRecipes);
+
+        values.tooltipShowRecipeBy = config
+            .getBoolean(CATEGORY_MISC, "tooltipShowRecipeBy", defaultValues.tooltipShowRecipeBy);
 
         Property property = config.get(CATEGORY_ADVANCED, "debugModeEnabled", defaultValues.debugModeEnabled);
         property.setShowInGui(false);

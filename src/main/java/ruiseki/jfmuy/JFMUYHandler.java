@@ -108,7 +108,7 @@ public class JFMUYHandler {
                             .info("Restarting JEI.", new RuntimeException("Stack trace for debugging"));
                     } else {
                         Log.get()
-                            .info("Restarting JEI.");
+                            .info("Restarting JFMUY.");
                     }
                     this.starter.start(this.plugins);
                 }

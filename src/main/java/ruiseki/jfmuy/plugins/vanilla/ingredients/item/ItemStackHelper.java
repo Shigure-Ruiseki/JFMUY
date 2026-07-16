@@ -130,6 +130,11 @@ public class ItemStackHelper implements IIngredientHelper<ItemStack> {
     }
 
     @Override
+    public int getMetadata(ItemStack ingredient) {
+        return ingredient.getItemDamage();
+    }
+
+    @Override
     public ItemStack getCheatItemStack(ItemStack ingredient) {
         return ingredient;
     }

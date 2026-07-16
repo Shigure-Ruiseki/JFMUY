@@ -35,6 +35,7 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
     private final Object modNames; // Can be String or String[]
     private final String displayName;
     private final String resourceId;
+    private final int metadata;
 
     private boolean visible = true;
 
@@ -80,6 +81,7 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
                     .toArray(String[]::new));
         this.displayName = IngredientInformation.getDisplayName(ingredient, ingredientHelper);
         this.resourceId = LegacyUtil.getResourceId(ingredient, ingredientHelper);
+        this.metadata = ingredientHelper.getMetadata(ingredient);
     }
 
     @Override
@@ -175,6 +177,11 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
     @Override
     public String getResourceId() {
         return resourceId;
+    }
+
+    @Override
+    public int getMetadata() {
+        return metadata;
     }
 
     @Override

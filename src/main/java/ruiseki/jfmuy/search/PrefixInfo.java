@@ -17,6 +17,13 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
     private static final Char2ObjectMap<PrefixInfo> instances = new Char2ObjectArrayMap<>(6);
 
     static {
+        NO_PREFIX = new PrefixInfo(
+            '\0',
+            -1,
+            "default",
+            () -> Config.SearchMode.ENABLED,
+            i -> Collections.singleton(Translator.toLowercaseWithLocale(i.getDisplayName())),
+            GeneralizedSuffixTree::new);
         addPrefix(
             new PrefixInfo(
                 '#',
@@ -26,17 +33,9 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
                 IIngredientListElement::getTooltipStrings,
                 GeneralizedSuffixTree::new));
         addPrefix(
-            NO_PREFIX = new PrefixInfo(
-                '\0',
-                1,
-                "default",
-                () -> Config.SearchMode.ENABLED,
-                i -> Collections.singleton(Translator.toLowercaseWithLocale(i.getDisplayName())),
-                GeneralizedSuffixTree::new));
-        addPrefix(
             new PrefixInfo(
                 '&',
-                2,
+                1,
                 "resource_id",
                 Config::getResourceIdSearchMode,
                 e -> Collections.singleton(e.getResourceId()),
@@ -44,7 +43,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
         addPrefix(
             new PrefixInfo(
                 '^',
-                3,
+                2,
                 "color",
                 Config::getColorSearchMode,
                 IIngredientListElement::getColorStrings,
@@ -52,7 +51,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
         addPrefix(
             new PrefixInfo(
                 '$',
-                4,
+                3,
                 "oredict",
                 Config::getOreDictSearchMode,
                 IIngredientListElement::getOreDictStrings,
@@ -60,7 +59,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
         addPrefix(
             new PrefixInfo(
                 '@',
-                5,
+                4,
                 "mod_name",
                 Config::getModNameSearchMode,
                 IIngredientListElement::getModNameStrings,
@@ -68,11 +67,12 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
         addPrefix(
             new PrefixInfo(
                 '%',
-                6,
+                5,
                 "creative_tab",
                 Config::getCreativeTabSearchMode,
                 IIngredientListElement::getCreativeTabsStrings,
                 LimitedStringStorage::new));
+
     }
 
     private static void addPrefix(PrefixInfo info) {

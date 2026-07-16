@@ -8,12 +8,12 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableSet;
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
@@ -69,10 +69,15 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
         this.ingredientRenderer = ingredientRenderer;
         String displayModId = ingredientHelper.getDisplayModId(ingredient);
         String modId = ingredientHelper.getModId(ingredient);
-        this.modIds = modId.equals(displayModId) ? displayModId.intern() : canonicalizedStringArrays.addOrGet(new String[] { modId.intern(), displayModId.intern() });
-        this.modNames = this.modIds instanceof String ?
-            modIdHelper.getModNameForModId((String) this.modIds).intern() :
-            canonicalizedStringArrays.addOrGet(Arrays.stream((String[]) this.modIds).map(modIdHelper::getModNameForModId).map(String::intern).toArray(String[]::new));
+        this.modIds = modId.equals(displayModId) ? displayModId.intern()
+            : canonicalizedStringArrays.addOrGet(new String[] { modId.intern(), displayModId.intern() });
+        this.modNames = this.modIds instanceof String ? modIdHelper.getModNameForModId((String) this.modIds)
+            .intern()
+            : canonicalizedStringArrays.addOrGet(
+                Arrays.stream((String[]) this.modIds)
+                    .map(modIdHelper::getModNameForModId)
+                    .map(String::intern)
+                    .toArray(String[]::new));
         this.displayName = IngredientInformation.getDisplayName(ingredient, ingredientHelper);
         this.resourceId = LegacyUtil.getResourceId(ingredient, ingredientHelper);
     }

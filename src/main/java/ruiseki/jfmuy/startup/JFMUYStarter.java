@@ -18,7 +18,6 @@ import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.GuiEventHandler;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.GuiScreenHelper;
-import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.BookmarkOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.LeftAreaDispatcher;
@@ -37,7 +36,6 @@ import ruiseki.jfmuy.runtime.SubtypeRegistry;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.LoggedTimer;
-import ruiseki.okcore.datastructure.NonNullList;
 
 public class JFMUYStarter {
 
@@ -85,14 +83,9 @@ public class JFMUYStarter {
         RecipeRegistry recipeRegistry = modRegistry.createRecipeRegistry(ingredientRegistry);
         timer.stop();
 
-        timer.start("Building ingredient list");
-        NonNullList<IIngredientListElement> ingredientList = IngredientListElementFactory
-            .createBaseList(ingredientRegistry, modIdHelper);
-        timer.stop();
-
-        timer.start("Building ingredient filter and dispatching async search tree building");
+        timer.start("Building ingredient list and filter while dispatching async search tree building");
         IngredientFilter ingredientFilter = new IngredientFilter(blacklist);
-        ingredientFilter.addIngredients(ingredientList);
+        ingredientFilter.addIngredients(IngredientListElementFactory.createBaseList(ingredientRegistry, modIdHelper));
         Internal.setIngredientFilter(ingredientFilter);
         timer.stop();
 
@@ -132,8 +125,6 @@ public class JFMUYStarter {
         timer.stop();
 
         stackHelper.disableUidCache();
-
-        ingredientFilter.notifyStopBuilding();
 
         sendRuntime(plugins, jfmuyRuntime);
 

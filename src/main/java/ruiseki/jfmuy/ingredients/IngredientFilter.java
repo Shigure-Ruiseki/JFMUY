@@ -13,7 +13,6 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableList;
 
-import cpw.mods.fml.common.ProgressManager;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -43,11 +42,11 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     private final IngredientBlacklistInternal blacklist;
 
     private final IElementSearch elementSearch;
+    private final List<IIngredientGridSource.Listener> listeners = new ArrayList<>();
 
+    private List<IIngredientListElement> ingredientListCached = Collections.emptyList();
     @Nullable
     private String filterCached;
-    private List<IIngredientListElement> ingredientListCached = Collections.emptyList();
-    private final List<IIngredientGridSource.Listener> listeners = new ArrayList<>();
 
     public IngredientFilter(IngredientBlacklistInternal blacklist) {
         this.blacklist = blacklist;
@@ -60,16 +59,8 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
 
     public void addIngredients(NonNullList<IIngredientListElement> ingredients) {
         ingredients.sort(IngredientListElementComparator.INSTANCE);
-        long modNameCount = ingredients.stream()
-            .map(IIngredientListElement::getModNameForSorting)
-            .distinct()
-            .count();
-        ProgressManager.ProgressBar progressBar = ProgressManager
-            .push("Indexing ingredients from " + modNameCount + " mods", 1, false);
-        progressBar.step("");
         this.elementSearch.addAll(ingredients);
         this.filterCached = null;
-        ProgressManager.pop(progressBar);
     }
 
     public <V> void addIngredient(IIngredientListElement<V> element) {
@@ -78,9 +69,9 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         this.filterCached = null;
     }
 
-    public void notifyStopBuilding() {
+    public void block() {
         if (this.elementSearch instanceof ElementSearch) {
-            ((ElementSearch) this.elementSearch).stopBuilding();
+            ((ElementSearch) this.elementSearch).block();
         }
     }
 
@@ -121,6 +112,7 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
 
     @SubscribeEvent
     public void onPlayerJoinedWorldEvent(PlayerJoinedWorldEvent event) {
+        block();
         this.filterCached = null;
         updateHidden();
     }

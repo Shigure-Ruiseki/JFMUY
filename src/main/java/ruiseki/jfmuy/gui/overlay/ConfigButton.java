@@ -1,6 +1,5 @@
 package ruiseki.jfmuy.gui.overlay;
 
-import java.util.Collection;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
@@ -17,8 +16,6 @@ import ruiseki.jfmuy.config.JFMUYModConfigGui;
 import ruiseki.jfmuy.config.KeyBindings;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.elements.GuiIconToggleButton;
-import ruiseki.jfmuy.ingredients.CollapsedStack;
-import ruiseki.jfmuy.ingredients.CollapsedStackRegistry;
 import ruiseki.jfmuy.util.Translator;
 
 public class ConfigButton extends GuiIconToggleButton {
@@ -38,7 +35,7 @@ public class ConfigButton extends GuiIconToggleButton {
 
     @Override
     protected void getTooltips(List<String> tooltip) {
-        tooltip.add(Translator.translateToLocal("jei.tooltip.config"));
+        tooltip.add(Translator.translateToLocal("jfmuy.tooltip.config"));
         if (Config.isOverlayEnabled() && Config.isCollapsibleGroupsEnabled()) {
             tooltip
                 .add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.config.expandCollapseAll"));
@@ -82,16 +79,8 @@ public class ConfigButton extends GuiIconToggleButton {
             if ((Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU))
                 && Config.isCollapsibleGroupsEnabled()
                 && Internal.hasIngredientFilter()) {
-                CollapsedStackRegistry registry = Internal.getCollapsedStackRegistry();
-                Collection<CollapsedStack> entries = registry.getEntries();
-                List<CollapsedStack> customEntries = registry.getCustomEntries();
-                boolean allExpanded = entries.stream()
-                    .allMatch(CollapsedStack::isExpanded)
-                    && customEntries.stream()
-                        .allMatch(CollapsedStack::isExpanded);
-                boolean targetExpanded = !allExpanded;
-                entries.forEach(e -> e.setExpanded(targetExpanded));
-                customEntries.forEach(e -> e.setExpanded(targetExpanded));
+                Internal.getCollapsedGroupRegistry()
+                    .expandOrCloseAll();
                 Internal.getIngredientFilter()
                     .notifyCollapsedStateChanged();
             } else if (Keyboard.getEventKeyState() && (Keyboard.getEventKey() == Keyboard.KEY_LCONTROL

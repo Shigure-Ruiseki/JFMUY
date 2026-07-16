@@ -9,6 +9,7 @@ import net.minecraft.client.gui.inventory.GuiBrewingStand;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemEnchantedBook;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import cpw.mods.fml.common.registry.GameData;
 import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.api.ICollapsibleGroupRegistry;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
 import ruiseki.jfmuy.api.IModPlugin;
 import ruiseki.jfmuy.api.IModRegistry;
@@ -34,8 +36,8 @@ import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.GuiProperties;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
-import ruiseki.jfmuy.ingredients.CollapsedStack;
-import ruiseki.jfmuy.ingredients.CollapsedStackIngredientHelper;
+import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredient;
+import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredientHelper;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugGhostIngredientHandler;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugRecipe;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugRecipeCategory;
@@ -44,7 +46,7 @@ import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredient;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredientHelper;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredientListFactory;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredientRenderer;
-import ruiseki.jfmuy.render.CollapsedStackRenderer;
+import ruiseki.jfmuy.render.CollapsedGroupRenderer;
 import ruiseki.jfmuy.runtime.JFMUYHelpers;
 
 @JFMUYPlugin
@@ -69,9 +71,12 @@ public class JFMUYInternalPlugin implements IModPlugin {
             .register(BookmarkItem.TYPE, Collections.emptyList(), bookmarkIngredientHelper, bookmarkItemRender);
 
         // Register CollapsedStack as ingredient type — addons that introspect grid items require a registered type
-        CollapsedStackIngredientHelper csHelper = new CollapsedStackIngredientHelper();
-        ingredientRegistration
-            .register(CollapsedStack.TYPE, Collections.emptyList(), csHelper, CollapsedStackRenderer.INSTANCE);
+        CollapsedGroupIngredientHelper csHelper = new CollapsedGroupIngredientHelper();
+        ingredientRegistration.register(
+            CollapsedGroupIngredient.TYPE,
+            Collections.emptyList(),
+            csHelper,
+            CollapsedGroupRenderer.INSTANCE);
     }
 
     @Override
@@ -154,6 +159,19 @@ public class JFMUYInternalPlugin implements IModPlugin {
 
             registry.addGhostIngredientHandler(GuiBrewingStand.class, new DebugGhostIngredientHandler<>());
         }
+    }
+
+    @Override
+    public void registerCollapsibleGroups(ICollapsibleGroupRegistry registry) {
+        registry.newGroup("enchanted_books", "Enchanted Books")
+            .addAny(VanillaTypes.ITEM, stack -> stack.getItem() instanceof ItemEnchantedBook)
+            .build();
+        registry.newGroup("potions", "Potions")
+            .addAny(VanillaTypes.ITEM, stack -> stack.getItem() == Items.potionitem)
+            .build();
+        registry.newGroup("spawn_eggs", "Spawn Eggs")
+            .addAny(VanillaTypes.ITEM, stack -> stack.getItem() == Items.spawn_egg)
+            .build();
     }
 
     @Override

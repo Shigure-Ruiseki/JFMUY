@@ -87,7 +87,7 @@ public class JFMUYModConfigGui extends GuiConfig {
                 // Find the "Hide Ingredients Mode" entry and insert Collapsible Groups submenu immediately after it
                 int insertAt = worldElements.size();
                 for (int i = 0; i < worldElements.size(); i++) {
-                    if ("config.jei.mode.editEnabled".equals(
+                    if ("config.jfmuy.mode.editEnabled".equals(
                         worldElements.get(i)
                             .getLanguageKey())) {
                         insertAt = i + 1;

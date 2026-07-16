@@ -7,30 +7,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-import net.minecraft.item.ItemStack;
-
 import org.jetbrains.annotations.Nullable;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
-import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
-import ruiseki.jfmuy.startup.StackHelper;
 
 public class IngredientSet<V> extends AbstractSet<V> {
 
     public static <V> IngredientSet<V> create(IIngredientType<V> ingredientType,
         IIngredientHelper<V> ingredientHelper) {
-        final Function<V, String> uidGenerator;
-        if (ingredientType == VanillaTypes.ITEM) {
-            StackHelper stackHelper = Internal.getStackHelper();
-            uidGenerator = stack -> stackHelper
-                .getUniqueIdentifierForStack((ItemStack) stack, StackHelper.UidMode.FULL);
-        } else {
-            uidGenerator = ingredientHelper::getUniqueId;
-        }
-        return new IngredientSet<>(uidGenerator);
+        return new IngredientSet<>(ingredientHelper::getUniqueId);
     }
 
     private final Function<V, String> uidGenerator;

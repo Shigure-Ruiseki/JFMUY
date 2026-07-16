@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -130,7 +131,7 @@ public final class Config {
         return values.disabledGroups;
     }
 
-    public static void saveDisabledGroups(Set<String> disabledGroups) {
+    public static void saveDisabledGroups(Collection<String> disabledGroups) {
         values.disabledGroups.clear();
         values.disabledGroups.addAll(disabledGroups);
         if (config != null) {
@@ -518,7 +519,7 @@ public final class Config {
         config.addCategory(CATEGORY_ADVANCED);
         config.addCategory(CATEGORY_MISC);
         config.addCategory(CATEGORY_COLLAPSIBLE);
-        // Override collapsible category lang keys from config.jei.* to config.jfmuy.*
+        // Override collapsible category lang keys from config.jfmuy.* to config.jfmuy.*
         config.setCategoryLanguageKey(CATEGORY_COLLAPSIBLE, "config.jfmuy.collapsible");
         config
             .setCategoryComment(CATEGORY_COLLAPSIBLE, Translator.translateToLocal("config.jfmuy.collapsible.comment"));
@@ -668,7 +669,7 @@ public final class Config {
             defaultValues.collapsedClickAction,
             CollapsedClickAction.values());
 
-        // Override property lang keys and comments from config.jei.collapsible.* to config.jfmuy.collapsible.*
+        // Override property lang keys and comments from config.jfmuy.collapsible.* to config.jfmuy.collapsible.*
         {
             String heiPrefix = "config.jfmuy.collapsible.";
 
@@ -686,8 +687,8 @@ public final class Config {
             Property collapsedClickActionProp = config
                 .get(CATEGORY_COLLAPSIBLE, "collapsedClickAction", defaultValues.collapsedClickAction.name());
             collapsedClickActionProp.setLanguageKey(heiPrefix + "collapsedClickAction");
-            String defaultLocalized = Translator.translateToLocal("config.jei.default");
-            String validLocalized = Translator.translateToLocal("config.jei.valid");
+            String defaultLocalized = Translator.translateToLocal("config.jfmuy.default");
+            String validLocalized = Translator.translateToLocal("config.jfmuy.valid");
             collapsedClickActionProp.comment = (Translator.translateToLocal(heiPrefix + "collapsedClickAction.comment")
                 + "\n["
                 + defaultLocalized

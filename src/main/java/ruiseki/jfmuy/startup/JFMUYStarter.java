@@ -1,15 +1,8 @@
 package ruiseki.jfmuy.startup;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Predicate;
-
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemMonsterPlacer;
 
 import cpw.mods.fml.common.ProgressManager;
 import ruiseki.jfmuy.Internal;
@@ -20,7 +13,6 @@ import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
 import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
 import ruiseki.jfmuy.api.gui.IGlobalGuiHandler;
 import ruiseki.jfmuy.api.gui.IGuiScreenHandler;
-import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.autocrafting.favorites.FavoriteRecipes;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
@@ -32,12 +24,11 @@ import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.BookmarkOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.LeftAreaDispatcher;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
-import ruiseki.jfmuy.ingredients.CollapsedStack;
-import ruiseki.jfmuy.ingredients.CollapsedStackRegistry;
 import ruiseki.jfmuy.ingredients.IngredientBlacklistInternal;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
+import ruiseki.jfmuy.ingredients.group.CollapsibleGroupRegistry;
 import ruiseki.jfmuy.input.InputHandler;
 import ruiseki.jfmuy.plugins.vanilla.VanillaPlugin;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
@@ -47,7 +38,6 @@ import ruiseki.jfmuy.runtime.SubtypeRegistry;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.LoggedTimer;
-import ruiseki.jfmuy.util.Translator;
 
 public class JFMUYStarter {
 
@@ -110,14 +100,10 @@ public class JFMUYStarter {
             timer.stop();
         }
 
-        registerDefaultCollapsibleGroups();
-        registerModCollapsibleGroups(plugins);
-
-        {
-            CollapsedStackRegistry registry = Internal.getCollapsedStackRegistry();
-            registry.loadCustomGroups();
-            registry.syncDisabledGroups();
-        }
+        CollapsibleGroupRegistry collapsibleGroupRegistry = new CollapsibleGroupRegistry();
+        Internal.setCollapsedGroupRegistry(collapsibleGroupRegistry);
+        registerCollapsibleGroups(plugins, collapsibleGroupRegistry);
+        collapsibleGroupRegistry.loadCustomGroups();
 
         BookmarkList bookmarkList = new BookmarkList(ingredientRegistry);
         Internal.setBookmarkList(bookmarkList);
@@ -465,150 +451,63 @@ public class JFMUYStarter {
 
     }
 
-    private static void registerDefaultCollapsibleGroups() {
-        CollapsedStackRegistry registry = Internal.getCollapsedStackRegistry();
-        // Enchanted books in JEI are stored as EnchantmentData (VanillaTypes.ENCHANT),
-        // not as ItemStacks — IngredientRegistry strips them from the ItemStack list.
-        // Match all EnchantmentData directly; every EnchantmentData IS an enchanted book.
-        registry.groupForType(
-            "enchanted_books",
-            "Enchanted Books",
-            ingredient -> ingredient instanceof net.minecraft.enchantment.EnchantmentData);
-        registry.group("potions", "Potions", stack -> stack.getItem() == Items.potionitem);
-        registry.group("spawn_eggs", "Spawn Eggs", stack -> stack.getItem() instanceof ItemMonsterPlacer);
-    }
-
-    private static void registerModCollapsibleGroups(List<IModPlugin> plugins) {
-        CollapsedStackRegistry registry = Internal.getCollapsedStackRegistry();
-        Map<String, ModGroupBuilderState> groupsById = new HashMap<>();
-
-        ICollapsibleGroupRegistry apiRegistry = new ICollapsibleGroupRegistry() {
-
-            @Override
-            public CollapsibleGroupBuilder newGroup(String id, String langKey) {
-                final ModGroupBuilderState state = groupsById.computeIfAbsent(id, key -> {
-                    ModGroupBuilderState created = new ModGroupBuilderState();
-                    // No uidMatcher yet — installed after all plugins finish registering.
-                    // This avoids IngredientFilter using an empty uid fast-path that would
-                    // short-circuit addAny/addAllOf predicates and cause them to never match.
-                    created.registeredStack = registry
-                        .addModGroup(id, Translator.translateToLocal(langKey), created::matches);
-                    return created;
-                });
-
-                return new CollapsibleGroupBuilder() {
-
-                    @Override
-                    public CollapsibleGroupBuilder add(Object ingredient) {
-                        if (ingredient != null) {
-                            String uid = CollapsedStack.computeIngredientUid(ingredient);
-                            if (uid != null) {
-                                state.exactUids.add(uid);
-                            }
-                        }
-                        return this;
-                    }
-
-                    @Override
-                    public CollapsibleGroupBuilder add(Object... ingredients) {
-                        if (ingredients != null) {
-                            for (Object ingredient : ingredients) {
-                                add(ingredient);
-                            }
-                        }
-                        return this;
-                    }
-
-                    @Override
-                    public CollapsibleGroupBuilder addAllOf(IIngredientType<?>... types) {
-                        if (types != null) {
-                            for (IIngredientType<?> type : types) {
-                                if (type != null) {
-                                    state.allOfTypes.add(type.getIngredientClass());
-                                }
-                            }
-                        }
-                        return this;
-                    }
-
-                    @Override
-                    public <V> ICollapsibleGroupRegistry.CollapsibleGroupBuilder addAny(IIngredientType<V> type,
-                        Predicate<V> filter) {
-                        if (type != null && filter != null) {
-                            Class<? extends V> ingredientClass = type.getIngredientClass();
-                            state.typedPredicates.add(ingredient -> {
-                                if (!ingredientClass.isInstance(ingredient)) {
-                                    return false;
-                                }
-                                return filter.test(ingredientClass.cast(ingredient));
-                            });
-                        }
-                        return this;
-                    }
-                };
-            }
-        };
-
+    private static void registerCollapsibleGroups(List<IModPlugin> plugins, ICollapsibleGroupRegistry registry) {
         if (Config.skipShowingProgressBar()) {
-            for (IModPlugin plugin : plugins) {
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
                 try {
-                    plugin.registerCollapsibleGroups(apiRegistry);
+                    long start_time = System.currentTimeMillis();
+                    Log.get()
+                        .debug(
+                            "Registering collapsible groups: {} ...",
+                            plugin.getClass()
+                                .getName());
+                    plugin.registerCollapsibleGroups(registry);
+                    long timeElapsedMs = System.currentTimeMillis() - start_time;
+                    Log.get()
+                        .debug(
+                            "Registered  collapsible groups: {} in {} ms",
+                            plugin.getClass()
+                                .getName(),
+                            timeElapsedMs);
                 } catch (RuntimeException | LinkageError e) {
                     Log.get()
-                        .error("Failed to register collapsible groups for plugin: {}", plugin.getClass(), e);
+                        .error("Failed to register mod collapsible groups: {}", plugin.getClass(), e);
+                    iterator.remove();
                 }
             }
         } else {
-            ProgressManager.ProgressBar bar = ProgressManager.push("Registering collapsible groups", plugins.size());
-            for (IModPlugin plugin : plugins) {
+            ProgressManager.ProgressBar progressBar = ProgressManager
+                .push("Registering collapsible groups", plugins.size());
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
                 try {
-                    bar.step(
+                    progressBar.step(
                         plugin.getClass()
                             .getName());
-                    plugin.registerCollapsibleGroups(apiRegistry);
+                    long start_time = System.currentTimeMillis();
+                    Log.get()
+                        .debug(
+                            "Registering collapsible groups: {} ...",
+                            plugin.getClass()
+                                .getName());
+                    plugin.registerCollapsibleGroups(registry);
+                    long timeElapsedMs = System.currentTimeMillis() - start_time;
+                    Log.get()
+                        .debug(
+                            "Registered  collapsible groups: {} in {} ms",
+                            plugin.getClass()
+                                .getName(),
+                            timeElapsedMs);
                 } catch (RuntimeException | LinkageError e) {
                     Log.get()
-                        .error("Failed to register collapsible groups for plugin: {}", plugin.getClass(), e);
+                        .error("Failed to register mod collapsible groups: {}", plugin.getClass(), e);
+                    iterator.remove();
                 }
             }
-            ProgressManager.pop(bar);
-        }
-
-        for (ModGroupBuilderState state : groupsById.values()) {
-            if (!state.exactUids.isEmpty() && state.registeredStack != null) {
-                state.registeredStack.setUidMatcher(state::matchesUid);
-            }
-        }
-    }
-
-    private static class ModGroupBuilderState {
-
-        final Set<String> exactUids = new HashSet<>();
-        final Set<Class<?>> allOfTypes = new HashSet<>();
-        final List<Predicate<Object>> typedPredicates = new java.util.ArrayList<>();
-        /** The CollapsedStack registered in the registry — uid matcher installed post-loop. */
-        CollapsedStack registeredStack;
-
-        boolean matchesUid(String uid) {
-            return exactUids.contains(uid);
-        }
-
-        boolean matches(Object ingredient) {
-            String uid = CollapsedStack.computeIngredientUid(ingredient);
-            if (uid != null && exactUids.contains(uid)) {
-                return true;
-            }
-            for (Class<?> ingredientClass : allOfTypes) {
-                if (ingredientClass.isInstance(ingredient)) {
-                    return true;
-                }
-            }
-            for (Predicate<Object> predicate : typedPredicates) {
-                if (predicate.test(ingredient)) {
-                    return true;
-                }
-            }
-            return false;
+            ProgressManager.pop(progressBar);
         }
     }
 }

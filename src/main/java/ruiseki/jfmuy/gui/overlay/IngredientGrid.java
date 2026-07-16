@@ -20,13 +20,13 @@ import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.gui.ingredients.GuiItemStackGroup;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
-import ruiseki.jfmuy.ingredients.CollapsedStack;
+import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredient;
 import ruiseki.jfmuy.input.ClickedIngredient;
 import ruiseki.jfmuy.input.IClickedIngredient;
 import ruiseki.jfmuy.input.IShowsRecipeFocuses;
 import ruiseki.jfmuy.input.MouseHelper;
 import ruiseki.jfmuy.network.PacketDeletePlayerItem;
-import ruiseki.jfmuy.render.CollapsedStackRenderer;
+import ruiseki.jfmuy.render.CollapsedGroupRenderer;
 import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 import ruiseki.jfmuy.render.IngredientListSlot;
 import ruiseki.jfmuy.render.IngredientRenderer;
@@ -118,7 +118,7 @@ public class IngredientGrid implements IShowsRecipeFocuses {
         guiIngredientSlots.renderExpandedGroupOutlines();
 
         if (!shouldDeleteItemOnClick(minecraft, mouseX, mouseY) && isMouseOver(mouseX, mouseY)) {
-            CollapsedStackRenderer collapsedHovered = guiIngredientSlots.getHoveredCollapsed(mouseX, mouseY);
+            CollapsedGroupRenderer collapsedHovered = guiIngredientSlots.getHoveredCollapsed(mouseX, mouseY);
             if (collapsedHovered != null) {
                 collapsedHovered.drawHighlight();
             } else {
@@ -135,16 +135,17 @@ public class IngredientGrid implements IShowsRecipeFocuses {
     public void drawTooltips(Minecraft minecraft, int mouseX, int mouseY) {
         if (isMouseOver(mouseX, mouseY)) {
             if (shouldDeleteItemOnClick(minecraft, mouseX, mouseY)) {
-                String deleteItem = Translator.translateToLocal("jei.tooltip.delete.item");
+                String deleteItem = Translator.translateToLocal("jfmuy.tooltip.delete.item");
                 TooltipRenderer.drawHoveringText(minecraft, deleteItem, mouseX, mouseY);
             } else {
-                CollapsedStackRenderer collapsedHovered = guiIngredientSlots.getHoveredCollapsed(mouseX, mouseY);
+                CollapsedGroupRenderer collapsedHovered = guiIngredientSlots.getHoveredCollapsed(mouseX, mouseY);
                 if (collapsedHovered != null) {
                     collapsedHovered.drawTooltip(minecraft, mouseX, mouseY);
                 } else {
                     IngredientRenderer<?> hovered = guiIngredientSlots.getHovered(mouseX, mouseY);
                     if (hovered != null) {
-                        CollapsedStack expandedGroup = guiIngredientSlots.getExpandedCollapsedGroupAt(mouseX, mouseY);
+                        CollapsedGroupIngredient expandedGroup = guiIngredientSlots
+                            .getExpandedCollapsedGroupAt(mouseX, mouseY);
                         if (expandedGroup != null) {
                             String hint = EnumChatFormatting.YELLOW
                                 + Translator.translateToLocal("jfmuy.tooltip.collapsed.collapse");
@@ -194,17 +195,28 @@ public class IngredientGrid implements IShowsRecipeFocuses {
 
     public boolean handleMouseClicked(int mouseX, int mouseY) {
         if (isMouseOver(mouseX, mouseY)) {
+            Minecraft minecraft = Minecraft.getMinecraft();
+            if (shouldDeleteItemOnClick(minecraft, mouseX, mouseY)) {
+                EntityPlayerSP player = minecraft.thePlayer;
+                if (player != null) {
+                    ItemStack itemStack = player.inventory.getItemStack();
+                    if (itemStack != null) {
+                        player.inventory.setItemStack(null);
+                        PacketDeletePlayerItem packet = new PacketDeletePlayerItem(itemStack);
+                        JFMUY.instance.getPacketHandler()
+                            .sendToServer(packet);
+                        return true;
+                    }
+                }
+            }
             boolean firstItemMode = Config.getCollapsedClickAction() == CollapsedClickAction.FIRST_ITEM;
             boolean altDown = Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
             // OPEN_GROUP: plain click expands a collapsed icon; alt+click falls through (first item).
             // FIRST_ITEM: alt+click expands a collapsed icon; plain click falls through (first item).
-            boolean expandKeyDown = firstItemMode ? altDown : !altDown;
+            boolean expandKeyDown = firstItemMode == altDown;
             if (expandKeyDown) {
-                CollapsedStackRenderer collapsedHovered = guiIngredientSlots.getHoveredCollapsed(mouseX, mouseY);
-                // A group with only 1 visible item should act as a plain ingredient click,
-                // not expand/collapse — the single item is already trivially "shown".
-                if (collapsedHovered != null && collapsedHovered.getCollapsedStack()
-                    .size() > 1) {
+                CollapsedGroupRenderer collapsedHovered = guiIngredientSlots.getHoveredCollapsed(mouseX, mouseY);
+                if (collapsedHovered != null) {
                     collapsedHovered.getCollapsedStack()
                         .toggleExpanded();
                     Internal.getIngredientFilter()
@@ -214,25 +226,13 @@ public class IngredientGrid implements IShowsRecipeFocuses {
             }
             // Alt+Click on any item inside an expanded group always collapses it.
             if (altDown) {
-                CollapsedStack expandedHovered = guiIngredientSlots.getExpandedCollapsedGroupAt(mouseX, mouseY);
+                CollapsedGroupIngredient expandedHovered = guiIngredientSlots
+                    .getExpandedCollapsedGroupAt(mouseX, mouseY);
                 if (expandedHovered != null) {
                     expandedHovered.toggleExpanded();
                     Internal.getIngredientFilter()
                         .notifyCollapsedStateChanged();
                     return true;
-                }
-            }
-            Minecraft minecraft = Minecraft.getMinecraft();
-            if (shouldDeleteItemOnClick(minecraft, mouseX, mouseY)) {
-                EntityPlayerSP player = minecraft.thePlayer;
-                if (player != null) {
-                    ItemStack itemStack = player.inventory.getItemStack();
-                    if (itemStack != null) {
-                        player.inventory.setItemStack(null);
-                        JFMUY.instance.getPacketHandler()
-                            .sendToServer(new PacketDeletePlayerItem(itemStack));
-                        return true;
-                    }
                 }
             }
         }

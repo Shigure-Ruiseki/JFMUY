@@ -18,7 +18,6 @@ import ruiseki.jfmuy.config.OverlayToggleEvent;
 import ruiseki.jfmuy.gui.ghost.GhostIngredientDragManager;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.LeftAreaDispatcher;
-import ruiseki.jfmuy.ingredients.CollapsedStackRegistry;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
 import ruiseki.jfmuy.util.LimitedLogger;
 import ruiseki.jfmuy.util.Log;

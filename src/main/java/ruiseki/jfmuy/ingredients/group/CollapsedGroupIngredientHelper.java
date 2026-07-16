@@ -1,4 +1,4 @@
-package ruiseki.jfmuy.ingredients;
+package ruiseki.jfmuy.ingredients.group;
 
 import java.awt.Color;
 import java.util.Collection;
@@ -17,14 +17,15 @@ import ruiseki.jfmuy.api.recipe.IFocus;
  * Follows the BookmarkIngredientHelper delegation pattern — most methods
  * delegate to the first ingredient's helper for addon compatibility.
  */
-public class CollapsedStackIngredientHelper implements IIngredientHelper<CollapsedStack> {
+public class CollapsedGroupIngredientHelper implements IIngredientHelper<CollapsedGroupIngredient> {
 
-    public static final CollapsedStackIngredientHelper INSTANCE = new CollapsedStackIngredientHelper();
+    public static final CollapsedGroupIngredientHelper INSTANCE = new CollapsedGroupIngredientHelper();
 
     @Nullable
     @Override
-    public CollapsedStack getMatch(Iterable<CollapsedStack> ingredients, CollapsedStack ingredientToMatch) {
-        for (CollapsedStack cs : ingredients) {
+    public CollapsedGroupIngredient getMatch(Iterable<CollapsedGroupIngredient> ingredients,
+        CollapsedGroupIngredient ingredientToMatch) {
+        for (CollapsedGroupIngredient cs : ingredients) {
             if (cs.getId()
                 .equals(ingredientToMatch.getId())) {
                 return cs;
@@ -34,76 +35,76 @@ public class CollapsedStackIngredientHelper implements IIngredientHelper<Collaps
     }
 
     @Override
-    public String getDisplayName(CollapsedStack ingredient) {
+    public String getDisplayName(CollapsedGroupIngredient ingredient) {
         return ingredient.getDisplayName();
     }
 
     @Override
-    public String getUniqueId(CollapsedStack ingredient) {
+    public String getUniqueId(CollapsedGroupIngredient ingredient) {
         // Prefixed to avoid collisions with other ingredient type UIDs
         return "collapsedstack:" + ingredient.getId();
     }
 
     @Override
-    public String getWildcardId(CollapsedStack ingredient) {
+    public String getWildcardId(CollapsedGroupIngredient ingredient) {
         return getUniqueId(ingredient);
     }
 
     @Override
-    public String getModId(CollapsedStack ingredient) {
+    public String getModId(CollapsedGroupIngredient ingredient) {
         return getFirstIngredientHelper(ingredient).getModId(getFirstIngredient(ingredient));
     }
 
     @Override
-    public String getDisplayModId(CollapsedStack ingredient) {
+    public String getDisplayModId(CollapsedGroupIngredient ingredient) {
         return getFirstIngredientHelper(ingredient).getDisplayModId(getFirstIngredient(ingredient));
     }
 
     @Override
-    public Iterable<Color> getColors(CollapsedStack ingredient) {
+    public Iterable<Color> getColors(CollapsedGroupIngredient ingredient) {
         return getFirstIngredientHelper(ingredient).getColors(getFirstIngredient(ingredient));
     }
 
     @Override
-    public String getResourceId(CollapsedStack ingredient) {
+    public String getResourceId(CollapsedGroupIngredient ingredient) {
         return "collapsedstack:" + ingredient.getId();
     }
 
     @Override
-    public ItemStack getCheatItemStack(CollapsedStack ingredient) {
+    public ItemStack getCheatItemStack(CollapsedGroupIngredient ingredient) {
         // Delegate cheat-give to the first ingredient in the group
         return getFirstIngredientHelper(ingredient).getCheatItemStack(getFirstIngredient(ingredient));
     }
 
     @Override
-    public CollapsedStack copyIngredient(CollapsedStack ingredient) {
+    public CollapsedGroupIngredient copyIngredient(CollapsedGroupIngredient ingredient) {
         // CollapsedStack instances are transient and shared via the registry per filter cycle;
         // returning the same instance is safe for current usage patterns.
         return ingredient;
     }
 
     @Override
-    public boolean isValidIngredient(CollapsedStack ingredient) {
+    public boolean isValidIngredient(CollapsedGroupIngredient ingredient) {
         return !ingredient.isEmpty();
     }
 
     @Override
-    public boolean isIngredientOnServer(CollapsedStack ingredient) {
+    public boolean isIngredientOnServer(CollapsedGroupIngredient ingredient) {
         return true;
     }
 
     @Override
-    public Collection<String> getOreDictNames(CollapsedStack ingredient) {
+    public Collection<String> getOreDictNames(CollapsedGroupIngredient ingredient) {
         return Collections.emptyList();
     }
 
     @Override
-    public Collection<String> getCreativeTabNames(CollapsedStack ingredient) {
+    public Collection<String> getCreativeTabNames(CollapsedGroupIngredient ingredient) {
         return Collections.emptyList();
     }
 
     @Override
-    public String getErrorInfo(@Nullable CollapsedStack ingredient) {
+    public String getErrorInfo(@Nullable CollapsedGroupIngredient ingredient) {
         if (ingredient == null) {
             return "CollapsedStack is null";
         }
@@ -112,8 +113,8 @@ public class CollapsedStackIngredientHelper implements IIngredientHelper<Collaps
 
     // Delegate recipe lookups to the representative item for addon compatibility
     @Override
-    public IFocus<?> translateFocus(IFocus<CollapsedStack> focus, IFocusFactory focusFactory) {
-        CollapsedStack cs = focus.getValue();
+    public IFocus<?> translateFocus(IFocus<CollapsedGroupIngredient> focus, IFocusFactory focusFactory) {
+        CollapsedGroupIngredient cs = focus.getValue();
         if (cs != null && !cs.isEmpty()) {
             Object firstIngredient = cs.getIngredients()
                 .get(0)
@@ -123,8 +124,8 @@ public class CollapsedStackIngredientHelper implements IIngredientHelper<Collaps
         return focus;
     }
 
-    @SuppressWarnings({ "rawtypes" })
-    private static IIngredientHelper getFirstIngredientHelper(CollapsedStack ingredient) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static IIngredientHelper getFirstIngredientHelper(CollapsedGroupIngredient ingredient) {
         if (ingredient.isEmpty()) {
             // Fallback: return ItemStack helper as a safe default
             return Internal.getIngredientRegistry()
@@ -137,7 +138,8 @@ public class CollapsedStackIngredientHelper implements IIngredientHelper<Collaps
             .getIngredientHelper(first);
     }
 
-    private static Object getFirstIngredient(CollapsedStack ingredient) {
+    @SuppressWarnings("rawtypes")
+    private static Object getFirstIngredient(CollapsedGroupIngredient ingredient) {
         if (ingredient.isEmpty()) {
             return null;
         }

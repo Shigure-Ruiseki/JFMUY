@@ -10,9 +10,9 @@ import ruiseki.jfmuy.api.ISubtypeRegistry;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.color.ColorNamer;
 import ruiseki.jfmuy.gui.GuiEventHandler;
-import ruiseki.jfmuy.ingredients.CollapsedStackRegistry;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
+import ruiseki.jfmuy.ingredients.group.CollapsibleGroupRegistry;
 import ruiseki.jfmuy.input.InputHandler;
 import ruiseki.jfmuy.runtime.JFMUYHelpers;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
@@ -43,7 +43,7 @@ public final class Internal {
     @Nullable
     private static BookmarkList bookmarkList;
     @Nullable
-    private static CollapsedStackRegistry collapsedStackRegistry;
+    private static CollapsibleGroupRegistry collapsedGroupRegistry;
 
     private Internal() {
 
@@ -156,15 +156,12 @@ public final class Internal {
         return bookmarkList;
     }
 
-    public static CollapsedStackRegistry getCollapsedStackRegistry() {
-        if (collapsedStackRegistry == null) {
-            collapsedStackRegistry = CollapsedStackRegistry.getInstance();
-        }
-        return collapsedStackRegistry;
+    public static CollapsibleGroupRegistry getCollapsedGroupRegistry() {
+        Preconditions.checkState(collapsedGroupRegistry != null, "Collapsed Group Registry has not been created yet.");
+        return collapsedGroupRegistry;
     }
 
-    public static void setCollapsedStackRegistry(CollapsedStackRegistry registry) {
-        Internal.collapsedStackRegistry = registry;
-        CollapsedStackRegistry.setInstance(registry);
+    public static void setCollapsedGroupRegistry(CollapsibleGroupRegistry registry) {
+        Internal.collapsedGroupRegistry = registry;
     }
 }

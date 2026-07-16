@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -112,7 +113,7 @@ public class StackHelper implements IStackHelper {
                     availableItemStacks.remove(matching.slotIndex);
                 }
                 matchingItemResult.matchingItems.put(recipeSlotNumber, matching.slotIndex);
-                matchingItemResult.matchingItemsCasted.put(recipeSlotNumber, matching.count);
+                matchingItemResult.matchingItemCounts.put(recipeSlotNumber, matching.count);
             }
         }
 
@@ -484,9 +485,9 @@ public class StackHelper implements IStackHelper {
 
     public static class MatchingItemsResult {
 
-        public final Map<Integer, Integer> matchingItems = new Int2IntOpenHashMap();
-        public final Int2IntMap matchingItemsCasted = (Int2IntMap) matchingItems;
-        public final List<Integer> missingItems = new IntArrayList();
+        public final Map<Integer, Integer> matchingItems = new HashMap<>();
+        public final Map<Integer, Integer> matchingItemCounts = new HashMap<>();
+        public final List<Integer> missingItems = new ArrayList<>();
     }
 
     private static class MatchingItem {

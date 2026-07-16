@@ -191,7 +191,7 @@ public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<Conta
         if (doTransfer) {
             PacketRecipeTransfer packet = new PacketRecipeTransfer(
                 matchingItemsResult.matchingItems,
-                matchingItemsResult.matchingItemsCasted,
+                matchingItemsResult.matchingItemCounts,
                 craftingSlotIndexes,
                 inventorySlotIndexes,
                 maxTransfer,

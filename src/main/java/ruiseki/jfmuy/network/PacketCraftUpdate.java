@@ -32,7 +32,7 @@ public class PacketCraftUpdate extends PacketCodec {
     public void actionClient(World world, EntityPlayer player) {
         Internal.getRuntime()
             .getAutocraftingHandler()
-            .stepFinished(this.success, this.itemsCrafted);
+            .stepFinished(this.success, success ? this.itemsCrafted : 0);
     }
 
     @Override

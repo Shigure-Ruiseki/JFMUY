@@ -21,9 +21,9 @@ import ruiseki.jfmuy.util.IngredientSet;
 public class ModIngredientRegistration implements IModIngredientRegistration {
 
     private final Map<IIngredientType, Collection> allIngredientsMap = new Reference2ObjectOpenHashMap<>();
-    public static final List<IIngredientType> CRAFTABLE_INGREDIENTS = new ObjectArrayList<>();
     private final Map<IIngredientType, IIngredientHelper> ingredientHelperMap = new Reference2ObjectOpenHashMap<>();
     private final Map<IIngredientType, IIngredientRenderer> ingredientRendererMap = new Reference2ObjectOpenHashMap<>();
+    private final List<IIngredientType> craftableIngredientsMap = new ObjectArrayList<>();
 
     @Override
     public <V> void register(IIngredientType<V> ingredientType, Collection<V> allIngredients,
@@ -40,7 +40,7 @@ public class ModIngredientRegistration implements IModIngredientRegistration {
 
     @Override
     public <V> void markAsCraftable(IIngredientType<V> ingredientType) {
-        CRAFTABLE_INGREDIENTS.add(ingredientType);
+        craftableIngredientsMap.add(ingredientType);
     }
 
     public IngredientRegistry createIngredientRegistry(IModIdHelper modIdHelper,
@@ -59,7 +59,7 @@ public class ModIngredientRegistration implements IModIngredientRegistration {
             ingredientsMap,
             ImmutableMap.copyOf(ingredientHelperMap),
             ImmutableMap.copyOf(ingredientRendererMap),
-            ImmutableList.copyOf(CRAFTABLE_INGREDIENTS));
+            ImmutableList.copyOf(craftableIngredientsMap));
     }
 
     private <T> IngredientSet<T> createIngredientSet(IIngredientType<T> ingredientType, Collection<T> ingredients) {

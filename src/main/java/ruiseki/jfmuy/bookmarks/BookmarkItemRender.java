@@ -13,6 +13,7 @@ import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.autocrafting.RecipeBookmarkItem;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.util.CountUtil;
+import ruiseki.okcore.client.renderer.GlStateManager;
 
 @SuppressWarnings("rawtypes")
 public class BookmarkItemRender implements IIngredientRenderer<BookmarkItem> {
@@ -41,6 +42,9 @@ public class BookmarkItemRender implements IIngredientRenderer<BookmarkItem> {
                 CountUtil.renderCountString(fontRenderer, ingredient.getDisplayAmount(), xPosition, yPosition, true);
             }
         }
+        // We need no lighting and plain color for continued ingredient rendering
+        GlStateManager.disableLighting();
+        GlStateManager.color(1, 1, 1, 1);
     }
 
     @Override

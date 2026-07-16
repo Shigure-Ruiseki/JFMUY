@@ -1,5 +1,7 @@
 package ruiseki.jfmuy;
 
+import net.minecraftforge.common.MinecraftForge;
+
 import ruiseki.jfmuy.network.PacketCheatPermission;
 import ruiseki.jfmuy.network.PacketCraftUpdate;
 import ruiseki.jfmuy.network.PacketDeletePlayerItem;
@@ -28,5 +30,11 @@ public class CommonProxy extends CommonProxyComponent {
         packetHandler.register(PacketRecipeTransfer.class);
         packetHandler.register(PacketRequestCheatPermission.class);
         packetHandler.register(PacketSetHotbarItemStack.class);
+    }
+
+    @Override
+    public void registerEventHooks() {
+        super.registerEventHooks();
+        MinecraftForge.EVENT_BUS.register(JFMUYHandler.INSTANCE);
     }
 }

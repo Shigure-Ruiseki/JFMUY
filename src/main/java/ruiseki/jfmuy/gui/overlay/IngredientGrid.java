@@ -9,8 +9,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.input.Keyboard;
 
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.JFMUY;
@@ -18,15 +20,18 @@ import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.gui.ingredients.GuiItemStackGroup;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.ingredients.CollapsedStack;
 import ruiseki.jfmuy.input.ClickedIngredient;
 import ruiseki.jfmuy.input.IClickedIngredient;
 import ruiseki.jfmuy.input.IShowsRecipeFocuses;
 import ruiseki.jfmuy.input.MouseHelper;
 import ruiseki.jfmuy.network.PacketDeletePlayerItem;
+import ruiseki.jfmuy.render.CollapsedStackRenderer;
 import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 import ruiseki.jfmuy.render.IngredientListSlot;
 import ruiseki.jfmuy.render.IngredientRenderer;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
+import ruiseki.jfmuy.util.CollapsedClickAction;
 import ruiseki.jfmuy.util.GiveMode;
 import ruiseki.jfmuy.util.MathUtil;
 import ruiseki.jfmuy.util.Translator;
@@ -110,11 +115,17 @@ public class IngredientGrid implements IShowsRecipeFocuses {
         GlStateManager.disableBlend();
 
         guiIngredientSlots.render(minecraft);
+        guiIngredientSlots.renderExpandedGroupOutlines();
 
         if (!shouldDeleteItemOnClick(minecraft, mouseX, mouseY) && isMouseOver(mouseX, mouseY)) {
-            IngredientRenderer<?> hovered = guiIngredientSlots.getHovered(mouseX, mouseY);
-            if (hovered != null) {
-                hovered.drawHighlight();
+            CollapsedStackRenderer collapsedHovered = guiIngredientSlots.getHoveredCollapsed(mouseX, mouseY);
+            if (collapsedHovered != null) {
+                collapsedHovered.drawHighlight();
+            } else {
+                IngredientRenderer<?> hovered = guiIngredientSlots.getHovered(mouseX, mouseY);
+                if (hovered != null) {
+                    hovered.drawHighlight();
+                }
             }
         }
 
@@ -124,12 +135,24 @@ public class IngredientGrid implements IShowsRecipeFocuses {
     public void drawTooltips(Minecraft minecraft, int mouseX, int mouseY) {
         if (isMouseOver(mouseX, mouseY)) {
             if (shouldDeleteItemOnClick(minecraft, mouseX, mouseY)) {
-                String deleteItem = Translator.translateToLocal("jfmuy.tooltip.delete.item");
+                String deleteItem = Translator.translateToLocal("jei.tooltip.delete.item");
                 TooltipRenderer.drawHoveringText(minecraft, deleteItem, mouseX, mouseY);
             } else {
-                IngredientRenderer<?> hovered = guiIngredientSlots.getHovered(mouseX, mouseY);
-                if (hovered != null) {
-                    hovered.drawTooltip(minecraft, mouseX, mouseY);
+                CollapsedStackRenderer collapsedHovered = guiIngredientSlots.getHoveredCollapsed(mouseX, mouseY);
+                if (collapsedHovered != null) {
+                    collapsedHovered.drawTooltip(minecraft, mouseX, mouseY);
+                } else {
+                    IngredientRenderer<?> hovered = guiIngredientSlots.getHovered(mouseX, mouseY);
+                    if (hovered != null) {
+                        CollapsedStack expandedGroup = guiIngredientSlots.getExpandedCollapsedGroupAt(mouseX, mouseY);
+                        if (expandedGroup != null) {
+                            String hint = EnumChatFormatting.YELLOW
+                                + Translator.translateToLocal("jfmuy.tooltip.collapsed.collapse");
+                            hovered.drawTooltip(minecraft, mouseX, mouseY, java.util.Collections.singletonList(hint));
+                        } else {
+                            hovered.drawTooltip(minecraft, mouseX, mouseY);
+                        }
+                    }
                 }
             }
         }
@@ -171,6 +194,34 @@ public class IngredientGrid implements IShowsRecipeFocuses {
 
     public boolean handleMouseClicked(int mouseX, int mouseY) {
         if (isMouseOver(mouseX, mouseY)) {
+            boolean firstItemMode = Config.getCollapsedClickAction() == CollapsedClickAction.FIRST_ITEM;
+            boolean altDown = Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
+            // OPEN_GROUP: plain click expands a collapsed icon; alt+click falls through (first item).
+            // FIRST_ITEM: alt+click expands a collapsed icon; plain click falls through (first item).
+            boolean expandKeyDown = firstItemMode ? altDown : !altDown;
+            if (expandKeyDown) {
+                CollapsedStackRenderer collapsedHovered = guiIngredientSlots.getHoveredCollapsed(mouseX, mouseY);
+                // A group with only 1 visible item should act as a plain ingredient click,
+                // not expand/collapse — the single item is already trivially "shown".
+                if (collapsedHovered != null && collapsedHovered.getCollapsedStack()
+                    .size() > 1) {
+                    collapsedHovered.getCollapsedStack()
+                        .toggleExpanded();
+                    Internal.getIngredientFilter()
+                        .notifyCollapsedStateChanged();
+                    return true;
+                }
+            }
+            // Alt+Click on any item inside an expanded group always collapses it.
+            if (altDown) {
+                CollapsedStack expandedHovered = guiIngredientSlots.getExpandedCollapsedGroupAt(mouseX, mouseY);
+                if (expandedHovered != null) {
+                    expandedHovered.toggleExpanded();
+                    Internal.getIngredientFilter()
+                        .notifyCollapsedStateChanged();
+                    return true;
+                }
+            }
             Minecraft minecraft = Minecraft.getMinecraft();
             if (shouldDeleteItemOnClick(minecraft, mouseX, mouseY)) {
                 EntityPlayerSP player = minecraft.thePlayer;

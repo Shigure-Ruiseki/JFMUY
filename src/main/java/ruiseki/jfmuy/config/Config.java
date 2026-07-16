@@ -3,6 +3,7 @@ package ruiseki.jfmuy.config;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -45,6 +46,7 @@ import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
 import ruiseki.jfmuy.network.PacketRequestCheatPermission;
 import ruiseki.jfmuy.startup.ForgeModIdHelper;
 import ruiseki.jfmuy.startup.IModIdHelper;
+import ruiseki.jfmuy.util.CollapsedClickAction;
 import ruiseki.jfmuy.util.GiveMode;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
@@ -62,6 +64,7 @@ public final class Config {
     public static final String CATEGORY_RENDERING = "rendering";
     public static final String CATEGORY_MISC = "misc";
     public static final String CATEGORY_CATEGORY = "category";
+    public static final String CATEGORY_COLLAPSIBLE = "collapsible";
 
     public static final String defaultModNameFormatFriendly = "blue italic";
     public static final int smallestNumColumns = 4;
@@ -77,6 +80,8 @@ public final class Config {
     private static LocalizedConfiguration itemBlacklistConfig;
     @Nullable
     private static LocalizedConfiguration searchColorsConfig;
+    @Nullable
+    private static CustomGroupsConfig customGroupsConfig;
     @Nullable
     private static File bookmarkFile;
     @Nullable
@@ -102,6 +107,39 @@ public final class Config {
         return values.overlayEnabled || KeyBindings.toggleOverlay.getKeyCode() == 0; // if there is no key binding to
                                                                                      // enable it, don't allow the
                                                                                      // overlay to be disabled
+    }
+
+    public static boolean isCollapsibleGroupsEnabled() {
+        return values.collapsibleGroupsEnabled;
+    }
+
+    public static boolean isCollapseOnClose() {
+        return values.collapseOnClose;
+    }
+
+    public static CollapsedClickAction getCollapsedClickAction() {
+        return values.collapsedClickAction;
+    }
+
+    @Nullable
+    public static CustomGroupsConfig getCustomGroupsConfig() {
+        return customGroupsConfig;
+    }
+
+    public static Set<String> getDisabledGroups() {
+        return values.disabledGroups;
+    }
+
+    public static void saveDisabledGroups(Set<String> disabledGroups) {
+        values.disabledGroups.clear();
+        values.disabledGroups.addAll(disabledGroups);
+        if (config != null) {
+            Property property = config.get(CATEGORY_COLLAPSIBLE, "disabledGroups", new String[] {});
+            property.set(disabledGroups.toArray(new String[0]));
+            if (config.hasChanged()) {
+                config.save();
+            }
+        }
     }
 
     public static void toggleOverlayEnabled() {
@@ -439,6 +477,9 @@ public final class Config {
         itemBlacklistConfig = new LocalizedConfiguration(configKeyPrefix, itemBlacklistConfigFile, "0.1.0");
         searchColorsConfig = new LocalizedConfiguration(configKeyPrefix, searchColorsConfigFile, "0.1.0");
 
+        customGroupsConfig = new CustomGroupsConfig(jfmuyConfigurationDir);
+        customGroupsConfig.load();
+
         syncConfig();
         syncItemBlacklistConfig();
         syncSearchColorsConfig();
@@ -476,6 +517,11 @@ public final class Config {
         config.addCategory(CATEGORY_SEARCH);
         config.addCategory(CATEGORY_ADVANCED);
         config.addCategory(CATEGORY_MISC);
+        config.addCategory(CATEGORY_COLLAPSIBLE);
+        // Override collapsible category lang keys from config.jei.* to config.jfmuy.*
+        config.setCategoryLanguageKey(CATEGORY_COLLAPSIBLE, "config.jfmuy.collapsible");
+        config
+            .setCategoryComment(CATEGORY_COLLAPSIBLE, Translator.translateToLocal("config.jfmuy.collapsible.comment"));
 
         ConfigCategory modeCategory = config.getCategory("mode");
         if (modeCategory != null) {
@@ -493,17 +539,16 @@ public final class Config {
         }
 
         ConfigCategory searchCategory = config.getCategory(CATEGORY_SEARCH);
-        searchCategory.remove("atPrefixRequiredForModName");
-        searchCategory.remove("prefixRequiredForTooltipSearch");
-        searchCategory.remove("prefixRequiredForOreDictSearch");
-        searchCategory.remove("prefixRequiredForCreativeTabSearch");
-        searchCategory.remove("prefixRequiredForColorSearch");
-
         SearchMode[] searchModes = SearchMode.values();
 
         String loadedConfigVersion = config.getLoadedConfigVersion();
         // set new defaults moving to config version 0.3.0
         if (loadedConfigVersion != null && versionCompare(loadedConfigVersion, "0.3.0") < 0) {
+            searchCategory.remove("atPrefixRequiredForModName");
+            searchCategory.remove("prefixRequiredForTooltipSearch");
+            searchCategory.remove("prefixRequiredForOreDictSearch");
+            searchCategory.remove("prefixRequiredForCreativeTabSearch");
+            searchCategory.remove("prefixRequiredForColorSearch");
             config.setEnum("creativeTabSearchMode", CATEGORY_SEARCH, defaultValues.creativeTabSearchMode, searchModes);
             config.setEnum("oreDictSearchMode", CATEGORY_SEARCH, defaultValues.oreDictSearchMode, searchModes);
         }
@@ -581,10 +626,16 @@ public final class Config {
         values.tooltipShowRecipeBy = config
             .getBoolean(CATEGORY_MISC, "tooltipShowRecipeBy", defaultValues.tooltipShowRecipeBy);
 
-        values.showHiddenIngredientsInCreative = config.getBoolean(
-            CATEGORY_MISC,
-            "showHiddenIngredientsInCreative",
-            defaultValues.showHiddenIngredientsInCreative);
+        {
+            boolean prev = values.showHiddenIngredientsInCreative;
+            values.showHiddenIngredientsInCreative = config.getBoolean(
+                CATEGORY_MISC,
+                "showHiddenIngredientsInCreative",
+                defaultValues.showHiddenIngredientsInCreative);
+            if (prev != values.showHiddenIngredientsInCreative) {
+                needsReload = true;
+            }
+        }
 
         values.skipShowingProgressBar = config
             .getBoolean(CATEGORY_MISC, "skipShowingProgressBar", defaultValues.skipShowingProgressBar);
@@ -599,20 +650,90 @@ public final class Config {
             "hideBottomLeftCornerBookmarkButton",
             defaultValues.hideBottomLeftCornerBookmarkButton);
 
-        Property property = config.get(CATEGORY_ADVANCED, "debugModeEnabled", defaultValues.debugModeEnabled);
-        property.setShowInGui(false);
-        values.debugModeEnabled = property.getBoolean();
+        {
+            boolean prev = values.collapsibleGroupsEnabled;
+            values.collapsibleGroupsEnabled = config
+                .getBoolean(CATEGORY_COLLAPSIBLE, "collapsibleGroupsEnabled", defaultValues.collapsibleGroupsEnabled);
+            if (prev != values.collapsibleGroupsEnabled) {
+                needsReload = true;
+            }
+        }
+
+        values.collapseOnClose = config
+            .getBoolean(CATEGORY_COLLAPSIBLE, "collapseOnClose", defaultValues.collapseOnClose);
+
+        values.collapsedClickAction = config.getEnum(
+            "collapsedClickAction",
+            CATEGORY_COLLAPSIBLE,
+            defaultValues.collapsedClickAction,
+            CollapsedClickAction.values());
+
+        // Override property lang keys and comments from config.jei.collapsible.* to config.jfmuy.collapsible.*
+        {
+            String heiPrefix = "config.jfmuy.collapsible.";
+
+            Property collapsibleGroupsEnabledProp = config
+                .get(CATEGORY_COLLAPSIBLE, "collapsibleGroupsEnabled", defaultValues.collapsibleGroupsEnabled);
+            collapsibleGroupsEnabledProp.setLanguageKey(heiPrefix + "collapsibleGroupsEnabled");
+            collapsibleGroupsEnabledProp.comment = (Translator
+                .translateToLocal(heiPrefix + "collapsibleGroupsEnabled.comment"));
+
+            Property collapseOnCloseProp = config
+                .get(CATEGORY_COLLAPSIBLE, "collapseOnClose", defaultValues.collapseOnClose);
+            collapseOnCloseProp.setLanguageKey(heiPrefix + "collapseOnClose");
+            collapseOnCloseProp.comment = (Translator.translateToLocal(heiPrefix + "collapseOnClose.comment"));
+
+            Property collapsedClickActionProp = config
+                .get(CATEGORY_COLLAPSIBLE, "collapsedClickAction", defaultValues.collapsedClickAction.name());
+            collapsedClickActionProp.setLanguageKey(heiPrefix + "collapsedClickAction");
+            String defaultLocalized = Translator.translateToLocal("config.jei.default");
+            String validLocalized = Translator.translateToLocal("config.jei.valid");
+            collapsedClickActionProp.comment = (Translator.translateToLocal(heiPrefix + "collapsedClickAction.comment")
+                + "\n["
+                + defaultLocalized
+                + ": "
+                + defaultValues.collapsedClickAction.name()
+                    .toLowerCase(Locale.ENGLISH)
+                + "]"
+                + "\n["
+                + validLocalized
+                + ": "
+                + Arrays.toString(collapsedClickActionProp.getValidValues())
+                + ']');
+        }
+
+        // Explicit property order so the GUI shows collapsibleGroupsEnabled first, then collapseOnClose.
+        List<String> collapsibleOrder = new ArrayList<>();
+        collapsibleOrder.add("collapsibleGroupsEnabled");
+        collapsibleOrder.add("collapseOnClose");
+        collapsibleOrder.add("collapsedClickAction");
+        config.setCategoryPropertyOrder(CATEGORY_COLLAPSIBLE, collapsibleOrder);
+
+        {
+            String[] disabledGroupsArray = config
+                .getStringList("disabledGroups", CATEGORY_COLLAPSIBLE, new String[] {});
+            Property disabledProp = config.get(CATEGORY_COLLAPSIBLE, "disabledGroups", new String[] {});
+            disabledProp.setShowInGui(false);
+            values.disabledGroups.clear();
+            Collections.addAll(values.disabledGroups, disabledGroupsArray);
+        }
+
+        {
+            Property property = config.get(CATEGORY_ADVANCED, "debugModeEnabled", defaultValues.debugModeEnabled);
+            property.setShowInGui(false);
+            values.debugModeEnabled = property.getBoolean();
+        }
+
+        if (!needToRebuildSearchTree) {
+            needToRebuildSearchTree = categoryAdvanced.get("ultraLowMemoryUsage")
+                .hasChanged();
+        }
 
         String[] categoryUidOrder = config.getStringList(
             "categoryUidOrder",
             CATEGORY_CATEGORY,
             defaultValues.categoryUidOrder.toArray(new String[] {}));
         values.categoryUidOrder = Arrays.asList(categoryUidOrder);
-
-        if (!needToRebuildSearchTree) {
-            needToRebuildSearchTree = categoryAdvanced.get("ultraLowMemoryUsage")
-                .hasChanged();
-        }
 
         final boolean configChanged = config.hasChanged();
         if (configChanged) {

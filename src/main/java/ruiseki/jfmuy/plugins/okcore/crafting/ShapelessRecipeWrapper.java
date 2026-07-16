@@ -30,6 +30,10 @@ public class ShapelessRecipeWrapper implements ICraftingRecipeWrapper {
         }
     }
 
+    public ShapelessRecipe getRawRecipe() {
+        return recipe;
+    }
+
     @Override
     public void getIngredients(ruiseki.jfmuy.api.ingredients.IIngredients ingredients) {
         ingredients.setInputLists(VanillaTypes.ITEM, inputs);

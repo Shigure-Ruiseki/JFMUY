@@ -34,6 +34,8 @@ import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.GuiProperties;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
+import ruiseki.jfmuy.ingredients.CollapsedStack;
+import ruiseki.jfmuy.ingredients.CollapsedStackIngredientHelper;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugGhostIngredientHandler;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugRecipe;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugRecipeCategory;
@@ -42,6 +44,7 @@ import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredient;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredientHelper;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredientListFactory;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredientRenderer;
+import ruiseki.jfmuy.render.CollapsedStackRenderer;
 import ruiseki.jfmuy.runtime.JFMUYHelpers;
 
 @JFMUYPlugin
@@ -64,6 +67,11 @@ public class JFMUYInternalPlugin implements IModPlugin {
         BookmarkItemRender bookmarkItemRender = new BookmarkItemRender();
         ingredientRegistration
             .register(BookmarkItem.TYPE, Collections.emptyList(), bookmarkIngredientHelper, bookmarkItemRender);
+
+        // Register CollapsedStack as ingredient type — addons that introspect grid items require a registered type
+        CollapsedStackIngredientHelper csHelper = new CollapsedStackIngredientHelper();
+        ingredientRegistration
+            .register(CollapsedStack.TYPE, Collections.emptyList(), csHelper, CollapsedStackRenderer.INSTANCE);
     }
 
     @Override

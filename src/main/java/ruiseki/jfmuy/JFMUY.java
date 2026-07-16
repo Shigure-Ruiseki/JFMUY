@@ -61,7 +61,7 @@ public class JFMUY extends ModBase {
     public void preInit(@Nonnull FMLPreInitializationEvent event) {
         super.preInit(event);
         if (MinecraftHelpers.isClientSide()) {
-            JFMUYHandler.INSTANCE.preInit(event);
+            JFMUYClientHandler.INSTANCE.preInit(event);
         }
     }
 
@@ -70,7 +70,7 @@ public class JFMUY extends ModBase {
     public void init(@Nonnull FMLInitializationEvent event) {
         super.init(event);
         if (MinecraftHelpers.isClientSide()) {
-            JFMUYHandler.INSTANCE.init(event);
+            JFMUYClientHandler.INSTANCE.init(event);
         }
     }
 
@@ -79,7 +79,7 @@ public class JFMUY extends ModBase {
     public void postInit(@Nonnull FMLPostInitializationEvent event) {
         super.postInit(event);
         if (MinecraftHelpers.isClientSide()) {
-            JFMUYHandler.INSTANCE.postInit(event);
+            JFMUYClientHandler.INSTANCE.postInit(event);
         }
     }
 

@@ -12,11 +12,13 @@ import org.apache.logging.log4j.Level;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.OverlayToggleEvent;
 import ruiseki.jfmuy.gui.ghost.GhostIngredientDragManager;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.LeftAreaDispatcher;
+import ruiseki.jfmuy.ingredients.CollapsedStackRegistry;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
 import ruiseki.jfmuy.util.LimitedLogger;
 import ruiseki.jfmuy.util.Log;
@@ -63,10 +65,22 @@ public class GuiEventHandler {
 
     @SubscribeEvent
     public void onGuiOpen(GuiOpenEvent event) {
+        boolean wasDisplayed = ingredientListOverlay.isListDisplayed();
         GuiScreen gui = event.gui;
         ingredientListOverlay.updateScreen(gui, false);
         leftAreaDispatcher.updateScreen(gui, false);
         ghostIngredientDragManager.updateScreen(gui, false);
+        if (wasDisplayed && !ingredientListOverlay.isListDisplayed()
+            && Config.isCollapseOnClose()
+            && Internal.hasIngredientFilter()) {
+            CollapsedStackRegistry registry = Internal.getCollapsedStackRegistry();
+            registry.getEntries()
+                .forEach(e -> e.setExpanded(false));
+            registry.getCustomEntries()
+                .forEach(e -> e.setExpanded(false));
+            Internal.getIngredientFilter()
+                .notifyCollapsedStateChanged();
+        }
     }
 
     @SubscribeEvent

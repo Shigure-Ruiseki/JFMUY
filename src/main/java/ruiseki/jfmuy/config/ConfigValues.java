@@ -1,11 +1,14 @@
 package ruiseki.jfmuy.config;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 
+import ruiseki.jfmuy.util.CollapsedClickAction;
 import ruiseki.jfmuy.util.GiveMode;
 
 public class ConfigValues {
@@ -55,4 +58,10 @@ public class ConfigValues {
 
     // category
     public List<String> categoryUidOrder = new ArrayList<>();
+
+    // collapsible groups
+    public boolean collapsibleGroupsEnabled = true;
+    public boolean collapseOnClose = false;
+    public CollapsedClickAction collapsedClickAction = CollapsedClickAction.OPEN_GROUP;
+    public Set<String> disabledGroups = new HashSet<>();
 }

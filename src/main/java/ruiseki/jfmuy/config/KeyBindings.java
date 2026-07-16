@@ -61,6 +61,6 @@ public class KeyBindings {
     }
 
     public static boolean isEnterKey(int keyCode) {
-        return keyCode == Keyboard.KEY_RETURN;
+        return keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER;
     }
 }

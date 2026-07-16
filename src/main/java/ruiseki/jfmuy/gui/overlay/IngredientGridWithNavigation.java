@@ -58,11 +58,11 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
         if (resetToFirstPage) {
             firstItemIndex = 0;
         }
-        List<IIngredientListElement> ingredientList = ingredientSource.getIngredientList();
-        if (firstItemIndex >= ingredientList.size()) {
+        List<IIngredientListElement> collapsedList = ingredientSource.getCollapsedIngredientList();
+        if (firstItemIndex >= ingredientSource.collapsedSize()) {
             firstItemIndex = 0;
         }
-        this.ingredientGrid.guiIngredientSlots.set(firstItemIndex, ingredientList);
+        this.ingredientGrid.guiIngredientSlots.setCollapsed(firstItemIndex, collapsedList);
         this.navigation.updatePageState();
     }
 
@@ -210,7 +210,7 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
 
         @Override
         public boolean nextPage() {
-            final int itemsCount = ingredientSource.size();
+            final int itemsCount = ingredientSource.collapsedSize();
             if (itemsCount > 0) {
                 firstItemIndex += ingredientGrid.size();
                 if (firstItemIndex >= itemsCount) {
@@ -233,7 +233,7 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
                 updateLayout(false);
                 return false;
             }
-            final int itemsCount = ingredientSource.size();
+            final int itemsCount = ingredientSource.collapsedSize();
 
             int pageNum = firstItemIndex / itemsPerPage;
             if (pageNum == 0) {
@@ -255,19 +255,19 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
         public boolean hasNext() {
             // true if there is more than one page because this wraps around
             int itemsPerPage = ingredientGrid.size();
-            return itemsPerPage > 0 && ingredientSource.size() > itemsPerPage;
+            return itemsPerPage > 0 && ingredientSource.collapsedSize() > itemsPerPage;
         }
 
         @Override
         public boolean hasPrevious() {
             // true if there is more than one page because this wraps around
             int itemsPerPage = ingredientGrid.size();
-            return itemsPerPage > 0 && ingredientSource.size() > itemsPerPage;
+            return itemsPerPage > 0 && ingredientSource.collapsedSize() > itemsPerPage;
         }
 
         @Override
         public int getPageCount() {
-            final int itemCount = ingredientSource.size();
+            final int itemCount = ingredientSource.collapsedSize();
             final int stacksPerPage = ingredientGrid.size();
             if (stacksPerPage == 0) {
                 return 1;

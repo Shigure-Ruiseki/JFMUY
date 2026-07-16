@@ -22,6 +22,12 @@ jfmuy.tooltip.bookmarks.usage.nokey=Add a key binding for JFMUY bookmarks in you
 jfmuy.tooltip.bookmarks.usage.key=Hover over an ingredient and press "%s" to bookmark it.
 jfmuy.tooltip.bookmarks.not.enough.space=The area on the left-hand side of this screen is too small for the JFMUY bookmark list overlay to display.
 
+# Collapsible Groups
+jfmuy.tooltip.collapsed.expand=Alt+Click to Expand
+jfmuy.tooltip.collapsed.expand.firstItem=Alt+Click for First Item
+jfmuy.tooltip.collapsed.collapse=Alt+Click to Collapse
+jfmuy.tooltip.config.expandCollapseAll=Alt+Click Toggle Groups
+
 # Error Tooltips
 jfmuy.tooltip.error.recipe.transfer.missing=Missing Items
 jfmuy.tooltip.error.recipe.transfer.inventory.full=Inventory is too full.
@@ -101,8 +107,8 @@ config.jfmuy.advanced.modNameFormat=Mod Name Format
 config.jfmuy.advanced.modNameFormat.comment=Formatting for the mod names in tooltips for JFMUY GUIs. Leave blank to disable.
 config.jfmuy.advanced.maxColumns=Max Overlay Width
 config.jfmuy.advanced.maxColumns.comment=The maximum width of the ingredient and bookmark list overlays.
-config.jfmuy.advanced.maxRecipeGuiHeight=Max Recipe GUI Height
-config.jfmuy.advanced.maxRecipeGuiHeight.comment=The maximum height of the recipe GUI.
+config.jfmuy.advanced.maxRecipeGuijfmuyght=Max Recipe GUI jfmuyght
+config.jfmuy.advanced.maxRecipeGuijfmuyght.comment=The maximum jfmuyght of the recipe GUI.
 config.jfmuy.advanced.giveMode=Give Mode
 config.jfmuy.advanced.giveMode.comment=Choose if JFMUY should give ingredients directly to the inventory or pick them up with the mouse.
 config.jfmuy.advanced.addBookmarksToFront=Prepend New Bookmarks
@@ -166,6 +172,17 @@ config.jfmuy.misc.hideBottomRightCornerConfigButton.comment=Whether to hide the 
 config.jfmuy.misc.hideBottomLeftCornerBookmarkButton=Hide Bottom-Left Corner Bookmark Button
 config.jfmuy.misc.hideBottomLeftCornerBookmarkButton.comment=Whether to hide the bottom-left corner bookmark button
 
+config.jfmuy.collapsible=Collapsible Groups
+config.jfmuy.collapsible.comment=Options for collapsing groups of ingredients into a single slot in the ingredient list.
+config.jfmuy.collapsible.collapsibleGroupsEnabled=Enable Collapsible Groups
+config.jfmuy.collapsible.collapsibleGroupsEnabled.comment=When enabled, groups of related ingredients (potions, enchanted books, etc.) are collapsed into a single slot. Alt+Click a group to expand or collapse it.
+config.jfmuy.collapsible.collapseOnClose=Collapse on Close
+config.jfmuy.collapsible.collapseOnClose.comment=Collapse currently opened groups when jfmuy is closed.
+config.jfmuy.collapsible.collapsedClickAction=Default Collapsed Action
+config.jfmuy.collapsible.collapsedClickAction.comment=Swaps the single click action, The other option becomes the Alt+Click action. Open Group opens the group. First Item applies the action to the first item in the group.
+config.jfmuy.collapsible.collapsedClickAction.OPEN_GROUP=Open Group
+config.jfmuy.collapsible.collapsedClickAction.FIRST_ITEM=First Item
+
 config.jfmuy.category.categoryUidOrder=Category UID Order
 config.jfmuy.category.categoryUidOrder.comment=Determines the display order of recipe categories in JFMUY. Categories listed earlier appear first in the JFMUY interface.
 
@@ -179,8 +196,11 @@ jfmuy.tooltip.favorite=Add Favorite Recipe
 jfmuy.tooltip.favorite_scroll=Scroll to Change Favorited Item
 jfmuy.tooltip.recipe_bookmark=Bookmark Recipe
 
-jfmuy.tooltip.press_alt=Press §fALT§r to see Tooltips
-jfmuy.tooltip.organizer.1=§fUP§r or §fDOWN§r: Move Group Up or Down
-jfmuy.tooltip.organizer.2=§fCTRL + SCROLL§r: Change Final Output
-jfmuy.tooltip.organizer.3=§f%s§r: Autocraft (By Default)
+jfmuy.tooltip.item_group=§7Item Group
+jfmuy.tooltip.recipe_group=§7Recipe Group
+jfmuy.tooltip.press_alt=§7Press §fALT§7 to see Actions
+jfmuy.tooltip.organizer.1=§6CTRL + LEFT CLICK§7: Move Bookmarks Between Groups
+jfmuy.tooltip.organizer.2=§6UP§r or §6DOWN§7: Move Group Up or Down
+jfmuy.tooltip.organizer.3=§6CTRL + SCROLL§7: Change Final Output
+jfmuy.tooltip.organizer.4=§6%s§7: Autocraft
 jfmuy.tooltip.missing_ingredients=§cMissing Ingredients:

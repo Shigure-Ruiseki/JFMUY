@@ -10,6 +10,7 @@ import ruiseki.jfmuy.api.ISubtypeRegistry;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.color.ColorNamer;
 import ruiseki.jfmuy.gui.GuiEventHandler;
+import ruiseki.jfmuy.ingredients.CollapsedStackRegistry;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.input.InputHandler;
@@ -41,6 +42,8 @@ public final class Internal {
     private static InputHandler inputHandler;
     @Nullable
     private static BookmarkList bookmarkList;
+    @Nullable
+    private static CollapsedStackRegistry collapsedStackRegistry;
 
     private Internal() {
 
@@ -151,5 +154,17 @@ public final class Internal {
     public static BookmarkList getBookmarkList() {
         Preconditions.checkState(bookmarkList != null, "Bookmark List has not been created yet.");
         return bookmarkList;
+    }
+
+    public static CollapsedStackRegistry getCollapsedStackRegistry() {
+        if (collapsedStackRegistry == null) {
+            collapsedStackRegistry = CollapsedStackRegistry.getInstance();
+        }
+        return collapsedStackRegistry;
+    }
+
+    public static void setCollapsedStackRegistry(CollapsedStackRegistry registry) {
+        Internal.collapsedStackRegistry = registry;
+        CollapsedStackRegistry.setInstance(registry);
     }
 }

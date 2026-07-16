@@ -72,11 +72,8 @@ public class GuiEventHandler {
         if (wasDisplayed && !ingredientListOverlay.isListDisplayed()
             && Config.isCollapseOnClose()
             && Internal.hasIngredientFilter()) {
-            CollapsedStackRegistry registry = Internal.getCollapsedStackRegistry();
-            registry.getEntries()
-                .forEach(e -> e.setExpanded(false));
-            registry.getCustomEntries()
-                .forEach(e -> e.setExpanded(false));
+            Internal.getCollapsedGroupRegistry()
+                .closeAllGroups();
             Internal.getIngredientFilter()
                 .notifyCollapsedStateChanged();
         }

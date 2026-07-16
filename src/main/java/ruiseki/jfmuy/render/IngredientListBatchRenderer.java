@@ -5,11 +5,15 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -17,6 +21,7 @@ import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 
+import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.input.ClickedIngredient;
 import ruiseki.jfmuy.util.ErrorUtil;
@@ -31,6 +36,9 @@ public class IngredientListBatchRenderer {
     private final List<ItemStackFastRenderer> renderItems3d = new ArrayList<>();
     private final List<IngredientRenderer> renderOther = new ArrayList<>();
 
+    @Nullable
+    private Framebuffer framebuffer = null;
+    private boolean refreshBuffer = true;
     private int blocked = 0;
 
     public void clear() {
@@ -144,10 +152,64 @@ public class IngredientListBatchRenderer {
         return null;
     }
 
+    public void render(Minecraft minecraft) {
+        if (Config.bufferIngredientRenders() && OpenGlHelper.isFramebufferEnabled()) {
+            if (framebuffer == null) {
+                framebuffer = new Framebuffer(minecraft.displayWidth, minecraft.displayHeight, true);
+                framebuffer.framebufferColor[0] = 0.0F;
+                framebuffer.framebufferColor[1] = 0.0F;
+                framebuffer.framebufferColor[2] = 0.0F;
+            }
+            if (refreshBuffer) {
+                framebuffer.createBindFramebuffer(minecraft.displayWidth, minecraft.displayHeight);
+                framebuffer.framebufferClear();
+                framebuffer.bindFramebuffer(false);
+                GlStateManager.disableBlend();
+                GlStateManager.tryBlendFuncSeparate(
+                    GL11.GL_SRC_ALPHA,
+                    GL11.GL_ONE_MINUS_SRC_ALPHA,
+                    GL11.GL_ONE,
+                    GL11.GL_ONE_MINUS_SRC_ALPHA);
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            } else {
+                GlStateManager.enableBlend();
+                GlStateManager.tryBlendFuncSeparate(
+                    GL11.GL_ONE,
+                    GL11.GL_ONE_MINUS_SRC_ALPHA,
+                    GL11.GL_ONE,
+                    GL11.GL_ONE_MINUS_SRC_ALPHA);
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                framebuffer.bindFramebufferTexture();
+                GlStateManager.enableTexture2D();
+                ScaledResolution res = new ScaledResolution(minecraft, minecraft.displayWidth, minecraft.displayHeight);
+                double width = res.getScaledWidth();
+                double height = res.getScaledHeight();
+                Tessellator tessellator = Tessellator.instance;
+                tessellator.startDrawingQuads();
+                tessellator.addVertexWithUV(0, height, 0.0, 0, 0);
+                tessellator.addVertexWithUV(width, height, 0.0, 1, 0);
+                tessellator.addVertexWithUV(width, 0, 0.0, 1, 1);
+                tessellator.addVertexWithUV(0, 0, 0.0, 0, 1);
+                tessellator.draw();
+                GlStateManager
+                    .tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+                return;
+            }
+        }
+
+        renderImpl(minecraft);
+
+        if (Config.bufferIngredientRenders() && refreshBuffer && OpenGlHelper.isFramebufferEnabled()) {
+            refreshBuffer = false;
+            minecraft.getFramebuffer()
+                .bindFramebuffer(false);
+        }
+    }
+
     /**
      * renders all ItemStacks
      */
-    public void render(Minecraft minecraft) {
+    private void renderImpl(Minecraft minecraft) {
         RenderHelper.enableGUIStandardItemLighting();
 
         RenderItem renderItem = RenderItem.getInstance();

@@ -501,7 +501,8 @@ public final class Config {
 
         updateModNameFormat(config);
 
-        values.bufferIngredientRenders = config.getBoolean(CATEGORY_RENDERING, "bufferIngredientRenders", defaultValues.bufferIngredientRenders);
+        values.bufferIngredientRenders = config
+            .getBoolean(CATEGORY_RENDERING, "bufferIngredientRenders", defaultValues.bufferIngredientRenders);
 
         values.mouseClickToSeeRecipes = config
             .getBoolean(CATEGORY_MISC, "mouseClickToSeeRecipes", defaultValues.mouseClickToSeeRecipes);

@@ -1,18 +1,14 @@
-package ruiseki.jfmuy.suffixtree;
+package ruiseki.jfmuy.search;
 
-import java.util.Map;
-
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Nullable;
 
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMaps;
-import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectCollection;
-import ruiseki.jfmuy.util.Log;
 
 /**
  * Represents a node of the generalized suffix tree graph
@@ -32,7 +28,7 @@ class Node {
      * The payload array used to store the data (indexes) associated with this node.
      * In this case, it is used to store all property indexes.
      */
-    private final IntList data;
+    private int[] data;
 
     /**
      * The set of edges starting from this node
@@ -51,9 +47,9 @@ class Node {
      * Creates a new Node
      */
     Node() {
-        edges = new Char2ObjectOpenHashMap<>();
-        suffix = null;
-        data = new IntArrayList(0);
+        this.data = IntArrays.EMPTY_ARRAY;
+        this.edges = Char2ObjectMaps.emptyMap();
+        this.suffix = null;
     }
 
     /**
@@ -61,7 +57,9 @@ class Node {
      * of the path to this node is a substring of the one of the children nodes.
      */
     void getData(final IntSet ret) {
-        ret.addAll(data);
+        for (int id : data) {
+            ret.add(id);
+        }
 
         for (Edge e : edges.values()) {
             e.getDest()
@@ -101,18 +99,26 @@ class Node {
      * @return true <tt>this</tt> contains a reference to index
      */
     private boolean contains(int index) {
-        return data.contains(index);
+        for (int id : data) {
+            if (id == index) {
+                return true;
+            }
+        }
+        return false;
     }
 
     void addEdge(char ch, Edge e) {
-        try {
-            edges.put(ch, e);
-        } catch (UnsupportedOperationException ex) {
-            // after trimToSize() call - fall back
-            Log.get()
-                .warn("Mod added a tree entry after memory optimization!", ex);
-            edges = new Char2ObjectOpenHashMap<>(edges);
-            edges.put(ch, e);
+        if (this.edges == Char2ObjectMaps.EMPTY_MAP) {
+            this.edges = Char2ObjectMaps.singleton(ch, e);
+        } else if (this.edges instanceof Char2ObjectMaps.Singleton) {
+            Char2ObjectMap.Entry<Edge> existingEdge = edges.char2ObjectEntrySet()
+                .iterator()
+                .next();
+            this.edges = new Char2ObjectArrayMap<>(2);
+            this.edges.put(existingEdge.getCharKey(), existingEdge.getValue());
+            this.edges.put(ch, e);
+        } else {
+            this.edges.put(ch, e);
         }
     }
 
@@ -131,37 +137,15 @@ class Node {
     }
 
     private void addIndex(int index) {
-        data.add(index);
+        this.data = ArrayUtils.add(this.data, index);
     }
 
     @Override
     public String toString() {
-        return "Node: size:" + data.size() + " Edges: " + edges.toString();
+        return "Node: size:" + data.length + " Edges: " + edges;
     }
 
     ObjectCollection<Edge> edges() {
         return edges.values();
-    }
-
-    void trimToSize() {
-        if (data instanceof IntArrayList) {
-            ((IntArrayList) data).trim();
-        }
-        switch (edges.size()) {
-            case 0:
-                edges = Char2ObjectMaps.emptyMap();
-                break;
-            case 1:
-                Map.Entry<Character, Edge> entry = edges.entrySet()
-                    .iterator()
-                    .next();
-                edges = Char2ObjectMaps.singleton(entry.getKey(), entry.getValue());
-                break;
-            case 2:
-            case 3:
-            case 4:
-                edges = new Char2ObjectArrayMap<>(edges);
-                break;
-        }
     }
 }

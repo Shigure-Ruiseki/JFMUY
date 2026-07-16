@@ -105,6 +105,8 @@ config.jfmuy.advanced.addBookmarksToFront=Prepend New Bookmarks
 config.jfmuy.advanced.addBookmarksToFront.comment=Add new bookmarks to the front of the bookmark list instead of the end.
 config.jfmuy.advanced.optimizeMemoryUsage=Optimize Memory Usage
 config.jfmuy.advanced.optimizeMemoryUsage.comment=Enable JFMUY memory usage optimizations.
+config.jfmuy.advanced.ultraLowMemoryUsage=Ultra Low Memory Usage Mode
+config.jfmuy.advanced.ultraLowMemoryUsage.comment=Enable ultra low memory usage mode, can slow down searching by a lot however.
 
 # Hide Ingredients Mode
 gui.jfmuy.editMode.description=JFMUY Hide Ingredients Mode:

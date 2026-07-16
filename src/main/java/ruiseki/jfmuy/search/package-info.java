@@ -1,4 +1,4 @@
 @NotNullByDefault
-package ruiseki.jfmuy.suffixtree;
+package ruiseki.jfmuy.search;
 
 import org.jetbrains.annotations.NotNullByDefault;

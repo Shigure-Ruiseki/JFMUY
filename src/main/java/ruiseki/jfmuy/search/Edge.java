@@ -1,4 +1,4 @@
-package ruiseki.jfmuy.suffixtree;
+package ruiseki.jfmuy.search;
 
 /**
  * Represents an Edge in the Suffix Tree.

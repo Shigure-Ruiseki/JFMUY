@@ -1,4 +1,4 @@
-package ruiseki.jfmuy.suffixtree;
+package ruiseki.jfmuy.search;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,22 +6,22 @@ import java.util.List;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 
-public class CombinedSearchTrees implements ISearchTree {
+public class CombinedSearchables implements ISearchable {
 
-    private final List<ISearchTree> searchTrees = new ArrayList<>();
+    private final List<ISearchable> searchable = new ArrayList<>();
 
     @Override
     public IntSet search(String word) {
         IntSet searchResults = new IntOpenHashSet(0);
-        for (ISearchTree searchTree : searchTrees) {
+        for (ISearchable searchTree : this.searchable) {
             IntSet search = searchTree.search(word);
             searchResults = union(searchResults, search);
         }
         return searchResults;
     }
 
-    public void addSearchTree(ISearchTree searchTree) {
-        this.searchTrees.add(searchTree);
+    public void addSearchable(ISearchable searchTree) {
+        this.searchable.add(searchTree);
     }
 
     /**

@@ -317,8 +317,4 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
             listener.onChange();
         }
     }
-
-    public IngredientBlacklistInternal getIngredientBlacklist() {
-        return blacklist;
-    }
 }

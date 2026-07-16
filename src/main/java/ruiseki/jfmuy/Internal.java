@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import com.google.common.base.Preconditions;
 
 import ruiseki.jfmuy.api.ISubtypeRegistry;
+import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.color.ColorNamer;
 import ruiseki.jfmuy.gui.GuiEventHandler;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
@@ -38,6 +39,8 @@ public final class Internal {
     private static GuiEventHandler guiEventHandler;
     @Nullable
     private static InputHandler inputHandler;
+    @Nullable
+    private static BookmarkList bookmarkList;
 
     private Internal() {
 
@@ -130,5 +133,14 @@ public final class Internal {
 
         Internal.inputHandler = inputHandler;
         MinecraftForge.EVENT_BUS.register(inputHandler);
+    }
+
+    public static void setBookmarkList(BookmarkList bookmarkList) {
+        Internal.bookmarkList = bookmarkList;
+    }
+
+    public static BookmarkList getBookmarkList() {
+        Preconditions.checkState(bookmarkList != null, "Bookmark List has not been created yet.");
+        return bookmarkList;
     }
 }

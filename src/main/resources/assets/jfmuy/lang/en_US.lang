@@ -153,3 +153,6 @@ config.jfmuy.interface.defaultFluidContainerItem=Default Fluid Container Item
 config.jfmuy.interface.defaultFluidContainerItem.comment=Default item to use to fill up fluids when clicking on a fluid ingredient in the menu, (format: item_name@meta)
 
 jfmuy.generic.ticks=%d Ticks
+
+jfmuy.command.load_bookmarks.failure=Bookmark List not found, something went horribly wrong.
+jfmuy.command.load_bookmarks.success=Loaded %d bookmarks.

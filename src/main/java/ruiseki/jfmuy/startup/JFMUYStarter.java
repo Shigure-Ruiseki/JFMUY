@@ -93,6 +93,7 @@ public class JFMUYStarter {
         timer.start("Building bookmarks");
         BookmarkList bookmarkList = new BookmarkList(ingredientRegistry);
         bookmarkList.loadBookmarks();
+        Internal.setBookmarkList(bookmarkList);
         timer.stop();
 
         timer.start("Building runtime");

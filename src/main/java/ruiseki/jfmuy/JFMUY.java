@@ -4,15 +4,24 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.command.ICommandSender;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.server.MinecraftServer;
+
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStartedEvent;
+import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.event.FMLServerStoppedEvent;
+import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 import cpw.mods.fml.common.network.NetworkCheckHandler;
 import cpw.mods.fml.relauncher.Side;
+import ruiseki.jfmuy.command.CommandLoadBookmarks;
 import ruiseki.jfmuy.config.ServerInfo;
 import ruiseki.okcore.helper.MinecraftHelpers;
 import ruiseki.okcore.init.ModBase;
@@ -47,8 +56,8 @@ public class JFMUY extends ModBase {
         return true;
     }
 
-    @Mod.EventHandler
     @Override
+    @Mod.EventHandler
     public void preInit(@Nonnull FMLPreInitializationEvent event) {
         super.preInit(event);
         if (MinecraftHelpers.isClientSide()) {
@@ -56,8 +65,8 @@ public class JFMUY extends ModBase {
         }
     }
 
-    @Mod.EventHandler
     @Override
+    @Mod.EventHandler
     public void init(@Nonnull FMLInitializationEvent event) {
         super.init(event);
         if (MinecraftHelpers.isClientSide()) {
@@ -65,13 +74,44 @@ public class JFMUY extends ModBase {
         }
     }
 
-    @Mod.EventHandler
     @Override
+    @Mod.EventHandler
     public void postInit(@Nonnull FMLPostInitializationEvent event) {
         super.postInit(event);
         if (MinecraftHelpers.isClientSide()) {
             JFMUYHandler.INSTANCE.postInit(event);
         }
+    }
+
+    @Override
+    @Mod.EventHandler
+    public void onServerStarted(FMLServerStartedEvent event) {
+        super.onServerStarted(event);
+    }
+
+    @Override
+    @Mod.EventHandler
+    public void onServerStopped(FMLServerStoppedEvent event) {
+        super.onServerStopped(event);
+    }
+
+    @Override
+    @Mod.EventHandler
+    public void onServerStopping(FMLServerStoppingEvent event) {
+        super.onServerStopping(event);
+    }
+
+    @Override
+    @Mod.EventHandler
+    public void onServerStarting(FMLServerStartingEvent event) {
+        super.onServerStarting(event);
+    }
+
+    @Override
+    protected LiteralArgumentBuilder<ICommandSender> constructBaseCommand(MinecraftServer server) {
+        LiteralArgumentBuilder<ICommandSender> builder = super.constructBaseCommand(server);
+        builder.then(new CommandLoadBookmarks(this).make());
+        return builder;
     }
 
     @Override

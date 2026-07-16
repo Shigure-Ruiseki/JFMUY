@@ -191,13 +191,18 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
 
     @Override
     public boolean isVisible() {
-        return (Config.getShowHiddenIngredientsInCreative() && !Internal.getIngredientFilter()
-            .getIngredientBlacklist()
-            .isIngredientBlacklistedByApi(ingredient, ingredientHelper)
-            && FMLLaunchHandler.side()
-                .isClient()
-            && Minecraft.getMinecraft().thePlayer != null
-            && Minecraft.getMinecraft().thePlayer.capabilities.isCreativeMode) || visible;
+        if (visible) {
+            return true;
+        }
+        if (FMLLaunchHandler.side()
+            .isClient()) {
+            return Config.getShowHiddenIngredientsInCreative() && Minecraft.getMinecraft().thePlayer != null
+                && Minecraft.getMinecraft().thePlayer.capabilities.isCreativeMode
+                && !Internal.getHelpers()
+                    .getIngredientBlacklist()
+                    .isIngredientBlacklistedByApi(ingredient);
+        }
+        return false;
     }
 
     @Override

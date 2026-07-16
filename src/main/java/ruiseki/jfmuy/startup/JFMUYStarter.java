@@ -50,6 +50,7 @@ public class JFMUYStarter {
         ErrorUtil.setModIdHelper(modIdHelper);
 
         SubtypeRegistry subtypeRegistry = new SubtypeRegistry();
+        Internal.setSubtypeRegistry(subtypeRegistry);
 
         registerItemSubtypes(plugins, subtypeRegistry);
 

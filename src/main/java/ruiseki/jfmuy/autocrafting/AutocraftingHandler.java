@@ -94,7 +94,7 @@ public class AutocraftingHandler implements IAutocraftingHandler {
         if (this.recipesToAutocraft == null) {
             return;
         }
-        if (amount != this.currentRequester.amount) {
+        if (amount < this.currentRequester.amount) {
             this.currentRequester.amount -= amount;
             this.recipesToAutocraft.push(this.currentRequester);
         }

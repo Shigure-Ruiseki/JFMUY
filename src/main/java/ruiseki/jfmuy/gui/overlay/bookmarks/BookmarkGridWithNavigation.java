@@ -94,11 +94,7 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
             return false;
         }
         Rectangle displayArea = this.bookmarkGrid.getArea();
-        Rectangle navigationArea = new Rectangle(
-            displayArea.x,
-            movedNavigationArea.y,
-            displayArea.width,
-            NAVIGATION_HEIGHT);
+        Rectangle navigationArea = new Rectangle(2, movedNavigationArea.y, displayArea.width, NAVIGATION_HEIGHT);
         this.navigation.updateBounds(navigationArea);
         this.groupOrganizer.updateBounds(groupOrganizerBounds);
         this.area = displayArea.union(navigationArea);
@@ -111,7 +107,9 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
 
     public void draw(Minecraft minecraft, int mouseX, int mouseY) {
         this.bookmarkGrid.draw(minecraft, mouseX, mouseY);
-        this.navigation.draw(minecraft, mouseX, mouseY);
+        if (this.pageDelegate.getPageCount() > 1) {
+            this.navigation.draw(minecraft, mouseX, mouseY);
+        }
         this.groupOrganizer.draw(minecraft, mouseX, mouseY);
     }
 
@@ -129,9 +127,11 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
 
     @Override
     public boolean handleMouseClicked(int mouseX, int mouseY, int mouseButton) {
-        return !guiScreenHelper.isInGuiExclusionArea(mouseX, mouseY)
-            && (this.bookmarkGrid.handleMouseClicked(mouseX, mouseY)
-                || this.navigation.handleMouseClickedButtons(mouseX, mouseY));
+        boolean clickedGrid = !guiScreenHelper.isInGuiExclusionArea(mouseX, mouseY)
+            && this.bookmarkGrid.handleMouseClicked(mouseX, mouseY);
+        boolean clickedNavigation = this.pageDelegate.getPageCount() > 1
+            && this.navigation.handleMouseClickedButtons(mouseX, mouseY);
+        return clickedGrid || clickedNavigation;
     }
 
     @Override
@@ -142,7 +142,8 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
             BookmarkItem<?> item = (BookmarkItem<?>) element.getIngredient();
             if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
                 if (item.ingredient instanceof ItemStack) {
-                    item.changeAmount(scrollDelta < 0 ? -64 : 64);
+                    int stackSize = ((ItemStack) item.ingredient).getMaxStackSize();
+                    item.changeAmount(scrollDelta < 0 ? -stackSize : stackSize);
                 } else if (item.ingredient instanceof FluidStack) {
                     item.changeAmount(scrollDelta < 0 ? -1000 : 1000);
                 } else {
@@ -153,6 +154,8 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
             }
             Internal.getBookmarkList()
                 .saveBookmarks();
+            bookmarkGrid.getGuiIngredientSlots()
+                .invalidateBuffer();
             return true;
         } else {
             if (scrollDelta < 0) {

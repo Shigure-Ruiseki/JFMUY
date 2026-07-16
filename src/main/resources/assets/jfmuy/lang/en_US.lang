@@ -163,6 +163,9 @@ config.jfmuy.interface.defaultFluidContainerItem.comment=Default item to use to 
 config.jfmuy.misc.hideBottomRightCornerConfigButton=Hide Bottom-Right Corner Config Button
 config.jfmuy.misc.hideBottomRightCornerConfigButton.comment=Whether to hide the bottom-right corner config button
 
+config.jfmuy.misc.hideBottomLeftCornerBookmarkButton=Hide Bottom-Left Corner Bookmark Button
+config.jfmuy.misc.hideBottomLeftCornerBookmarkButton.comment=Whether to hide the bottom-left corner bookmark button
+
 config.jfmuy.category.categoryUidOrder=Category UID Order
 config.jfmuy.category.categoryUidOrder.comment=Determines the display order of recipe categories in JFMUY. Categories listed earlier appear first in the JFMUY interface.
 
@@ -171,13 +174,13 @@ jfmuy.generic.ticks=%d Ticks
 jfmuy.command.load_bookmarks.failure=Bookmark List not found, something went horribly wrong.
 jfmuy.command.load_bookmarks.success=Loaded %d bookmarks.
 
-jfmuy.tooltip.unfavorite=Remove this recipe from your favorites.
-jfmuy.tooltip.favorite=Add this recipe to your favorites.
-jfmuy.tooltip.favorite_scroll=Scroll: change favorited item.
-jfmuy.tooltip.recipe_bookmark=Bookmark this recipe.
+jfmuy.tooltip.unfavorite=Remove Favorite Recipe
+jfmuy.tooltip.favorite=Add Favorite Recipe
+jfmuy.tooltip.favorite_scroll=Scroll to Change Favorited Item
+jfmuy.tooltip.recipe_bookmark=Bookmark Recipe
 
-jfmuy.tooltip.press_alt=Press §fALT§r to see tooltips
+jfmuy.tooltip.press_alt=Press §fALT§r to see Tooltips
 jfmuy.tooltip.organizer.1=§fUP§r or §fDOWN§r: Move Group Up or Down
-jfmuy.tooltip.organizer.2=§fCTRL + SCROLL§r: Change Crafting Final Output
-jfmuy.tooltip.organizer.3=§f%s§r: Autocraft (by default)
-jfmuy.tooltip.missing_ingredients=§cMissing ingredients:
+jfmuy.tooltip.organizer.2=§fCTRL + SCROLL§r: Change Final Output
+jfmuy.tooltip.organizer.3=§f%s§r: Autocraft (By Default)
+jfmuy.tooltip.missing_ingredients=§cMissing Ingredients:

@@ -43,11 +43,21 @@ public class IngredientListBatchRenderer {
 
     @Nullable
     private Framebuffer framebuffer = null;
+    private boolean allowBuffering;
     private boolean refreshBuffer = true;
     protected int size = 0;
+    protected int maxSize = 0;
     private int width;
     private int maxWidth;
     private int height;
+
+    public IngredientListBatchRenderer() {
+        this(true);
+    }
+
+    public IngredientListBatchRenderer(boolean allowBuffering) {
+        this.allowBuffering = allowBuffering;
+    }
 
     public void clear() {
         slots.clear();
@@ -56,6 +66,7 @@ public class IngredientListBatchRenderer {
         renderItems3d.clear();
         renderOther.clear();
         size = 0;
+        maxSize = 0;
 
         width = 0;
         maxWidth = 0;
@@ -88,6 +99,7 @@ public class IngredientListBatchRenderer {
         renderItems2d.clear();
         renderItems3d.clear();
         renderOther.clear();
+        maxSize = 0;
         size = 0;
 
         // We need to clear all of them anyway.
@@ -115,6 +127,15 @@ public class IngredientListBatchRenderer {
         }
 
         invalidateBuffer();
+    }
+
+    /**
+     * Returns the maximum number of ingredients that can be displayed, if none of them ended rows early.
+     *
+     * @return the maximum number of ingredients.
+     */
+    public int getMaxSize() {
+        return maxSize;
     }
 
     public void invalidateBuffer() {
@@ -182,6 +203,9 @@ public class IngredientListBatchRenderer {
         this.maxWidth = maxWidth;
         width = 0;
         for (List<IngredientListSlot> row : slots) {
+            maxSize += (int) row.stream()
+                .filter(IngredientListSlot::isFree)
+                .count();
             for (IngredientListSlot slot : row) {
                 if (xPos >= maxWidth) {
                     xPos = 0;
@@ -218,7 +242,9 @@ public class IngredientListBatchRenderer {
     }
 
     public void render(Minecraft minecraft) {
-        if (!Config.isEditModeEnabled() && Config.bufferIngredientRenders() && OpenGlHelper.framebufferSupported) {
+        if (allowBuffering && !Config.isEditModeEnabled()
+            && Config.bufferIngredientRenders()
+            && OpenGlHelper.framebufferSupported) {
             if (framebuffer == null) {
                 framebuffer = new Framebuffer(minecraft.displayWidth, minecraft.displayHeight, true);
                 framebuffer.framebufferColor[0] = 0.0F;
@@ -264,8 +290,9 @@ public class IngredientListBatchRenderer {
 
         renderImpl(minecraft);
 
-        if (!Config.isEditModeEnabled() && Config.bufferIngredientRenders()
-            && refreshBuffer
+        if (allowBuffering && refreshBuffer
+            && !Config.isEditModeEnabled()
+            && Config.bufferIngredientRenders()
             && OpenGlHelper.isFramebufferEnabled()) {
             refreshBuffer = false;
             minecraft.getFramebuffer()

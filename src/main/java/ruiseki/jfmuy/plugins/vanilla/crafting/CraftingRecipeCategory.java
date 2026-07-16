@@ -132,7 +132,7 @@ public class CraftingRecipeCategory implements IRecipeCategory<IRecipeWrapper> {
                         }
 
                         boolean showAdvanced = Minecraft.getMinecraft().gameSettings.advancedItemTooltips
-                            || GuiScreen.isShiftKeyDown();
+                            && GuiScreen.isShiftKeyDown();
                         if (showAdvanced) {
                             tooltip.add(
                                 EnumChatFormatting.DARK_GRAY + Translator

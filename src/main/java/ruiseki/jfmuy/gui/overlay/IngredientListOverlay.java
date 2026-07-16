@@ -159,14 +159,17 @@ public class IngredientListOverlay
                             SEARCH_HEIGHT));
                 }
 
-                if (Config.hideBottomRightCornerConfigButton()) this.configButton.updateBounds(
-                    new Rectangle(searchField.xPosition + searchField.width - 1, searchField.yPosition, 0, 0));
-                else this.configButton.updateBounds(
-                    new Rectangle(
-                        searchField.xPosition + searchField.width - 1,
-                        searchField.yPosition,
-                        BUTTON_SIZE,
-                        BUTTON_SIZE));
+                if (Config.hideBottomRightCornerConfigButton()) {
+                    this.configButton.updateBounds(
+                        new Rectangle(searchField.xPosition + searchField.width - 1, searchField.yPosition, 0, 0));
+                } else {
+                    this.configButton.updateBounds(
+                        new Rectangle(
+                            searchField.xPosition + searchField.width - 1,
+                            searchField.yPosition,
+                            BUTTON_SIZE,
+                            BUTTON_SIZE));
+                }
 
                 updateLayout(false);
             }
@@ -187,8 +190,10 @@ public class IngredientListOverlay
                 GlStateManager.disableLighting();
                 this.searchField.drawTextBox();
                 this.contents.draw(minecraft, mouseX, mouseY);
-                this.configButton.draw(minecraft, mouseX, mouseY);
-            } else {
+                if (!Config.hideBottomRightCornerConfigButton() || Config.isCenterSearchBarEnabled()) {
+                    this.configButton.draw(minecraft, mouseX, mouseY);
+                }
+            } else if (!Config.hideBottomRightCornerConfigButton() || Config.isCenterSearchBarEnabled()) {
                 this.configButton.draw(minecraft, mouseX, mouseY);
             }
         }
@@ -196,7 +201,9 @@ public class IngredientListOverlay
 
     public void drawTooltips(Minecraft minecraft, int mouseX, int mouseY) {
         if (isListDisplayed()) {
-            this.configButton.drawTooltips(minecraft, mouseX, mouseY);
+            if (!Config.hideBottomRightCornerConfigButton() || Config.isCenterSearchBarEnabled()) {
+                this.configButton.drawTooltips(minecraft, mouseX, mouseY);
+            }
             this.contents.drawTooltips(minecraft, mouseX, mouseY);
         } else if (this.guiProperties != null) {
             this.configButton.drawTooltips(minecraft, mouseX, mouseY);
@@ -247,8 +254,10 @@ public class IngredientListOverlay
     @Override
     public boolean handleMouseClicked(int mouseX, int mouseY, int mouseButton) {
         if (isListDisplayed()) {
-            if (this.configButton.handleMouseClick(mouseX, mouseY)) {
-                return true;
+            if (!Config.hideBottomRightCornerConfigButton() || Config.isCenterSearchBarEnabled()) {
+                if (this.configButton.handleMouseClick(mouseX, mouseY)) {
+                    return true;
+                }
             }
 
             if (!isMouseOver(mouseX, mouseY)) {
@@ -292,9 +301,10 @@ public class IngredientListOverlay
                     }
                 }
             }
-        } else if (this.guiProperties != null) {
-            return this.configButton.handleMouseClick(mouseX, mouseY);
-        }
+        } else if (this.guiProperties != null
+            && (!Config.hideBottomRightCornerConfigButton() || Config.isCenterSearchBarEnabled())) {
+                return this.configButton.handleMouseClick(mouseX, mouseY);
+            }
         return false;
     }
 

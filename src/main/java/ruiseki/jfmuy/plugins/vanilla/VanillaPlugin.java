@@ -165,7 +165,7 @@ public class VanillaPlugin implements IModPlugin {
             10,
             36,
             0);
-        recipeTransferRegistry.addRecipeTransferHandlerWithOutput(
+        recipeTransferRegistry.addRecipeTransferHandler(
             new PlayerRecipeTransferHandler(jfmuyHelpers.recipeTransferHandlerHelper()),
             VanillaRecipeCategoryUid.CRAFTING);
         recipeTransferRegistry

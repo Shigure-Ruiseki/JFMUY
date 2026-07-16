@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableTable;
 
 import cpw.mods.fml.common.ProgressManager;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -53,7 +54,7 @@ import ruiseki.jfmuy.util.Log;
 
 public class RecipeRegistry implements IRecipeRegistry {
 
-    private final Map<IRecipeWrapper, Long> recipeIds = new Object2LongOpenHashMap<>();
+    private final Object2LongMap<IRecipeWrapper> recipeIds = new Object2LongOpenHashMap<>();
     private final IngredientRegistry ingredientRegistry;
     private final ImmutableList<IRecipeCategory> recipeCategories;
     private final Set<String> hiddenRecipeCategoryUids = new ObjectOpenHashSet<>();
@@ -166,7 +167,6 @@ public class RecipeRegistry implements IRecipeRegistry {
         }
         hash = category.getUid()
             .hashCode() + hash * 31;
-        recipeIds.put(recipe, hash);
         return hash;
     }
 
@@ -511,6 +511,6 @@ public class RecipeRegistry implements IRecipeRegistry {
     }
 
     public long getRecipeId(IRecipeWrapper recipe) {
-        return recipeIds.get(recipe);
+        return recipeIds.getLong(recipe);
     }
 }

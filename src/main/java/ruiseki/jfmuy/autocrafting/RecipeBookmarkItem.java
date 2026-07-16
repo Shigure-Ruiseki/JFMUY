@@ -53,6 +53,19 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
         this.amount = amount;
     }
 
+    public RecipeBookmarkItem(RecipeBookmarkItem<I> other) {
+        super(other.ingredient);
+        this.aliases = other.aliases;
+        this.foundAliases = other.foundAliases;
+        this.amount = other.amount;
+        this.outputAmount = other.outputAmount;
+        this.selfOutputAmount = other.selfOutputAmount;
+        this.recipe = other.recipe;
+        this.category = other.category;
+        this.inputs = other.inputs;
+        this.secondaryTo = other.secondaryTo;
+    }
+
     public void populateWithFavorite() {
         if (recipe != null) {
             return;
@@ -69,6 +82,10 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
     }
 
     public void populateWith(IRecipeWrapper recipe, IRecipeCategory<?> category) {
+        if (!Internal.getIngredientRegistry()
+            .isIngredientCraftable(this.ingredient)) {
+            return;
+        }
         this.recipe = recipe;
         this.category = category;
         Ingredients ingredients = new Ingredients();
@@ -128,11 +145,11 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
         inputs.forEach(input -> input.foundAliases = true);
     }
 
-    private <T> List<T> removeNulls(List<T> orig) {
-        List<T> list = new ObjectArrayList<>(orig);
-        for (int i = list.size() - 1; i >= 0; i--) {
-            if (list.get(i) == null) {
-                list.remove(i);
+    private <T> List<T> removeNulls(List<T> original) {
+        List<T> list = new ObjectArrayList<>(original.size());
+        for (T item : original) {
+            if (item != null) {
+                list.add(item);
             }
         }
         return list;
@@ -152,6 +169,9 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
     }
 
     public long getMultiplier() {
+        if (outputAmount == 0) {
+            return 0;
+        }
         return (amount + outputAmount - 1) / outputAmount;
     }
 
@@ -215,5 +235,10 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
         if (this.inputDummyItems != null) {
             this.inputDummyItems.forEach(item -> item.setGroup(group));
         }
+    }
+
+    @Override
+    public RecipeBookmarkItem<I> copy() {
+        return new RecipeBookmarkItem<>(this);
     }
 }

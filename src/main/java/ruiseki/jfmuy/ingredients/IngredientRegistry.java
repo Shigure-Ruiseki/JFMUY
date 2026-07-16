@@ -68,6 +68,11 @@ public class IngredientRegistry implements IIngredientRegistry {
         return craftableIngredientTypes;
     }
 
+    @Override
+    public boolean isIngredientCraftable(Object ingredient) {
+        return craftableIngredientTypes.contains(getIngredientType(ingredient));
+    }
+
     private void getStackProperties(ItemStack itemStack) {
         try {
             if (TileEntityFurnace.isItemFuel(itemStack)) {

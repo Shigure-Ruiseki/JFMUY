@@ -67,12 +67,11 @@ public class RecipeTransferRegistry implements IRecipeTransferRegistry {
             stackHelper,
             handlerHelper,
             recipeTransferInfo);
-        addRecipeTransferHandlerWithOutput(recipeTransferHandler, recipeTransferInfo.getRecipeCategoryUid());
+        addRecipeTransferHandler(recipeTransferHandler, recipeTransferInfo.getRecipeCategoryUid());
     }
 
     @Override
-    public void addRecipeTransferHandlerWithOutput(IRecipeTransferHandler<?> recipeTransferHandler,
-        String recipeCategoryUid) {
+    public void addRecipeTransferHandler(IRecipeTransferHandler<?> recipeTransferHandler, String recipeCategoryUid) {
         ErrorUtil.checkNotNull(recipeTransferHandler, "recipeTransferHandler");
         ErrorUtil.checkNotNull(recipeCategoryUid, "recipeCategoryUid");
 

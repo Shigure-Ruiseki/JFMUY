@@ -56,7 +56,7 @@ public class IngredientGrid implements IShowsRecipeFocuses {
     }
 
     public int size() {
-        return this.guiIngredientSlots.size();
+        return this.guiIngredientSlots.getMaxSize();
     }
 
     public boolean updateBounds(Rectangle availableArea, int minWidth, Collection<Rectangle> exclusionAreas) {

@@ -363,14 +363,37 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
 
     @Override
     public void setRecipeTransferButton(int posX, int posY) {
+        setRecipeTransferButton(posX, posY, true);
+    }
+
+    @Override
+    public void setRecipeTransferButton(int posX, int posY, boolean moveAll) {
         if (recipeTransferButton != null) {
             recipeTransferButton.xPosition = posX + this.posX;
             recipeTransferButton.yPosition = posY + this.posY;
         }
+        if (moveAll) {
+            if (recipeFavoriteButton != null) {
+                recipeFavoriteButton.xPosition = posX + this.posX + RECIPE_BUTTON_SIZE + 2;
+                recipeFavoriteButton.yPosition = posY + this.posY;
+            }
+            if (recipeBookmarkButton != null) {
+                recipeBookmarkButton.xPosition = posX + this.posX + RECIPE_BUTTON_SIZE * 2 + 4;
+                recipeBookmarkButton.yPosition = posY + this.posY;
+            }
+        }
+    }
+
+    @Override
+    public void setRecipeFavoriteButton(int posX, int posY) {
         if (recipeFavoriteButton != null) {
             recipeFavoriteButton.xPosition = posX + this.posX;
             recipeFavoriteButton.yPosition = posY + this.posY;
         }
+    }
+
+    @Override
+    public void setRecipeBookmarkButton(int posX, int posY) {
         if (recipeBookmarkButton != null) {
             recipeBookmarkButton.xPosition = posX + this.posX;
             recipeBookmarkButton.yPosition = posY + this.posY;

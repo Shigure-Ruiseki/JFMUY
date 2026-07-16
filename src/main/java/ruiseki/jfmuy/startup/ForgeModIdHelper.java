@@ -19,6 +19,7 @@ import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.util.Log;
 
@@ -112,10 +113,20 @@ public class ForgeModIdHelper extends AbstractModIdHelper {
             tooltip.add(EnumChatFormatting.GRAY + "info: " + ingredientHelper.getErrorInfo(ingredient));
             tooltip.add(EnumChatFormatting.GRAY + "uid: " + ingredientHelper.getUniqueId(ingredient));
         }
-        if (Config.isModNameFormatOverrideActive() && ingredient instanceof ItemStack) {
+        if (Config.isModNameFormatOverrideActive() && this.skipAddingModName(ingredient)) {
             // we detected that another mod is adding the mod name already
             return tooltip;
         }
         return super.addModNameToIngredientTooltip(tooltip, ingredient, ingredientHelper);
+    }
+
+    private <T> boolean skipAddingModName(T ingredient) {
+        if (ingredient instanceof ItemStack) {
+            return true;
+        }
+        if (ingredient instanceof BookmarkItem) {
+            return this.skipAddingModName(((BookmarkItem<?>) ingredient).ingredient);
+        }
+        return false;
     }
 }

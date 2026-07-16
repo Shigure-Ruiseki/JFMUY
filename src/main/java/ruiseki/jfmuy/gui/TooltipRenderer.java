@@ -1,7 +1,6 @@
 package ruiseki.jfmuy.gui;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
@@ -10,6 +9,8 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
+
+import com.google.common.collect.Lists;
 
 import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 import ruiseki.okcore.client.renderer.GlStateManager;
@@ -21,7 +22,7 @@ public final class TooltipRenderer {
     private TooltipRenderer() {}
 
     public static void drawHoveringText(Minecraft minecraft, String textLine, int x, int y) {
-        drawHoveringText(null, minecraft, Collections.singletonList(textLine), x, y, -1, minecraft.fontRenderer);
+        drawHoveringText(null, minecraft, Lists.newArrayList(textLine), x, y, -1, minecraft.fontRenderer);
     }
 
     public static void drawHoveringText(Minecraft minecraft, List<String> textLines, int x, int y) {
@@ -308,7 +309,7 @@ public final class TooltipRenderer {
         }
         for (IngredientListBatchRenderer line : itemLines) {
             GlStateManager.pushMatrix();
-            GlStateManager.translate(tooltipX, tooltipY, 100.0F);
+            GlStateManager.translate(tooltipX, tooltipY, 300.0F);
             line.render(minecraft);
             GlStateManager.popMatrix();
             tooltipY += line.getHeight();

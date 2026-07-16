@@ -8,9 +8,9 @@ import net.minecraft.inventory.Container;
 
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
-import ruiseki.jfmuy.api.recipe.transfer.RecipeTransferErrorInternal;
 import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.gui.elements.GuiIconButtonSmall;
+import ruiseki.jfmuy.transfer.RecipeTransferErrorInternal;
 import ruiseki.jfmuy.transfer.RecipeTransferUtil;
 import ruiseki.jfmuy.util.Translator;
 

@@ -51,6 +51,7 @@ public class ConfigValues {
     public boolean showHiddenIngredientsInCreative = false;
     public boolean skipShowingProgressBar = false;
     public boolean hideBottomRightCornerConfigButton = false;
+    public boolean hideBottomLeftCornerBookmarkButton = false;
 
     // category
     public List<String> categoryUidOrder = new ArrayList<>();

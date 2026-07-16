@@ -19,6 +19,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
+import ruiseki.jfmuy.util.CountUtil;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
@@ -43,7 +44,7 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
             itemRender
                 .renderItemAndEffectIntoGUI(font, minecraft.getTextureManager(), ingredient, xPosition, yPosition);
             if (ingredient.stackSize > 64) {
-                renderCustomStackSize(font, ingredient, xPosition, yPosition);
+                CountUtil.renderCountString(font, ingredient.stackSize, xPosition, yPosition, true);
             } else {
                 itemRender.renderItemOverlayIntoGUI(
                     font,
@@ -60,40 +61,6 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
             GL11.glPopMatrix();
         }
-    }
-
-    /**
-     * Custom method for rendering item stack count
-     *
-     * @param font      The font renderer
-     * @param stack     The item stack
-     * @param xPosition X coordinate
-     * @param yPosition Y coordinate
-     */
-    private void renderCustomStackSize(FontRenderer font, ItemStack stack, int xPosition, int yPosition) {
-        int count = stack.stackSize;
-        String countText = formatStackCount(count);
-
-        GlStateManager.pushMatrix();
-        GlStateManager.disableLighting();
-        GlStateManager.disableDepth();
-        GlStateManager.disableBlend();
-
-        boolean shouldScale = count > 99;
-        if (shouldScale) {
-            GlStateManager.scale(0.5F, 0.5F, 1.0F);
-        }
-
-        int x = shouldScale ? (xPosition + 16) * 2 - font.getStringWidth(countText)
-            : xPosition + 17 - font.getStringWidth(countText);
-        int y = shouldScale ? (yPosition + 16) * 2 - 8 : yPosition + 17 - 8;
-
-        font.drawStringWithShadow(countText, x, y, 0xFFFFFF);
-
-        GlStateManager.popMatrix();
-        GlStateManager.enableLighting();
-        GlStateManager.enableDepth();
-        GlStateManager.enableBlend();
     }
 
     /**

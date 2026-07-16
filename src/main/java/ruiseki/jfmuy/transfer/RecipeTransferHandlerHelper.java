@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
-import ruiseki.jfmuy.api.recipe.transfer.RecipeTransferErrorInternal;
 import ruiseki.jfmuy.util.ErrorUtil;
 
 public class RecipeTransferHandlerHelper implements IRecipeTransferHandlerHelper {

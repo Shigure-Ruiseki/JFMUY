@@ -64,7 +64,7 @@ public interface IRecipeTransferRegistry {
      * Complete control over recipe transfer.
      * Use this when the container has a non-standard inventory or crafting area.
      */
-    void addRecipeTransferHandlerWithOutput(IRecipeTransferHandler<?> recipeTransferHandler, String recipeCategoryUid);
+    void addRecipeTransferHandler(IRecipeTransferHandler<?> recipeTransferHandler, String recipeCategoryUid);
 
     /**
      * Add a universal handler that can handle any category of recipe.

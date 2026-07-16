@@ -111,6 +111,10 @@ config.jfmuy.misc=Miscellaneous
 config.jfmuy.misc.comment=Miscellaneous config options
 config.jfmuy.misc.mouseClickToSeeRecipes=Mouse Click to See Recipes/Usages
 config.jfmuy.misc.mouseClickToSeeRecipes.comment=Disable to disallow mouse clicks to see recipes and usages when hovering over an ingredient
+config.jfmuy.rendering=Rendering
+config.jfmuy.rendering.comment=Rendering config options
+config.jfmuy.rendering.bufferIngredientRenders=Buffer Ingredient Renders
+config.jfmuy.rendering.bufferIngredientRenders.comment=Stops extremely frequent ingredient draw calls by using a render buffer, improves FPS in menus by up to 2-3x. But animations and glint will not be applied correctly.
 
 # Hide Ingredients Mode
 gui.jfmuy.editMode.description=JFMUY Hide Ingredients Mode:

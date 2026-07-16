@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerPlayer;
 import net.minecraft.inventory.Slot;
@@ -174,9 +175,8 @@ public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<Conta
         Collections.sort(inventorySlotIndexes);
 
         // check that the slots exist and can be altered
-        for (Map.Entry<Integer, Integer> entry : matchingItemsResult.matchingItems.entrySet()) {
-            int craftNumber = entry.getKey();
-            int slotNumber = craftingSlotIndexes.get(craftNumber);
+        for (Int2IntMap.Entry entry : matchingItemsResult.matchingItemsCasted.int2IntEntrySet()) {
+            int slotNumber = craftingSlotIndexes.get(entry.getIntKey());
             if (slotNumber < 0 || slotNumber >= container.inventorySlots.size()) {
                 Log.get()
                     .error(
@@ -190,8 +190,7 @@ public class PlayerRecipeTransferHandler implements IRecipeTransferHandler<Conta
 
         if (doTransfer) {
             PacketRecipeTransfer packet = new PacketRecipeTransfer(
-                matchingItemsResult.matchingItems,
-                matchingItemsResult.matchingItemCounts,
+                matchingItemsResult.matchingItemsCasted,
                 craftingSlotIndexes,
                 inventorySlotIndexes,
                 maxTransfer,

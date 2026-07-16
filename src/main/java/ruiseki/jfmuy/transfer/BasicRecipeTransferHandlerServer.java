@@ -24,9 +24,9 @@ public final class BasicRecipeTransferHandlerServer {
     /**
      * Called server-side to actually put the items in place.
      */
-    public static void setItems(EntityPlayer player, Map<Integer, Integer> slotIdMap,
-        Map<Integer, Integer> slotCountMap, List<Integer> craftingSlots, List<Integer> inventorySlots,
-        boolean maxTransfer, boolean requireCompleteSets) {
+    public static void setItems(EntityPlayer player, Map<Integer, Integer> slotIdMap, List<Integer> craftingSlots,
+        List<Integer> inventorySlots, boolean maxTransfer, boolean requireCompleteSets,
+        Map<Integer, Integer> itemCounts) {
         Container container = player.openContainer;
 
         // grab items from slots
@@ -34,7 +34,7 @@ public final class BasicRecipeTransferHandlerServer {
         for (Map.Entry<Integer, Integer> entry : slotIdMap.entrySet()) {
             Slot slot = container.getSlot(entry.getValue());
             final ItemStack slotStack = slot.getStack();
-            int count = Math.max(1, slotCountMap.getOrDefault(entry.getKey(), 1));
+            int count = Math.max(1, itemCounts.getOrDefault(entry.getKey(), 1));
             if (slotStack == null || slotStack.stackSize < count) {
                 return;
             }

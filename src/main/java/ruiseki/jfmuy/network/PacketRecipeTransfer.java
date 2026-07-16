@@ -23,9 +23,9 @@ public class PacketRecipeTransfer extends PacketCodec {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public Map<Integer, Integer> recipeMap;
-    public Map<Integer, Integer> recipeCountMap;
     public List<Integer> craftingSlots;
     public List<Integer> inventorySlots;
+    public Map<Integer, Integer> itemCounts;
 
     @CodecField
     private boolean maxTransfer;
@@ -39,17 +39,18 @@ public class PacketRecipeTransfer extends PacketCodec {
         List<Integer> inventorySlots, boolean maxTransfer, boolean requireCompleteSets) {
         this(
             recipeMap,
-            createDefaultRecipeCountMap(recipeMap),
             craftingSlots,
             inventorySlots,
             maxTransfer,
-            requireCompleteSets);
+            requireCompleteSets,
+            createDefaultRecipeCountMap(recipeMap));
     }
 
-    public PacketRecipeTransfer(Map<Integer, Integer> recipeMap, Map<Integer, Integer> recipeCountMap,
-        List<Integer> craftingSlots, List<Integer> inventorySlots, boolean maxTransfer, boolean requireCompleteSets) {
+    public PacketRecipeTransfer(Map<Integer, Integer> recipeMap, List<Integer> craftingSlots,
+        List<Integer> inventorySlots, boolean maxTransfer, boolean requireCompleteSets,
+        Map<Integer, Integer> itemCounts) {
         this.recipeMap = recipeMap;
-        this.recipeCountMap = recipeCountMap;
+        this.itemCounts = itemCounts;
         this.craftingSlots = craftingSlots;
         this.inventorySlots = inventorySlots;
         this.maxTransfer = maxTransfer;
@@ -65,13 +66,13 @@ public class PacketRecipeTransfer extends PacketCodec {
     public void decode(ExtendedBuffer input) {
         int recipeMapSize = input.readVarIntFromBuffer();
         this.recipeMap = new HashMap<>();
-        this.recipeCountMap = new HashMap<>();
+        this.itemCounts = new HashMap<>();
         for (int i = 0; i < recipeMapSize; i++) {
             int slotIndex = input.readVarIntFromBuffer();
             int recipeItem = input.readVarIntFromBuffer();
             int recipeItemCount = input.readVarIntFromBuffer();
             this.recipeMap.put(slotIndex, recipeItem);
-            this.recipeCountMap.put(slotIndex, recipeItemCount);
+            this.itemCounts.put(slotIndex, recipeItemCount);
         }
 
         int craftingSlotsSize = input.readVarIntFromBuffer();
@@ -95,7 +96,7 @@ public class PacketRecipeTransfer extends PacketCodec {
         for (Map.Entry<Integer, Integer> recipeMapEntry : recipeMap.entrySet()) {
             output.writeVarIntToBuffer(recipeMapEntry.getKey());
             output.writeVarIntToBuffer(recipeMapEntry.getValue());
-            output.writeVarIntToBuffer(recipeCountMap.getOrDefault(recipeMapEntry.getKey(), 1));
+            output.writeVarIntToBuffer(itemCounts.getOrDefault(recipeMapEntry.getKey(), 1));
         }
 
         output.writeVarIntToBuffer(craftingSlots.size());
@@ -126,7 +127,7 @@ public class PacketRecipeTransfer extends PacketCodec {
             if (!isValidSlotIndex(container, entry.getValue(), "recipe item")) {
                 return;
             }
-            int count = this.recipeCountMap.getOrDefault(entry.getKey(), 0);
+            int count = this.itemCounts.getOrDefault(entry.getKey(), 0);
             if (count < 1) {
                 LOGGER.error(
                     "Recipe transfer packet has invalid recipe item count {} for container {}",
@@ -158,11 +159,11 @@ public class PacketRecipeTransfer extends PacketCodec {
         BasicRecipeTransferHandlerServer.setItems(
             player,
             this.recipeMap,
-            this.recipeCountMap,
             this.craftingSlots,
             this.inventorySlots,
             this.maxTransfer,
-            this.requireCompleteSets);
+            this.requireCompleteSets,
+            this.itemCounts);
     }
 
     private static boolean isValidCollectionSize(Container container, int slotCount, String collectionName) {

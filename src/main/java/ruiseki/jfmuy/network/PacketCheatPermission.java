@@ -1,35 +1,34 @@
-package ruiseki.jfmuy.network.packets;
+package ruiseki.jfmuy.network;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.world.World;
 
 import ruiseki.jfmuy.config.Config;
-import ruiseki.jfmuy.network.IPacketId;
-import ruiseki.jfmuy.network.PacketIdClient;
 import ruiseki.jfmuy.util.CommandUtilServer;
+import ruiseki.okcore.network.CodecField;
+import ruiseki.okcore.network.PacketCodec;
 
-public class PacketCheatPermission extends PacketJFMUY {
+public class PacketCheatPermission extends PacketCodec {
 
-    private final boolean hasPermission;
+    @CodecField
+    private boolean hasPermission;
+
+    public PacketCheatPermission() {}
 
     public PacketCheatPermission(boolean hasPermission) {
         this.hasPermission = hasPermission;
     }
 
     @Override
-    public IPacketId getPacketId() {
-        return PacketIdClient.CHEAT_PERMISSION;
+    public boolean isAsync() {
+        return false;
     }
 
     @Override
-    public void writePacketData(PacketBuffer buf) {
-        buf.writeBoolean(hasPermission);
-    }
-
-    public static void readPacketData(PacketBuffer buf, EntityPlayer player) {
-        boolean hasPermission = buf.readBoolean();
-        if (!hasPermission && Config.isCheatItemsEnabled()) {
+    public void actionClient(World world, EntityPlayer player) {
+        if (!this.hasPermission && Config.isCheatItemsEnabled()) {
             CommandUtilServer
                 .writeChatMessage(player, "jfmuy.chat.error.no.cheat.permission.1", EnumChatFormatting.RED);
             CommandUtilServer
@@ -38,4 +37,7 @@ public class PacketCheatPermission extends PacketJFMUY {
             player.closeScreen();
         }
     }
+
+    @Override
+    public void actionServer(World world, EntityPlayerMP player) {}
 }

@@ -35,7 +35,7 @@ import ruiseki.jfmuy.color.ColorNamer;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
-import ruiseki.jfmuy.network.packets.PacketRequestCheatPermission;
+import ruiseki.jfmuy.network.PacketRequestCheatPermission;
 import ruiseki.jfmuy.startup.ForgeModIdHelper;
 import ruiseki.jfmuy.startup.IModIdHelper;
 import ruiseki.jfmuy.util.GiveMode;
@@ -154,8 +154,8 @@ public final class Config {
             }
 
             if (values.cheatItemsEnabled && ServerInfo.isJFMUYOnServer()) {
-                JFMUY.getProxy()
-                    .sendPacketToServer(new PacketRequestCheatPermission());
+                JFMUY.instance.getPacketHandler()
+                    .sendToServer(new PacketRequestCheatPermission());
             }
         }
     }

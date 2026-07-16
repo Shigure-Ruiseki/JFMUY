@@ -22,7 +22,7 @@ import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferInfo;
 import ruiseki.jfmuy.config.ServerInfo;
-import ruiseki.jfmuy.network.packets.PacketRecipeTransfer;
+import ruiseki.jfmuy.network.PacketRecipeTransfer;
 import ruiseki.jfmuy.startup.StackHelper;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
@@ -163,8 +163,8 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
                 inventorySlotIndexes,
                 maxTransfer,
                 transferHelper.requireCompleteSets());
-            JFMUY.getProxy()
-                .sendPacketToServer(packet);
+            JFMUY.instance.getPacketHandler()
+                .sendToServer(packet);
         }
 
         return null;

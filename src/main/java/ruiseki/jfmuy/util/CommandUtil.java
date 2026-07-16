@@ -16,8 +16,8 @@ import org.apache.commons.lang3.StringUtils;
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.ServerInfo;
-import ruiseki.jfmuy.network.packets.PacketGiveItemStack;
-import ruiseki.jfmuy.network.packets.PacketSetHotbarItemStack;
+import ruiseki.jfmuy.network.PacketGiveItemStack;
+import ruiseki.jfmuy.network.PacketSetHotbarItemStack;
 import ruiseki.okcore.helper.Helpers;
 import ruiseki.okcore.helper.ItemHandlerHelpers;
 
@@ -45,9 +45,8 @@ public final class CommandUtil {
         } else if (ServerInfo.isJFMUYOnServer()) {
             final int amount = giveMode.getStackSize(itemStack, mouseButton);
             ItemStack sendStack = ItemHandlerHelpers.copyStackWithSize(itemStack, amount);
-            PacketGiveItemStack packet = new PacketGiveItemStack(sendStack, giveMode);
-            JFMUY.getProxy()
-                .sendPacketToServer(packet);
+            JFMUY.instance.getPacketHandler()
+                .sendToServer(new PacketGiveItemStack(sendStack, giveMode));
         } else {
             int amount = GiveMode.INVENTORY.getStackSize(itemStack, mouseButton);
             giveStackVanilla(itemStack, amount);
@@ -57,9 +56,8 @@ public final class CommandUtil {
     public static void setHotbarStack(ItemStack itemStack, int hotbarSlot) {
         if (ServerInfo.isJFMUYOnServer()) {
             ItemStack sendStack = ItemHandlerHelpers.copyStackWithSize(itemStack, itemStack.getMaxStackSize());
-            PacketSetHotbarItemStack packet = new PacketSetHotbarItemStack(sendStack, hotbarSlot);
-            JFMUY.getProxy()
-                .sendPacketToServer(packet);
+            JFMUY.instance.getPacketHandler()
+                .sendToServer(new PacketSetHotbarItemStack(sendStack, hotbarSlot));
         }
     }
 

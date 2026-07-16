@@ -20,8 +20,7 @@ import ruiseki.jfmuy.input.ClickedIngredient;
 import ruiseki.jfmuy.input.IClickedIngredient;
 import ruiseki.jfmuy.input.IShowsRecipeFocuses;
 import ruiseki.jfmuy.input.MouseHelper;
-import ruiseki.jfmuy.network.packets.PacketDeletePlayerItem;
-import ruiseki.jfmuy.network.packets.PacketJFMUY;
+import ruiseki.jfmuy.network.PacketDeletePlayerItem;
 import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 import ruiseki.jfmuy.render.IngredientListSlot;
 import ruiseki.jfmuy.render.IngredientRenderer;
@@ -164,9 +163,8 @@ public class IngredientGrid implements IShowsRecipeFocuses {
                     ItemStack itemStack = player.inventory.getItemStack();
                     if (itemStack != null) {
                         player.inventory.setItemStack(null);
-                        PacketJFMUY packet = new PacketDeletePlayerItem(itemStack);
-                        JFMUY.getProxy()
-                            .sendPacketToServer(packet);
+                        JFMUY.instance.getPacketHandler()
+                            .sendToServer(new PacketDeletePlayerItem(itemStack));
                         return true;
                     }
                 }

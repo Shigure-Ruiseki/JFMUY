@@ -20,7 +20,7 @@ import cpw.mods.fml.client.config.IConfigElement;
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
-import ruiseki.jfmuy.network.packets.PacketRequestCheatPermission;
+import ruiseki.jfmuy.network.PacketRequestCheatPermission;
 import ruiseki.jfmuy.util.Translator;
 
 public class JFMUYModConfigGui extends GuiConfig {
@@ -91,8 +91,8 @@ public class JFMUYModConfigGui extends GuiConfig {
         super.actionPerformed(button);
 
         if (Config.isCheatItemsEnabled() && ServerInfo.isJFMUYOnServer()) {
-            JFMUY.getProxy()
-                .sendPacketToServer(new PacketRequestCheatPermission());
+            JFMUY.instance.getPacketHandler()
+                .sendToServer(new PacketRequestCheatPermission());
         }
     }
 }

@@ -40,7 +40,7 @@ public class ConfigButton extends GuiIconToggleButton {
             tooltip.add(
                 EnumChatFormatting.GOLD + Translator.translateToLocalFormatted(
                     "jfmuy.tooltip.ingredient.list.disabled.how.to.fix",
-                    KeyBindings.toggleOverlay.getKeyDescription()));
+                    Translator.translateToLocal(KeyBindings.toggleOverlay.getKeyDescription())));
         } else if (!parent.isListDisplayed()) {
             tooltip.add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.not.enough.space"));
         }
@@ -52,7 +52,7 @@ public class ConfigButton extends GuiIconToggleButton {
                 tooltip.add(
                     EnumChatFormatting.RED + Translator.translateToLocalFormatted(
                         "jfmuy.tooltip.cheat.mode.how.to.disable.hotkey",
-                        toggleCheatMode.getKeyDescription()));
+                        Translator.translateToLocal(toggleCheatMode.getKeyDescription())));
             } else {
                 tooltip.add(
                     EnumChatFormatting.RED + Translator.translateToLocalFormatted(

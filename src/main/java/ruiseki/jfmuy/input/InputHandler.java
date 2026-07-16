@@ -145,7 +145,7 @@ public class InputHandler {
             return true;
         }
 
-        if (clicked != null && handleMouseClickedFocus(mouseButton, clicked)) {
+        if (clicked != null && (Config.mouseClickToSeeRecipe() && handleMouseClickedFocus(mouseButton, clicked))) {
             return true;
         }
         if (handleFocusKeybinds(mouseButton - 100)) {

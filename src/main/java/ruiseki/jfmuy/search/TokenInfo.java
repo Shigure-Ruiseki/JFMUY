@@ -1,7 +1,5 @@
 package ruiseki.jfmuy.search;
 
-import java.util.Optional;
-
 import ruiseki.jfmuy.config.Config;
 
 public class TokenInfo {
@@ -18,10 +16,6 @@ public class TokenInfo {
             return null;
         }
         return new TokenInfo(token.substring(1), prefixInfo);
-    }
-
-    public static Optional<TokenInfo> parseToken(String token) {
-        return Optional.ofNullable(parseRawToken(token));
     }
 
     public final String token;

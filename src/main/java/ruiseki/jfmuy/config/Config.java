@@ -56,6 +56,7 @@ public final class Config {
     public static final String CATEGORY_SEARCH = "search";
     public static final String CATEGORY_ADVANCED = "advanced";
     public static final String CATEGORY_SEARCH_COLORS = "searchColors";
+    public static final String CATEGORY_MISC = "misc";
 
     public static final String defaultModNameFormatFriendly = "blue italic";
     public static final int smallestNumColumns = 4;
@@ -309,6 +310,10 @@ public final class Config {
         return values.defaultFluidContainerItem.copy();
     }
 
+    public static boolean mouseClickToSeeRecipe() {
+        return values.mouseClickToSeeRecipes;
+    }
+
     @Nullable
     public static LocalizedConfiguration getConfig() {
         return config;
@@ -406,6 +411,7 @@ public final class Config {
 
         config.addCategory(CATEGORY_SEARCH);
         config.addCategory(CATEGORY_ADVANCED);
+        config.addCategory(CATEGORY_MISC);
 
         ConfigCategory modeCategory = config.getCategory("mode");
         if (modeCategory != null) {
@@ -489,6 +495,9 @@ public final class Config {
             maxRecipeGuiHeight);
 
         updateModNameFormat(config);
+
+        values.mouseClickToSeeRecipes = config
+            .getBoolean(CATEGORY_MISC, "mouseClickToSeeRecipes", defaultValues.mouseClickToSeeRecipes);
 
         {
             Property property = config.get(CATEGORY_ADVANCED, "debugModeEnabled", defaultValues.debugModeEnabled);

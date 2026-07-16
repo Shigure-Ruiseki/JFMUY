@@ -17,11 +17,13 @@ import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 
 public class SearchToken {
 
+    public static final SearchToken EMPTY = new SearchToken(Collections.emptyList(), Collections.emptyList());
+
     public static SearchToken parseSearchToken(String filterText) {
-        SearchToken searchTokens = new SearchToken(new ArrayList<>(), new ArrayList<>());
         if (filterText.isEmpty()) {
-            return searchTokens;
+            return EMPTY;
         }
+        SearchToken searchTokens = new SearchToken(new ArrayList<>(), new ArrayList<>());
         Matcher filterMatcher = FILTER_SPLIT_PATTERN.matcher(filterText);
         while (filterMatcher.find()) {
             String string = filterMatcher.group(1);
@@ -34,14 +36,14 @@ public class SearchToken {
             if (string.isEmpty()) {
                 continue;
             }
-            TokenInfo.parseToken(string)
-                .ifPresent(result -> {
-                    if (remove) {
-                        searchTokens.remove.add(result);
-                    } else {
-                        searchTokens.search.add(result);
-                    }
-                });
+            TokenInfo token = TokenInfo.parseRawToken(string);
+            if (token != null) {
+                if (remove) {
+                    searchTokens.remove.add(token);
+                } else {
+                    searchTokens.search.add(token);
+                }
+            }
         }
         return searchTokens;
     }

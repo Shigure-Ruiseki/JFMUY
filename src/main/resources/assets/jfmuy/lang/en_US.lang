@@ -107,6 +107,10 @@ config.jfmuy.advanced.optimizeMemoryUsage=Optimize Memory Usage
 config.jfmuy.advanced.optimizeMemoryUsage.comment=Enable JFMUY memory usage optimizations.
 config.jfmuy.advanced.ultraLowMemoryUsage=Ultra Low Memory Usage Mode
 config.jfmuy.advanced.ultraLowMemoryUsage.comment=Enable ultra low memory usage mode, can slow down searching by a lot however.
+config.jfmuy.misc=Miscellaneous
+config.jfmuy.misc.comment=Miscellaneous config options
+config.jfmuy.misc.mouseClickToSeeRecipes=Mouse Click to See Recipes/Usages
+config.jfmuy.misc.mouseClickToSeeRecipes.comment=Disable to disallow mouse clicks to see recipes and usages when hovering over an ingredient
 
 # Hide Ingredients Mode
 gui.jfmuy.editMode.description=JFMUY Hide Ingredients Mode:

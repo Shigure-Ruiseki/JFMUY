@@ -109,17 +109,7 @@ public class IngredientListBatchRenderer {
             .collect(Collectors.toList());
     }
 
-    public void set(final int startIndex, List<IIngredientListElement> ingredientList) {
-        renderItems2d.clear();
-        renderItems3d.clear();
-        renderOther.clear();
-        renderCollapsed.clear();
-        collapsedStackIndexed.clear();
-        expandedElementToGroup.clear();
-        expandedGroupSlots.clear();
-        maxSize = 0;
-        size = 0;
-
+    protected void setSlots(final int startIndex, List<IIngredientListElement> ingredientList) {
         // We need to clear all of them anyway.
         for (List<IngredientListSlot> row : slots) {
             for (IngredientListSlot slot : row) {
@@ -143,7 +133,20 @@ public class IngredientListBatchRenderer {
                 i++;
             }
         }
+    }
 
+    public void set(final int startIndex, List<IIngredientListElement> ingredientList) {
+        renderItems2d.clear();
+        renderItems3d.clear();
+        renderOther.clear();
+        renderCollapsed.clear();
+        collapsedStackIndexed.clear();
+        expandedElementToGroup.clear();
+        expandedGroupSlots.clear();
+        maxSize = 0;
+        size = 0;
+
+        setSlots(startIndex, ingredientList);
         invalidateBuffer();
     }
 
@@ -178,11 +181,23 @@ public class IngredientListBatchRenderer {
             if (obj instanceof CollapsedGroupIngredient) {
                 CollapsedGroupIngredient collapsed = (CollapsedGroupIngredient) obj;
                 if (collapsed.isExpanded()) {
-                    // Expanded: add each ingredient individually, track which belong to this group
-                    for (IIngredientListElement<?> element : collapsed.getIngredients()) {
-                        displayItems.add(element);
-                        itemToCollapsed.put(element, collapsed);
+                    List<IIngredientListElement<?>> filterIngredients = collapsed.getFilterIngredients();
+                    if (filterIngredients.size() == 1) {
+                        // Expanded but filtered to a single item: treat as a plain slot, no group border.
+                        displayItems.add(filterIngredients.get(0));
+                    } else {
+                        // Expanded: add each ingredient individually, track which belong to this group
+                        for (IIngredientListElement<?> element : filterIngredients) {
+                            displayItems.add(element);
+                            itemToCollapsed.put(element, collapsed);
+                        }
                     }
+                } else if (collapsed.size() == 1) {
+                    // Single-item group: render as a plain ingredient slot without collapsed visuals.
+                    // Not tracked in itemToCollapsed so clicks/hover treat it as a normal item.
+                    displayItems.add(
+                        collapsed.getDisplayIngredients()
+                            .get(0));
                 } else {
                     // Collapsed: add the CollapsedStack itself as a single display item
                     displayItems.add(collapsed);
@@ -334,6 +349,14 @@ public class IngredientListBatchRenderer {
         // Check collapsed renderers first
         CollapsedGroupRenderer collapsedHovered = getHoveredCollapsed(mouseX, mouseY);
         if (collapsedHovered != null) {
+            // If the search has filtered this group to a single item, act as if the user
+            // clicked that item directly — no expand step needed.
+            CollapsedGroupIngredient stack = collapsedHovered.getCollapsedStack();
+            if (stack.size() == 1) {
+                IIngredientListElement<?> single = stack.getDisplayIngredients()
+                    .get(0);
+                return ClickedIngredient.create(single.getIngredient(), collapsedHovered.getArea());
+            }
             return collapsedHovered.getClickedIngredient();
         }
         IngredientRenderer hovered = getHovered(mouseX, mouseY);
@@ -354,12 +377,16 @@ public class IngredientListBatchRenderer {
     @Nullable
     public CollapsedGroupIngredient getExpandedCollapsedGroupAt(int mouseX, int mouseY) {
         IngredientRenderer hovered = getHovered(mouseX, mouseY);
-        if (hovered == null) return null;
+        if (hovered == null) {
+            return null;
+        }
         return expandedElementToGroup.get(hovered.getElement());
     }
 
     public void renderExpandedGroupOutlines() {
-        if (expandedGroupSlots.isEmpty()) return;
+        if (expandedGroupSlots.isEmpty()) {
+            return;
+        }
         GlStateManager.disableLighting();
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(
@@ -367,27 +394,58 @@ public class IngredientListBatchRenderer {
             GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
             GlStateManager.SourceFactor.ONE,
             GlStateManager.DestFactor.ZERO);
-        int bgColor = 0x33555555; // subtle smoke background
-        int borderColor = 0xCC888888; // medium smoke border
-        for (List<Rectangle> slots : expandedGroupSlots.values()) {
+        for (Map.Entry<CollapsedGroupIngredient, List<Rectangle>> slots : expandedGroupSlots.entrySet()) {
+            int bgColor = slots.getKey()
+                .getBackgroundColor();
+            int borderColor = slots.getKey()
+                .getBorderColor();
             // Build a fast lookup set keyed by "x,y" to detect adjacent group slots.
             java.util.Set<String> keys = new java.util.HashSet<>();
-            for (Rectangle r : slots) keys.add(r.x + "," + r.y);
-            for (Rectangle r : slots) {
-                // Subtle background fill over each slot
+            for (Rectangle r : slots.getValue()) keys.add(r.x + "," + r.y);
+            for (Rectangle r : slots.getValue()) {
+                // Background fill for each slot in group
                 Gui.drawRect(r.x, r.y, r.x + r.width, r.y + r.height, bgColor);
-                // Draw only the edges that are NOT shared with another group slot
-                if (!keys.contains(r.x + "," + (r.y - INGREDIENT_HEIGHT))) {
+
+                // Determine which cardinal neighbors are part of this group
+                boolean hasTop = keys.contains(r.x + "," + (r.y - INGREDIENT_HEIGHT));
+                boolean hasBottom = keys.contains(r.x + "," + (r.y + INGREDIENT_HEIGHT));
+                boolean hasLeft = keys.contains((r.x - INGREDIENT_WIDTH) + "," + r.y);
+                boolean hasRight = keys.contains((r.x + INGREDIENT_WIDTH) + "," + r.y);
+
+                // Horizontal edges own the full width including corner pixels — drawn exactly once.
+                if (!hasTop) {
                     Gui.drawRect(r.x, r.y, r.x + r.width, r.y + 1, borderColor); // top
                 }
-                if (!keys.contains(r.x + "," + (r.y + INGREDIENT_HEIGHT))) {
+                if (!hasBottom) {
                     Gui.drawRect(r.x, r.y + r.height - 1, r.x + r.width, r.y + r.height, borderColor); // bottom
                 }
-                if (!keys.contains((r.x - INGREDIENT_WIDTH) + "," + r.y)) {
-                    Gui.drawRect(r.x, r.y, r.x + 1, r.y + r.height, borderColor); // left
+
+                // Vertical edges are inset by 1px at each end where a horizontal edge already owns that corner,
+                int vTop = r.y + (!hasTop ? 1 : 0);
+                int vBottom = r.y + r.height - (!hasBottom ? 1 : 0);
+                if (!hasLeft && vTop < vBottom) {
+                    Gui.drawRect(r.x, vTop, r.x + 1, vBottom, borderColor); // left
                 }
-                if (!keys.contains((r.x + INGREDIENT_WIDTH) + "," + r.y)) {
-                    Gui.drawRect(r.x + r.width - 1, r.y, r.x + r.width, r.y + r.height, borderColor); // right
+                if (!hasRight && vTop < vBottom) {
+                    Gui.drawRect(r.x + r.width - 1, vTop, r.x + r.width, vBottom, borderColor); // right
+                }
+                // Inner concave corner pixels: both cardinal neighbors are part of the group so neither draws.
+                if (hasTop && hasLeft && !keys.contains((r.x - INGREDIENT_WIDTH) + "," + (r.y - INGREDIENT_HEIGHT))) {
+                    Gui.drawRect(r.x, r.y, r.x + 1, r.y + 1, borderColor); // top-left inner corner
+                }
+                if (hasTop && hasRight && !keys.contains((r.x + INGREDIENT_WIDTH) + "," + (r.y - INGREDIENT_HEIGHT))) {
+                    Gui.drawRect(r.x + r.width - 1, r.y, r.x + r.width, r.y + 1, borderColor); // top-right inner corner
+                }
+
+                if (hasBottom && hasLeft
+                    && !keys.contains((r.x - INGREDIENT_WIDTH) + "," + (r.y + INGREDIENT_HEIGHT))) {
+                    Gui.drawRect(r.x, r.y + r.height - 1, r.x + 1, r.y + r.height, borderColor); // bottom-left inner
+                } // corner
+                if (hasBottom && hasRight
+                    && !keys.contains((r.x + INGREDIENT_WIDTH) + "," + (r.y + INGREDIENT_HEIGHT))) {
+                    Gui.drawRect(r.x + r.width - 1, r.y + r.height - 1, r.x + r.width, r.y + r.height, borderColor); // bottom-right
+                    // inner
+                    // corner
                 }
             }
         }

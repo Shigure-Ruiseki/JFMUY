@@ -4,13 +4,15 @@ import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.gui.IDrawable;
-import ruiseki.jfmuy.api.gui.IGuiFluidStackGroup;
-import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
+import ruiseki.jfmuy.api.gui.IGuiIngredientGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
+import ruiseki.jfmuy.api.ingredients.VanillaTypes;
+import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.gui.GuiHelper;
+import ruiseki.jfmuy.plugins.jfmuy.JFMUYInternalPlugin;
 import ruiseki.jfmuy.util.Translator;
 
 public class IngredientInfoRecipeCategory implements IRecipeCategory<IngredientInfoRecipe> {
@@ -57,15 +59,20 @@ public class IngredientInfoRecipeCategory implements IRecipeCategory<IngredientI
 
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, IngredientInfoRecipe recipeWrapper, IIngredients ingredients) {
-        IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
         int xPos = (recipeWidth - 18) / 2;
-        guiItemStacks.init(0, true, xPos, 0);
-        guiItemStacks.setBackground(0, slotBackground);
-        guiItemStacks.set(ingredients);
-
-        IGuiFluidStackGroup guiFluidStackGroup = recipeLayout.getFluidStacks();
-        guiFluidStackGroup.init(0, true, xPos + 1, 1);
-        guiFluidStackGroup.set(ingredients);
+        for (IIngredientType<?> ingredientType : JFMUYInternalPlugin.ingredientRegistry
+            .getRegisteredIngredientTypes()) {
+            if (ingredients.getInputs(ingredientType)
+                .isEmpty()
+                || ingredients.getOutputs(ingredientType)
+                    .isEmpty())
+                continue;
+            IGuiIngredientGroup<?> group = recipeLayout.getIngredientsGroup(ingredientType);
+            group.init(0, true, xPos + 1, 1);
+            // only render the background for items
+            if (ingredientType == VanillaTypes.ITEM) group.setBackground(0, slotBackground);
+            group.set(ingredients);
+        }
     }
 }

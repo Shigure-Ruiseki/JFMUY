@@ -22,6 +22,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredient;
 import ruiseki.jfmuy.util.Log;
 
 /**
@@ -101,22 +102,28 @@ public class CustomGroupsConfig {
 
         public String id;
         public String displayName;
+        public int backgroundColor;
+        public int borderColor;
         public List<String> itemUids;
 
         public CustomGroup() {
             this.id = "";
             this.displayName = "";
+            this.backgroundColor = CollapsedGroupIngredient.BACKGROUND_COLOR_SMOKE;
+            this.borderColor = CollapsedGroupIngredient.BORDER_COLOR_SMOKE;
             this.itemUids = new ArrayList<>();
         }
 
-        public CustomGroup(String id, String displayName, List<String> itemUids) {
+        public CustomGroup(String id, String displayName, int backgroundColor, int borderColor, List<String> itemUids) {
             this.id = id;
             this.displayName = displayName;
+            this.backgroundColor = backgroundColor;
+            this.borderColor = borderColor;
             this.itemUids = new ArrayList<>(itemUids);
         }
 
         public CustomGroup copy() {
-            return new CustomGroup(id, displayName, new ArrayList<>(itemUids));
+            return new CustomGroup(id, displayName, backgroundColor, borderColor, new ArrayList<>(itemUids));
         }
     }
 }

@@ -9,16 +9,16 @@ import ruiseki.jfmuy.api.recipe.IIngredientType;
  * They can be toggled on/off by the user but cannot be edited or deleted.
  * Obtain an instance via {@link IModPlugin#registerCollapsibleGroups(ICollapsibleGroupRegistry)}.
  * EXAMPLE 1 — Group with filtered items:
- * 
+ *
  * <pre>
  * <code>
  * registry.newGroup("mymod:my_group", "group.mymod.my_group")
  * 		.addAny(VanillaTypes.ITEM, stack -> stack.getItem() instanceof ItemFood);
  * </code>
  * </pre>
- * 
+ *
  * EXAMPLE 2 — Group mixing exact items, fluids, and all of a type:
- * 
+ *
  * <pre>
  * <code>
  *     registry.newGroup("mymod:my_group", "group.mymod.my_group")
@@ -76,6 +76,15 @@ public interface ICollapsibleGroupRegistry {
          * @return this builder for chaining
          */
         <V> Builder addAny(IIngredientType<V> type, Predicate<V> filter);
+
+        /**
+         * Set the color for the collapsable group.
+         *
+         * @param backgroundColor the background color for the group
+         * @param borderColor     the color displayed on the border of the group
+         * @return this builder for chaining
+         */
+        Builder color(int backgroundColor, int borderColor);
 
         /**
          * Finalizes the current builder and registers it

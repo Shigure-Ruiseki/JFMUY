@@ -13,6 +13,7 @@ import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.startup.ForgeModIdHelper;
+import ruiseki.jfmuy.util.Log;
 
 public class BookmarkGroup {
 
@@ -45,8 +46,14 @@ public class BookmarkGroup {
     }
 
     public void addItemInternal(BookmarkItem<?> item) {
+        IIngredientListElement<?> element = getIngredientListElement(item);
+        if (element == null) {
+            Log.get()
+                .error("Failed to create ingredient list element for bookmark item: {}", item.ingredient);
+            return;
+        }
         items.add(item);
-        ingredientListElements.add(getIngredientListElement(item));
+        ingredientListElements.add(element);
         item.setGroup(this);
     }
 

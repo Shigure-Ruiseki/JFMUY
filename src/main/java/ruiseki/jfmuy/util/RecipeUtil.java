@@ -29,9 +29,6 @@ import ruiseki.jfmuy.gui.Focus;
  */
 public final class RecipeUtil {
 
-    private static final IRecipeRegistry recipeRegistry = Internal.getRuntime()
-        .getRecipeRegistry();
-
     private RecipeUtil() {}
 
     public static Query query() {
@@ -101,6 +98,8 @@ public final class RecipeUtil {
                 !this.inputs.isEmpty() || !this.outputs.isEmpty(),
                 "Both inputs and outputs were empty when querying for recipes, that is not allowed");
 
+            IRecipeRegistry recipeRegistry = Internal.getRuntime()
+                .getRecipeRegistry();
             Set<IRecipeWrapper> recipes = new HashSet<>();
             MutableFocus focus = new MutableFocus();
 

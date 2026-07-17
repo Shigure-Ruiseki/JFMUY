@@ -37,9 +37,13 @@ public interface IGhostIngredientHandler<T extends GuiScreen> {
     }
 
     /**
-     * Called when a quick-move (for example shift-click) is performed to move a ghost ingredient.
+     * Called when a player starts to move a ghost ingredient while holding SHIFT.
+     * In most cases this should insert the ingredient into one of the highlighted targets.
+     * This is called before {@link #getTargets(GuiScreen, Object, boolean)} starts
+     * the drag process, and if this returns true the normal logic will not be run.
      *
-     * @return true if quick-move was handled, false otherwise.
+     * @return true if some operation occurred and the normal targeting
+     *         and drag logic should be skipped
      */
     default <I> boolean quickMove(T gui, I ingredient) {
         return false;

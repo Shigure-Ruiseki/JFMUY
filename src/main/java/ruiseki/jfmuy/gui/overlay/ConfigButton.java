@@ -4,7 +4,6 @@ import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.EnumChatFormatting;
 
 import org.lwjgl.input.Keyboard;

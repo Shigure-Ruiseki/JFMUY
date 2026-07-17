@@ -5,14 +5,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.overlay.GridAlignment;
 import ruiseki.jfmuy.gui.overlay.IngredientGrid;
 import ruiseki.jfmuy.gui.overlay.bookmarks.group.BookmarkGroupOrganizer;
 import ruiseki.jfmuy.render.BookmarkListBatchRenderer;
+import ruiseki.jfmuy.render.CollapsedGroupRenderer;
 import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 import ruiseki.jfmuy.render.IngredientListSlot;
+import ruiseki.jfmuy.render.IngredientRenderer;
+import ruiseki.jfmuy.util.CollapsedClickAction;
 import ruiseki.jfmuy.util.MathUtil;
+import ruiseki.okcore.helper.KeyBoardHelpers;
 
 public class BookmarkGrid extends IngredientGrid {
 
@@ -74,7 +79,36 @@ public class BookmarkGrid extends IngredientGrid {
         return area.contains(mouseX, mouseY);
     }
 
-    protected IngredientListBatchRenderer getGuiIngredientSlots() {
+    public IngredientListBatchRenderer getGuiIngredientSlots() {
         return guiIngredientSlots;
+    }
+
+    @Override
+    protected boolean handleCollapsedGroupClicked(int mouseX, int mouseY) {
+        BookmarkListBatchRenderer renderer = (BookmarkListBatchRenderer) guiIngredientSlots;
+        boolean firstItemMode = Config.getCollapsedClickAction() == CollapsedClickAction.FIRST_ITEM;
+        boolean altDown = KeyBoardHelpers.isAltKeyDown();
+        boolean expandKeyDown = firstItemMode == altDown;
+        if (expandKeyDown) {
+            CollapsedGroupRenderer collapsedHovered = renderer.getHoveredCollapsed(mouseX, mouseY);
+            if (collapsedHovered != null) {
+                BookmarkItem item = renderer.getBookmarkItemForRenderer(collapsedHovered);
+                if (item != null) {
+                    renderer.toggleBookmarkItemExpanded(item);
+                    return true;
+                }
+            }
+        }
+        if (altDown) {
+            IngredientRenderer<?> hovered = renderer.getHovered(mouseX, mouseY);
+            if (hovered != null) {
+                BookmarkItem item = renderer.getBookmarkItemForExpandedElement(hovered.getElement());
+                if (item != null) {
+                    renderer.toggleBookmarkItemExpanded(item);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

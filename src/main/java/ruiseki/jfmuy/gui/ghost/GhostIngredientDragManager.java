@@ -25,6 +25,7 @@ import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.input.IClickedIngredient;
 import ruiseki.okcore.client.renderer.GlStateManager;
+import ruiseki.okcore.helper.KeyBoardHelpers;
 
 public class GhostIngredientDragManager {
 
@@ -149,6 +150,12 @@ public class GhostIngredientDragManager {
     public <T extends GuiScreen, V> boolean handleClickGhostIngredient(IGhostIngredientHandler<T> handler,
         T currentScreen, IClickedIngredient<V> clicked) {
         V ingredient = clicked.getValue();
+        if (KeyBoardHelpers.isShiftKeyDown()) {
+            if (handler.quickMove(currentScreen, ingredient)) {
+                clicked.onClickHandled();
+                return true;
+            }
+        }
         List<IGhostIngredientHandler.Target<V>> targets = handler.getTargets(currentScreen, ingredient, true);
         if (!targets.isEmpty()) {
             IIngredientRenderer<V> ingredientRenderer = ingredientRegistry.getIngredientRenderer(ingredient);

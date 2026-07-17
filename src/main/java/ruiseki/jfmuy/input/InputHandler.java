@@ -37,6 +37,7 @@ import ruiseki.jfmuy.gui.recipes.RecipeLayout;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
+import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredient;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
 import ruiseki.jfmuy.util.ReflectionUtil;
@@ -383,12 +384,15 @@ public class InputHandler {
             return false;
         }
 
-        if (bookmarkList.remove(clicked.getValue())) {
-            if (bookmarkList.isEmpty() && Config.isBookmarkOverlayEnabled()) {
+        Object value = clicked.getValue();
+
+        if (value instanceof BookmarkItem) {
+            boolean removed = bookmarkList.remove(value);
+            if (removed && bookmarkList.isEmpty() && Config.isBookmarkOverlayEnabled()) {
                 Config.toggleBookmarkEnabled();
             }
+            return removed;
 
-            return true;
         }
 
         if (!Config.isBookmarkOverlayEnabled()) {
@@ -404,7 +408,12 @@ public class InputHandler {
             return layout.addToBookmarks();
         }
 
-        return bookmarkList.add(new BookmarkItem<>(clicked.getValue()));
+        // Don't allow bookmarking collapsed groups directly — only individual items.
+        if (value instanceof CollapsedGroupIngredient) {
+            return false;
+        }
+
+        return bookmarkList.add(new BookmarkItem<>(value));
     }
 
     private boolean showRecipeOrUses(IFocus.Mode mode) {

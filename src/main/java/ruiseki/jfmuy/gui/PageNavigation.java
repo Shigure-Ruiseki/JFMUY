@@ -59,13 +59,15 @@ public class PageNavigation {
     }
 
     public void draw(Minecraft minecraft, int mouseX, int mouseY) {
-        if (this.paged.hasNext()) {
+        boolean next = this.paged.hasNext();
+        boolean previous = this.paged.hasPrevious();
+        if (next) {
             nextButton.drawButton(minecraft, mouseX, mouseY);
         }
-        if (this.paged.hasPrevious()) {
+        if (previous) {
             backButton.drawButton(minecraft, mouseX, mouseY);
         }
-        if (!hideOnSinglePage) {
+        if (!hideOnSinglePage || next || previous) {
             minecraft.fontRenderer
                 .drawString(pageNumDisplayString, pageNumDisplayX, pageNumDisplayY, Color.white.getRGB(), true);
         }

@@ -12,7 +12,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.input.Keyboard;
 
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.JFMUY;
@@ -31,7 +30,6 @@ import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 import ruiseki.jfmuy.render.IngredientListSlot;
 import ruiseki.jfmuy.render.IngredientRenderer;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
-import ruiseki.jfmuy.util.CollapsedClickAction;
 import ruiseki.jfmuy.util.GiveMode;
 import ruiseki.jfmuy.util.MathUtil;
 import ruiseki.jfmuy.util.Translator;
@@ -209,34 +207,14 @@ public class IngredientGrid implements IShowsRecipeFocuses {
                     }
                 }
             }
-            boolean firstItemMode = Config.getCollapsedClickAction() == CollapsedClickAction.FIRST_ITEM;
-            boolean altDown = Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
-            // OPEN_GROUP: plain click expands a collapsed icon; alt+click falls through (first item).
-            // FIRST_ITEM: alt+click expands a collapsed icon; plain click falls through (first item).
-            boolean expandKeyDown = firstItemMode == altDown;
-            if (expandKeyDown) {
-                CollapsedGroupRenderer collapsedHovered = guiIngredientSlots.getHoveredCollapsed(mouseX, mouseY);
-                if (collapsedHovered != null) {
-                    collapsedHovered.getCollapsedStack()
-                        .toggleExpanded();
-                    Internal.getIngredientFilter()
-                        .notifyCollapsedStateChanged();
-                    return true;
-                }
-            }
-            // Alt+Click on any item inside an expanded group always collapses it.
-            if (altDown) {
-                CollapsedGroupIngredient expandedHovered = guiIngredientSlots
-                    .getExpandedCollapsedGroupAt(mouseX, mouseY);
-                if (expandedHovered != null) {
-                    expandedHovered.toggleExpanded();
-                    Internal.getIngredientFilter()
-                        .notifyCollapsedStateChanged();
-                    return true;
-                }
-            }
+            return handleCollapsedGroupClicked(mouseX, mouseY);
         }
         return false;
+    }
+
+    protected boolean handleCollapsedGroupClicked(int mouseX, int mouseY) {
+        return Internal.getCollapsedGroupRegistry()
+            .handleMouseClicked(guiIngredientSlots, mouseX, mouseY);
     }
 
     @Nullable

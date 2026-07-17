@@ -1,19 +1,19 @@
 package ruiseki.jfmuy.search;
 
 import java.io.PrintWriter;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.IntSummaryStatistics;
 import java.util.stream.IntStream;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Nullable;
 
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMaps;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrays;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import ruiseki.jfmuy.collect.Char2ObjectSingletonMap;
 import ruiseki.jfmuy.util.Substring;
 
@@ -29,7 +29,7 @@ public class Node<T> extends Substring {
      * In this case, it is used to store all property indexes.
      */
 
-    private T[] data;
+    private Collection<T> data;
 
     /**
      * The set of edges starting from this node
@@ -46,7 +46,7 @@ public class Node<T> extends Substring {
 
     Node(Substring string) {
         super(string);
-        this.data = (T[]) ObjectArrays.EMPTY_ARRAY;
+        this.data = Collections.emptyList();
         this.edges = Char2ObjectMaps.emptyMap();
         this.suffix = null;
     }
@@ -56,8 +56,8 @@ public class Node<T> extends Substring {
      * of the path to this node is a substring of the one of the children nodes.
      */
     void getData(Collection<T> collection) {
-        for (int i = 0; i < data.length; i++) {
-            collection.add(data[i]);
+        if (!data.isEmpty()) {
+            collection.addAll(data);
         }
         for (Node<T> e : edges.values()) {
             e.getData(collection);
@@ -93,13 +93,7 @@ public class Node<T> extends Substring {
      * @return true <tt>this</tt> contains a reference to index
      */
     protected boolean contains(T index) {
-        for (T t : data) {
-            if (t == index) {
-
-                return true;
-            }
-        }
-        return false;
+        return data.contains(index);
     }
 
     protected void addEdge(Node<T> e) {
@@ -142,12 +136,31 @@ public class Node<T> extends Substring {
     }
 
     protected void addValue(T index) {
-        this.data = ArrayUtils.add(this.data, index);
+        switch (data.size()) {
+            case 0:
+                data = Collections.singletonList(index);
+                break;
+            case 1:
+                T first = data.iterator()
+                    .next();
+                data = new ArrayList<>(2);
+                data.add(first);
+                data.add(index);
+                break;
+            case 8:
+                Collection<T> newData = new ReferenceOpenHashSet<>();
+                newData.addAll(data);
+                newData.add(index);
+                data = newData;
+                break;
+            default:
+                data.add(index);
+        }
     }
 
     @Override
     public String toString() {
-        return "Node: size:" + (data.length) + " Edges: " + edges;
+        return "Node: size:" + (data.size()) + " Edges: " + edges;
     }
 
     public IntSummaryStatistics nodeSizeStats() {
@@ -156,7 +169,7 @@ public class Node<T> extends Substring {
 
     private IntStream nodeSizes() {
         return IntStream.concat(
-            IntStream.of(data.length),
+            IntStream.of(data.size()),
             edges.values()
                 .stream()
                 .flatMapToInt(Node::nodeSizes));
@@ -214,7 +227,7 @@ public class Node<T> extends Substring {
             out.println(
                 "\t" + nodeId(this)
                     + " [label=\""
-                    + Arrays.toString(data)
+                    + data
                     + "\",shape=point,style=filled,fillcolor=lightgrey,shape=circle,width=.07,height=.07]");
         } else {
             for (Node<T> edge : edges.values()) {
@@ -228,7 +241,7 @@ public class Node<T> extends Substring {
             out.println(
                 "\t" + nodeId(this)
                     + " [label=\""
-                    + Arrays.toString(data)
+                    + data
                     + "\",style=filled,fillcolor=lightgrey,shape=circle,width=.07,height=.07]");
         }
         for (Node<T> edge : edges.values()) {

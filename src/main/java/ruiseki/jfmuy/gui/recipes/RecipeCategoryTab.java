@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
 
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -107,6 +108,10 @@ public class RecipeCategoryTab extends RecipeGuiTab {
         // noinspection ConstantConditions
         if (title != null) {
             tooltip.add(title);
+        }
+
+        if (Minecraft.getMinecraft().gameSettings.advancedItemTooltips) {
+            tooltip.add(EnumChatFormatting.DARK_GRAY + category.getUid());
         }
 
         String modName = LegacyUtil.getModName(category);

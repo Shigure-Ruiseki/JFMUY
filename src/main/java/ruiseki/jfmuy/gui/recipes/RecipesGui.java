@@ -327,12 +327,23 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
                     }
                 }
             }
-            if (scrollDelta < 0) {
-                logic.nextPage();
-                return;
-            } else if (scrollDelta > 0) {
-                logic.previousPage();
-                return;
+            if (isShiftKeyDown()) {
+                // change tabs when shift is held
+                if (scrollDelta < 0) {
+                    logic.nextRecipeCategory();
+                    return;
+                } else if (scrollDelta > 0) {
+                    logic.previousRecipeCategory();
+                    return;
+                }
+            } else {
+                if (scrollDelta < 0) {
+                    logic.nextPage();
+                    return;
+                } else if (scrollDelta > 0) {
+                    logic.previousPage();
+                    return;
+                }
             }
         }
         super.handleMouseInput();
@@ -394,6 +405,12 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
                         return true;
                     } else if (KeyBindings.previousPage.isActiveAndMatches(eventKey)) {
                         logic.previousPage();
+                        return true;
+                    } else if (KeyBindings.nextCategory.isActiveAndMatches(eventKey)) {
+                        logic.nextRecipeCategory();
+                        return true;
+                    } else if (KeyBindings.previousCategory.isActiveAndMatches(eventKey)) {
+                        logic.previousRecipeCategory();
                         return true;
                     }
                 }

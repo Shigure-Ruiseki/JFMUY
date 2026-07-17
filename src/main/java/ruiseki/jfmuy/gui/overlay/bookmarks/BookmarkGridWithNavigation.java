@@ -53,6 +53,8 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
         this.guiScreenHelper = guiScreenHelper;
         this.pageDelegate = new BookmarkGridPaged();
         this.navigation = new BookmarkPageNavigation(this.pageDelegate, false);
+        ((BookmarkListBatchRenderer) this.bookmarkGrid.getGuiIngredientSlots())
+            .addBookmarkCollapseListener(() -> this.updateLayout(false));
     }
 
     public void updateLayout(boolean resetToFirstPage) {
@@ -61,13 +63,23 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
         }
         @SuppressWarnings("rawtypes")
         List<IIngredientListElement> ingredientList = ingredientSource.getIngredientList();
-        if (firstItemIndex >= ingredientList.size()) {
+        BookmarkListBatchRenderer renderer = (BookmarkListBatchRenderer) this.bookmarkGrid.getGuiIngredientSlots();
+        // Bounds check
+        int prevDisplaySize = renderer.getDisplaySize();
+        int boundsLimit = prevDisplaySize > 0 ? prevDisplaySize : ingredientList.size();
+        if (firstItemIndex >= boundsLimit) {
             firstItemIndex = 0;
         }
+        List<IIngredientListElement> collapsedList = ingredientSource.getCollapsedIngredientList();
         this.bookmarkGrid.getGuiIngredientSlots()
-            .set(firstItemIndex, ingredientList);
-        this.pageBoundaries = ((BookmarkListBatchRenderer) this.bookmarkGrid.getGuiIngredientSlots())
-            .sizePages(ingredientList);
+            .setCollapsed(firstItemIndex, collapsedList);
+        // Re-clamp if the display list shrank (e.g. group expanded) and firstItemIndex is now past the end.
+        if (firstItemIndex > 0 && firstItemIndex >= renderer.getDisplaySize()) {
+            firstItemIndex = 0;
+            this.bookmarkGrid.getGuiIngredientSlots()
+                .setCollapsed(0, collapsedList);
+        }
+        this.pageBoundaries = renderer.sizePages();
         this.navigation.updatePageState();
     }
 

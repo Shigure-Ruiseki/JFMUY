@@ -61,6 +61,14 @@ public interface IIngredientHelper<V> {
     String getUniqueId(V ingredient);
 
     /**
+     * Fully unique ID that includes all variant information for use in
+     * ingredient-list deduplication. Delegates to {@link #getUniqueId}
+     */
+    default String getFullUniqueId(V ingredient) {
+        return getUniqueId(ingredient);
+    }
+
+    /**
      * Entirely unique ID for use in comparing, blacklisting, and looking up ingredients by count, NBT, and any other
      * possible variation.
      */

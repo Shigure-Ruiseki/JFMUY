@@ -24,6 +24,7 @@ import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.gui.overlay.IIngredientGridSource;
 import ruiseki.jfmuy.gui.overlay.bookmarks.group.BookmarkGroupOrganizer;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
+import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredient;
 import ruiseki.jfmuy.util.Log;
 
 @SuppressWarnings("rawtypes")
@@ -55,8 +56,12 @@ public class BookmarkList implements IIngredientGridSource {
 
     public <T> boolean add(BookmarkItem<T> ingredient, boolean forceFront) {
         BookmarkItem<T> normalized = IngredientUtil.normalizeBookmark(ingredient);
-        if (!contains(normalized)) {
-            if (addToLists(normalized, forceFront || Config.isAddingBookmarksToFront())) {
+        boolean addToFront = forceFront || Config.isAddingBookmarksToFront();
+        boolean alreadyExists = normalized.ingredient instanceof CollapsedGroupIngredient
+            ? groupContains(getAddingGroup(addToFront), normalized)
+            : contains(normalized);
+        if (!alreadyExists) {
+            if (addToLists(normalized, addToFront)) {
                 notifyListenersOfChange();
                 saveBookmarks();
                 return true;
@@ -69,6 +74,22 @@ public class BookmarkList implements IIngredientGridSource {
                 notifyListenersOfChange();
                 saveBookmarks();
                 return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean groupContains(BookmarkGroup group, BookmarkItem<?> item) {
+        IIngredientHelper<Object> ingredientHelper = ingredientRegistry.getIngredientHelper(item);
+        String uid = ingredientHelper.getUniqueId(item);
+        for (BookmarkItem<?> existing : group.getItems()) {
+            if (item == existing) {
+                return true;
+            }
+            if (existing != null && existing.getClass() == item.getClass()) {
+                if (uid.equals(ingredientHelper.getUniqueId(existing))) {
+                    return true;
+                }
             }
         }
         return false;

@@ -16,6 +16,8 @@ import ruiseki.jfmuy.autocrafting.RecipeBookmarkItem;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
+import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredient;
+import ruiseki.jfmuy.ingredients.group.CollapsibleGroup;
 import ruiseki.jfmuy.startup.ForgeModIdHelper;
 import ruiseki.jfmuy.util.Log;
 
@@ -31,6 +33,7 @@ public class BookmarkItem<I> {
 
     protected static final String MARKER_OTHER = "O:";
     protected static final String MARKER_STACK = "T:";
+    protected static final String MARKER_COLLAPSED_GROUP = "G:";
     private static final char MARKER_NORMAL = 'B';
     protected static final char MARKER_RECIPE = 'R';
 
@@ -76,7 +79,16 @@ public class BookmarkItem<I> {
 
     @Nullable
     public String serialize() {
+        if (ingredient instanceof CollapsedGroupIngredient) {
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setString("id", ((CollapsedGroupIngredient) ingredient).getId());
+            tag.setLong("amount", amount);
+            return MARKER_NORMAL + MARKER_COLLAPSED_GROUP + tag;
+        }
         NBTTagCompound tag = getNBTOfIngredient(ingredient);
+        if (tag == null) {
+            return null;
+        }
         tag.setLong("amount", amount);
         if (ingredient instanceof ItemStack) {
             return MARKER_NORMAL + MARKER_STACK + tag;
@@ -151,6 +163,20 @@ public class BookmarkItem<I> {
                 } else {
                     Log.get()
                         .warn("Failed to load bookmarked ItemStack, the item no longer exists:\n{}", parsed);
+                }
+            }
+        } else if (ingredientJsonString.startsWith(MARKER_COLLAPSED_GROUP)) {
+            NBTTagCompound parsed = getNBT(ingredientJsonString);
+            if (parsed != null) {
+                String groupId = parsed.getString("id");
+                CollapsibleGroup group = Internal.getCollapsedGroupRegistry()
+                    .getAllGroups()
+                    .get(groupId);
+                if (group != null) {
+                    return group.getIngredient();
+                } else {
+                    Log.get()
+                        .warn("Failed to load bookmarked collapsible group, group no longer exists: {}", groupId);
                 }
             }
         } else if (ingredientJsonString.startsWith(MARKER_OTHER)) {

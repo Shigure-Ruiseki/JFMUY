@@ -38,6 +38,7 @@ import ruiseki.jfmuy.gui.GuiProperties;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredient;
 import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredientHelper;
+import ruiseki.jfmuy.ingredients.group.CollapsibleGroupRegistry;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugGhostIngredientHandler;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugRecipe;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugRecipeCategory;
@@ -162,14 +163,15 @@ public class JFMUYInternalPlugin implements IModPlugin {
     }
 
     @Override
-    public void registerCollapsibleGroups(ICollapsibleGroupRegistry registry) {
-        registry.newGroup("enchanted_books", "Enchanted Books")
+    public void registerCollapsibleGroups(ICollapsibleGroupRegistry r) {
+        CollapsibleGroupRegistry registry = (CollapsibleGroupRegistry) r;
+        registry.defaultNewGroup("enchanted_books", "Enchanted Books")
             .addAny(VanillaTypes.ITEM, stack -> stack.getItem() instanceof ItemEnchantedBook)
             .build();
-        registry.newGroup("potions", "Potions")
+        registry.defaultNewGroup("potions", "Potions")
             .addAny(VanillaTypes.ITEM, stack -> stack.getItem() == Items.potionitem)
             .build();
-        registry.newGroup("spawn_eggs", "Spawn Eggs")
+        registry.defaultNewGroup("spawn_eggs", "Spawn Eggs")
             .addAny(VanillaTypes.ITEM, stack -> stack.getItem() == Items.spawn_egg)
             .build();
     }

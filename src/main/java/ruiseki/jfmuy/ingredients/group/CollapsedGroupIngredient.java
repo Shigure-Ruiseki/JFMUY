@@ -11,6 +11,7 @@ import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.render.CollapsedGroupRenderer;
+import ruiseki.jfmuy.util.Translator;
 
 /**
  * Represents a collapsible ingredient group
@@ -27,6 +28,9 @@ public class CollapsedGroupIngredient implements IIngredientListElement<Collapse
     // Registered as IIngredientType for addon compatibility — addons expect every grid item to have a type
     public static final IIngredientType<CollapsedGroupIngredient> TYPE = () -> CollapsedGroupIngredient.class;
 
+    public static final int BACKGROUND_COLOR_SMOKE = 0x33555555; // subtle smoke background
+    public static final int BORDER_COLOR_SMOKE = 0xCC888888; // medium smoke border
+
     public enum GroupSource {
         DEFAULT,
         MOD,
@@ -37,26 +41,27 @@ public class CollapsedGroupIngredient implements IIngredientListElement<Collapse
     private final String langKey;
     /** Identifies who registered this group. */
     private final GroupSource source;
-    private final List<Object> ingredients;
-    private final List<IIngredientListElement<?>> elements;
+    private final List<IIngredientListElement<?>> filterElements;
     private final Set<String> uids;
+    private final int backgroundColor;
+    private final int borderColor;
+
+    private List<IIngredientListElement<?>> elements;
     /** Matches against the raw ingredient object (any type). */
     private boolean expanded;
     private boolean visible = true;
 
-    public CollapsedGroupIngredient(String id, String langKey, List<Object> ingredients, Set<String> uids) {
-        this(id, langKey, ingredients, uids, GroupSource.DEFAULT);
-    }
-
-    public CollapsedGroupIngredient(String id, String langKey, List<Object> ingredients, Set<String> uids,
+    public CollapsedGroupIngredient(String id, String langKey, int backgroundColor, int borderColor, Set<String> uids,
         GroupSource source) {
         this.id = id;
         this.langKey = langKey;
-        this.ingredients = ingredients;
         this.uids = uids;
         this.source = source;
         this.expanded = false;
-        this.elements = new ArrayList<>(ingredients.size());
+        this.elements = new ArrayList<>(uids.size());
+        this.filterElements = new ArrayList<>(uids.size());
+        this.backgroundColor = backgroundColor;
+        this.borderColor = borderColor;
     }
 
     public String getId() {
@@ -64,11 +69,19 @@ public class CollapsedGroupIngredient implements IIngredientListElement<Collapse
     }
 
     public String getDisplayName() {
-        return langKey;
+        return Translator.translateToLocal(langKey);
     }
 
     public GroupSource getSource() {
         return source;
+    }
+
+    public int getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public int getBorderColor() {
+        return borderColor;
     }
 
     public boolean isExpanded() {
@@ -80,13 +93,24 @@ public class CollapsedGroupIngredient implements IIngredientListElement<Collapse
     }
 
     public void toggleExpanded() {
-        this.expanded = !this.expanded;
+        this.setExpanded(!this.expanded);
     }
 
     public boolean matches(IIngredientListElement element) {
-        return this.uids.contains(
-            element.getIngredientHelper()
-                .getUniqueId(element.getIngredient()));
+        String uid = element.getIngredientHelper()
+            .getUniqueId(element.getIngredient());
+        if (this.uids.contains(uid)) {
+            return true;
+        }
+        for (String stored : this.uids) {
+            if (stored.endsWith(":*")) {
+                String prefix = stored.substring(0, stored.length() - 2);
+                if (uid.equals(prefix) || uid.startsWith(prefix + ":")) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // --- Runtime ingredient list (transient per filter cycle) ---
@@ -96,23 +120,45 @@ public class CollapsedGroupIngredient implements IIngredientListElement<Collapse
     }
 
     public List<IIngredientListElement<?>> getIngredients() {
-        return elements;
+        return filterElements;
+    }
+
+    public List<IIngredientListElement<?>> getFilterIngredients() {
+        return filterElements;
+    }
+
+    public void setStableIngredients(List<IIngredientListElement<?>> stableIngredients) {
+        this.elements = stableIngredients;
     }
 
     public void addIngredient(IIngredientListElement<?> element) {
-        elements.add(element);
+        filterElements.add(element);
     }
 
     public void clearIngredients() {
-        elements.clear();
+        filterElements.clear();
+    }
+
+    /**
+     * Returns the ingredient list that should be displayed in the current context.
+     * When a search filter is active ({@code filterElements} is non-empty), returns
+     * only the matched subset so the count badge and icons reflect the search results.
+     * Falls back to the full stable list when no filter is applied (e.g. bookmarks).
+     */
+    public List<IIngredientListElement<?>> getDisplayIngredients() {
+        return filterElements.isEmpty() ? elements : filterElements;
     }
 
     public int size() {
-        return elements.size();
+        return getDisplayIngredients().size();
     }
 
     public boolean isEmpty() {
-        return elements.isEmpty();
+        return filterElements.isEmpty();
+    }
+
+    public boolean isFilterEmpty() {
+        return filterElements.isEmpty();
     }
 
     @Override
@@ -122,8 +168,8 @@ public class CollapsedGroupIngredient implements IIngredientListElement<Collapse
 
     @Override
     public int getOrderIndex() {
-        return elements.isEmpty() ? 0
-            : elements.get(0)
+        return filterElements.isEmpty() ? 0
+            : filterElements.get(0)
                 .getOrderIndex();
     }
 
@@ -141,43 +187,43 @@ public class CollapsedGroupIngredient implements IIngredientListElement<Collapse
 
     @Override
     public String getModNameForSorting() {
-        return elements.isEmpty() ? ""
-            : elements.get(0)
+        return filterElements.isEmpty() ? ""
+            : filterElements.get(0)
                 .getModNameForSorting();
     }
 
     @Override
     public Set<String> getModNameStrings() {
-        return elements.isEmpty() ? Collections.emptySet()
-            : elements.get(0)
+        return filterElements.isEmpty() ? Collections.emptySet()
+            : filterElements.get(0)
                 .getModNameStrings();
     }
 
     @Override
     public List<String> getTooltipStrings() {
-        return elements.isEmpty() ? Collections.emptyList()
-            : elements.get(0)
+        return filterElements.isEmpty() ? Collections.emptyList()
+            : filterElements.get(0)
                 .getTooltipStrings();
     }
 
     @Override
     public Collection<String> getOreDictStrings() {
-        return elements.isEmpty() ? Collections.emptyList()
-            : elements.get(0)
+        return filterElements.isEmpty() ? Collections.emptyList()
+            : filterElements.get(0)
                 .getOreDictStrings();
     }
 
     @Override
     public Collection<String> getCreativeTabsStrings() {
-        return elements.isEmpty() ? Collections.emptyList()
-            : elements.get(0)
+        return filterElements.isEmpty() ? Collections.emptyList()
+            : filterElements.get(0)
                 .getCreativeTabsStrings();
     }
 
     @Override
     public Collection<String> getColorStrings() {
-        return elements.isEmpty() ? Collections.emptyList()
-            : elements.get(0)
+        return filterElements.isEmpty() ? Collections.emptyList()
+            : filterElements.get(0)
                 .getColorStrings();
     }
 

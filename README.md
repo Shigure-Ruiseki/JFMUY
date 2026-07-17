@@ -6,7 +6,7 @@ A backport of the modern JEI item utility system to Minecraft 1.7.10 for learnin
 
 ## Required Dependencies:
 
-- [OKCore (>= 26.07.15.2)](https://github.com/Shigure-Ruiseki/OKCore)
+- [OKCore (>= 26.07.17.2)](https://github.com/Shigure-Ruiseki/OKCore)
 
 ## Features
 
@@ -18,5 +18,5 @@ A backport of the modern JEI item utility system to Minecraft 1.7.10 for learnin
 
 ## Original Mod
 
-Check out the modern JFMUY project here:
+Check out the modern JEI project here:
 https://www.curseforge.com/minecraft/mc-mods/jei

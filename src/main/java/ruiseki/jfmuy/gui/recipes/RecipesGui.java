@@ -263,6 +263,7 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         previousRecipeCategory.drawButton(mc, mouseX, mouseY);
         nextPage.drawButton(mc, mouseX, mouseY);
         previousPage.drawButton(mc, mouseX, mouseY);
+        searchButton.drawButton(mc, mouseX, mouseY);
 
         RecipeLayout hoveredLayout = null;
         for (RecipeLayout recipeLayout : recipeLayouts) {

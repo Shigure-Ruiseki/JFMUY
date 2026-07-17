@@ -106,27 +106,26 @@ public class ForgeModIdHelper extends AbstractModIdHelper {
 
     @Override
     public <T> List<String> addModNameToIngredientTooltip(List<String> tooltip, T ingredient,
-        IIngredientHelper<T> ingredientHelper) {
+                                                          IIngredientHelper<T> ingredientHelper) {
         if (Config.isDebugModeEnabled() && Minecraft.getMinecraft().gameSettings.advancedItemTooltips) {
             tooltip = new ArrayList<>(tooltip);
             tooltip.add(EnumChatFormatting.GRAY + "JFMUY Debug:");
             tooltip.add(EnumChatFormatting.GRAY + "info: " + ingredientHelper.getErrorInfo(ingredient));
             tooltip.add(EnumChatFormatting.GRAY + "uid: " + ingredientHelper.getUniqueId(ingredient));
         }
-        if (Config.isModNameFormatOverrideActive() && this.skipAddingModName(ingredient)) {
-            // we detected that another mod is adding the mod name already
-            return tooltip;
-        }
-        return super.addModNameToIngredientTooltip(tooltip, ingredient, ingredientHelper);
-    }
 
-    private <T> boolean skipAddingModName(T ingredient) {
-        if (ingredient instanceof ItemStack) {
-            return true;
+        String modId = ingredientHelper.getModId(ingredient);
+        String modName = getModNameForModId(modId);
+
+        if (modName != null && !modName.isEmpty()) {
+            for (String line : tooltip) {
+                String cleanLine = EnumChatFormatting.getTextWithoutFormattingCodes(line);
+                if (cleanLine != null && cleanLine.equalsIgnoreCase(modName)) {
+                    return tooltip;
+                }
+            }
         }
-        if (ingredient instanceof BookmarkItem) {
-            return this.skipAddingModName(((BookmarkItem<?>) ingredient).ingredient);
-        }
-        return false;
+
+        return super.addModNameToIngredientTooltip(tooltip, ingredient, ingredientHelper);
     }
 }

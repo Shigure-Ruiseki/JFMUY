@@ -24,6 +24,9 @@ import ruiseki.jfmuy.api.recipe.IFocus;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
+import ruiseki.jfmuy.autocrafting.RecipeBookmarkGroup;
+import ruiseki.jfmuy.autocrafting.RecipeBookmarkItem;
+import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.gui.Focus;
 import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.gui.elements.DrawableNineSliceTexture;
@@ -439,4 +442,15 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
         return posY;
     }
 
+    public boolean addToBookmarks() {
+        BookmarkList bookmarkList = Internal.getBookmarkList();
+        RecipeBookmarkGroup group = new RecipeBookmarkGroup(bookmarkList.nextId());
+        RecipeBookmarkItem<?> recipeBookmarkItem = new RecipeBookmarkItem<>(
+            getRecipeFavoriteButton().getDisplayedIngredient());
+        recipeBookmarkItem.setGroup(group); // Do this early so that the dummy items are also added.
+        recipeBookmarkItem.populateWith(recipeWrapper, recipeCategory);
+        group.addItem(recipeBookmarkItem); // Do this late so that the recipe isn't overwritten.
+        group.update();
+        return bookmarkList.add(group);
+    }
 }

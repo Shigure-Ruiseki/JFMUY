@@ -2,25 +2,25 @@
 jfmuy.tooltip.config=JFMUY Config
 jfmuy.tooltip.show.recipes=Show Recipes
 jfmuy.tooltip.show.all.recipes=Show All Recipes
-jfmuy.tooltip.delete.item=Click to delete.
+jfmuy.tooltip.delete.item=Click to Delete
 jfmuy.tooltip.liquid.amount.with.capacity=%,d / %,d mB
 jfmuy.tooltip.liquid.amount=%,d mB
 jfmuy.tooltip.transfer=Move Items
-jfmuy.tooltip.recipe.ore.dict=Accepts Any: %s
+jfmuy.tooltip.recipe.ore.dict=Accepts any: %s
 jfmuy.tooltip.item.colors=Colors: %s
 jfmuy.tooltip.shapeless.recipe=Shapeless Recipe
-jfmuy.tooltip.cheat.mode.button.enabled=Cheat mode enabled.
-jfmuy.tooltip.cheat.mode.how.to.disable.hotkey=Press "%s" to toggle it.
-jfmuy.tooltip.cheat.mode.how.to.disable.no.hotkey=%s-Click here to toggle it.
+jfmuy.tooltip.cheat.mode.button.enabled=Cheat Mode enabled
+jfmuy.tooltip.cheat.mode.how.to.disable.hotkey=Press %s to toggle it.
+jfmuy.tooltip.cheat.mode.how.to.disable.no.hotkey=%s-click here to toggle it.
 jfmuy.tooltip.recipe.by=Recipe By: %s
 jfmuy.tooltip.recipe.id=Recipe ID: %s
-jfmuy.tooltip.not.enough.space=The area on the right-hand side of this screen is too small for the JFMUY ingredient list overlay to display.
-jfmuy.tooltip.ingredient.list.disabled=JFMUY overlays are hidden.
-jfmuy.tooltip.ingredient.list.disabled.how.to.fix=Press "%s" to show them again.
+jfmuy.tooltip.not.enough.space=There is not enough space to display JFMUY here.
+jfmuy.tooltip.ingredient.list.disabled=The JFMUY overlay is disabled.
+jfmuy.tooltip.ingredient.list.disabled.how.to.fix=Press %s to enable it.
 jfmuy.tooltip.bookmarks=JFMUY Bookmarks
 jfmuy.tooltip.bookmarks.usage.nokey=Add a key binding for JFMUY bookmarks in your Controls settings.
 jfmuy.tooltip.bookmarks.usage.key=Hover over an ingredient and press "%s" to bookmark it.
-jfmuy.tooltip.bookmarks.not.enough.space=The area on the left-hand side of this screen is too small for the JFMUY bookmark list overlay to display.
+jfmuy.tooltip.bookmarks.not.enough.space=There is not enough space to display bookmarks here.
 
 # Collapsible Groups
 jfmuy.tooltip.collapsed.expand=Alt+Click to Expand
@@ -30,28 +30,32 @@ jfmuy.tooltip.config.expandCollapseAll=Alt+Click Toggle Groups
 
 # Error Tooltips
 jfmuy.tooltip.error.recipe.transfer.missing=Missing Items
-jfmuy.tooltip.error.recipe.transfer.inventory.full=Inventory is too full.
-jfmuy.tooltip.error.recipe.transfer.no.server=The server must have JFMUY installed.
+jfmuy.tooltip.error.recipe.transfer.inventory.full=Inventory is too full
+jfmuy.tooltip.error.recipe.transfer.unknown=Unknown Error, see logs
+jfmuy.tooltip.error.recipe.transfer.no.server=The server must have JFMUY installed
 jfmuy.tooltip.error.recipe.transfer.too.large.player.inventory=Recipe is too large to craft in the 2x2 player crafting grid.
-jfmuy.tooltip.error.crash=This ingredient crashed when getting its tooltip. Please see the client logs for details.
+jfmuy.tooltip.error.crash=Tooltip error, see log
 
 # Error Messages
-jfmuy.chat.error.command.too.long=JFMUY must be installed on the server to handle this chat command, it is too long for Minecraft to send.
-jfmuy.chat.error.no.cheat.permission.1=You do not have permission to use JFMUY's cheat mode.
-jfmuy.chat.error.no.cheat.permission.2=Permission is given to players who can /give items or are in the creative mode.
+jfmuy.chat.error.command.too.long=JFMUY must be on the server to handle this Chat Command, it is too long for Minecraft to send.
+jfmuy.chat.error.no.cheat.permission.1=You do not have permission to use JFMUY's Cheat Mode.
+jfmuy.chat.error.no.cheat.permission.2=Permission is given to players who can /give items or are in Creative Mode.
 
 # Key Bindings
-key.jfmuy.toggleOverlay=Show/Hide JFMUY Overlays
+key.jfmuy.toggleOverlay=Show/Hide JFMUY
 key.jfmuy.focusSearch=Select Search Bar
 key.jfmuy.showRecipe=Show Recipe
 key.jfmuy.showUses=Show Uses
-key.jfmuy.recipeBack=Previous Recipe
+key.jfmuy.recipeBack=Show Previously Viewed Recipe
 key.jfmuy.toggleCheatMode=Toggle Cheat Mode
-key.jfmuy.toggleEditMode=Toggle Hide Ingredients Mode
-key.jfmuy.previousPage=Previous Page
-key.jfmuy.nextPage=Next Page
-key.jfmuy.bookmark=Add/Remove Bookmark
+key.jfmuy.toggleEditMode=Toggle Hide/Edit Mode
+key.jfmuy.previousPage=Show Previous Page
+key.jfmuy.nextPage=Show Next Page
+key.jfmuy.bookmark=Add/Remove a Bookmarked Ingredient
+key.jfmuy.bookmarkToTop=Add a Bookmarked Ingredient to the top
+key.jfmuy.recipeBookmark=Add/Remove a Bookmarked Recipe
 key.jfmuy.toggleBookmarkOverlay=Show/Hide Bookmarked Ingredients
+key.jfmuy.crafting=Autocraft Selected Bookmarked Recipes
 
 # Config
 config.jfmuy.default=Default
@@ -64,83 +68,68 @@ config.jfmuy.mode.comment=Change the mode that JFMUY is operating in.
 config.jfmuy.mode.cheatItemsEnabled=Cheat Mode
 config.jfmuy.mode.cheatItemsEnabled.comment=Give items instead of showing the recipe.
 config.jfmuy.mode.editEnabled=Hide Ingredients Mode
-config.jfmuy.mode.editEnabled.comment=Hide or unhide ingredients by clicking them in the ingredient list overlay.
+config.jfmuy.mode.editEnabled.comment=Hide and unhide ingredients by clicking them in the list.
 
 config.jfmuy.interface=Interface
-config.jfmuy.interface.comment=Options related to the user interface.
-config.jfmuy.interface.overlayEnabled=Show Ingredient List Overlay
-config.jfmuy.interface.overlayEnabled.comment=Show the ingredient list overlay next to open GUIs.
-config.jfmuy.interface.bookmarkOverlayEnabled=Show Bookmark List Overlay
-config.jfmuy.interface.bookmarkOverlayEnabled.comment=Show the bookmark list overlay next to open GUIs.
+config.jfmuy.interface.comment=Options related to the User Interface.
+config.jfmuy.interface.overlayEnabled=Show Ingredient List
+config.jfmuy.interface.overlayEnabled.comment=Show the list of ingredients next to open GUIs.
+config.jfmuy.interface.bookmarkOverlayEnabled=Show Bookmarks
+config.jfmuy.interface.bookmarkOverlayEnabled.comment=Show the list of bookmarks next to open GUIs.
 config.jfmuy.interface.recipeBookmarksEnabled=Enable Recipe Bookmarks
 config.jfmuy.interface.recipeBookmarksEnabled.comment=Add and remove bookmark groups for recipes.
 config.jfmuy.interface.autocraftingEnabled=Enable Autocraft
 config.jfmuy.interface.autocraftingEnabled.comment=IF AND ONLY IF recipe bookmarks are enabled, allow autocrafting with them.
 
 config.jfmuy.search=Search Options
-config.jfmuy.search.comment=Options related to the search bar.
+config.jfmuy.search.comment=Options relating to the search bar.
 config.jfmuy.search.modNameSearchMode=@ModName
-config.jfmuy.search.modNameSearchMode.comment=Search mode for mod names (prefix: @).
+config.jfmuy.search.modNameSearchMode.comment=Search mode for Mod Names (prefix: @)
 config.jfmuy.search.tooltipSearchMode=#Tooltip
-config.jfmuy.search.tooltipSearchMode.comment=Search mode for tooltips (prefix: #).
+config.jfmuy.search.tooltipSearchMode.comment=Search mode for Tooltips (prefix: #)
 config.jfmuy.search.oreDictSearchMode=$OreDictionary
-config.jfmuy.search.oreDictSearchMode.comment=Search mode for Ore Dictionary names (prefix: $).
-config.jfmuy.search.creativeTabSearchMode=%%CreativeModeTab
-config.jfmuy.search.creativeTabSearchMode.comment=Search mode for creative mode tab names (prefix: %).
+config.jfmuy.search.oreDictSearchMode.comment=Search mode for Ore Dictionary Names (prefix: $)
+config.jfmuy.search.creativeTabSearchMode=%%CreativeTab
+config.jfmuy.search.creativeTabSearchMode.comment=Search mode for Creative Tab Names (prefix: %)
 config.jfmuy.search.colorSearchMode=^Color
-config.jfmuy.search.colorSearchMode.comment=Search mode for colors (prefix: ^).
+config.jfmuy.search.colorSearchMode.comment=Search mode for Colors (prefix: ^)
 config.jfmuy.search.resourceIdSearchMode=&ResourceId
-config.jfmuy.search.resourceIdSearchMode.comment=Search mode for resource IDs (prefix: &).
-config.jfmuy.search.searchAdvancedTooltips=Search in Advanced Tooltips
+config.jfmuy.search.resourceIdSearchMode.comment=Search mode for resources ids (prefix: &)
 
 config.jfmuy.advanced=Advanced
 config.jfmuy.advanced.comment=Advanced config options to change the way JFMUY functions.
 config.jfmuy.advanced.itemBlacklist=Ingredient Blacklist
-config.jfmuy.advanced.itemBlacklist.comment=List of ingredients that should not be displayed in the ingredient list overlay. Format: modId[:name[:meta]]. The hide ingredients mode will automatically add or remove entries here.
+config.jfmuy.advanced.itemBlacklist.comment=List of ingredients that should not be displayed in the list. Format: modId[:name[:meta]]. Hide Ingredients Mode will automatically add or remove entries here.
 config.jfmuy.advanced.colorSearchEnabled=Enable Color Search
-config.jfmuy.advanced.colorSearchEnabled.comment=Search ingredients by color and show the colors in tooltips in the ingredient list overlay.
+config.jfmuy.advanced.colorSearchEnabled.comment=Search ingredients by color and show the colors on tooltips in the list.
 config.jfmuy.advanced.debugModeEnabled=Debug Mode
 config.jfmuy.advanced.debugModeEnabled.comment=Only useful for JFMUY developers, adds test ingredients and some debug recipes.
 config.jfmuy.advanced.centerSearchBarEnabled=Center Search Bar
 config.jfmuy.advanced.centerSearchBarEnabled.comment=Move the JFMUY search bar to the bottom center of the screen.
 config.jfmuy.advanced.modNameFormat=Mod Name Format
-config.jfmuy.advanced.modNameFormat.comment=Formatting for the mod names in tooltips for JFMUY GUIs. Leave blank to disable.
+config.jfmuy.advanced.modNameFormat.comment=How the mod name should be formatted in the tooltip for JFMUY GUIs. Leave blank to disable.
 config.jfmuy.advanced.maxColumns=Max Overlay Width
-config.jfmuy.advanced.maxColumns.comment=The maximum width of the ingredient and bookmark list overlays.
-config.jfmuy.advanced.maxRecipeGuijfmuyght=Max Recipe GUI jfmuyght
-config.jfmuy.advanced.maxRecipeGuijfmuyght.comment=The maximum jfmuyght of the recipe GUI.
+config.jfmuy.advanced.maxColumns.comment=The maximum width of the ingredient list.
+config.jfmuy.advanced.maxRecipeGuiHeight=Max Recipe GUI Height
+config.jfmuy.advanced.maxRecipeGuiHeight.comment=The maximum height of the recipe GUI.
 config.jfmuy.advanced.giveMode=Give Mode
-config.jfmuy.advanced.giveMode.comment=Choose if JFMUY should give ingredients directly to the inventory or pick them up with the mouse.
-config.jfmuy.advanced.addBookmarksToFront=Prepend New Bookmarks
-config.jfmuy.advanced.addBookmarksToFront.comment=Add new bookmarks to the front of the bookmark list instead of the end.
+config.jfmuy.advanced.giveMode.comment=Choose if JFMUY should give ingredients direct to the inventory (inventory) or pick them up with the mouse (mouse_pickup).
 config.jfmuy.advanced.optimizeMemoryUsage=Optimize Memory Usage
 config.jfmuy.advanced.optimizeMemoryUsage.comment=Enable JFMUY memory usage optimizations.
 config.jfmuy.advanced.ultraLowMemoryUsage=Ultra Low Memory Usage Mode
 config.jfmuy.advanced.ultraLowMemoryUsage.comment=Enable ultra low memory usage mode, can slow down searching by a lot however.
 config.jfmuy.advanced.recipeBookmarkGroupColor=Color of Recipe Bookmark Group
 config.jfmuy.advanced.recipeBookmarkGroupColor.comment=Color of the recipe bookmark group in RGBA format.
-config.jfmuy.misc=Miscellaneous
-config.jfmuy.misc.comment=Miscellaneous config options
-config.jfmuy.misc.mouseClickToSeeRecipes=Mouse Click to See Recipes/Usages
-config.jfmuy.misc.mouseClickToSeeRecipes.comment=Disable to disallow mouse clicks to see recipes and usages when hovering over an ingredient
-config.jfmuy.rendering=Rendering
-config.jfmuy.rendering.comment=Rendering config options
-config.jfmuy.misc.showHiddenIngredientsInCreative=Show Hidden Ingredients in Creative Mode
-config.jfmuy.misc.showHiddenIngredientsInCreative.comment=Show user-hidden ingredients when the player is in creative mode
-config.jfmuy.misc.skipShowingProgressBar=Skip Showing Progress Bar
-config.jfmuy.misc.skipShowingProgressBar.comment=Skip showing JFMUY's progress bars on load, can save up to a few seconds when loading
-config.jfmuy.rendering.bufferIngredientRenders=Buffer Ingredient Renders
-config.jfmuy.rendering.bufferIngredientRenders.comment=Stops extremely frequent ingredient draw calls by using a render buffer, improves FPS in menus by up to 2-3x. But animations and glint will not be applied correctly.
-config.jfmuy.search.searchAdvancedTooltips.comment=Includes advanced tooltips in search trees
-config.jfmuy.search.searchStrippedDiacritics=Search Stripped Diacritics
-config.jfmuy.search.searchStrippedDiacritics.comment=Includes stripped diacritics version of strings in search trees
-config.jfmuy.advanced.asyncSearchTreeBuilding=Async Search Tree Building
-config.jfmuy.advanced.asyncSearchTreeBuilding.comment=Builds search trees on multiple threads concurrently, turn this off if you're experiencing extremely high load on your CPU when loading JFMUY
 
 # Hide Ingredients Mode
 gui.jfmuy.editMode.description=JFMUY Hide Ingredients Mode:
-gui.jfmuy.editMode.description.hide=%CTRL-Click to hide.
-gui.jfmuy.editMode.description.hide.wild=%CTRL-Right-Click to hide by wildcard.
+gui.jfmuy.editMode.description.hide=%CTRL-Click to Hide
+gui.jfmuy.editMode.description.hide.wild=%CTRL-right-click to Hide by Wildcard
+
+# PC/Linux Control Key
+key.jfmuy.ctrl=CTRL
+# Mac Command Key
+key.jfmuy.ctrl.mac=CMD
 
 # Recipe Categories
 gui.jfmuy.category.craftingTable=Crafting
@@ -153,16 +142,44 @@ gui.jfmuy.category.brewing=Brewing
 gui.jfmuy.category.brewing.steps=Steps: %s
 gui.jfmuy.category.itemInformation=Information
 
-# Key Names
-key.jfmuy.ctrl=CTRL
-key.jfmuy.ctrl.mac=CMD
-
-# Debug (for a debug mode, do not need translation)
-description.jfmuy.wooden.door.1=Wooden doors allow you to block monsters from entering your building.\nTesting sentences.
-description.jfmuy.wooden.door.2=Clicking on a door changes its state from open to closed and vice versa.
-description.jfmuy.wooden.door.3=Wooden doors can be opened/closed via redstone circuits.
+# DEBUG (for debug mode, do not need translation)
+description.jfmuy.wooden.door.1=Wooden Doors allow you to block monsters from entering your building.\nTesting sentences.
+description.jfmuy.wooden.door.2=Clicking on a door changes its state from open to closed and visa versa.
+description.jfmuy.wooden.door.3=Wooden Doors can be opened/closed via Redstone Circuits.
 
 # New JFMUY lang keys
+config.jfmuy.rendering=Rendering
+config.jfmuy.rendering.comment=Rendering config options
+config.jfmuy.misc=Miscellaneous
+config.jfmuy.misc.comment=Miscellaneous config options
+
+config.jfmuy.search.searchAdvancedTooltips=Search Advanced Tooltips
+config.jfmuy.search.searchAdvancedTooltips.comment=Includes advanced tooltips in search trees [WILL RELOAD SEARCH TREES]
+
+config.jfmuy.search.searchStrippedDiacritics=Search Stripped Diacritics
+config.jfmuy.search.searchStrippedDiacritics.comment=Includes stripped diacritics version of strings in search trees [WILL RELOAD SEARCH TREES]
+
+config.jfmuy.advanced.asyncSearchTreeBuilding=Async Search Tree Building
+config.jfmuy.advanced.asyncSearchTreeBuilding.comment=Builds search trees on multiple threads concurrently, turn this off if you're experiencing extremely high load on your CPU when loading JFMUY
+
+config.jfmuy.advanced.addBookmarksToFront=Prepend New Bookmarks
+config.jfmuy.advanced.addBookmarksToFront.comment=When enabled, adds new bookmarks to the front of the bookmark list
+
+config.jfmuy.misc.mouseClickToSeeRecipes=Mouse Click to See Recipes/Usages
+config.jfmuy.misc.mouseClickToSeeRecipes.comment=Disable to disallow mouse clicks to see recipes and usages when hovering over an ingredient
+
+config.jfmuy.misc.tooltipShowRecipeBy=Show `Recipe By` in tooltip
+config.jfmuy.misc.tooltipShowRecipeBy.comment=Show when a recipe has been changed by adding it to the item's tooltip
+
+config.jfmuy.misc.showHiddenIngredientsInCreative=Show Hidden Ingredients in Creative Mode
+config.jfmuy.misc.showHiddenIngredientsInCreative.comment=Show user-hidden ingredients when the player is in creative mode
+
+config.jfmuy.misc.skipShowingProgressBar=Skip Showing Progress Bar
+config.jfmuy.misc.skipShowingProgressBar.comment=Skip showing JFMUY's progress bars on load, can save up to a few seconds when loading
+
+config.jfmuy.rendering.bufferIngredientRenders=Buffer Ingredient Renders
+config.jfmuy.rendering.bufferIngredientRenders.comment=Stops extremely frequent ingredient draw calls by using a render buffer, improves FPS in menus by up to 2-3x. But animations and glint will not be applied correctly.
+
 config.jfmuy.interface.defaultFluidContainerItem=Default Fluid Container Item
 config.jfmuy.interface.defaultFluidContainerItem.comment=Default item to use to fill up fluids when clicking on a fluid ingredient in the menu, (format: item_name@meta)
 
@@ -177,7 +194,7 @@ config.jfmuy.collapsible.comment=Options for collapsing groups of ingredients in
 config.jfmuy.collapsible.collapsibleGroupsEnabled=Enable Collapsible Groups
 config.jfmuy.collapsible.collapsibleGroupsEnabled.comment=When enabled, groups of related ingredients (potions, enchanted books, etc.) are collapsed into a single slot. Alt+Click a group to expand or collapse it.
 config.jfmuy.collapsible.collapseOnClose=Collapse on Close
-config.jfmuy.collapsible.collapseOnClose.comment=Collapse currently opened groups when jfmuy is closed.
+config.jfmuy.collapsible.collapseOnClose.comment=Collapse currently opened groups when JFMUY is closed.
 config.jfmuy.collapsible.collapsedClickAction=Default Collapsed Action
 config.jfmuy.collapsible.collapsedClickAction.comment=Swaps the single click action, The other option becomes the Alt+Click action. Open Group opens the group. First Item applies the action to the first item in the group.
 config.jfmuy.collapsible.collapsedClickAction.OPEN_GROUP=Open Group
@@ -203,4 +220,20 @@ jfmuy.tooltip.organizer.1=§6CTRL + LEFT CLICK§7: Move Bookmarks Between Groups
 jfmuy.tooltip.organizer.2=§6UP§r or §6DOWN§7: Move Group Up or Down
 jfmuy.tooltip.organizer.3=§6CTRL + SCROLL§7: Change Final Output
 jfmuy.tooltip.organizer.4=§6%s§7: Autocraft
+
+jfmuy.gui.collapsible.title=Manage Groups
+jfmuy.gui.collapsible.back=Back
+jfmuy.gui.collapsible.newGroup=New Group
+jfmuy.gui.collapsible.title.tooltip=Enable/Disable built in groups and create user defined groups.
+jfmuy.gui.collapsible.enabled=Enabled
+jfmuy.gui.collapsible.disabled=Disabled
+jfmuy.gui.collapsible.customGroup=Custom
+jfmuy.gui.collapsible.modGroup=Mod
+jfmuy.gui.collapsible.defaultGroup=Default
+jfmuy.gui.collapsible.itemCount=%d items
+jfmuy.gui.collapsible.editor.title=Selected Items
+jfmuy.gui.collapsible.editor.name=Name
+jfmuy.gui.collapsible.editor.save=Save
+jfmuy.gui.collapsible.editor.selected=%d selected
+jfmuy.gui.collapsible.confirmDelete=Delete?
 jfmuy.tooltip.missing_ingredients=§cMissing Ingredients:

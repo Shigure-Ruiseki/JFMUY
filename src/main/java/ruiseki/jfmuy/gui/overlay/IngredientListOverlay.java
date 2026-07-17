@@ -326,15 +326,15 @@ public class IngredientListOverlay
 
     public boolean onGlobalKeyPressed(int eventKey) {
         if (isListDisplayed()) {
-            if (KeyBindings.toggleCheatMode.getKeyCode() == eventKey) {
+            if (KeyBindings.toggleCheatMode.isActiveAndMatches(eventKey)) {
                 Config.toggleCheatItemsEnabled();
                 return true;
             }
-            if (KeyBindings.toggleEditMode.getKeyCode() == eventKey) {
+            if (KeyBindings.toggleEditMode.isActiveAndMatches(eventKey)) {
                 Config.toggleEditModeEnabled();
                 return true;
             }
-            if (KeyBindings.focusSearch.getKeyCode() == eventKey) {
+            if (KeyBindings.focusSearch.isActiveAndMatches(eventKey)) {
                 setKeyboardFocus(true);
                 return true;
             }

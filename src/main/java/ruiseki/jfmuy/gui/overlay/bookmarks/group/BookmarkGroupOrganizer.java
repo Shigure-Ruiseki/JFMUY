@@ -40,6 +40,9 @@ public class BookmarkGroupOrganizer {
     private Rectangle area = new Rectangle();
     private int hoveredGroupId = -1;
     private int missingIngredients = 0;
+    private int draggedGroupId = -1;
+    private boolean dragWholeGroup = false;
+    private int prevMouseY = 0;
 
     public BookmarkGroupOrganizer() {}
 
@@ -128,7 +131,13 @@ public class BookmarkGroupOrganizer {
         }
         if (mouseX > area.x + BookmarkGridWithNavigation.BOOKMARK_TAB_WIDTH) {
             hoveredGroupId = -1;
+            stopDrag();
             return;
+        }
+
+        if (draggedGroupId != -1) {
+            handleGroupDrag(mouseX, mouseY);
+            prevMouseY = mouseY;
         }
 
         boolean hovered = false;
@@ -154,7 +163,7 @@ public class BookmarkGroupOrganizer {
                         tooltips.add(
                             Translator.translateToLocalFormatted(
                                 "jfmuy.tooltip.organizer.4",
-                                Translator.translateToLocal(KeyBindings.crafting.getKeyDescription())));
+                                KeyBindings.crafting.getDisplayName()));
                     }
                 }
             } else {
@@ -219,18 +228,105 @@ public class BookmarkGroupOrganizer {
                     return true;
                 }
             }
-            if (KeyBindings.bookmark.getKeyCode() == eventKey) {
+            if (KeyBindings.bookmark.isActiveAndMatches(eventKey)) {
                 if (bookmarkList.removeGroup(group.group)) {
                     return true;
                 }
             }
-            if (KeyBindings.crafting.getKeyCode() == eventKey && Config.isAutocraftingEnabled()) {
+            if (KeyBindings.crafting.isActiveAndMatches(eventKey) && Config.isAutocraftingEnabled()) {
                 if (group.group instanceof RecipeBookmarkGroup) {
                     ((RecipeBookmarkGroup) group.group).autocraft();
                     return true;
                 }
             }
         }
+        if (KeyBindings.isInventoryCloseKey(eventKey) || KeyBindings.isInventoryToggleKey(eventKey)) {
+            stopDrag();
+        }
         return false;
+    }
+
+    public boolean handleMouseClicked(int mouseX, int mouseY, int mouseButton) {
+        if (mouseX > area.x + BookmarkGridWithNavigation.BOOKMARK_TAB_WIDTH) {
+            return false;
+        }
+
+        if (draggedGroupId != -1 || mouseButton != 0 || !area.contains(mouseX, mouseY)) {
+            return false;
+        }
+
+        int groupId = getGroupIndexAt(mouseX, mouseY);
+        if (groupId != -1) {
+            draggedGroupId = groupId;
+            dragWholeGroup = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean handleMouseReleased(int mouseX, int mouseY, int mouseButton) {
+        if (mouseButton != 0 || draggedGroupId == -1) {
+            return false;
+        }
+
+        stopDrag();
+        return true;
+    }
+
+    private void stopDrag() {
+        draggedGroupId = -1;
+        dragWholeGroup = false;
+    }
+
+    private void handleGroupDrag(int mouseX, int mouseY) {
+        if (dragWholeGroup) {
+            int currentGroupId = getGroupForSwap(mouseX, mouseY);
+            if (currentGroupId == -1 || currentGroupId == draggedGroupId) {
+                return;
+            }
+
+            BookmarkGroupDisplay currentGroup = groups.get(currentGroupId);
+            BookmarkGroupDisplay draggedGroup = groups.get(draggedGroupId);
+            Internal.getBookmarkList()
+                .swapGroups(currentGroup.group.id, draggedGroup.group.id);
+
+            draggedGroupId = currentGroupId;
+        } else {
+            // TODO: Handle group extension by dragging.
+            // For partial/broken implementation refer to commit 529ee9599efd1f2e964106ec32da364b88b7e13f
+        }
+    }
+
+    private int getGroupIndexAt(int mouseX, int mouseY) {
+        for (int i = 0; i < groups.size(); ++i) {
+            BookmarkGroupDisplay group = groups.get(i);
+            if (group.area.contains(mouseX, mouseY)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private int getGroupForSwap(int mouseX, int mouseY) {
+        int mouseDeltaY = mouseY - prevMouseY;
+        if (mouseDeltaY == 0) {
+            return -1;
+        }
+
+        int sig = Integer.signum(mouseDeltaY);
+        int candidateId = getGroupIndexAt(mouseX, mouseY);
+        if (candidateId == -1) {
+            return -1;
+        }
+
+        BookmarkGroupDisplay candidate = groups.get(candidateId);
+        if (!candidate.area.contains(mouseX, mouseY + sig * INGREDIENT_HEIGHT)) {
+            return candidateId;
+        }
+
+        return -1;
     }
 }

@@ -35,7 +35,7 @@
  */
 dependencies {
 
-    implementation("com.github.Shigure-Ruiseki:OKCore:26.07.15.2:dev") { transitive = false }
+    implementation("com.github.Shigure-Ruiseki:OKCore:c5e3b6c69e:dev") { transitive = false }
 
     devOnlyNonPublishable("com.github.GTNewHorizons:waila:1.19.30:dev") { transitive = false }
 
@@ -45,6 +45,7 @@ dependencies {
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:BetterCrashes:1.4.5-GTNH:dev"){ transitive = false }
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:ServerUtilities:2.4.1:dev"){ transitive = false }
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:Baubles-Expanded:2.2.19-GTNH:dev') { transitive = false }
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:Controlling:2.1.8:dev') { transitive = false }
 
     compileOnlyApi("it.unimi.dsi:fastutil:8.5.18") // Apache 2.0
     compileOnlyApi("org.joml:joml:1.10.8") { transitive = false } // MIT

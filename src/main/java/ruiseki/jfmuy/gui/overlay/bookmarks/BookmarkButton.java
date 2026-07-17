@@ -2,7 +2,6 @@ package ruiseki.jfmuy.gui.overlay.bookmarks;
 
 import java.util.List;
 
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.EnumChatFormatting;
 
 import ruiseki.jfmuy.api.gui.IDrawable;
@@ -13,6 +12,7 @@ import ruiseki.jfmuy.config.KeyBindings;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.elements.GuiIconToggleButton;
 import ruiseki.jfmuy.util.Translator;
+import ruiseki.okcore.client.key.KeyBindingOK;
 
 public class BookmarkButton extends GuiIconToggleButton {
 
@@ -36,8 +36,8 @@ public class BookmarkButton extends GuiIconToggleButton {
     @Override
     protected void getTooltips(List<String> tooltip) {
         tooltip.add(Translator.translateToLocal("jfmuy.tooltip.bookmarks"));
-        KeyBinding bookmarkKey = KeyBindings.bookmark;
-        if (bookmarkKey.getKeyCode() == 0) {
+        KeyBindingOK bookmarkKey = KeyBindings.bookmark;
+        if (bookmarkKey.isActiveAndMatches(0)) {
             tooltip.add(EnumChatFormatting.RED + Translator.translateToLocal("jfmuy.tooltip.bookmarks.usage.nokey"));
         } else if (!bookmarkOverlay.hasRoom()) {
             tooltip
@@ -46,7 +46,7 @@ public class BookmarkButton extends GuiIconToggleButton {
             tooltip.add(
                 EnumChatFormatting.GRAY + Translator.translateToLocalFormatted(
                     "jfmuy.tooltip.bookmarks.usage.key",
-                    Translator.translateToLocal(bookmarkKey.getKeyDescription())));
+                    bookmarkKey.getDisplayName()));
         }
     }
 

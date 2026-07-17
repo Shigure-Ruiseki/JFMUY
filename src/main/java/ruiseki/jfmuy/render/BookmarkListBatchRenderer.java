@@ -3,6 +3,7 @@ package ruiseki.jfmuy.render;
 import java.util.List;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.gui.overlay.bookmarks.group.BookmarkGroupOrganizer;
@@ -37,7 +38,7 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
             int i = startIndex;
             int currentGroup = ingredientList.get(i)
                 .getGroupIndex();
-            List<Integer> groupIndices = new IntArrayList();
+            IntList groupIndices = new IntArrayList();
             for (List<IngredientListSlot> row : slots) {
                 for (int column = 0; column < row.size(); column++) {
                     IngredientListSlot ingredientListSlot = row.get(column);
@@ -75,8 +76,8 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
         invalidateBuffer();
     }
 
-    public List<Integer> sizePages(List<IIngredientListElement> ingredientList) {
-        List<Integer> pages = new IntArrayList();
+    public IntList sizePages(List<IIngredientListElement> ingredientList) {
+        IntList pages = new IntArrayList();
         pages.add(0);
         if (ingredientList.isEmpty() || slots.isEmpty()) {
             return pages;
@@ -85,14 +86,24 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
         int ingredientIndex = 0;
         int currentGroup = ingredientList.get(ingredientIndex)
             .getGroupIndex();
-        while (true) {
-            for (int rowIndex = 0; rowIndex < slots.size(); rowIndex++) {
+        while (ingredientIndex < ingredientList.size()) {
+            int pageStartIndex = ingredientIndex;
+            boolean hasUsableSlot = false;
+
+            for (int rowIndex = 0; rowIndex < slots.size() && ingredientIndex < ingredientList.size(); rowIndex++) {
                 List<IngredientListSlot> row = slots.get(rowIndex);
-                for (int column = 0; column < row.size(); column++) {
+                if (row.isEmpty()) {
+                    continue;
+                }
+
+                for (int column = 0; column < row.size() && ingredientIndex < ingredientList.size(); column++) {
                     IngredientListSlot ingredientListSlot = row.get(column);
                     if (ingredientListSlot.isBlocked()) {
                         continue;
                     }
+
+                    hasUsableSlot = true;
+
                     IIngredientListElement<?> element = ingredientList.get(ingredientIndex);
                     if (element.getGroupIndex() != currentGroup || element.startsNewRow()) {
                         currentGroup = element.getGroupIndex();
@@ -100,12 +111,23 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
                             break;
                         }
                     }
-                    if (ingredientIndex >= ingredientList.size()) {
-                        return pages;
-                    }
+
+                    ingredientIndex++;
+
                 }
             }
-            pages.add(ingredientIndex);
+
+            if (!hasUsableSlot || ingredientIndex == pageStartIndex) {
+                return pages;
+            }
+
+            if (ingredientIndex < ingredientList.size()) {
+                pages.add(ingredientIndex);
+                currentGroup = ingredientList.get(ingredientIndex)
+                    .getGroupIndex();
+            }
         }
+
+        return pages;
     }
 }

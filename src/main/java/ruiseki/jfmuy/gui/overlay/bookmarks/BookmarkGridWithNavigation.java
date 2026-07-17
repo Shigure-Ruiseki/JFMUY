@@ -12,6 +12,7 @@ import net.minecraftforge.fluids.FluidStack;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Keyboard;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.config.Config;
@@ -35,7 +36,7 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
 
     private int firstItemIndex = 0;
     private final IPaged pageDelegate;
-    private List<Integer> pageBoundaries;
+    private IntList pageBoundaries;
     private final BookmarkPageNavigation navigation;
 
     private BookmarkGroupOrganizer groupOrganizer;
@@ -127,11 +128,15 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
 
     @Override
     public boolean handleMouseClicked(int mouseX, int mouseY, int mouseButton) {
-        boolean clickedGrid = !guiScreenHelper.isInGuiExclusionArea(mouseX, mouseY)
-            && this.bookmarkGrid.handleMouseClicked(mouseX, mouseY);
-        boolean clickedNavigation = this.pageDelegate.getPageCount() > 1
-            && this.navigation.handleMouseClickedButtons(mouseX, mouseY);
-        return clickedGrid || clickedNavigation;
+        return !guiScreenHelper.isInGuiExclusionArea(mouseX, mouseY)
+            && (this.groupOrganizer.handleMouseClicked(mouseX, mouseY, mouseButton)
+                || this.bookmarkGrid.handleMouseClicked(mouseX, mouseY)
+                || this.navigation.handleMouseClickedButtons(mouseX, mouseY));
+
+    }
+
+    public boolean handleMouseReleased(int mouseX, int mouseY, int mouseButton) {
+        return this.groupOrganizer.handleMouseReleased(mouseX, mouseY, mouseButton);
     }
 
     @Override
@@ -200,7 +205,7 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
                 updateLayout(true);
                 return true;
             }
-            firstItemIndex = pageBoundaries.get(pageNum + 1);
+            firstItemIndex = pageBoundaries.getInt(pageNum + 1);
             updateLayout(false);
             return true;
         }
@@ -208,7 +213,7 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
         @Override
         public boolean previousPage() {
             int pageNum = getPageNumber();
-            firstItemIndex = pageBoundaries.get(pageNum == 0 ? pageBoundaries.size() - 1 : pageNum - 1);
+            firstItemIndex = pageBoundaries.getInt(pageNum == 0 ? pageBoundaries.size() - 1 : pageNum - 1);
             updateLayout(false);
             return true;
         }
@@ -245,7 +250,7 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
                     index--;
                 }
             }
-            firstItemIndex = pageBoundaries.get(index); // This side effect is fine.
+            firstItemIndex = pageBoundaries.getInt(index); // This side effect is fine.
             return index;
         }
     }

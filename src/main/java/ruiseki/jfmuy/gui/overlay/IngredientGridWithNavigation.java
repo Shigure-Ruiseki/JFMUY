@@ -139,10 +139,10 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
     }
 
     public boolean onKeyPressed(char typedChar, int keyCode) {
-        if (KeyBindings.nextPage.getKeyCode() == keyCode) {
+        if (KeyBindings.nextPage.isActiveAndMatches(keyCode)) {
             this.pageDelegate.nextPage();
             return true;
-        } else if (KeyBindings.previousPage.getKeyCode() == keyCode) {
+        } else if (KeyBindings.previousPage.isActiveAndMatches(keyCode)) {
             this.pageDelegate.previousPage();
             return true;
         }

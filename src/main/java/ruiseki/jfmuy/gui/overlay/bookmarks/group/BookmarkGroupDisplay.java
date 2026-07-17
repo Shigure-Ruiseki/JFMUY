@@ -25,9 +25,13 @@ public class BookmarkGroupDisplay implements IGhostIngredientHandler.Target {
 
     @Override
     public void accept(Object ingredient) {
+        accept(ingredient, false);
+    }
+
+    public void accept(Object ingredient, boolean toFront) {
         if (ingredient instanceof BookmarkItem) {
             BookmarkGroup oldGroup = ((BookmarkItem<?>) ingredient).getGroup();
-            boolean canAdd = group.addItem((BookmarkItem<?>) ingredient);
+            boolean canAdd = group.addItem((BookmarkItem<?>) ingredient, toFront);
             if (canAdd) {
                 if (oldGroup != null) {
                     oldGroup.removeItem((BookmarkItem<?>) ingredient);
@@ -39,7 +43,7 @@ public class BookmarkGroupDisplay implements IGhostIngredientHandler.Target {
             }
         } else {
             BookmarkItem<?> item = new BookmarkItem<>(ingredient);
-            if (group.addItem(item)) {
+            if (group.addItem(item, toFront)) {
                 if (!Config.isBookmarkOverlayEnabled()) Config.toggleBookmarkEnabled();
                 Internal.getBookmarkList()
                     .saveBookmarks();

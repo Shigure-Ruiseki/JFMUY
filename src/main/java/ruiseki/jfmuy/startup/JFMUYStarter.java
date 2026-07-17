@@ -69,10 +69,10 @@ public class JFMUYStarter {
         Internal.setIngredientRegistry(ingredientRegistry);
 
         GuiHelper guiHelper = new GuiHelper(ingredientRegistry);
-        JFMUYHelpers jeiHelpers = new JFMUYHelpers(guiHelper, ingredientRegistry, blacklist, stackHelper);
-        Internal.setHelpers(jeiHelpers);
+        JFMUYHelpers jfmuyHelpers = new JFMUYHelpers(guiHelper, ingredientRegistry, blacklist, stackHelper);
+        Internal.setHelpers(jfmuyHelpers);
 
-        ModRegistry modRegistry = new ModRegistry(jeiHelpers, ingredientRegistry);
+        ModRegistry modRegistry = new ModRegistry(jfmuyHelpers, ingredientRegistry);
 
         LoggedTimer timer = new LoggedTimer();
         timer.start("Registering recipe categories");
@@ -128,20 +128,23 @@ public class JFMUYStarter {
             guiScreenHelper,
             ghostIngredientDragManager);
 
-        BookmarkOverlay bookmarkOverlay = new BookmarkOverlay(bookmarkList, jeiHelpers.getGuiHelper(), guiScreenHelper);
+        BookmarkOverlay bookmarkOverlay = new BookmarkOverlay(
+            bookmarkList,
+            jfmuyHelpers.getGuiHelper(),
+            guiScreenHelper);
         RecipesGui recipesGui = new RecipesGui(recipeRegistry, ingredientRegistry);
-        JFMUYRuntime jeiRuntime = new JFMUYRuntime(
+        JFMUYRuntime jfmuyRuntime = new JFMUYRuntime(
             recipeRegistry,
             ingredientListOverlay,
             bookmarkOverlay,
             recipesGui,
             ingredientFilter);
-        Internal.setRuntime(jeiRuntime);
+        Internal.setRuntime(jfmuyRuntime);
         timer.stop();
 
         stackHelper.disableUidCache();
 
-        sendRuntime(plugins, jeiRuntime);
+        sendRuntime(plugins, jfmuyRuntime);
 
         LeftAreaDispatcher leftAreaDispatcher = new LeftAreaDispatcher(guiScreenHelper);
         leftAreaDispatcher.addContent(bookmarkOverlay);
@@ -162,7 +165,7 @@ public class JFMUYStarter {
             ghostIngredientDragManager);
         Internal.setGuiEventHandler(guiEventHandler);
         InputHandler inputHandler = new InputHandler(
-            jeiRuntime,
+            jfmuyRuntime,
             ingredientRegistry,
             ingredientListOverlay,
             guiScreenHelper,

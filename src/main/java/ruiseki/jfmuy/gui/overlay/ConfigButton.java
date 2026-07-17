@@ -17,6 +17,7 @@ import ruiseki.jfmuy.config.KeyBindings;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.elements.GuiIconToggleButton;
 import ruiseki.jfmuy.util.Translator;
+import ruiseki.okcore.client.key.KeyBindingOK;
 
 public class ConfigButton extends GuiIconToggleButton {
 
@@ -46,19 +47,19 @@ public class ConfigButton extends GuiIconToggleButton {
             tooltip.add(
                 EnumChatFormatting.GOLD + Translator.translateToLocalFormatted(
                     "jfmuy.tooltip.ingredient.list.disabled.how.to.fix",
-                    Translator.translateToLocal(KeyBindings.toggleOverlay.getKeyDescription())));
+                    KeyBindings.toggleOverlay.getDisplayName()));
         } else if (!parent.isListDisplayed()) {
             tooltip.add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.not.enough.space"));
         }
         if (Config.isCheatItemsEnabled()) {
             tooltip
                 .add(EnumChatFormatting.RED + Translator.translateToLocal("jfmuy.tooltip.cheat.mode.button.enabled"));
-            KeyBinding toggleCheatMode = KeyBindings.toggleCheatMode;
+            KeyBindingOK toggleCheatMode = KeyBindings.toggleCheatMode;
             if (toggleCheatMode.getKeyCode() != 0) {
                 tooltip.add(
                     EnumChatFormatting.RED + Translator.translateToLocalFormatted(
                         "jfmuy.tooltip.cheat.mode.how.to.disable.hotkey",
-                        Translator.translateToLocal(toggleCheatMode.getKeyDescription())));
+                        toggleCheatMode.getDisplayName()));
             } else {
                 tooltip.add(
                     EnumChatFormatting.RED + Translator.translateToLocalFormatted(

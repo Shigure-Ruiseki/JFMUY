@@ -381,7 +381,7 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         if (KeyBindings.isInventoryCloseKey(eventKey) || KeyBindings.isInventoryToggleKey(eventKey)) {
             close();
             return true;
-        } else if (KeyBindings.recipeBack.getKeyCode() == eventKey) {
+        } else if (KeyBindings.recipeBack.isActiveAndMatches(eventKey)) {
             back();
             return true;
         } else {
@@ -389,10 +389,10 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
             if (runtime != null) {
                 IngredientListOverlay itemListOverlay = runtime.getIngredientListOverlay();
                 if (!itemListOverlay.isMouseOver(MouseHelper.getX(), MouseHelper.getY())) {
-                    if (KeyBindings.nextPage.getKeyCode() == eventKey) {
+                    if (KeyBindings.nextPage.isActiveAndMatches(eventKey)) {
                         logic.nextPage();
                         return true;
-                    } else if (KeyBindings.previousPage.getKeyCode() == eventKey) {
+                    } else if (KeyBindings.previousPage.isActiveAndMatches(eventKey)) {
                         logic.previousPage();
                         return true;
                     }
@@ -588,5 +588,16 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
     @Override
     public void onStateChange() {
         updateLayout();
+    }
+
+    @Nullable
+    public RecipeLayout getRecipeLayout(int mouseX, int mouseY) {
+        for (RecipeLayout layout : recipeLayouts) {
+            if (layout.isMouseOver(mouseX, mouseY)) {
+                return layout;
+            }
+        }
+
+        return null;
     }
 }

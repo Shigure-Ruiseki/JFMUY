@@ -10,9 +10,3 @@ minecraft {
     injectedTags.put("MOD_NAME", project.modName)
     injectedTags.put("MOD_GROUP", project.modGroup)
 }
-
-tasks.named("publishCurseforge") {
-    api {
-        environment = "both"
-    }
-}

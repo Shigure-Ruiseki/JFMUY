@@ -23,7 +23,6 @@ public class AutocraftingHandler implements IAutocraftingHandler {
     @Nullable
     private RecipeBookmarkItem<?> currentRequester;
     private Stack<RecipeBookmarkItem<?>> recipesToAutocraft;
-    private boolean waitingForCraftResult = false;
 
     public void start(RecipeChain chain) {
         this.currentChain = chain;
@@ -66,7 +65,6 @@ public class AutocraftingHandler implements IAutocraftingHandler {
         IRecipeCraftingHandler craftingHandler = (IRecipeCraftingHandler) recipeTransferHandler;
         int craftAmount = (int) this.currentRequester.getMultiplier();
         if (craftingHandler.craft(openContainer, recipeLayout, player, craftAmount, false) == null) {
-            waitingForCraftResult = true;
             craftingHandler.craft(openContainer, recipeLayout, player, craftAmount, true);
             return false;
         }
@@ -81,14 +79,13 @@ public class AutocraftingHandler implements IAutocraftingHandler {
         do {
             this.currentRequester = recipesToAutocraft.pop();
         } while (autocraft() && !recipesToAutocraft.isEmpty());
-        if (!waitingForCraftResult && recipesToAutocraft != null && recipesToAutocraft.isEmpty()) {
+        if (recipesToAutocraft != null && recipesToAutocraft.isEmpty()) {
             stop();
         }
     }
 
     @Override
     public void stepFinished(boolean success, int amount) {
-        waitingForCraftResult = false;
         if (this.recipesToAutocraft == null) {
             return;
         }
@@ -101,7 +98,6 @@ public class AutocraftingHandler implements IAutocraftingHandler {
 
     @Override
     public void stop() {
-        this.waitingForCraftResult = false;
         this.currentChain = null;
         this.currentRequester = null;
         this.recipesToAutocraft = null;

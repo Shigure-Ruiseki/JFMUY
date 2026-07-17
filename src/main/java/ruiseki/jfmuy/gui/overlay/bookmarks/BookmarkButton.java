@@ -44,9 +44,8 @@ public class BookmarkButton extends GuiIconToggleButton {
                 .add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.bookmarks.not.enough.space"));
         } else {
             tooltip.add(
-                EnumChatFormatting.GRAY + Translator.translateToLocalFormatted(
-                    "jfmuy.tooltip.bookmarks.usage.key",
-                    bookmarkKey.getDisplayName()));
+                EnumChatFormatting.GRAY + Translator
+                    .translateToLocalFormatted("jfmuy.tooltip.bookmarks.usage.key", bookmarkKey.getDisplayName()));
         }
     }
 

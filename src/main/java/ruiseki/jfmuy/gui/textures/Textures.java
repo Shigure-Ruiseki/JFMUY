@@ -29,6 +29,7 @@ public class Textures {
     public static final TextureInfo infoIcon;
     public static final TextureInfo catalystTab;
     public static final TextureInfo flameIcon;
+    public static final TextureInfo searchIcon;
 
     static {
         slot = registerGuiSprite("slot", 18, 18).slice(4, 4, 4, 4);
@@ -56,6 +57,7 @@ public class Textures {
         bookmarkButtonEnabledIcon = registerGuiSprite("icons/bookmark_button_enabled", 16, 16);
         infoIcon = registerGuiSprite("icons/info", 16, 16);
         flameIcon = registerGuiSprite("icons/flame", 14, 14);
+        searchIcon = registerGuiSprite("icons/search", 8, 8);
     }
 
     private static TextureInfo registerGuiSprite(String name, int width, int height) {

@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import ruiseki.jfmuy.api.IRecipesGui;
 import ruiseki.jfmuy.api.recipe.IFocus;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.gui.Focus;
@@ -16,6 +17,8 @@ public class IngredientLookupState {
 
     @Nullable
     private final IFocus<?> focus;
+    private String searchFilter;
+    private IRecipesGui.RecipeSearchMode searchMode;
     private final ImmutableList<IRecipeCategory> recipeCategories;
 
     private int recipeCategoryIndex;
@@ -31,6 +34,8 @@ public class IngredientLookupState {
             focus = Focus.check(focus);
         }
         this.focus = focus;
+        this.searchFilter = "";
+        this.searchMode = IRecipesGui.RecipeSearchMode.NONE;
         this.recipeCategories = ImmutableList.copyOf(recipeCategories);
         this.setRecipeCategoryIndex(recipeCategoryIndex);
         this.setRecipeIndex(recipeIndex);
@@ -67,5 +72,25 @@ public class IngredientLookupState {
 
     public void setRecipesPerPage(int recipesPerPage) {
         this.recipesPerPage = recipesPerPage;
+    }
+
+    public String getSearchFilter() {
+        return searchFilter;
+    }
+
+    public boolean setSearchFilter(String searchFilter) {
+        String old = this.searchFilter;
+        this.searchFilter = searchFilter;
+        return !old.equals(searchFilter);
+    }
+
+    public IRecipesGui.RecipeSearchMode getSearchMode() {
+        return searchMode;
+    }
+
+    public boolean setSearchMode(IRecipesGui.RecipeSearchMode searchMode) {
+        IRecipesGui.RecipeSearchMode old = this.searchMode;
+        this.searchMode = searchMode;
+        return old != searchMode;
     }
 }

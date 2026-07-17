@@ -9,6 +9,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
@@ -32,7 +33,7 @@ import ruiseki.okcore.helper.GuiHelpers;
  */
 public class CollapsedGroupRenderer implements IIngredientRenderer<CollapsedGroupIngredient> {
 
-    /** Singleton registered with the ingredient type system — {@code collapsedStack} is null. */
+    /** Singleton registered with the ingredient type system - {@code collapsedStack} is null. */
     public static final CollapsedGroupRenderer INSTANCE = new CollapsedGroupRenderer(null);
 
     private final CollapsedGroupIngredient collapsedGroupIngredient;
@@ -146,23 +147,33 @@ public class CollapsedGroupRenderer implements IIngredientRenderer<CollapsedGrou
         try {
             RenderHelper.enableGUIStandardItemLighting();
             GlStateManager.pushMatrix();
-            GlStateManager.translate(x, y, 0);
-            GlStateManager.scale(scale, scale, scale);
-            if (ingredient instanceof ItemStack) {
-                RenderItem.getInstance()
-                    .renderItemAndEffectIntoGUI(
-                        minecraft.fontRenderer,
-                        minecraft.getTextureManager(),
-                        (ItemStack) ingredient,
-                        0,
-                        0);
-            } else {
-                renderIngredient(minecraft, 0, 0, element);
+            try {
+                GlStateManager.translate(x, y, 0);
+                GlStateManager.scale(scale, scale, scale);
+                if (ingredient instanceof ItemStack) {
+                    RenderItem.getInstance()
+                        .renderItemAndEffectIntoGUI(
+                            minecraft.fontRenderer,
+                            minecraft.getTextureManager(),
+                            (ItemStack) ingredient,
+                            0,
+                            0);
+                } else {
+                    renderIngredient(minecraft, 0, 0, element);
+                }
+            } finally {
+                GlStateManager.popMatrix();
             }
-            GlStateManager.popMatrix();
+
         } catch (RuntimeException | LinkageError ignored) {
-            GlStateManager.popMatrix();
+            discardStartedBuffer();
         }
+    }
+
+    private static void discardStartedBuffer() {
+        try {
+            Tessellator.instance.draw();
+        } catch (RuntimeException | LinkageError ignored) {}
     }
 
     private static void drawCollapsedBorder(int x, int y, int borderColor) {

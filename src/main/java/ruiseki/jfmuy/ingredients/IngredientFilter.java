@@ -386,6 +386,10 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         return builder.build();
     }
 
+    public Collection<IIngredientListElement<?>> getRawIngredients(String filterText) {
+        return Collections.unmodifiableList(getIngredientListUncached(Translator.toLowercaseWithLocale(filterText)));
+    }
+
     @Override
     public String getFilterText() {
         return Config.getFilterText();

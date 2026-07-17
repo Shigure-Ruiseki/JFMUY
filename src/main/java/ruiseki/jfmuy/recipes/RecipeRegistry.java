@@ -131,18 +131,17 @@ public class RecipeRegistry implements IRecipeRegistry {
         }
     }
 
-    private long calculateId(IRecipeWrapper recipe, IRecipeCategory<?> category) {
-        Ingredients ings = new Ingredients();
-        recipe.getIngredients(ings);
+    @SuppressWarnings("unchecked")
+    private long calculateId(IRecipeCategory<?> category, Ingredients ingredients) {
         long hash = 0;
         for (IIngredientType<?> type : Internal.getIngredientRegistry()
             .getCraftableIngredientTypes()) {
-            List<Object> ingredients = ings.getInputIngredients()
+            List<Object> ings = ingredients.getInputIngredients()
                 .get(type);
-            if (ingredients == null) {
+            if (ings == null) {
                 continue;
             }
-            for (Object ingredient : ingredients) {
+            for (Object ingredient : ings) {
                 if (ingredient == null) { // Looking at you, Techguns
                     continue;
                 }
@@ -152,12 +151,12 @@ public class RecipeRegistry implements IRecipeRegistry {
         }
         for (IIngredientType<?> type : Internal.getIngredientRegistry()
             .getCraftableIngredientTypes()) {
-            List<Object> ingredients = ings.getOutputIngredients()
+            List<Object> ings = ingredients.getOutputIngredients()
                 .get(type);
-            if (ingredients == null) {
+            if (ings == null) {
                 continue;
             }
-            for (Object ingredient : ingredients) {
+            for (Object ingredient : ings) {
                 if (ingredient == null) {
                     continue;
                 }
@@ -253,7 +252,7 @@ public class RecipeRegistry implements IRecipeRegistry {
 
         recipeWrappersForCategories.put(recipeCategory, recipeWrapper);
 
-        long recipeId = calculateId(recipeWrapper, recipeCategory);
+        long recipeId = calculateId(recipeCategory, ingredients);
         recipeIds.put(recipeWrapper, recipeId);
         recipeWrappersByCategory.put(recipeCategory, recipeId, recipeWrapper);
 

@@ -1,9 +1,10 @@
 package ruiseki.jfmuy.plugins.vanilla;
 
-import java.util.Collections;
 import java.util.List;
 
 import net.minecraft.item.ItemStack;
+
+import com.google.common.collect.ImmutableList;
 
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.IVanillaRecipeFactory;
@@ -20,7 +21,10 @@ public class VanillaRecipeFactory implements IVanillaRecipeFactory {
         ErrorUtil.checkNotEmpty(rightInputs, "rightInputs");
         ErrorUtil.checkNotEmpty(outputs, "outputs");
 
-        return new AnvilRecipeWrapper(Collections.singletonList(leftInput), rightInputs, outputs);
+        return new AnvilRecipeWrapper(
+            ImmutableList.of(leftInput),
+            ImmutableList.copyOf(rightInputs),
+            ImmutableList.copyOf(outputs));
     }
 
     @Override
@@ -30,7 +34,10 @@ public class VanillaRecipeFactory implements IVanillaRecipeFactory {
         ErrorUtil.checkNotEmpty(rightInputs, "rightInputs");
         ErrorUtil.checkNotEmpty(outputs, "outputs");
 
-        return new AnvilRecipeWrapper(leftInputs, rightInputs, outputs);
+        return new AnvilRecipeWrapper(
+            ImmutableList.copyOf(leftInputs),
+            ImmutableList.copyOf(rightInputs),
+            ImmutableList.copyOf(outputs));
     }
 
     @Override

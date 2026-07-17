@@ -3,7 +3,6 @@ package ruiseki.jfmuy.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -15,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.base.Preconditions;
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.IRecipeRegistry;
 import ruiseki.jfmuy.api.recipe.IFocus;
@@ -22,6 +22,7 @@ import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
 import ruiseki.jfmuy.gui.Focus;
+import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 
 /**
  * Utilities to query recipes in vanilla or any mod that supports JFMUY's recipe framework.
@@ -33,6 +34,30 @@ public final class RecipeUtil {
 
     public static Query query() {
         return new Query();
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static Set<IRecipeWrapper> search(IRecipeCategory category,
+        Collection<IIngredientListElement<?>> ingredients, boolean searchInputs, boolean searchOutputs) {
+        IRecipeRegistry recipeRegistry = Internal.getRuntime()
+            .getRecipeRegistry();
+        Set<IRecipeWrapper> matched = new ReferenceOpenHashSet<>();
+        MutableFocus focus = new MutableFocus();
+        if (searchInputs) {
+            focus.setMode(IFocus.Mode.INPUT);
+            for (IIngredientListElement<?> element : ingredients) {
+                focus.setValue(element.getIngredient());
+                matched.addAll(recipeRegistry.getRecipeWrappers(category, translateFocus(element, focus)));
+            }
+        }
+        if (searchOutputs) {
+            focus.setMode(IFocus.Mode.OUTPUT);
+            for (IIngredientListElement<?> element : ingredients) {
+                focus.setValue(element.getIngredient());
+                matched.addAll(recipeRegistry.getRecipeWrappers(category, translateFocus(element, focus)));
+            }
+        }
+        return matched;
     }
 
     public static List<IRecipeWrapper> query(Consumer<Query> consumer) throws IllegalArgumentException {
@@ -100,7 +125,7 @@ public final class RecipeUtil {
 
             IRecipeRegistry recipeRegistry = Internal.getRuntime()
                 .getRecipeRegistry();
-            Set<IRecipeWrapper> recipes = new HashSet<>();
+            Set<IRecipeWrapper> recipes = new ReferenceOpenHashSet<>();
             MutableFocus focus = new MutableFocus();
 
             focus.setMode(IFocus.Mode.INPUT);
@@ -125,6 +150,12 @@ public final class RecipeUtil {
             return new ArrayList<>(recipes);
         }
 
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <V> IFocus<?> translateFocus(IIngredientListElement<V> element, MutableFocus focus) {
+        return element.getIngredientHelper()
+            .translateFocus((Focus<V>) focus, Focus::new);
     }
 
     private static class MutableFocus extends Focus<Object> {

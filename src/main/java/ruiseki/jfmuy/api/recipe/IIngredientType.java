@@ -10,7 +10,8 @@ import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 /**
  * A type of ingredient (i.e. ItemStack, FluidStack, etc) handled by JFMUY.
  * Register new types with
- * {@link IModIngredientRegistration#register(IIngredientType, Collection, IIngredientHelper, IIngredientRenderer)}
+ * {@link IModIngredientRegistration#register(IIngredientType, Collection, IIngredientHelper, IIngredientRenderer)}.
+ * Mark types as craftable with {@link IModIngredientRegistration#markAsCraftable(IIngredientType)}.
  *
  * @see VanillaTypes for the built-in vanilla types {@link VanillaTypes#ITEM} and {@link VanillaTypes#FLUID}
  */

@@ -18,18 +18,22 @@ import ruiseki.jfmuy.util.ErrorUtil;
 
 public class ShapelessRecipesWrapper<T extends IRecipe> implements ICraftingRecipeWrapper {
 
-    protected final IJFMUYHelpers jeiHelpers;
+    protected final IJFMUYHelpers jfmuyHelpers;
     protected final T recipe;
 
-    public ShapelessRecipesWrapper(IJFMUYHelpers jeiHelpers, T recipe) {
-        this.jeiHelpers = jeiHelpers;
+    public ShapelessRecipesWrapper(IJFMUYHelpers jfmuyHelpers, T recipe) {
+        this.jfmuyHelpers = jfmuyHelpers;
         this.recipe = recipe;
+    }
+
+    public T getRawRecipe() {
+        return recipe;
     }
 
     @Override
     public void getIngredients(IIngredients ingredients) {
         ItemStack recipeOutput = recipe.getRecipeOutput();
-        IStackHelper stackHelper = jeiHelpers.getStackHelper();
+        IStackHelper stackHelper = jfmuyHelpers.getStackHelper();
 
         List<Object> rawInputs = new ArrayList<>();
         if (recipe instanceof ShapelessRecipes shapeless) {

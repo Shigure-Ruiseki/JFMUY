@@ -1,8 +1,6 @@
 package ruiseki.jfmuy.ingredients;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -13,12 +11,18 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableSet;
 
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import ruiseki.jfmuy.ClientProxy;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
+import ruiseki.jfmuy.bookmarks.BookmarkItem;
+import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.startup.IModIdHelper;
 import ruiseki.jfmuy.util.LegacyUtil;
 import ruiseki.jfmuy.util.Log;
+import ruiseki.jfmuy.util.StringUtil;
 import ruiseki.jfmuy.util.Translator;
 
 public class IngredientListElement<V> implements IIngredientListElement<V> {
@@ -29,10 +33,9 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
     private final int orderIndex;
     private final IIngredientHelper<V> ingredientHelper;
     private final IIngredientRenderer<V> ingredientRenderer;
-    private final String displayName;
-    private final List<String> modIds;
-    private final List<String> modNames;
-    private final String resourceId;
+    private final Object modIds; // Can be String or String[]
+    private final Object modNames; // Can be String or String[]
+
     private boolean visible = true;
 
     @Nullable
@@ -66,16 +69,19 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
         this.ingredientRenderer = ingredientRenderer;
         String displayModId = ingredientHelper.getDisplayModId(ingredient);
         String modId = ingredientHelper.getModId(ingredient);
-        this.modIds = new ArrayList<>();
-        this.modIds.add(displayModId);
-        if (!modId.equals(displayModId)) {
-            this.modIds.add(modId);
+        if (modId.equals(displayModId)) {
+            this.modIds = StringUtil.intern(modId);
+            this.modNames = StringUtil.intern(modIdHelper.getModNameForModId(modId));
+        } else {
+            this.modIds = new String[] { StringUtil.intern(modId), StringUtil.intern(displayModId) };
+            String modIdName = modIdHelper.getModNameForModId(modId);
+            String displayModIdName = modIdHelper.getModNameForModId(displayModId);
+            if (modIdName.equals(displayModIdName)) {
+                this.modNames = StringUtil.intern(modIdName);
+            } else {
+                this.modNames = new String[] { StringUtil.intern(modIdName), StringUtil.intern(displayModIdName) };
+            }
         }
-        this.modNames = this.modIds.stream()
-            .map(modIdHelper::getModNameForModId)
-            .collect(Collectors.toList());
-        this.displayName = IngredientInformation.getDisplayName(ingredient, ingredientHelper);
-        this.resourceId = LegacyUtil.getResourceId(ingredient, ingredientHelper);
     }
 
     @Override
@@ -100,46 +106,60 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
 
     @Override
     public final String getDisplayName() {
-        return displayName;
+        return IngredientInformation.getDisplayName(ingredient, ingredientHelper);
     }
 
     @Override
     public String getModNameForSorting() {
-        return modNames.get(0);
+        return this.modNames instanceof String ? (String) this.modNames : ((String[]) this.modNames)[0];
     }
 
     @Override
     public Set<String> getModNameStrings() {
-        Set<String> modNameStrings = new HashSet<>();
-        for (int i = 0; i < modIds.size(); i++) {
-            String modId = modIds.get(i);
-            String modName = modNames.get(i);
-            addModNameStrings(modNameStrings, modId, modName);
+        Set<String> modNameStrings = new ObjectArraySet<>();
+        if (this.modIds instanceof String) {
+            addModIdStrings(modNameStrings, (String) this.modIds);
+        } else {
+            String[] modIdsCasted = (String[]) this.modIds;
+            for (String modId : modIdsCasted) {
+                addModIdStrings(modNameStrings, modId);
+            }
+        }
+        if (this.modNames instanceof String) {
+            addModNameStrings(modNameStrings, (String) this.modNames);
+        } else {
+            String[] modNamesCasted = (String[]) this.modNames;
+            for (String modName : modNamesCasted) {
+                addModNameStrings(modNameStrings, modName);
+            }
         }
         return modNameStrings;
     }
 
-    private static void addModNameStrings(Set<String> modNames, String modId, String modName) {
-        String modNameLowercase = modName.toLowerCase(Locale.ENGLISH);
-        String modNameNoSpaces = SPACE_PATTERN.matcher(modNameLowercase)
-            .replaceAll("");
+    private static void addModIdStrings(Set<String> modNames, String modId) {
         String modIdNoSpaces = SPACE_PATTERN.matcher(modId)
             .replaceAll("");
         modNames.add(modId);
-        modNames.add(modNameNoSpaces);
         modNames.add(modIdNoSpaces);
+    }
+
+    private static void addModNameStrings(Set<String> modNames, String modName) {
+        String modNameLowercase = modName.toLowerCase(Locale.ENGLISH);
+        String modNameNoSpaces = SPACE_PATTERN.matcher(modNameLowercase)
+            .replaceAll("");
+        modNames.add(modNameNoSpaces);
     }
 
     @Override
     public final List<String> getTooltipStrings() {
-        String modName = this.modNames.get(0);
-        String modId = this.modIds.get(0);
+        String modId = this.modIds instanceof String ? (String) this.modIds : ((String[]) this.modIds)[0];
+        String modName = this.modNames instanceof String ? (String) this.modNames : ((String[]) this.modNames)[0];
         String modNameLowercase = modName.toLowerCase(Locale.ENGLISH);
-        String displayNameLowercase = Translator.toLowercaseWithLocale(this.displayName);
+        String displayNameLowercase = Translator.toLowercaseWithLocale(this.getDisplayName());
         return IngredientInformation.getTooltipStrings(
             ingredient,
             ingredientRenderer,
-            ImmutableSet.of(modId, modNameLowercase, displayNameLowercase, resourceId));
+            ImmutableSet.of(modId, modNameLowercase, displayNameLowercase, this.getResourceId()));
     }
 
     @Override
@@ -165,16 +185,44 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
 
     @Override
     public String getResourceId() {
-        return resourceId;
+        return LegacyUtil.getResourceId(ingredient, ingredientHelper);
     }
 
     @Override
     public boolean isVisible() {
-        return visible;
+        if (visible) {
+            return true;
+        }
+        if (FMLLaunchHandler.side()
+            .isClient()) {
+            return Config.getShowHiddenIngredientsInCreative() && ClientProxy.isCreative();
+        }
+        return false;
     }
 
     @Override
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    @Override
+    public int getGroupIndex() {
+        if (ingredient instanceof BookmarkItem<?> && ((BookmarkItem<?>) ingredient).getGroup() != null) {
+            return ((BookmarkItem<?>) ingredient).getGroup().id;
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean startsNewRow() {
+        if (ingredient instanceof BookmarkItem) {
+            return ((BookmarkItem<?>) ingredient).startsNewRow();
+        }
+        return false;
+    }
+
+    @Override
+    public int getOrdinal() {
+        return ingredientHelper.getOrdinal(ingredient);
     }
 }

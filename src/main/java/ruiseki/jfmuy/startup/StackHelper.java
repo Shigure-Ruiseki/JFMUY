@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +19,10 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.oredict.OreDictionary;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import ruiseki.jfmuy.api.ISubtypeRegistry;
 import ruiseki.jfmuy.api.gui.IGuiIngredient;
 import ruiseki.jfmuy.api.recipe.IStackHelper;
@@ -42,7 +44,7 @@ public class StackHelper implements IStackHelper {
     public StackHelper(ISubtypeRegistry subtypeRegistry) {
         this.subtypeRegistry = subtypeRegistry;
         for (UidMode mode : UidMode.values()) {
-            uidCache.put(mode, new IdentityHashMap<>());
+            uidCache.put(mode, new Reference2ObjectOpenHashMap<>());
         }
     }
 
@@ -52,7 +54,7 @@ public class StackHelper implements IStackHelper {
 
     public void disableUidCache() {
         for (UidMode mode : UidMode.values()) {
-            uidCache.put(mode, new IdentityHashMap<>());
+            uidCache.put(mode, new Reference2ObjectOpenHashMap<>());
         }
         uidCacheEnabled = false;
     }
@@ -110,7 +112,6 @@ public class StackHelper implements IStackHelper {
                     availableItemStacks.remove(matching.slotIndex);
                 }
                 matchingItemResult.matchingItems.put(recipeSlotNumber, matching.slotIndex);
-                matchingItemResult.matchingItemCounts.put(recipeSlotNumber, matching.count);
             }
         }
 
@@ -132,6 +133,51 @@ public class StackHelper implements IStackHelper {
             }
         }
         return null;
+    }
+
+    public SensitiveCountMatchingItemsResult getMatchingItemsWithSensitiveCount(
+        Map<Integer, ItemStack> availableItemStacks, Map<Integer, ? extends IGuiIngredient<ItemStack>> ingredientsMap) {
+        SensitiveCountMatchingItemsResult matchingItemResult = new SensitiveCountMatchingItemsResult();
+
+        int recipeSlotNumber = -1;
+        SortedSet<Integer> keys = new TreeSet<>(ingredientsMap.keySet());
+        for (Integer key : keys) {
+            IGuiIngredient<ItemStack> ingredient = ingredientsMap.get(key);
+            if (!ingredient.isInput()) {
+                continue;
+            }
+            recipeSlotNumber++;
+
+            List<ItemStack> requiredStacks = ingredient.getAllIngredients();
+            if (requiredStacks.isEmpty()) {
+                continue;
+            }
+
+            Integer matching = containsAnyStackIndexed(availableItemStacks, requiredStacks);
+            if (matching == null) {
+                matchingItemResult.missingItems.add(key);
+            } else {
+                ItemStack matchingStack = availableItemStacks.get(matching);
+                int count = requiredStacks.stream()
+                    .mapToInt(stack -> stack.stackSize)
+                    .max()
+                    .orElse(1);
+                int diff = matchingStack.stackSize - count;
+                ItemStackHelpers.shrink(matchingStack, count);
+                if (diff < 0) {
+                    matchingItemResult.missingItems.add(key);
+                    availableItemStacks.remove(matching);
+                } else {
+                    if (matchingStack.stackSize == 0) {
+                        availableItemStacks.remove(matching);
+                    }
+                    matchingItemResult.matchingItems.put(recipeSlotNumber, matching);
+                    matchingItemResult.matchingItemsCounts.put(recipeSlotNumber, count);
+                }
+            }
+        }
+
+        return matchingItemResult;
     }
 
     public boolean containsSameStacks(Collection<ItemStack> stacks, Collection<ItemStack> contains) {
@@ -482,9 +528,9 @@ public class StackHelper implements IStackHelper {
 
     public static class MatchingItemsResult {
 
-        public final Map<Integer, Integer> matchingItems = new HashMap<>();
-        public final Map<Integer, Integer> matchingItemCounts = new HashMap<>();
-        public final List<Integer> missingItems = new ArrayList<>();
+        public final Map<Integer, Integer> matchingItems = new Int2IntOpenHashMap();
+        public final Int2IntMap matchingItemsCasted = (Int2IntMap) matchingItems;
+        public final List<Integer> missingItems = new IntArrayList();
     }
 
     private static class MatchingItem {
@@ -496,6 +542,11 @@ public class StackHelper implements IStackHelper {
             this.slotIndex = slotIndex;
             this.count = count;
         }
+    }
+
+    public static class SensitiveCountMatchingItemsResult extends MatchingItemsResult {
+
+        public final Map<Integer, Integer> matchingItemsCounts = new Int2IntOpenHashMap();
     }
 
     private interface ItemStackMatchable<R> {

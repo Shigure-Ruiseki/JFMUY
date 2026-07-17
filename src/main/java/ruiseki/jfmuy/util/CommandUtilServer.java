@@ -25,7 +25,7 @@ import net.minecraftforge.event.CommandEvent;
 import com.google.common.base.Throwables;
 
 import ruiseki.jfmuy.JFMUY;
-import ruiseki.jfmuy.network.packets.PacketCheatPermission;
+import ruiseki.jfmuy.network.PacketCheatPermission;
 import ruiseki.okcore.helper.Helpers;
 import ruiseki.okcore.helper.ItemHandlerHelpers;
 
@@ -98,8 +98,8 @@ public final class CommandUtilServer {
                 mousePickupItemStack(sender, itemStack);
             }
         } else {
-            JFMUY.getProxy()
-                .sendPacketToClient(new PacketCheatPermission(false), sender);
+            JFMUY.instance.getPacketHandler()
+                .sendToPlayer(new PacketCheatPermission(false), sender);
         }
     }
 
@@ -129,8 +129,8 @@ public final class CommandUtilServer {
             sender.inventoryContainer.detectAndSendChanges();
             notifyGive(sender, originalStack, count);
         } else {
-            JFMUY.getProxy()
-                .sendPacketToClient(new PacketCheatPermission(false), sender);
+            JFMUY.instance.getPacketHandler()
+                .sendToPlayer(new PacketCheatPermission(false), sender);
         }
     }
 

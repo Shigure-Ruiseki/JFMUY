@@ -3,11 +3,11 @@ package ruiseki.jfmuy.startup;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -18,6 +18,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableTable;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import ruiseki.jfmuy.api.IGuiHelper;
 import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.IModRegistry;
@@ -36,6 +39,7 @@ import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferRegistry;
 import ruiseki.jfmuy.collect.ListMultiMap;
 import ruiseki.jfmuy.collect.SetMultiMap;
+import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.recipes.RecipeClickableArea;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.plugins.jfmuy.info.IngredientInfoRecipe;
@@ -50,12 +54,12 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
     private final JFMUYHelpers jfmuyHelpers;
     private final IIngredientRegistry ingredientRegistry;
     private final List<IRecipeCategory> recipeCategories = new ArrayList<>();
-    private final Set<String> recipeCategoryUids = new HashSet<>();
+    private final Set<String> recipeCategoryUids = new ObjectOpenHashSet<>();
     private final SetMultiMap<String, Class> recipeHandlerClasses = new SetMultiMap<>();
     private final List<IAdvancedGuiHandler<?>> advancedGuiHandlers = new ArrayList<>();
     private final List<IGlobalGuiHandler> globalGuiHandlers = new ArrayList<>();
-    private final Map<Class, IGuiScreenHandler> guiScreenHandlers = new HashMap<>();
-    private final Map<Class, IGhostIngredientHandler> ghostIngredientHandlers = new HashMap<>();
+    private final Map<Class, IGuiScreenHandler> guiScreenHandlers = new Reference2ObjectOpenHashMap<>();
+    private final Map<Class, IGhostIngredientHandler> ghostIngredientHandlers = new Reference2ObjectOpenHashMap<>();
     private final ListMultiMap<String, Object> recipes = new ListMultiMap<>();
     private final RecipeTransferRegistry recipeTransferRegistry;
     private final ListMultiMap<Class<? extends GuiContainer>, RecipeClickableArea> recipeClickableAreas = new ListMultiMap<>();
@@ -192,7 +196,7 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
         Preconditions.checkArgument(GuiScreen.class.isAssignableFrom(guiClass), "guiClass must inherit from GuiScreen");
         Preconditions.checkArgument(
             !ghostIngredientGuiBlacklist.contains(guiClass),
-            "you cannot add a ghost ingredient handler for the following Guis, it would interfere with using JEI: %s",
+            "you cannot add a ghost ingredient handler for the following Guis, it would interfere with using JFMUY: %s",
             ghostIngredientGuiBlacklist);
         ErrorUtil.checkNotNull(handler, "handler");
         this.ghostIngredientHandlers.put(guiClass, handler);
@@ -253,6 +257,34 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
     }
 
     public RecipeRegistry createRecipeRegistry(IngredientRegistry ingredientRegistry) {
+        if (!Config.categoryUidOrder()
+            .isEmpty()) {
+            List<IRecipeCategory> orderedCategories = new ArrayList<>();
+            ListMultiMap<String, Object> orderedRecipeCatalysts = new ListMultiMap<>(
+                new Object2ObjectLinkedOpenHashMap<>(),
+                ArrayList::new);
+
+            for (String uid : Config.categoryUidOrder()) {
+                Stream<IRecipeCategory> stream = recipeCategories.stream()
+                    .filter(
+                        category -> category.getUid()
+                            .equals(uid));
+                Optional<IRecipeCategory> first = stream.findFirst();
+                if (first.isPresent()) {
+                    IRecipeCategory category = first.get();
+                    orderedCategories.add(category);
+                    recipeCategories.remove(category);
+                    List<Object> catalysts = recipeCatalysts.get(uid);
+                    orderedRecipeCatalysts.put(uid, catalysts);
+                    recipeCatalysts.remove(uid);
+                }
+            }
+
+            orderedRecipeCatalysts.putAll(recipeCatalysts);
+            recipeCategories.addAll(0, orderedCategories);
+            recipeCatalysts.clear();
+            recipeCatalysts.putAll(orderedRecipeCatalysts);
+        }
         ImmutableTable<Class, String, IRecipeTransferHandler> recipeTransferHandlers = recipeTransferRegistry
             .getRecipeTransferHandlers();
         return new RecipeRegistry(

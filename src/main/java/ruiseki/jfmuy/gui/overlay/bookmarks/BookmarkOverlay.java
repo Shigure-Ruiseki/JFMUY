@@ -19,13 +19,11 @@ import ruiseki.jfmuy.gui.elements.GuiIconToggleButton;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.gui.overlay.GridAlignment;
 import ruiseki.jfmuy.gui.overlay.IngredientGrid;
-import ruiseki.jfmuy.gui.overlay.IngredientGridWithNavigation;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.input.IClickedIngredient;
-import ruiseki.jfmuy.input.IShowsRecipeFocuses;
 import ruiseki.jfmuy.util.CommandUtil;
 
-public class BookmarkOverlay implements IShowsRecipeFocuses, ILeftAreaContent, IBookmarkOverlay {
+public class BookmarkOverlay implements ILeftAreaContent, IBookmarkOverlay {
 
     private static final int BUTTON_SIZE = 20;
 
@@ -34,7 +32,7 @@ public class BookmarkOverlay implements IShowsRecipeFocuses, ILeftAreaContent, I
     private Rectangle displayArea = new Rectangle();
 
     // display elements
-    private final IngredientGridWithNavigation contents;
+    private final BookmarkGridWithNavigation contents;
     private final GuiIconToggleButton bookmarkButton;
 
     // visibility
@@ -46,8 +44,9 @@ public class BookmarkOverlay implements IShowsRecipeFocuses, ILeftAreaContent, I
     public BookmarkOverlay(BookmarkList bookmarkList, GuiHelper guiHelper, GuiScreenHelper guiScreenHelper) {
         this.bookmarkList = bookmarkList;
         this.bookmarkButton = BookmarkButton.create(this, bookmarkList, guiHelper);
-        this.contents = new IngredientGridWithNavigation(bookmarkList, guiScreenHelper, GridAlignment.RIGHT);
+        this.contents = new BookmarkGridWithNavigation(bookmarkList, guiScreenHelper, GridAlignment.RIGHT);
         bookmarkList.addListener(() -> contents.updateLayout(false));
+        bookmarkList.setGroupOrganizer(contents.getBookmarkGroupOrganizer());
     }
 
     public boolean isListDisplayed() {
@@ -68,8 +67,10 @@ public class BookmarkOverlay implements IShowsRecipeFocuses, ILeftAreaContent, I
     public void drawScreen(Minecraft minecraft, int mouseX, int mouseY) {
         if (this.isListDisplayed()) {
             this.contents.draw(minecraft, mouseX, mouseY);
+            if (!Config.hideBottomLeftCornerBookmarkButton()) {
+                bookmarkButton.drawTooltips(minecraft, mouseX, mouseY);
+            }
         }
-        this.bookmarkButton.draw(minecraft, mouseX, mouseY);
     }
 
     @Override
@@ -79,8 +80,10 @@ public class BookmarkOverlay implements IShowsRecipeFocuses, ILeftAreaContent, I
     public void drawTooltips(Minecraft minecraft, int mouseX, int mouseY) {
         if (isListDisplayed()) {
             this.contents.drawTooltips(minecraft, mouseX, mouseY);
+            if (!Config.hideBottomLeftCornerBookmarkButton()) {
+                bookmarkButton.drawTooltips(minecraft, mouseX, mouseY);
+            }
         }
-        bookmarkButton.drawTooltips(minecraft, mouseX, mouseY);
     }
 
     private static int getMinWidth() {
@@ -100,23 +103,21 @@ public class BookmarkOverlay implements IShowsRecipeFocuses, ILeftAreaContent, I
             displayArea.y,
             displayArea.width,
             displayArea.height - (BUTTON_SIZE + 4));
-        int legacySize = contents.size();
         boolean contentsHasRoom = this.contents.updateBounds(availableContentsArea, guiExclusionAreas, minWidth);
-        boolean resetToFirstPage = legacySize != contents.size();
 
         // update area to match contents size
         Rectangle contentsArea = this.contents.getArea();
         displayArea.x = contentsArea.x;
         displayArea.width = contentsArea.width;
 
-        this.bookmarkButton.updateBounds(
-            new Rectangle(
-                displayArea.x,
-                (int) Math.floor(displayArea.getMaxY()) - BUTTON_SIZE - 2,
-                BUTTON_SIZE,
-                BUTTON_SIZE));
+        if (Config.hideBottomLeftCornerBookmarkButton()) {
+            this.bookmarkButton.updateBounds(new Rectangle(0, 0, 0, 0));
+        } else {
+            this.bookmarkButton.updateBounds(
+                new Rectangle(2, (int) Math.floor(displayArea.getMaxY()) - BUTTON_SIZE - 2, BUTTON_SIZE, BUTTON_SIZE));
+        }
 
-        this.contents.updateLayout(resetToFirstPage);
+        this.contents.updateLayout(false);
 
         return contentsHasRoom;
     }
@@ -153,7 +154,11 @@ public class BookmarkOverlay implements IShowsRecipeFocuses, ILeftAreaContent, I
                     IClickedIngredient<?> clicked = getIngredientUnderMouse(mouseX, mouseY);
                     if (clicked != null) {
                         if (Config.isCheatItemsEnabled()) {
-                            ItemStack itemStack = clicked.getCheatItemStack();
+                            ItemStack clickWithStack = minecraft.thePlayer.inventory.getItemStack();
+                            ItemStack itemStack = clicked.replaceWithCheatItemStack(clickWithStack);
+                            if (itemStack == null) {
+                                itemStack = clicked.getCheatItemStack();
+                            }
                             if (itemStack != null) {
                                 CommandUtil.giveStack(itemStack, mouseButton);
                             }
@@ -173,6 +178,21 @@ public class BookmarkOverlay implements IShowsRecipeFocuses, ILeftAreaContent, I
         return false;
     }
 
+    @Override
+    public boolean handleMouseReleased(int mouseX, int mouseY, int mouseButton) {
+        if (contents.isMouseOver(mouseX, mouseY)) {
+            return this.contents.handleMouseReleased(mouseX, mouseY, mouseButton);
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean onKeyPressed(char typedChar, int eventKey) {
+        return isListDisplayed() && this.contents.getBookmarkGroupOrganizer()
+            .onKeyPressed(typedChar, eventKey);
+    }
+
     @Nullable
     @Override
     public Object getIngredientUnderMouse() {
@@ -181,6 +201,15 @@ public class BookmarkOverlay implements IShowsRecipeFocuses, ILeftAreaContent, I
             if (elementUnderMouse != null) {
                 return elementUnderMouse.getIngredient();
             }
+        }
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public IIngredientListElement getElementUnderMouse() {
+        if (isListDisplayed()) {
+            return this.contents.getElementUnderMouse();
         }
         return null;
     }

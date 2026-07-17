@@ -1,32 +1,42 @@
 package ruiseki.jfmuy.runtime;
 
-import java.util.IdentityHashMap;
 import java.util.Map;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidStack;
 
 import org.jetbrains.annotations.Nullable;
 
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import ruiseki.jfmuy.api.ISubtypeRegistry;
+import ruiseki.jfmuy.api.ingredients.IIngredientSubtypeInterpreter;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 
 public class SubtypeRegistry implements ISubtypeRegistry {
 
-    private final Map<Item, ISubtypeInterpreter> interpreters = new IdentityHashMap<>();
+    private final Map<Object, IIngredientSubtypeInterpreter<?>> interpreters = new Reference2ObjectOpenHashMap<>();
 
     @Override
     public void useNbtForSubtypes(Item... items) {
         for (Item item : items) {
-            registerSubtypeInterpreter(item, AllNbt.INSTANCE);
+            registerSubtypeInterpreter(item, ItemAllNbt.INSTANCE);
+        }
+    }
+
+    @Override
+    public void useNbtForSubtypes(Fluid... fluids) {
+        for (Fluid fluid : fluids) {
+            registerSubtypeInterpreter(fluid, FluidAllNbt.INSTANCE);
         }
     }
 
     @Override
     public void registerSubtypeInterpreter(Item item, ISubtypeInterpreter interpreter) {
-        ErrorUtil.checkNotNull(item, "item ");
+        ErrorUtil.checkNotNull(item, "item");
         ErrorUtil.checkNotNull(interpreter, "interpreter");
 
         if (interpreters.containsKey(item)) {
@@ -38,41 +48,86 @@ public class SubtypeRegistry implements ISubtypeRegistry {
         interpreters.put(item, interpreter);
     }
 
+    @Override
+    public void registerSubtypeInterpreter(Fluid fluid, IFluidSubtypeInterpreter interpreter) {
+        ErrorUtil.checkNotNull(fluid, "fluid");
+        ErrorUtil.checkNotNull(interpreter, "interpreter");
+
+        if (interpreters.containsKey(fluid)) {
+            Log.get()
+                .error(
+                    "An interpreter is already registered for this fluid: {}",
+                    fluid,
+                    new IllegalArgumentException());
+            return;
+        }
+
+        interpreters.put(fluid, interpreter);
+    }
+
     @Nullable
     @Override
     public String getSubtypeInfo(ItemStack itemStack) {
         ErrorUtil.checkNotEmpty(itemStack);
-
         Item item = itemStack.getItem();
-        ISubtypeInterpreter subtypeInterpreter = interpreters.get(item);
-        if (subtypeInterpreter != null) {
-            return subtypeInterpreter.apply(itemStack);
+        IIngredientSubtypeInterpreter interpreter = interpreters.get(item);
+        if (interpreter != null) {
+            return interpreter.apply(itemStack);
         }
+        return null;
+    }
 
+    @Nullable
+    @Override
+    public String getSubtypeInfo(FluidStack fluidStack) {
+        ErrorUtil.checkNotNull(fluidStack, "fluid");
+        Fluid fluid = fluidStack.getFluid();
+        IIngredientSubtypeInterpreter interpreter = interpreters.get(fluid);
+        if (interpreter != null) {
+            return interpreter.apply(fluidStack);
+        } // Fallback to default behaviour if tag exists
+        if (fluidStack.tag != null) {
+            return fluidStack.tag.toString();
+        }
         return null;
     }
 
     @Override
     public boolean hasSubtypeInterpreter(ItemStack itemStack) {
         ErrorUtil.checkNotEmpty(itemStack);
-
-        Item item = itemStack.getItem();
-        return interpreters.containsKey(item);
+        return interpreters.containsKey(itemStack.getItem());
     }
 
-    private static class AllNbt implements ISubtypeInterpreter {
+    @Override
+    public boolean hasSubtypeInterpreter(FluidStack fluidStack) {
+        ErrorUtil.checkNotNull(fluidStack, "fluidStack");
+        return interpreters.containsKey(fluidStack.getFluid());
+    }
 
-        public static final AllNbt INSTANCE = new AllNbt();
+    private static final class ItemAllNbt implements ISubtypeInterpreter {
 
-        private AllNbt() {}
+        public static final ItemAllNbt INSTANCE = new ItemAllNbt();
 
         @Override
         public String apply(ItemStack itemStack) {
             NBTTagCompound nbtTagCompound = itemStack.getTagCompound();
             if (nbtTagCompound == null || nbtTagCompound.hasNoTags()) {
-                return ISubtypeInterpreter.NONE;
+                return NONE;
             }
             return nbtTagCompound.toString();
+        }
+    }
+
+    private static final class FluidAllNbt implements IFluidSubtypeInterpreter {
+
+        public static final FluidAllNbt INSTANCE = new FluidAllNbt();
+
+        @Override
+        public String apply(FluidStack fluidStack) {
+            if (fluidStack.tag == null || fluidStack.tag.hasNoTags()) {
+                return NONE;
+            }
+            return fluidStack.tag.toString();
         }
     }
 }

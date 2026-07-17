@@ -9,43 +9,44 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.Nullable;
 
+import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.JFMUY;
+import ruiseki.jfmuy.network.PacketCraftUpdate;
 import ruiseki.okcore.helper.ItemStackHelpers;
 
 public final class BasicRecipeTransferHandlerServer {
 
+    public static int itemsCrafted;
+
     private BasicRecipeTransferHandlerServer() {}
 
-    /**
-     * Called server-side to actually put the items in place.
-     */
-    public static void setItems(EntityPlayer player, Map<Integer, Integer> slotIdMap,
-        Map<Integer, Integer> slotCountMap, List<Integer> craftingSlots, List<Integer> inventorySlots,
-        boolean maxTransfer, boolean requireCompleteSets) {
+    public static void setItems(EntityPlayer player, Map<Integer, Integer> slotIdMap, List<Integer> craftingSlots,
+        List<Integer> inventorySlots, int maxTransfer, boolean requireCompleteSets,
+        @Nullable Map<Integer, Integer> itemCounts) {
         Container container = player.openContainer;
-
         // grab items from slots
         Map<Integer, ItemStack> slotMap = new HashMap<>(slotIdMap.size());
         for (Map.Entry<Integer, Integer> entry : slotIdMap.entrySet()) {
             Slot slot = container.getSlot(entry.getValue());
             final ItemStack slotStack = slot.getStack();
-            int count = Math.max(1, slotCountMap.getOrDefault(entry.getKey(), 1));
-            if (slotStack == null || slotStack.stackSize < count) {
+            if (slotStack == null) {
                 return;
             }
             ItemStack stack = slotStack.copy();
-            stack.stackSize = count;
+            stack.stackSize = itemCounts == null ? 1 : itemCounts.get(entry.getKey());
             slotMap.put(entry.getKey(), stack);
         }
 
         // Transfer as many items as possible only if it has been explicitly requested by the implementation
         // and a max-transfer operation has been requested by the player.
-        boolean transferAsCompleteSets = requireCompleteSets || !maxTransfer;
+        boolean transferAsCompleteSets = requireCompleteSets || maxTransfer != Integer.MAX_VALUE;
 
         Map<Integer, ItemStack> toTransfer = removeItemsFromInventory(
             player,
@@ -67,11 +68,7 @@ public final class BasicRecipeTransferHandlerServer {
             < craftingSlots.size(); craftingSlotNumberIndex++) {
             int craftingSlotNumber = craftingSlots.get(craftingSlotNumberIndex);
             Slot craftingSlot = container.getSlot(craftingSlotNumber);
-            if (!craftingSlot.canTakeStack(player)) {
-                continue;
-            }
-            ItemStack item = craftingSlot.getStack();
-            if (item != null && craftingSlot.isItemValid(item)) {
+            if (craftingSlot.getHasStack()) {
                 ItemStack craftingItem = craftingSlot.decrStackSize(Integer.MAX_VALUE);
                 clearedCraftingItems.add(craftingItem);
             }
@@ -91,7 +88,7 @@ public final class BasicRecipeTransferHandlerServer {
             Slot slot = container.getSlot(slotNumber);
 
             ItemStack stack = entry.getValue();
-            if (slot.getStack() == null && slot.isItemValid(stack)) {
+            if (slot.isItemValid(stack)) {
                 if (stack.stackSize > minSlotStackLimit) {
                     ItemStack remainder = stack.splitStack(stack.stackSize - minSlotStackLimit);
                     clearedCraftingItems.add(remainder);
@@ -104,9 +101,9 @@ public final class BasicRecipeTransferHandlerServer {
 
         // put cleared items back into the inventory
         for (ItemStack oldCraftingItem : clearedCraftingItems) {
-            int added = addStack(player, container, inventorySlots, oldCraftingItem);
+            int added = addStack(container, inventorySlots, oldCraftingItem);
             if (added < oldCraftingItem.stackSize) {
-                // only drop the items which were not added to the inventory
+                // Only drop the items which were not added to the inventory
                 ItemStackHelpers.shrink(oldCraftingItem, added);
                 if (!player.inventory.addItemStackToInventory(oldCraftingItem)) {
                     player.dropPlayerItemWithRandomChoice(oldCraftingItem, false);
@@ -117,14 +114,34 @@ public final class BasicRecipeTransferHandlerServer {
         container.detectAndSendChanges();
     }
 
+    /**
+     * Called server-side to actually put the items in place.
+     */
+    public static void setItems(EntityPlayer player, Map<Integer, Integer> slotIdMap, List<Integer> craftingSlots,
+        List<Integer> inventorySlots, boolean maxTransfer, boolean requireCompleteSets) {
+        setItems(
+            player,
+            slotIdMap,
+            craftingSlots,
+            inventorySlots,
+            maxTransfer ? Integer.MAX_VALUE : 1,
+            requireCompleteSets,
+            null);
+    }
+
+    public static void setItems(EntityPlayer player, Map<Integer, Integer> slotIdMap, List<Integer> craftingSlots,
+        List<Integer> inventorySlots, int maxTransfer, boolean requireCompleteSets) {
+        setItems(player, slotIdMap, craftingSlots, inventorySlots, maxTransfer, requireCompleteSets, null);
+    }
+
     @Nonnull
     private static Map<Integer, ItemStack> removeItemsFromInventory(EntityPlayer player, Container container,
         Map<Integer, ItemStack> required, List<Integer> craftingSlots, List<Integer> inventorySlots,
-        boolean transferAsCompleteSets, boolean maxTransfer) {
+        boolean transferAsCompleteSets, int maxTransfer) {
 
         // This map becomes populated with the resulting items to transfer and is returned by this method.
         final Map<Integer, ItemStack> result = new HashMap<>(required.size());
-
+        int setsTransferred = 0;
         loopSets: while (true) { // for each set
 
             // This map holds the original contents of a slot we have removed items from. This is used if we don't
@@ -151,12 +168,12 @@ public final class BasicRecipeTransferHandlerServer {
                     .copy();
 
                 // Locate a slot that has what we need.
-                final Slot slot = getSlotWithStack(player, container, requiredStack, craftingSlots, inventorySlots);
+                final Slot slot = getSlotWithStack(container, requiredStack, craftingSlots, inventorySlots);
 
-                boolean itemFound = (slot != null) && slot.getStack() != null;
+                boolean itemFound = (slot != null) && slot.getStack() != null && slot.canTakeStack(player);
                 ItemStack resultItemStack = result.get(entry.getKey());
                 boolean resultItemStackLimitReached = (resultItemStack != null)
-                    && (resultItemStack.stackSize + requiredStack.stackSize > resultItemStack.getMaxStackSize());
+                    && (resultItemStack.stackSize == resultItemStack.getMaxStackSize());
 
                 if (!itemFound || resultItemStackLimitReached) {
                     // We can't find any more items to fulfill the requirements or the maximum stack size for this item
@@ -184,7 +201,7 @@ public final class BasicRecipeTransferHandlerServer {
                     }
 
                     // Reduce the size of the found slot.
-                    ItemStack removedItemStack = slot.decrStackSize(requiredStack.stackSize);
+                    ItemStack removedItemStack = slot.decrStackSize(entry.getValue().stackSize);
                     foundItemsInSet.put(entry.getKey(), removedItemStack);
 
                     noItemsFound = false;
@@ -203,9 +220,15 @@ public final class BasicRecipeTransferHandlerServer {
                 }
             }
 
-            if (!maxTransfer || noItemsFound) {
+            if (noItemsFound) {
                 // If max transfer is not requested by the player this will exit the loop after trying one set.
                 // If no items were found during this iteration, we're done.
+                break;
+            }
+
+            setsTransferred++;
+            if (setsTransferred >= maxTransfer) {
+                // The player has requested a maximum number of sets to transfer.
                 break;
             }
         }
@@ -214,30 +237,25 @@ public final class BasicRecipeTransferHandlerServer {
     }
 
     @Nullable
-    private static Slot getSlotWithStack(EntityPlayer player, Container container, ItemStack stack,
-        List<Integer> craftingSlots, List<Integer> inventorySlots) {
-        Slot slot = getSlotWithStack(player, container, craftingSlots, stack);
+    private static Slot getSlotWithStack(Container container, ItemStack stack, List<Integer> craftingSlots,
+        List<Integer> inventorySlots) {
+        Slot slot = getSlotWithStack(container, craftingSlots, stack);
         if (slot == null) {
-            slot = getSlotWithStack(player, container, inventorySlots, stack);
+            slot = getSlotWithStack(container, inventorySlots, stack);
         }
 
         return slot;
     }
 
-    private static int addStack(EntityPlayer player, Container container, Collection<Integer> slotIndexes,
-        ItemStack stack) {
+    private static int addStack(Container container, Collection<Integer> slotIndexes, ItemStack stack) {
         int added = 0;
         // Add to existing stacks first
         for (final Integer slotIndex : slotIndexes) {
             if (slotIndex >= 0 && slotIndex < container.inventorySlots.size()) {
                 final Slot slot = container.getSlot(slotIndex);
-                if (!slot.canTakeStack(player)) {
-                    continue;
-                }
                 final ItemStack inventoryStack = slot.getStack();
                 // Check that the slot's contents are stackable with this stack
                 if (inventoryStack != null && inventoryStack.isStackable()
-                    && slot.isItemValid(stack)
                     && inventoryStack.isItemEqual(stack)
                     && ItemStack.areItemStackTagsEqual(inventoryStack, stack)) {
 
@@ -268,11 +286,8 @@ public final class BasicRecipeTransferHandlerServer {
         for (final Integer slotIndex : slotIndexes) {
             if (slotIndex >= 0 && slotIndex < container.inventorySlots.size()) {
                 final Slot slot = container.getSlot(slotIndex);
-                if (!slot.canTakeStack(player)) {
-                    continue;
-                }
                 final ItemStack inventoryStack = slot.getStack();
-                if (inventoryStack == null && slot.isItemValid(stack)) {
+                if (inventoryStack == null) {
                     ItemStack stackToAdd = stack.copy();
                     stackToAdd.stackSize = stack.stackSize - added;
                     slot.putStack(stackToAdd);
@@ -293,20 +308,52 @@ public final class BasicRecipeTransferHandlerServer {
      * @return the slot that contains the itemStack. returns null if no slot contains the itemStack.
      */
     @Nullable
-    private static Slot getSlotWithStack(EntityPlayer player, Container container, Iterable<Integer> slotNumbers,
-        ItemStack itemStack) {
+    private static Slot getSlotWithStack(Container container, Iterable<Integer> slotNumbers, ItemStack itemStack) {
         for (Integer slotNumber : slotNumbers) {
             if (slotNumber >= 0 && slotNumber < container.inventorySlots.size()) {
                 Slot slot = container.getSlot(slotNumber);
                 ItemStack slotStack = slot.getStack();
-                if (slot.canTakeStack(player) && slotStack != null
-                    && slotStack.stackSize >= itemStack.stackSize
-                    && ItemStackHelpers.areStacksEqual(itemStack, slotStack)
-                    && ItemStack.areItemStackTagsEqual(itemStack, slotStack)) {
+                if (slotStack != null && Internal.getStackHelper()
+                    .isEquivalent(itemStack, slotStack)) {
                     return slot;
                 }
             }
         }
         return null;
+    }
+
+    /**
+     * Perform the recipe, in this case by taking the result in the output slot and giving it to the player if possible.
+     * Sends a network message to the client which calls
+     * {@link ruiseki.jfmuy.api.recipe.transfer.IAutocraftingHandler#stepFinished(boolean, int)} to
+     * continue the autocrafting process.
+     *
+     * @param player     The player whose inventory to check
+     * @param outputSlot The index of the output slot in the given crafting inventory
+     */
+    public static void performRecipe(EntityPlayer player, int outputSlot) {
+        if (player.openContainer == null) {
+            return;
+        }
+        player.openContainer.onCraftMatrixChanged(player.inventory); // The inventory doesn't seem to matter?
+        ItemStack outputStack = player.openContainer.getSlot(outputSlot)
+            .getStack();
+        EntityPlayerMP playerMP = (EntityPlayerMP) player;
+        if (outputStack != null) {
+            // You may be asking yourself why I'm not just getting the result from the below method.
+            // As it turns out, Minecraft gets the output one click at a time, overwriting the stack every single time.
+            // So, we have to hook into the listener system and see how many times the output slot updates to figure
+            // this out!
+            itemsCrafted = 0;
+            playerMP.openContainer.slotClick(outputSlot, 0, 1, player);
+            playerMP.updateHeldItem();
+            playerMP.openContainer.detectAndSendChanges();
+            JFMUY.instance.getPacketHandler()
+                .sendToPlayer(new PacketCraftUpdate(true, itemsCrafted), playerMP);
+            return;
+        }
+        playerMP.openContainer.detectAndSendChanges();
+        JFMUY.instance.getPacketHandler()
+            .sendToPlayer(new PacketCraftUpdate(false, 0), playerMP);
     }
 }

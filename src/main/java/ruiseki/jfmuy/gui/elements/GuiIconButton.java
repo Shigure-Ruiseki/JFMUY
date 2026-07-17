@@ -18,9 +18,9 @@ import ruiseki.okcore.client.renderer.GlStateManager;
 
 public class GuiIconButton extends GuiButton {
 
-    private final Consumer<List<String>> tooltipCallback;
-    private final Supplier<IDrawable> iconSupplier;
-    private final IMouseClickedButtonCallback mouseClickCallback;
+    protected Consumer<List<String>> tooltipCallback;
+    protected Supplier<IDrawable> iconSupplier;
+    protected IMouseClickedButtonCallback mouseClickCallback;
 
     public GuiIconButton(int buttonId, IDrawable icon, IMouseClickedButtonCallback mouseClickCallback) {
         this(buttonId, (tooltip) -> {}, () -> icon, mouseClickCallback);
@@ -86,7 +86,7 @@ public class GuiIconButton extends GuiButton {
         }
     }
 
-    public void drawTooltips(Minecraft minecraft, int mouseX, int mouseY) {
+    public void drawToolTip(Minecraft minecraft, int mouseX, int mouseY) {
         if (this.func_146115_a()) {
             List<String> tooltip = new ArrayList<>();
             this.tooltipCallback.accept(tooltip);

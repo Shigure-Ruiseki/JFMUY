@@ -4,8 +4,9 @@ import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.EnumChatFormatting;
+
+import org.lwjgl.input.Keyboard;
 
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IDrawable;
@@ -15,6 +16,7 @@ import ruiseki.jfmuy.config.KeyBindings;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.elements.GuiIconToggleButton;
 import ruiseki.jfmuy.util.Translator;
+import ruiseki.okcore.client.key.KeyBindingOK;
 
 public class ConfigButton extends GuiIconToggleButton {
 
@@ -34,25 +36,29 @@ public class ConfigButton extends GuiIconToggleButton {
     @Override
     protected void getTooltips(List<String> tooltip) {
         tooltip.add(Translator.translateToLocal("jfmuy.tooltip.config"));
+        if (Config.isOverlayEnabled() && Config.isCollapsibleGroupsEnabled()) {
+            tooltip
+                .add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.config.expandCollapseAll"));
+        }
         if (!Config.isOverlayEnabled()) {
             tooltip
                 .add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.ingredient.list.disabled"));
             tooltip.add(
                 EnumChatFormatting.GOLD + Translator.translateToLocalFormatted(
                     "jfmuy.tooltip.ingredient.list.disabled.how.to.fix",
-                    KeyBindings.toggleOverlay.getKeyDescription()));
+                    KeyBindings.toggleOverlay.getDisplayName()));
         } else if (!parent.isListDisplayed()) {
             tooltip.add(EnumChatFormatting.GOLD + Translator.translateToLocal("jfmuy.tooltip.not.enough.space"));
         }
         if (Config.isCheatItemsEnabled()) {
             tooltip
                 .add(EnumChatFormatting.RED + Translator.translateToLocal("jfmuy.tooltip.cheat.mode.button.enabled"));
-            KeyBinding toggleCheatMode = KeyBindings.toggleCheatMode;
+            KeyBindingOK toggleCheatMode = KeyBindings.toggleCheatMode;
             if (toggleCheatMode.getKeyCode() != 0) {
                 tooltip.add(
                     EnumChatFormatting.RED + Translator.translateToLocalFormatted(
                         "jfmuy.tooltip.cheat.mode.how.to.disable.hotkey",
-                        toggleCheatMode.getKeyDescription()));
+                        toggleCheatMode.getDisplayName()));
             } else {
                 tooltip.add(
                     EnumChatFormatting.RED + Translator.translateToLocalFormatted(
@@ -70,16 +76,24 @@ public class ConfigButton extends GuiIconToggleButton {
     @Override
     protected boolean onMouseClicked(int mouseX, int mouseY) {
         if (Config.isOverlayEnabled()) {
-            if (GuiScreen.isCtrlKeyDown()) {
-                Config.toggleCheatItemsEnabled();
-            } else {
-                Minecraft minecraft = Minecraft.getMinecraft();
-                if (minecraft.currentScreen != null) {
-                    GuiScreen configScreen = new JFMUYModConfigGui(minecraft.currentScreen);
-                    parent.updateScreen(configScreen, false);
-                    minecraft.displayGuiScreen(configScreen);
+            if ((Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU))
+                && Config.isCollapsibleGroupsEnabled()
+                && Internal.hasIngredientFilter()) {
+                Internal.getCollapsedGroupRegistry()
+                    .expandOrCloseAll();
+                Internal.getIngredientFilter()
+                    .notifyCollapsedStateChanged();
+            } else if (Keyboard.getEventKeyState() && (Keyboard.getEventKey() == Keyboard.KEY_LCONTROL
+                || Keyboard.getEventKey() == Keyboard.KEY_RCONTROL)) {
+                    Config.toggleCheatItemsEnabled();
+                } else {
+                    Minecraft minecraft = Minecraft.getMinecraft();
+                    if (minecraft.currentScreen != null) {
+                        GuiScreen configScreen = new JFMUYModConfigGui(minecraft.currentScreen);
+                        parent.updateScreen(configScreen, false);
+                        minecraft.displayGuiScreen(configScreen);
+                    }
                 }
-            }
             return true;
         }
         return false;

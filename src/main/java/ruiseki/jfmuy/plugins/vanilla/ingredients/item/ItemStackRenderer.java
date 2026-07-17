@@ -19,6 +19,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
+import ruiseki.jfmuy.util.CountUtil;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
@@ -42,8 +43,17 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
             itemRender
                 .renderItemAndEffectIntoGUI(font, minecraft.getTextureManager(), ingredient, xPosition, yPosition);
-            itemRender
-                .renderItemOverlayIntoGUI(font, minecraft.getTextureManager(), ingredient, xPosition, yPosition, null);
+            if (ingredient.stackSize > 64) {
+                CountUtil.renderCountString(font, ingredient.stackSize, xPosition, yPosition, true);
+            } else {
+                itemRender.renderItemOverlayIntoGUI(
+                    font,
+                    minecraft.getTextureManager(),
+                    ingredient,
+                    xPosition,
+                    yPosition,
+                    null);
+            }
 
             RenderHelper.disableStandardItemLighting();
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
@@ -51,6 +61,32 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
             GL11.glPopMatrix();
         }
+    }
+
+    /**
+     * Formats the stack count for display
+     */
+    private String formatStackCount(int count) {
+        if (count <= 99) {
+            return String.valueOf(count);
+        }
+
+        if (count <= 9999) {
+            return String.valueOf(count);
+        }
+
+        if (count <= 999999) {
+            float k = count / 1000f;
+            return String.format(k % 1 == 0 ? "%.0fk" : "%.1fk", k);
+        }
+
+        if (count <= 999999999) {
+            float m = count / 1000000f;
+            return String.format(m % 1 == 0 ? "%.0fm" : "%.1fm", m);
+        }
+
+        float g = count / 1000000000f;
+        return String.format(g % 1 == 0 ? "%.0fg" : "%.1fg", g);
     }
 
     @Override

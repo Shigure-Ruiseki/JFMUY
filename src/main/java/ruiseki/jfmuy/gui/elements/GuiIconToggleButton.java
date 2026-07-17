@@ -38,7 +38,9 @@ public abstract class GuiIconToggleButton {
         }
         this.button.drawButton(minecraft, mouseX, mouseY);
         IDrawable icon = isIconToggledOn() ? this.onIcon : this.offIcon;
-        icon.draw(minecraft, this.button.xPosition + 2, this.button.yPosition + 2);
+        double xOffset = this.button.xPosition + (this.button.width - icon.getWidth()) / 2.0;
+        double yOffset = this.button.yPosition + (this.button.height - icon.getHeight()) / 2.0;
+        icon.draw(minecraft, (int) xOffset, (int) yOffset);
     }
 
     public final boolean isMouseOver(int mouseX, int mouseY) {
@@ -56,6 +58,10 @@ public abstract class GuiIconToggleButton {
             getTooltips(tooltip);
             TooltipRenderer.drawHoveringText(minecraft, tooltip, mouseX, mouseY, Reference.MAX_TOOLTIP_WIDTH);
         }
+    }
+
+    public final GuiIconButton getInternalButton() {
+        return this.button;
     }
 
     protected abstract void getTooltips(List<String> tooltip);

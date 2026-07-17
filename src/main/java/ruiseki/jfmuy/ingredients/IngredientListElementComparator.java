@@ -31,6 +31,13 @@ public final class IngredientListElementComparator implements Comparator<IIngred
 
             final int orderIndex1 = o1.getOrderIndex();
             final int orderIndex2 = o2.getOrderIndex();
+
+            if (orderIndex1 == orderIndex2) {
+                final int metadata1 = o1.getOrderIndex();
+                final int metadata2 = o2.getOrderIndex();
+                return Integer.compare(metadata1, metadata2);
+            }
+
             return Integer.compare(orderIndex1, orderIndex2);
         } else if (modName1.equals(Reference.MINECRAFT_NAME)) {
             return -1;

@@ -77,7 +77,7 @@ public class ForgeModIdHelper extends AbstractModIdHelper {
             ItemStack itemStack = new ItemStack(Items.apple);
             EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
             List<String> tooltip = new ArrayList<>();
-            tooltip.add("JEI Tooltip Testing for mod name formatting");
+            tooltip.add("JFMUY Tooltip Testing for mod name formatting");
             ItemTooltipEvent tooltipEvent = ForgeEventFactory.onItemTooltip(itemStack, player, tooltip, false);
             tooltip = tooltipEvent.toolTip;
 
@@ -108,14 +108,23 @@ public class ForgeModIdHelper extends AbstractModIdHelper {
         IIngredientHelper<T> ingredientHelper) {
         if (Config.isDebugModeEnabled() && Minecraft.getMinecraft().gameSettings.advancedItemTooltips) {
             tooltip = new ArrayList<>(tooltip);
-            tooltip.add(EnumChatFormatting.GRAY + "JEI Debug:");
+            tooltip.add(EnumChatFormatting.GRAY + "JFMUY Debug:");
             tooltip.add(EnumChatFormatting.GRAY + "info: " + ingredientHelper.getErrorInfo(ingredient));
             tooltip.add(EnumChatFormatting.GRAY + "uid: " + ingredientHelper.getUniqueId(ingredient));
         }
-        if (Config.isModNameFormatOverrideActive() && ingredient instanceof ItemStack) {
-            // we detected that another mod is adding the mod name already
-            return tooltip;
+
+        String modId = ingredientHelper.getModId(ingredient);
+        String modName = getModNameForModId(modId);
+
+        if (modName != null && !modName.isEmpty()) {
+            for (String line : tooltip) {
+                String cleanLine = EnumChatFormatting.getTextWithoutFormattingCodes(line);
+                if (cleanLine != null && cleanLine.equalsIgnoreCase(modName)) {
+                    return tooltip;
+                }
+            }
         }
+
         return super.addModNameToIngredientTooltip(tooltip, ingredient, ingredientHelper);
     }
 }

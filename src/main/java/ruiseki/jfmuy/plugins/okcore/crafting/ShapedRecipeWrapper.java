@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+
+import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
@@ -18,7 +21,7 @@ public class ShapedRecipeWrapper implements IShapedCraftingRecipeWrapper {
     private final ShapedRecipe recipe;
     private final List<List<ItemStack>> inputs;
 
-    public ShapedRecipeWrapper(IJFMUYHelpers jeiHelpers, ShapedRecipe recipe) {
+    public ShapedRecipeWrapper(IJFMUYHelpers jfmuyHelpers, ShapedRecipe recipe) {
         this.recipe = recipe;
         this.inputs = new ArrayList<>();
 
@@ -59,5 +62,10 @@ public class ShapedRecipeWrapper implements IShapedCraftingRecipeWrapper {
     @Override
     public int getHeight() {
         return recipe.getRecipeHeight();
+    }
+
+    @Override
+    public @Nullable ResourceLocation getRegistryName() {
+        return recipe.getId();
     }
 }

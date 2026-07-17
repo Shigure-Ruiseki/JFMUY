@@ -51,4 +51,8 @@ public class IngredientListSlot {
     public boolean isBlocked() {
         return blocked;
     }
+
+    public boolean isFree() {
+        return !blocked;
+    }
 }

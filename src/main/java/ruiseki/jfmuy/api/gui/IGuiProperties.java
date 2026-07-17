@@ -3,7 +3,7 @@ package ruiseki.jfmuy.api.gui;
 import net.minecraft.client.gui.GuiScreen;
 
 /**
- * Defines the properties of a gui so that JEI can draw next to it.
+ * Defines the properties of a gui so that JFMUY can draw next to it.
  */
 public interface IGuiProperties {
 

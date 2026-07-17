@@ -18,12 +18,20 @@ public interface IModIngredientRegistration {
      * @param ingredientType     The type of the ingredient.
      * @param allIngredients     A collection of every to be displayed in the ingredient list.
      * @param ingredientHelper   The ingredient helper to allows JFMUY to get information about ingredients for
-     *                           searching
-     *                           and other purposes.
+     *                           searching and other purposes.
      * @param ingredientRenderer The ingredient render to allow JFMUY to render these ingredients in the ingredient
      *                           list.
      *                           This ingredient renderer must be configured to draw in a 16 by 16 pixel space.
      */
     <V> void register(IIngredientType<V> ingredientType, Collection<V> allIngredients,
         IIngredientHelper<V> ingredientHelper, IIngredientRenderer<V> ingredientRenderer);
+
+    /**
+     * Mark a type of ingredient as being craftable.
+     * This is accessed in {@link IIngredientRegistry#getCraftableIngredientTypes()} to determine which types of
+     * ingredients can be hashed, have favorite recipes, and be autocrafted.
+     *
+     * @param ingredientType The type of the ingredient.
+     */
+    <V> void markAsCraftable(IIngredientType<V> ingredientType);
 }

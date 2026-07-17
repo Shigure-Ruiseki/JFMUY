@@ -86,9 +86,17 @@ public class IngredientRenderer<T> {
     }
 
     public void drawTooltip(Minecraft minecraft, int mouseX, int mouseY) {
+        drawTooltip(minecraft, mouseX, mouseY, null);
+    }
+
+    public void drawTooltip(Minecraft minecraft, int mouseX, int mouseY, List<String> extraLines) {
         T ingredient = element.getIngredient();
         IIngredientRenderer<T> ingredientRenderer = element.getIngredientRenderer();
         List<String> tooltip = getTooltip(minecraft, element);
+        if (extraLines != null && !extraLines.isEmpty()) {
+            tooltip = new ArrayList<>(tooltip);
+            tooltip.addAll(extraLines);
+        }
         FontRenderer fontRenderer = ingredientRenderer.getFontRenderer(minecraft, ingredient);
 
         IIngredientHelper<T> ingredientHelper = element.getIngredientHelper();
@@ -126,11 +134,18 @@ public class IngredientRenderer<T> {
             }
         }
 
+        boolean copied = false;
+
         if (Config.getColorSearchMode() != Config.SearchMode.DISABLED) {
+            tooltip = new ArrayList<>(tooltip);
+            copied = true;
             addColorSearchInfoToTooltip(minecraft, element, tooltip, maxWidth);
         }
 
         if (Config.isEditModeEnabled()) {
+            if (!copied) {
+                tooltip = new ArrayList<>(tooltip);
+            }
             addEditModeInfoToTooltip(minecraft, tooltip, maxWidth);
         }
 

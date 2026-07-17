@@ -10,20 +10,19 @@ import ruiseki.jfmuy.api.IModRegistry;
 import ruiseki.jfmuy.api.ingredients.IModIngredientRegistration;
 
 /**
- * Allows plugins to change how JEI is displayed next to guis.
- * This is for mods that display next to all GUIs, like JEI does, so they can draw together correctly.
+ * Allows plugins to change how JFMUY is displayed next to guis.
+ * This is for mods that display next to all GUIs, like JFMUY does, so they can draw together correctly.
  * For handling modded GUIs, you should use {@link IAdvancedGuiHandler} instead.
  *
  * Register your implementation with {@link IModRegistry#addGlobalGuiHandlers(IGlobalGuiHandler...)}.
  *
  * @see IAdvancedGuiHandler
- * @since JEI 4.14.0
  */
 public interface IGlobalGuiHandler {
 
     /**
-     * Give JEI information about extra space that your mod takes up.
-     * Used for moving JEI out of the way of extra things like gui buttons.
+     * Give JFMUY information about extra space that your mod takes up.
+     * Used for moving JFMUY out of the way of extra things like gui buttons.
      *
      * @return the space that the gui takes up besides the normal rectangle defined by GuiContainer.
      */
@@ -32,11 +31,11 @@ public interface IGlobalGuiHandler {
     }
 
     /**
-     * Return anything under the mouse that JEI could not normally detect, used for JEI recipe lookups.
+     * Return anything under the mouse that JFMUY could not normally detect, used for JFMUY recipe lookups.
      * <p>
-     * This is useful for guis that don't have normal slots (which is how JEI normally detects items under the mouse).
+     * This is useful for guis that don't have normal slots (which is how JFMUY normally detects items under the mouse).
      * <p>
-     * This can also be used to let JEI look up liquids in tanks directly, by returning a FluidStack.
+     * This can also be used to let JFMUY look up liquids in tanks directly, by returning a FluidStack.
      * Works with any ingredient type that has been registered with {@link IModIngredientRegistration}.
      *
      * @param mouseX the current X position of the mouse in screen coordinates.

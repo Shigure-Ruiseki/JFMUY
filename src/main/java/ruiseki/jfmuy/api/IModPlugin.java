@@ -11,10 +11,10 @@ import ruiseki.jfmuy.api.recipe.IRecipeCategoryRegistration;
 public interface IModPlugin {
 
     /**
-     * If your item has subtypes that depend on NBT or capabilities, use this to help JFMUY identify those subtypes
-     * correctly.
+     * If your item or fluid has subtypes that depend on NBT or capabilities, use this to help JFMUY identify those
+     * subtypes correctly.
      */
-    default void registerItemSubtypes(ISubtypeRegistry subtypeRegistry) {
+    default void registerSubtypes(ISubtypeRegistry subtypeRegistry) {
 
     }
 
@@ -30,6 +30,21 @@ public interface IModPlugin {
      * These are registered before recipes so they can be checked for validity.
      */
     default void registerCategories(IRecipeCategoryRegistration registry) {
+
+    }
+
+    /**
+     * Register collapsible ingredient groups provided by this mod.
+     * These appear in the "Manage Groups" screen tagged as "Mod" and can be toggled
+     * by the user but are not editable or deletable.
+     * <p>
+     * Use {@link ICollapsibleGroupRegistry#newGroup(String, String)} to create a builder
+     * and call its methods to define the group's members. See {@link ICollapsibleGroupRegistry}
+     * for full usage examples.
+     *
+     * @param registry the registry used to create collapsible group builders
+     */
+    default void registerCollapsibleGroups(ICollapsibleGroupRegistry registry) {
 
     }
 

@@ -15,11 +15,13 @@ import ruiseki.jfmuy.api.gui.IGuiProperties;
 import ruiseki.jfmuy.gui.GuiProperties;
 import ruiseki.jfmuy.gui.GuiScreenHelper;
 import ruiseki.jfmuy.gui.PageNavigation;
+import ruiseki.jfmuy.gui.ghost.IGhostIngredientDragSource;
+import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.input.IClickedIngredient;
 import ruiseki.jfmuy.input.IPaged;
 import ruiseki.jfmuy.input.IShowsRecipeFocuses;
 
-public class LeftAreaDispatcher implements IShowsRecipeFocuses, IPaged {
+public class LeftAreaDispatcher implements IShowsRecipeFocuses, IGhostIngredientDragSource, IPaged {
 
     private static final int BORDER_PADDING = 2;
     private static final int NAVIGATION_HEIGHT = 20;
@@ -160,6 +162,19 @@ public class LeftAreaDispatcher implements IShowsRecipeFocuses, IPaged {
         return false;
     }
 
+    public boolean handleMouseReleased(int mouseX, int mouseY, int mouseButton) {
+        if (!(canShow || hasContent())) {
+            return false;
+        }
+
+        if (displayArea.contains(mouseX, mouseY)) {
+            return contents.get(current)
+                .handleMouseReleased(mouseX, mouseY, mouseButton);
+        }
+
+        return false;
+    }
+
     @Override
     public boolean nextPage() {
         current++;
@@ -200,4 +215,14 @@ public class LeftAreaDispatcher implements IShowsRecipeFocuses, IPaged {
         return current;
     }
 
+    @Override
+    public IIngredientListElement getElementUnderMouse() {
+        return contents.get(current)
+            .getElementUnderMouse();
+    }
+
+    public boolean onKeyPressed(char typedChar, int eventKey) {
+        return contents.get(current)
+            .onKeyPressed(typedChar, eventKey);
+    }
 }

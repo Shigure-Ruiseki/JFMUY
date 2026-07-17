@@ -1,11 +1,14 @@
 package ruiseki.jfmuy.startup;
 
 import java.util.Collection;
-import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.api.ingredients.IModIngredientRegistration;
@@ -17,9 +20,10 @@ import ruiseki.jfmuy.util.IngredientSet;
 
 public class ModIngredientRegistration implements IModIngredientRegistration {
 
-    private final Map<IIngredientType, Collection> allIngredientsMap = new IdentityHashMap<>();
-    private final Map<IIngredientType, IIngredientHelper> ingredientHelperMap = new IdentityHashMap<>();
-    private final Map<IIngredientType, IIngredientRenderer> ingredientRendererMap = new IdentityHashMap<>();
+    private final Map<IIngredientType, Collection> allIngredientsMap = new Reference2ObjectOpenHashMap<>();
+    private final Map<IIngredientType, IIngredientHelper> ingredientHelperMap = new Reference2ObjectOpenHashMap<>();
+    private final Map<IIngredientType, IIngredientRenderer> ingredientRendererMap = new Reference2ObjectOpenHashMap<>();
+    private final List<IIngredientType> craftableIngredientsMap = new ObjectArrayList<>();
 
     @Override
     public <V> void register(IIngredientType<V> ingredientType, Collection<V> allIngredients,
@@ -34,9 +38,14 @@ public class ModIngredientRegistration implements IModIngredientRegistration {
         ingredientRendererMap.put(ingredientType, ingredientRenderer);
     }
 
+    @Override
+    public <V> void markAsCraftable(IIngredientType<V> ingredientType) {
+        craftableIngredientsMap.add(ingredientType);
+    }
+
     public IngredientRegistry createIngredientRegistry(IModIdHelper modIdHelper,
         IngredientBlacklistInternal blacklist) {
-        Map<IIngredientType, IngredientSet> ingredientsMap = new IdentityHashMap<>();
+        Map<IIngredientType, IngredientSet> ingredientsMap = new Reference2ObjectOpenHashMap<>();
         for (Map.Entry<IIngredientType, Collection> entry : allIngredientsMap.entrySet()) {
             IIngredientType ingredientType = entry.getKey();
             @SuppressWarnings("unchecked")
@@ -49,7 +58,8 @@ public class ModIngredientRegistration implements IModIngredientRegistration {
             blacklist,
             ingredientsMap,
             ImmutableMap.copyOf(ingredientHelperMap),
-            ImmutableMap.copyOf(ingredientRendererMap));
+            ImmutableMap.copyOf(ingredientRendererMap),
+            ImmutableList.copyOf(craftableIngredientsMap));
     }
 
     private <T> IngredientSet<T> createIngredientSet(IIngredientType<T> ingredientType, Collection<T> ingredients) {

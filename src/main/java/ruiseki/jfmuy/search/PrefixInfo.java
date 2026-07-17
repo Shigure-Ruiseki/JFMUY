@@ -1,0 +1,202 @@
+package ruiseki.jfmuy.search;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.function.Supplier;
+
+import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
+import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
+import ruiseki.jfmuy.config.Config;
+import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.util.StringUtil;
+import ruiseki.jfmuy.util.Translator;
+
+public class PrefixInfo implements Comparable<PrefixInfo> {
+
+    public static final PrefixInfo NO_PREFIX;
+
+    private static final Char2ObjectMap<PrefixInfo> instances = new Char2ObjectArrayMap<>(6);
+
+    static {
+        NO_PREFIX = new PrefixInfo(
+            '\0',
+            -1,
+            true,
+            "default",
+            () -> Config.SearchMode.ENABLED,
+            i -> Collections.singleton(Translator.toLowercaseWithLocale(i.getDisplayName())),
+            GeneralizedSuffixTree::new);
+        addPrefix(
+            new PrefixInfo(
+                '#',
+                0,
+                true,
+                false,
+                "tooltip",
+                Config::getTooltipSearchMode,
+                IIngredientListElement::getTooltipStrings,
+                GeneralizedSuffixTree::new));
+        addPrefix(
+            new PrefixInfo(
+                '&',
+                1,
+                false,
+                "resource_id",
+                Config::getResourceIdSearchMode,
+                e -> Collections.singleton(e.getResourceId()),
+                GeneralizedSuffixTree::new));
+        addPrefix(
+            new PrefixInfo(
+                '^',
+                2,
+                true,
+                "color",
+                Config::getColorSearchMode,
+                IIngredientListElement::getColorStrings,
+                LimitedStringStorage::new));
+        addPrefix(
+            new PrefixInfo(
+                '$',
+                3,
+                false,
+                "oredict",
+                Config::getOreDictSearchMode,
+                IIngredientListElement::getOreDictStrings,
+                LimitedStringStorage::new));
+        addPrefix(
+            new PrefixInfo(
+                '@',
+                4,
+                false,
+                "mod_name",
+                Config::getModNameSearchMode,
+                IIngredientListElement::getModNameStrings,
+                LimitedStringStorage::new));
+        addPrefix(
+            new PrefixInfo(
+                '%',
+                5,
+                true,
+                "creative_tab",
+                Config::getCreativeTabSearchMode,
+                IIngredientListElement::getCreativeTabsStrings,
+                LimitedStringStorage::new));
+    }
+
+    private static void addPrefix(PrefixInfo info) {
+        instances.put(info.getPrefix(), info);
+    }
+
+    public static Collection<PrefixInfo> all() {
+        return Collections.unmodifiableCollection(instances.values());
+    }
+
+    public static PrefixInfo get(char ch) {
+        return instances.get(ch);
+    }
+
+    private final char prefix;
+    private final int priority;
+    private final boolean potentialDialecticInclusion, async;
+    private final String desc;
+    private final IModeGetter modeGetter;
+    private final IStringsGetter stringsGetter;
+    private final Supplier<ISearchStorage<IIngredientListElement<?>>> storage;
+
+    public PrefixInfo(char prefix, int priority, boolean potentialDialecticInclusion, String desc,
+        IModeGetter modeGetter, IStringsGetter stringsGetter,
+        Supplier<ISearchStorage<IIngredientListElement<?>>> storage) {
+        this(prefix, priority, potentialDialecticInclusion, true, desc, modeGetter, stringsGetter, storage);
+    }
+
+    public PrefixInfo(char prefix, int priority, boolean potentialDialecticInclusion, boolean async, String desc,
+        IModeGetter modeGetter, IStringsGetter stringsGetter,
+        Supplier<ISearchStorage<IIngredientListElement<?>>> storage) {
+        this.prefix = prefix;
+        this.priority = priority;
+        this.potentialDialecticInclusion = potentialDialecticInclusion;
+        this.async = async;
+        this.desc = desc;
+        this.modeGetter = modeGetter;
+        this.stringsGetter = stringsGetter;
+        this.storage = storage;
+
+    }
+
+    public char getPrefix() {
+        return prefix;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public boolean hasPotentialDialecticInclusion() {
+        return potentialDialecticInclusion;
+    }
+
+    public boolean isAsyncable() {
+        return this.async;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public Config.SearchMode getMode() {
+        return modeGetter.getMode();
+    }
+
+    public ISearchStorage<IIngredientListElement<?>> createStorage() {
+        return this.storage.get();
+    }
+
+    public Collection<String> getStrings(IIngredientListElement<?> element) {
+        if (!Config.getSearchStrippedDiacritics() || !this.potentialDialecticInclusion) {
+            return this.stringsGetter.getStrings(element);
+        }
+        Collection<String> strings = this.stringsGetter.getStrings(element);
+        Collection<String> newStrings = null;
+        for (String string : strings) {
+
+            for (int i = 0; i < string.length(); i++) {
+                if (string.charAt(i) > 0x7F) {
+                    String stripped = StringUtil.stripAccents(string);
+                    if (!stripped.equals(string)) {
+                        if (newStrings == null) {
+                            newStrings = new ArrayList<>(strings);
+                        }
+                        newStrings.add(stripped);
+
+                    }
+                    break;
+                }
+            }
+        }
+        return newStrings == null ? strings : newStrings;
+    }
+
+    @Override
+    public int compareTo(PrefixInfo o) {
+        return Integer.compare(o.priority, this.priority);
+    }
+
+    @FunctionalInterface
+    public interface IStringsGetter {
+
+        Collection<String> getStrings(IIngredientListElement<?> element);
+    }
+
+    @FunctionalInterface
+    public interface IModeGetter {
+
+        Config.SearchMode getMode();
+    }
+
+    @Override
+    public String toString() {
+        return "PrefixInfo{" + desc + '}';
+    }
+
+}

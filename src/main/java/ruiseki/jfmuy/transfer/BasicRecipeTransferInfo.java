@@ -16,6 +16,7 @@ public class BasicRecipeTransferInfo<C extends Container> implements IRecipeTran
     private final int recipeSlotCount;
     private final int inventorySlotStart;
     private final int inventorySlotCount;
+    private int craftingSlot = -1;
 
     public BasicRecipeTransferInfo(Class<C> containerClass, String recipeCategoryUid, int recipeSlotStart,
         int recipeSlotCount, int inventorySlotStart, int inventorySlotCount) {
@@ -25,6 +26,16 @@ public class BasicRecipeTransferInfo<C extends Container> implements IRecipeTran
         this.recipeSlotCount = recipeSlotCount;
         this.inventorySlotStart = inventorySlotStart;
         this.inventorySlotCount = inventorySlotCount;
+    }
+
+    public BasicRecipeTransferInfo<C> setCraftingSlot(int craftingSlot) {
+        this.craftingSlot = craftingSlot;
+        return this;
+    }
+
+    @Override
+    public int getOutputSlot() {
+        return craftingSlot;
     }
 
     @Override

@@ -4,9 +4,12 @@ import java.awt.Rectangle;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+
+import org.lwjgl.opengl.GL11;
 
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
@@ -30,7 +33,7 @@ public class ItemStackFastRenderer extends IngredientRenderer<ItemStack> {
     private void uncheckedRenderItemAndEffectIntoGUI() {
         if (Config.isEditModeEnabled()) {
             renderEditMode(element, area, padding);
-            GlStateManager.enableBlend();
+            GL11.glEnable(GL11.GL_BLEND);
         }
 
         ItemStack itemStack = element.getIngredient();
@@ -38,17 +41,17 @@ public class ItemStackFastRenderer extends IngredientRenderer<ItemStack> {
             return;
         }
 
-        Minecraft minecraft = Minecraft.getMinecraft();
+        renderItemAndEffectIntoGUI(Minecraft.getMinecraft(), itemStack, area.x + padding, area.y + padding);
+    }
+
+    public static void renderItemAndEffectIntoGUI(Minecraft minecraft, ItemStack itemStack, int x, int y) {
         RenderItem renderItem = RenderItem.getInstance();
 
-        net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();
+        RenderHelper.enableGUIStandardItemLighting();
         GlStateManager.pushMatrix();
         GlStateManager.enableRescaleNormal();
         GlStateManager.enableColorMaterial();
         GlStateManager.enableLighting();
-
-        int x = area.x + padding;
-        int y = area.y + padding;
 
         try {
             renderItem

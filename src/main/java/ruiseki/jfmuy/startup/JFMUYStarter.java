@@ -4,22 +4,22 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Stopwatch;
-
 import cpw.mods.fml.common.ProgressManager;
 import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.api.ICollapsibleGroupRegistry;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
 import ruiseki.jfmuy.api.IModPlugin;
 import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
 import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
 import ruiseki.jfmuy.api.gui.IGlobalGuiHandler;
 import ruiseki.jfmuy.api.gui.IGuiScreenHandler;
+import ruiseki.jfmuy.autocrafting.favorites.FavoriteRecipes;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.GuiEventHandler;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.GuiScreenHelper;
-import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.gui.ghost.GhostIngredientDragManager;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.BookmarkOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.LeftAreaDispatcher;
@@ -28,6 +28,7 @@ import ruiseki.jfmuy.ingredients.IngredientBlacklistInternal;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
+import ruiseki.jfmuy.ingredients.group.CollapsibleGroupRegistry;
 import ruiseki.jfmuy.input.InputHandler;
 import ruiseki.jfmuy.plugins.vanilla.VanillaPlugin;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
@@ -36,20 +37,25 @@ import ruiseki.jfmuy.runtime.JFMUYRuntime;
 import ruiseki.jfmuy.runtime.SubtypeRegistry;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
-import ruiseki.okcore.datastructure.NonNullList;
+import ruiseki.jfmuy.util.LoggedTimer;
 
 public class JFMUYStarter {
 
     private boolean started;
 
     public void start(List<IModPlugin> plugins) {
+        load(plugins, false);
+    }
+
+    public void load(List<IModPlugin> plugins, boolean recipesOnly) {
         LoggedTimer totalTime = new LoggedTimer();
-        totalTime.start("Starting JEI");
+        totalTime.start("Starting JFMUY");
 
         IModIdHelper modIdHelper = ForgeModIdHelper.getInstance();
         ErrorUtil.setModIdHelper(modIdHelper);
 
         SubtypeRegistry subtypeRegistry = new SubtypeRegistry();
+        Internal.setSubtypeRegistry(subtypeRegistry);
 
         registerItemSubtypes(plugins, subtypeRegistry);
 
@@ -63,10 +69,10 @@ public class JFMUYStarter {
         Internal.setIngredientRegistry(ingredientRegistry);
 
         GuiHelper guiHelper = new GuiHelper(ingredientRegistry);
-        JFMUYHelpers jeiHelpers = new JFMUYHelpers(guiHelper, ingredientRegistry, blacklist, stackHelper);
-        Internal.setHelpers(jeiHelpers);
+        JFMUYHelpers jfmuyHelpers = new JFMUYHelpers(guiHelper, ingredientRegistry, blacklist, stackHelper);
+        Internal.setHelpers(jfmuyHelpers);
 
-        ModRegistry modRegistry = new ModRegistry(jeiHelpers, ingredientRegistry);
+        ModRegistry modRegistry = new ModRegistry(jfmuyHelpers, ingredientRegistry);
 
         LoggedTimer timer = new LoggedTimer();
         timer.start("Registering recipe categories");
@@ -81,21 +87,26 @@ public class JFMUYStarter {
         RecipeRegistry recipeRegistry = modRegistry.createRecipeRegistry(ingredientRegistry);
         timer.stop();
 
-        timer.start("Building ingredient list");
-        NonNullList<IIngredientListElement> ingredientList = IngredientListElementFactory
-            .createBaseList(ingredientRegistry, modIdHelper);
-        timer.stop();
+        IngredientFilter ingredientFilter;
+        if (recipesOnly && Internal.hasIngredientFilter()) {
+            ingredientFilter = Internal.getIngredientFilter();
+            ingredientFilter.replaceBlacklist(blacklist);
+        } else {
+            timer.start("Building ingredient filter and search trees");
+            ingredientFilter = new IngredientFilter(
+                blacklist,
+                IngredientListElementFactory.createBaseList(ingredientRegistry, modIdHelper));
+            Internal.setIngredientFilter(ingredientFilter);
+            timer.stop();
+        }
 
-        timer.start("Building ingredient filter");
-        IngredientFilter ingredientFilter = new IngredientFilter(blacklist);
-        ingredientFilter.addIngredients(ingredientList);
-        Internal.setIngredientFilter(ingredientFilter);
-        timer.stop();
+        CollapsibleGroupRegistry collapsibleGroupRegistry = new CollapsibleGroupRegistry();
+        Internal.setCollapsedGroupRegistry(collapsibleGroupRegistry);
+        registerCollapsibleGroups(plugins, collapsibleGroupRegistry);
+        collapsibleGroupRegistry.loadCustomGroups();
 
-        timer.start("Building bookmarks");
         BookmarkList bookmarkList = new BookmarkList(ingredientRegistry);
-        bookmarkList.loadBookmarks();
-        timer.stop();
+        Internal.setBookmarkList(bookmarkList);
 
         timer.start("Building runtime");
         List<IAdvancedGuiHandler<?>> advancedGuiHandlers = modRegistry.getAdvancedGuiHandlers();
@@ -108,49 +119,59 @@ public class JFMUYStarter {
             advancedGuiHandlers,
             ghostIngredientHandlers,
             guiScreenHandlers);
+        GhostIngredientDragManager ghostIngredientDragManager = new GhostIngredientDragManager(
+            guiScreenHelper,
+            ingredientRegistry);
         IngredientListOverlay ingredientListOverlay = new IngredientListOverlay(
             ingredientFilter,
             ingredientRegistry,
-            guiScreenHelper);
+            guiScreenHelper,
+            ghostIngredientDragManager);
 
-        BookmarkOverlay bookmarkOverlay = new BookmarkOverlay(bookmarkList, jeiHelpers.getGuiHelper(), guiScreenHelper);
+        BookmarkOverlay bookmarkOverlay = new BookmarkOverlay(
+            bookmarkList,
+            jfmuyHelpers.getGuiHelper(),
+            guiScreenHelper);
         RecipesGui recipesGui = new RecipesGui(recipeRegistry, ingredientRegistry);
-        JFMUYRuntime jeiRuntime = new JFMUYRuntime(
+        JFMUYRuntime jfmuyRuntime = new JFMUYRuntime(
             recipeRegistry,
             ingredientListOverlay,
             bookmarkOverlay,
             recipesGui,
             ingredientFilter);
-        Internal.setRuntime(jeiRuntime);
+        Internal.setRuntime(jfmuyRuntime);
         timer.stop();
 
         stackHelper.disableUidCache();
 
-        sendRuntime(plugins, jeiRuntime);
-
-        // Some mods insist on adding ingredients at runtime, so we cannot optimize memory usage earlier than that.
-        if (Config.isOptimizeMemoryUsage()) {
-            timer.start("Optimizing memory usage");
-            ingredientFilter.trimToSize();
-            timer.stop();
-        }
+        sendRuntime(plugins, jfmuyRuntime);
 
         LeftAreaDispatcher leftAreaDispatcher = new LeftAreaDispatcher(guiScreenHelper);
         leftAreaDispatcher.addContent(bookmarkOverlay);
+
+        timer.start("Building favorites");
+        FavoriteRecipes.load();
+        timer.stop();
+
+        timer.start("Building bookmarks");
+        bookmarkList.loadBookmarks();
+        timer.stop();
 
         GuiEventHandler guiEventHandler = new GuiEventHandler(
             guiScreenHelper,
             leftAreaDispatcher,
             ingredientListOverlay,
-            recipeRegistry);
+            recipeRegistry,
+            ghostIngredientDragManager);
         Internal.setGuiEventHandler(guiEventHandler);
         InputHandler inputHandler = new InputHandler(
-            jeiRuntime,
+            jfmuyRuntime,
             ingredientRegistry,
             ingredientListOverlay,
             guiScreenHelper,
             leftAreaDispatcher,
-            bookmarkList);
+            bookmarkList,
+            ghostIngredientDragManager);
         Internal.setInputHandler(inputHandler);
 
         Config.checkForModNameFormatOverride();
@@ -164,168 +185,332 @@ public class JFMUYStarter {
     }
 
     private static void registerItemSubtypes(List<IModPlugin> plugins, SubtypeRegistry subtypeRegistry) {
-        ProgressManager.ProgressBar progressBar = ProgressManager.push("Registering item subtypes", plugins.size());
-        Iterator<IModPlugin> iterator = plugins.iterator();
-        while (iterator.hasNext()) {
-            IModPlugin plugin = iterator.next();
-            try {
-                progressBar.step(
-                    plugin.getClass()
-                        .getName());
-                plugin.registerItemSubtypes(subtypeRegistry);
-            } catch (RuntimeException | LinkageError e) {
-                Log.get()
-                    .error("Failed to register item subtypes for mod plugin: {}", plugin.getClass(), e);
-                iterator.remove();
-            }
-        }
-        ProgressManager.pop(progressBar);
-    }
-
-    private static ModIngredientRegistration registerIngredients(List<IModPlugin> plugins) {
-        ProgressManager.ProgressBar progressBar = ProgressManager.push("Registering ingredients", plugins.size());
-        ModIngredientRegistration modIngredientRegistry = new ModIngredientRegistration();
-
-        Iterator<IModPlugin> iterator = plugins.iterator();
-        while (iterator.hasNext()) {
-            IModPlugin plugin = iterator.next();
-            try {
-                progressBar.step(
-                    plugin.getClass()
-                        .getName());
-                plugin.registerIngredients(modIngredientRegistry);
-            } catch (RuntimeException | LinkageError e) {
-                if (plugin instanceof VanillaPlugin) {
-                    throw e;
-                } else {
+        if (Config.skipShowingProgressBar()) {
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    plugin.registerSubtypes(subtypeRegistry);
+                } catch (RuntimeException | LinkageError e) {
                     Log.get()
-                        .error("Failed to register Ingredients for mod plugin: {}", plugin.getClass(), e);
+                        .error("Failed to register item subtypes for mod plugin: {}", plugin.getClass(), e);
                     iterator.remove();
                 }
             }
+        } else {
+            ProgressManager.ProgressBar progressBar = ProgressManager.push("Registering item subtypes", plugins.size());
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    progressBar.step(
+                        plugin.getClass()
+                            .getName());
+                    plugin.registerSubtypes(subtypeRegistry);
+                } catch (RuntimeException | LinkageError e) {
+                    Log.get()
+                        .error("Failed to register item subtypes for mod plugin: {}", plugin.getClass(), e);
+                    iterator.remove();
+                }
+            }
+            ProgressManager.pop(progressBar);
         }
-        ProgressManager.pop(progressBar);
+    }
+
+    private static ModIngredientRegistration registerIngredients(List<IModPlugin> plugins) {
+        ModIngredientRegistration modIngredientRegistry;
+        if (Config.skipShowingProgressBar()) {
+            modIngredientRegistry = new ModIngredientRegistration();
+
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    plugin.registerIngredients(modIngredientRegistry);
+                } catch (RuntimeException | LinkageError e) {
+                    if (plugin instanceof VanillaPlugin) {
+                        throw e;
+                    } else {
+                        Log.get()
+                            .error("Failed to register Ingredients for mod plugin: {}", plugin.getClass(), e);
+                        iterator.remove();
+                    }
+                }
+            }
+        } else {
+            ProgressManager.ProgressBar progressBar = ProgressManager.push("Registering ingredients", plugins.size());
+            modIngredientRegistry = new ModIngredientRegistration();
+
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    progressBar.step(
+                        plugin.getClass()
+                            .getName());
+                    plugin.registerIngredients(modIngredientRegistry);
+                } catch (RuntimeException | LinkageError e) {
+                    if (plugin instanceof VanillaPlugin) {
+                        throw e;
+                    } else {
+                        Log.get()
+                            .error("Failed to register Ingredients for mod plugin: {}", plugin.getClass(), e);
+                        iterator.remove();
+                    }
+                }
+            }
+            ProgressManager.pop(progressBar);
+        }
 
         return modIngredientRegistry;
     }
 
     private static void registerCategories(List<IModPlugin> plugins, ModRegistry modRegistry) {
-        ProgressManager.ProgressBar progressBar = ProgressManager.push("Registering categories", plugins.size());
-        Iterator<IModPlugin> iterator = plugins.iterator();
-        while (iterator.hasNext()) {
-            IModPlugin plugin = iterator.next();
-            try {
-                progressBar.step(
-                    plugin.getClass()
-                        .getName());
-                long start_time = System.currentTimeMillis();
-                Log.get()
-                    .debug(
-                        "Registering categories: {} ...",
-                        plugin.getClass()
-                            .getName());
-                plugin.registerCategories(modRegistry);
-                long timeElapsedMs = System.currentTimeMillis() - start_time;
-                Log.get()
-                    .debug(
-                        "Registered  categories: {} in {} ms",
-                        plugin.getClass()
-                            .getName(),
-                        timeElapsedMs);
-            } catch (AbstractMethodError ignored) {
-                // legacy plugins do not implement registerCategories
-            } catch (RuntimeException | LinkageError e) {
-                Log.get()
-                    .error("Failed to register mod categories: {}", plugin.getClass(), e);
-                iterator.remove();
-            }
-        }
-        ProgressManager.pop(progressBar);
-    }
-
-    private static void registerPlugins(List<IModPlugin> plugins, ModRegistry modRegistry) {
-        ProgressManager.ProgressBar progressBar = ProgressManager.push("Registering plugins", plugins.size());
-        Iterator<IModPlugin> iterator = plugins.iterator();
-        while (iterator.hasNext()) {
-            IModPlugin plugin = iterator.next();
-            try {
-                progressBar.step(
-                    plugin.getClass()
-                        .getName());
-                long start_time = System.currentTimeMillis();
-                Log.get()
-                    .debug(
-                        "Registering plugin: {} ...",
-                        plugin.getClass()
-                            .getName());
-                plugin.register(modRegistry);
-                long timeElapsedMs = System.currentTimeMillis() - start_time;
-                Log.get()
-                    .debug(
-                        "Registered  plugin: {} in {} ms",
-                        plugin.getClass()
-                            .getName(),
-                        timeElapsedMs);
-            } catch (RuntimeException | LinkageError e) {
-                Log.get()
-                    .error("Failed to register mod plugin: {}", plugin.getClass(), e);
-                iterator.remove();
-            }
-        }
-        ProgressManager.pop(progressBar);
-    }
-
-    private static void sendRuntime(List<IModPlugin> plugins, IJFMUYRuntime jeiRuntime) {
-        ProgressManager.ProgressBar progressBar = ProgressManager.push("Sending Runtime", plugins.size());
-        Iterator<IModPlugin> iterator = plugins.iterator();
-        while (iterator.hasNext()) {
-            IModPlugin plugin = iterator.next();
-            try {
-                progressBar.step(
-                    plugin.getClass()
-                        .getName());
-                long start_time = System.currentTimeMillis();
-                Log.get()
-                    .debug(
-                        "Sending runtime to plugin: {} ...",
-                        plugin.getClass()
-                            .getName());
-                plugin.onRuntimeAvailable(jeiRuntime);
-                long timeElapsedMs = System.currentTimeMillis() - start_time;
-                if (timeElapsedMs > 100) {
+        if (Config.skipShowingProgressBar()) {
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    long start_time = System.currentTimeMillis();
                     Log.get()
-                        .warn(
-                            "Sending runtime to plugin: {} took {} ms",
+                        .debug(
+                            "Registering categories: {} ...",
+                            plugin.getClass()
+                                .getName());
+                    plugin.registerCategories(modRegistry);
+                    long timeElapsedMs = System.currentTimeMillis() - start_time;
+                    Log.get()
+                        .debug(
+                            "Registered  categories: {} in {} ms",
                             plugin.getClass()
                                 .getName(),
                             timeElapsedMs);
+                } catch (AbstractMethodError ignored) {
+                    // legacy plugins do not implement registerCategories
+                } catch (RuntimeException | LinkageError e) {
+                    Log.get()
+                        .error("Failed to register mod categories: {}", plugin.getClass(), e);
+                    iterator.remove();
                 }
-            } catch (RuntimeException | LinkageError e) {
-                Log.get()
-                    .error("Sending runtime to plugin failed: {}", plugin.getClass(), e);
-                iterator.remove();
             }
+        } else {
+            ProgressManager.ProgressBar progressBar = ProgressManager.push("Registering categories", plugins.size());
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    progressBar.step(
+                        plugin.getClass()
+                            .getName());
+                    long start_time = System.currentTimeMillis();
+                    Log.get()
+                        .debug(
+                            "Registering categories: {} ...",
+                            plugin.getClass()
+                                .getName());
+                    plugin.registerCategories(modRegistry);
+                    long timeElapsedMs = System.currentTimeMillis() - start_time;
+                    Log.get()
+                        .debug(
+                            "Registered  categories: {} in {} ms",
+                            plugin.getClass()
+                                .getName(),
+                            timeElapsedMs);
+                } catch (AbstractMethodError ignored) {
+                    // legacy plugins do not implement registerCategories
+                } catch (RuntimeException | LinkageError e) {
+                    Log.get()
+                        .error("Failed to register mod categories: {}", plugin.getClass(), e);
+                    iterator.remove();
+                }
+            }
+            ProgressManager.pop(progressBar);
         }
-        ProgressManager.pop(progressBar);
+
     }
 
-    private static class LoggedTimer {
-
-        private final Stopwatch stopWatch = Stopwatch.createUnstarted();
-        private String message = "";
-
-        public void start(String message) {
-            this.message = message;
-            Log.get()
-                .info("{}...", message);
-            stopWatch.reset();
-            stopWatch.start();
+    private static void registerPlugins(List<IModPlugin> plugins, ModRegistry modRegistry) {
+        if (Config.skipShowingProgressBar()) {
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    long start_time = System.currentTimeMillis();
+                    Log.get()
+                        .debug(
+                            "Registering plugin: {} ...",
+                            plugin.getClass()
+                                .getName());
+                    plugin.register(modRegistry);
+                    long timeElapsedMs = System.currentTimeMillis() - start_time;
+                    Log.get()
+                        .debug(
+                            "Registered  plugin: {} in {} ms",
+                            plugin.getClass()
+                                .getName(),
+                            timeElapsedMs);
+                } catch (RuntimeException | LinkageError e) {
+                    Log.get()
+                        .error("Failed to register mod plugin: {}", plugin.getClass(), e);
+                    iterator.remove();
+                }
+            }
+        } else {
+            ProgressManager.ProgressBar progressBar = ProgressManager.push("Registering plugins", plugins.size());
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    progressBar.step(
+                        plugin.getClass()
+                            .getName());
+                    long start_time = System.currentTimeMillis();
+                    Log.get()
+                        .debug(
+                            "Registering plugin: {} ...",
+                            plugin.getClass()
+                                .getName());
+                    plugin.register(modRegistry);
+                    long timeElapsedMs = System.currentTimeMillis() - start_time;
+                    Log.get()
+                        .debug(
+                            "Registered  plugin: {} in {} ms",
+                            plugin.getClass()
+                                .getName(),
+                            timeElapsedMs);
+                } catch (RuntimeException | LinkageError e) {
+                    Log.get()
+                        .error("Failed to register mod plugin: {}", plugin.getClass(), e);
+                    iterator.remove();
+                }
+            }
+            ProgressManager.pop(progressBar);
         }
 
-        public void stop() {
-            stopWatch.stop();
-            Log.get()
-                .info("{} took {}", message, stopWatch);
+    }
+
+    private static void sendRuntime(List<IModPlugin> plugins, IJFMUYRuntime jfmuyRuntime) {
+        if (Config.skipShowingProgressBar()) {
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    long start_time = System.currentTimeMillis();
+                    Log.get()
+                        .debug(
+                            "Sending runtime to plugin: {} ...",
+                            plugin.getClass()
+                                .getName());
+                    plugin.onRuntimeAvailable(jfmuyRuntime);
+                    long timeElapsedMs = System.currentTimeMillis() - start_time;
+                    if (timeElapsedMs > 100) {
+                        Log.get()
+                            .warn(
+                                "Sending runtime to plugin: {} took {} ms",
+                                plugin.getClass()
+                                    .getName(),
+                                timeElapsedMs);
+                    }
+                } catch (RuntimeException | LinkageError e) {
+                    Log.get()
+                        .error("Sending runtime to plugin failed: {}", plugin.getClass(), e);
+                    iterator.remove();
+                }
+            }
+        } else {
+            ProgressManager.ProgressBar progressBar = ProgressManager.push("Sending Runtime", plugins.size());
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    progressBar.step(
+                        plugin.getClass()
+                            .getName());
+                    long start_time = System.currentTimeMillis();
+                    Log.get()
+                        .debug(
+                            "Sending runtime to plugin: {} ...",
+                            plugin.getClass()
+                                .getName());
+                    plugin.onRuntimeAvailable(jfmuyRuntime);
+                    long timeElapsedMs = System.currentTimeMillis() - start_time;
+                    if (timeElapsedMs > 100) {
+                        Log.get()
+                            .warn(
+                                "Sending runtime to plugin: {} took {} ms",
+                                plugin.getClass()
+                                    .getName(),
+                                timeElapsedMs);
+                    }
+                } catch (RuntimeException | LinkageError e) {
+                    Log.get()
+                        .error("Sending runtime to plugin failed: {}", plugin.getClass(), e);
+                    iterator.remove();
+                }
+
+            }
+            ProgressManager.pop(progressBar);
+        }
+
+    }
+
+    private static void registerCollapsibleGroups(List<IModPlugin> plugins, ICollapsibleGroupRegistry registry) {
+        if (Config.skipShowingProgressBar()) {
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    long start_time = System.currentTimeMillis();
+                    Log.get()
+                        .debug(
+                            "Registering collapsible groups: {} ...",
+                            plugin.getClass()
+                                .getName());
+                    plugin.registerCollapsibleGroups(registry);
+                    long timeElapsedMs = System.currentTimeMillis() - start_time;
+                    Log.get()
+                        .debug(
+                            "Registered  collapsible groups: {} in {} ms",
+                            plugin.getClass()
+                                .getName(),
+                            timeElapsedMs);
+                } catch (RuntimeException | LinkageError e) {
+                    Log.get()
+                        .error("Failed to register mod collapsible groups: {}", plugin.getClass(), e);
+                    iterator.remove();
+                }
+            }
+        } else {
+            ProgressManager.ProgressBar progressBar = ProgressManager
+                .push("Registering collapsible groups", plugins.size());
+            Iterator<IModPlugin> iterator = plugins.iterator();
+            while (iterator.hasNext()) {
+                IModPlugin plugin = iterator.next();
+                try {
+                    progressBar.step(
+                        plugin.getClass()
+                            .getName());
+                    long start_time = System.currentTimeMillis();
+                    Log.get()
+                        .debug(
+                            "Registering collapsible groups: {} ...",
+                            plugin.getClass()
+                                .getName());
+                    plugin.registerCollapsibleGroups(registry);
+                    long timeElapsedMs = System.currentTimeMillis() - start_time;
+                    Log.get()
+                        .debug(
+                            "Registered  collapsible groups: {} in {} ms",
+                            plugin.getClass()
+                                .getName(),
+                            timeElapsedMs);
+                } catch (RuntimeException | LinkageError e) {
+                    Log.get()
+                        .error("Failed to register mod collapsible groups: {}", plugin.getClass(), e);
+                    iterator.remove();
+                }
+            }
+            ProgressManager.pop(progressBar);
         }
     }
 }

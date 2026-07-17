@@ -6,18 +6,24 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.base.Preconditions;
 
+import ruiseki.jfmuy.api.ISubtypeRegistry;
+import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.color.ColorNamer;
 import ruiseki.jfmuy.gui.GuiEventHandler;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
+import ruiseki.jfmuy.ingredients.group.CollapsibleGroupRegistry;
 import ruiseki.jfmuy.input.InputHandler;
 import ruiseki.jfmuy.runtime.JFMUYHelpers;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
+import ruiseki.jfmuy.runtime.SubtypeRegistry;
 import ruiseki.jfmuy.startup.StackHelper;
 
 /** For JFMUY internal use only, these are normally accessed from the API. */
 public final class Internal {
 
+    @Nullable
+    private static SubtypeRegistry subtypeRegistry;
     @Nullable
     private static StackHelper stackHelper;
     @Nullable
@@ -34,9 +40,22 @@ public final class Internal {
     private static GuiEventHandler guiEventHandler;
     @Nullable
     private static InputHandler inputHandler;
+    @Nullable
+    private static BookmarkList bookmarkList;
+    @Nullable
+    private static CollapsibleGroupRegistry collapsedGroupRegistry;
 
     private Internal() {
 
+    }
+
+    public static ISubtypeRegistry getSubtypeRegistry() {
+        Preconditions.checkState(subtypeRegistry != null, "SubtypeRegistry has not been created yet.");
+        return subtypeRegistry;
+    }
+
+    public static void setSubtypeRegistry(SubtypeRegistry subtypeRegistry) {
+        Internal.subtypeRegistry = subtypeRegistry;
     }
 
     public static StackHelper getStackHelper() {
@@ -49,7 +68,7 @@ public final class Internal {
     }
 
     public static JFMUYHelpers getHelpers() {
-        Preconditions.checkState(helpers != null, "JeiHelpers has not been created yet.");
+        Preconditions.checkState(helpers != null, "JMFUYHelpers has not been created yet.");
         return helpers;
     }
 
@@ -63,9 +82,9 @@ public final class Internal {
     }
 
     public static void setRuntime(JFMUYRuntime runtime) {
-        JFMUYRuntime jeiRuntime = Internal.runtime;
-        if (jeiRuntime != null) {
-            jeiRuntime.close();
+        JFMUYRuntime jfmuyRuntime = Internal.runtime;
+        if (jfmuyRuntime != null) {
+            jfmuyRuntime.close();
         }
         Internal.runtime = runtime;
     }
@@ -86,6 +105,10 @@ public final class Internal {
 
     public static void setColorNamer(ColorNamer colorNamer) {
         Internal.colorNamer = colorNamer;
+    }
+
+    public static boolean hasIngredientFilter() {
+        return ingredientFilter != null;
     }
 
     public static IngredientFilter getIngredientFilter() {
@@ -117,5 +140,28 @@ public final class Internal {
 
         Internal.inputHandler = inputHandler;
         MinecraftForge.EVENT_BUS.register(inputHandler);
+    }
+
+    @Nullable
+    public static InputHandler getInputHandler() {
+        return inputHandler;
+    }
+
+    public static void setBookmarkList(BookmarkList bookmarkList) {
+        Internal.bookmarkList = bookmarkList;
+    }
+
+    public static BookmarkList getBookmarkList() {
+        Preconditions.checkState(bookmarkList != null, "Bookmark List has not been created yet.");
+        return bookmarkList;
+    }
+
+    public static CollapsibleGroupRegistry getCollapsedGroupRegistry() {
+        Preconditions.checkState(collapsedGroupRegistry != null, "Collapsed Group Registry has not been created yet.");
+        return collapsedGroupRegistry;
+    }
+
+    public static void setCollapsedGroupRegistry(CollapsibleGroupRegistry registry) {
+        Internal.collapsedGroupRegistry = registry;
     }
 }

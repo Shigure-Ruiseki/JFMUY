@@ -31,4 +31,9 @@ public interface IIngredientBlacklist {
      * Returns true if the ingredient is blacklisted and will not be displayed in the ingredient list.
      */
     <V> boolean isIngredientBlacklisted(V ingredient);
+
+    /**
+     * Returns true if the ingredient is blacklisted via the api and will not be displayed in the ingredient list.
+     */
+    <V> boolean isIngredientBlacklistedByApi(V ingredient);
 }

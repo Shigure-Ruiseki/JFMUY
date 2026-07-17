@@ -9,8 +9,12 @@ import net.minecraft.client.resources.LanguageManager;
 import net.minecraft.util.StatCollector;
 
 import org.apache.commons.lang3.LocaleUtils;
+import org.jetbrains.annotations.Nullable;
 
 public class Translator {
+
+    @Nullable
+    private static Locale locale;
 
     private Translator() {
 
@@ -22,6 +26,10 @@ public class Translator {
         } else {
             return StatCollector.translateToFallback(key);
         }
+    }
+
+    public static void invalidateLocale() {
+        locale = null;
     }
 
     public static String translateToLocalFormatted(String key, Object... format) {
@@ -41,21 +49,20 @@ public class Translator {
 
     @SuppressWarnings("ConstantConditions")
     private static Locale getLocale() {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        if (minecraft != null) {
-            LanguageManager languageManager = minecraft.getLanguageManager();
-            if (languageManager != null) {
-                Language currentLanguage = languageManager.getCurrentLanguage();
-                if (currentLanguage != null) {
-                    String code = currentLanguage.getLanguageCode();
-                    try {
-                        return LocaleUtils.toLocale(code);
-                    } catch (IllegalArgumentException e) {
-                        return Locale.getDefault();
+        if (locale == null) {
+            Minecraft minecraft = Minecraft.getMinecraft();
+            if (minecraft != null) {
+                LanguageManager languageManager = minecraft.getLanguageManager();
+                if (languageManager != null) {
+                    Language currentLanguage = languageManager.getCurrentLanguage();
+                    if (currentLanguage != null) {
+                        locale = LocaleUtils.toLocale(currentLanguage.getLanguageCode());
+                        return locale;
                     }
                 }
             }
+            locale = Locale.getDefault();
         }
-        return Locale.getDefault();
+        return locale;
     }
 }

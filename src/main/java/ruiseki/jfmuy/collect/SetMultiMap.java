@@ -1,14 +1,15 @@
 package ruiseki.jfmuy.collect;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+
 public class SetMultiMap<K, V> extends MultiMap<K, V, Set<V>> {
 
     public SetMultiMap() {
-        this(HashSet::new);
+        this(ObjectOpenHashSet::new);
     }
 
     public SetMultiMap(Supplier<Set<V>> collectionSupplier) {

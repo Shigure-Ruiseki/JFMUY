@@ -32,4 +32,38 @@ public interface IRecipesGui {
      */
     @Nullable
     Object getIngredientUnderMouse();
+
+    /**
+     * @return the text of the search filter
+     */
+    String getSearchFilter();
+
+    /**
+     * Set the text of the search filter
+     *
+     * @return if the search filter was changed as a result
+     */
+    boolean setSearchFilter(String searchFilter);
+
+    /**
+     * @return the search mode being used
+     */
+    RecipeSearchMode getSearchMode();
+
+    /**
+     * Set the search mode being used
+     *
+     * @return if the search mode was changed as a result
+     */
+    boolean setSearchMode(RecipeSearchMode searchMode);
+
+    /**
+     * What ingredients are being searched by the search filter.
+     */
+    enum RecipeSearchMode {
+        NONE,
+        INPUT,
+        OUTPUT,
+        BOTH;
+    }
 }

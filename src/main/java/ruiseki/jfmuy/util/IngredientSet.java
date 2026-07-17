@@ -3,34 +3,21 @@ package ruiseki.jfmuy.util;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-import net.minecraft.item.ItemStack;
-
 import org.jetbrains.annotations.Nullable;
 
-import ruiseki.jfmuy.Internal;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
-import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
-import ruiseki.jfmuy.startup.StackHelper;
 
 public class IngredientSet<V> extends AbstractSet<V> {
 
     public static <V> IngredientSet<V> create(IIngredientType<V> ingredientType,
         IIngredientHelper<V> ingredientHelper) {
-        final Function<V, String> uidGenerator;
-        if (ingredientType == VanillaTypes.ITEM) {
-            StackHelper stackHelper = Internal.getStackHelper();
-            uidGenerator = stack -> stackHelper
-                .getUniqueIdentifierForStack((ItemStack) stack, StackHelper.UidMode.FULL);
-        } else {
-            uidGenerator = ingredientHelper::getUniqueId;
-        }
-        return new IngredientSet<>(uidGenerator);
+        return new IngredientSet<>(ingredientHelper::getFullUniqueId);
     }
 
     private final Function<V, String> uidGenerator;
@@ -38,7 +25,7 @@ public class IngredientSet<V> extends AbstractSet<V> {
 
     private IngredientSet(Function<V, String> uidGenerator) {
         this.uidGenerator = uidGenerator;
-        this.ingredients = new LinkedHashMap<>();
+        this.ingredients = new Object2ObjectLinkedOpenHashMap<>();
     }
 
     @Override

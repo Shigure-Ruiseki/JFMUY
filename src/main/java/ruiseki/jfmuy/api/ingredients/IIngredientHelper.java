@@ -61,6 +61,22 @@ public interface IIngredientHelper<V> {
     String getUniqueId(V ingredient);
 
     /**
+     * Fully unique ID that includes all variant information for use in
+     * ingredient-list deduplication. Delegates to {@link #getUniqueId}
+     */
+    default String getFullUniqueId(V ingredient) {
+        return getUniqueId(ingredient);
+    }
+
+    /**
+     * Entirely unique ID for use in comparing, blacklisting, and looking up ingredients by count, NBT, and any other
+     * possible variation.
+     */
+    default int getHash(V ingredient) {
+        return getUniqueId(ingredient).hashCode();
+    }
+
+    /**
      * Wildcard ID for use in comparing, blacklisting, and looking up ingredients.
      * For an example, ItemStack's wildcardId does not include NBT or meta.
      * For ingredients like FluidStacks which do not have a wildcardId, just return the uniqueId here.
@@ -93,12 +109,32 @@ public interface IIngredientHelper<V> {
     String getResourceId(V ingredient);
 
     /**
+     * Return the ordinal for the ingredient
+     *
+     * @return the ordinal for an ingredient
+     */
+    default int getOrdinal(V ingredient) {
+        return 0;
+    }
+
+    /**
      * Called when a player is in cheat mode and clicks an ingredient in the list.
      *
      * @param ingredient The ingredient to cheat in. Do not edit this ingredient.
      * @return an ItemStack for JFMUY to give the player, or an empty stack if there is nothing that can be given.
      */
     default ItemStack getCheatItemStack(V ingredient) {
+        return null;
+    }
+
+    /**
+     * Called when a player is in cheat mode and clicks an ingredient in the list with an item.
+     *
+     * @param ingredient  The ingredient to cheat in. Do not edit this ingredient.
+     * @param clickedWith The non-empty ItemStack that clicked on the ingredient.
+     * @return an ItemStack for JFMUY to give the player, or an empty stack if there is nothing that can be given.
+     */
+    default ItemStack replaceWithCheatItemStack(V ingredient, ItemStack clickedWith) {
         return null;
     }
 

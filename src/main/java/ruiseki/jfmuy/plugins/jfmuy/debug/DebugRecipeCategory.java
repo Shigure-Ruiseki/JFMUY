@@ -89,8 +89,8 @@ public class DebugRecipeCategory implements IRecipeCategory<DebugRecipe> {
         IIngredientRegistry ingredientRegistry = JFMUYInternalPlugin.ingredientRegistry;
         if (ingredientRegistry != null) {
             IIngredientHelper<T> ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
-            String jeiUid = ingredientHelper.getUniqueId(ingredient);
-            minecraft.fontRenderer.drawString(jeiUid, 50, 52, 0);
+            String jfmuyUid = ingredientHelper.getUniqueId(ingredient);
+            minecraft.fontRenderer.drawString(jfmuyUid, 50, 52, 0);
         }
     }
 

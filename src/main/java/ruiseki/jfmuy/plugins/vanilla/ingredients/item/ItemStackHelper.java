@@ -4,13 +4,13 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 import net.minecraftforge.fluids.Fluid;
@@ -22,16 +22,20 @@ import net.minecraftforge.oredict.OreDictionary;
 import org.jetbrains.annotations.Nullable;
 
 import cpw.mods.fml.common.registry.GameData;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.recipe.IFocus;
 import ruiseki.jfmuy.color.ColorGetter;
 import ruiseki.jfmuy.startup.StackHelper;
 import ruiseki.jfmuy.util.ErrorUtil;
+import ruiseki.jfmuy.util.Log;
 import ruiseki.okcore.helper.Helpers;
 
 public class ItemStackHelper implements IIngredientHelper<ItemStack> {
 
     private final StackHelper stackHelper;
+    private final Object2IntMap<ItemStack> hashCache = new Object2IntOpenHashMap<>();
 
     public ItemStackHelper(StackHelper stackHelper) {
         this.stackHelper = stackHelper;
@@ -74,6 +78,42 @@ public class ItemStackHelper implements IIngredientHelper<ItemStack> {
     public String getUniqueId(ItemStack ingredient) {
         ErrorUtil.checkNotEmpty(ingredient);
         return stackHelper.getUniqueIdentifierForStack(ingredient);
+    }
+
+    @Override
+    public String getFullUniqueId(ItemStack ingredient) {
+        ErrorUtil.checkNotEmpty(ingredient);
+        return stackHelper.getUniqueIdentifierForStack(ingredient, StackHelper.UidMode.FULL);
+    }
+
+    @Override
+    public int getHash(ItemStack ingredient) {
+        Integer cachedHash = hashCache.get(ingredient);
+        if (cachedHash != null) {
+            return cachedHash;
+        }
+        int hash = ingredient.stackSize * 31 + ingredient.getItemDamage();
+        hash = hash * 31 + ingredient.getItemDamage();
+        if (ingredient.getItem() != null) {
+            hash = hash * 31 + GameData.getItemRegistry()
+                .getNameForObject(ingredient.getItem())
+                .hashCode();
+        }
+        NBTTagCompound tag = ingredient.getTagCompound();
+        if (tag != null) {
+            try {
+                hash = hash * 31 + tag.hashCode();
+            } catch (StackOverflowError e) {
+                Log.get()
+                    .error(
+                        "Stack overflow while hashing ItemStack ingredient: {}",
+                        GameData.getItemRegistry()
+                            .getNameForObject(ingredient.getItem()),
+                        e);
+            }
+        }
+        hashCache.put(ingredient, hash);
+        return hash;
     }
 
     @Override
@@ -130,6 +170,11 @@ public class ItemStackHelper implements IIngredientHelper<ItemStack> {
     }
 
     @Override
+    public int getOrdinal(ItemStack ingredient) {
+        return ingredient.getItemDamage();
+    }
+
+    @Override
     public ItemStack getCheatItemStack(ItemStack ingredient) {
         return ingredient;
     }
@@ -159,11 +204,10 @@ public class ItemStackHelper implements IIngredientHelper<ItemStack> {
 
     @Override
     public Collection<String> getOreDictNames(ItemStack ingredient) {
-        Collection<String> names = new ArrayList<>();
-        for (int oreId : OreDictionary.getOreIDs(ingredient)) {
-            String oreNameLowercase = OreDictionary.getOreName(oreId)
-                .toLowerCase(Locale.ENGLISH);
-            names.add(oreNameLowercase);
+        int[] oreIds = OreDictionary.getOreIDs(ingredient);
+        Collection<String> names = new ArrayList<>(oreIds.length);
+        for (int oreId : oreIds) {
+            names.add(OreDictionary.getOreName(oreId));
         }
         return names;
     }

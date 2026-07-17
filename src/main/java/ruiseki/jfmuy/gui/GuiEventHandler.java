@@ -12,8 +12,10 @@ import org.apache.logging.log4j.Level;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.OverlayToggleEvent;
+import ruiseki.jfmuy.gui.ghost.GhostIngredientDragManager;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.LeftAreaDispatcher;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
@@ -31,14 +33,17 @@ public class GuiEventHandler {
     private final LeftAreaDispatcher leftAreaDispatcher;
     private final RecipeRegistry recipeRegistry;
     private final LimitedLogger missingBackgroundLogger = new LimitedLogger(Log.get(), Duration.ofHours(1));
+    private final GhostIngredientDragManager ghostIngredientDragManager;
     private boolean drawnOnBackground = false;
 
     public GuiEventHandler(GuiScreenHelper guiScreenHelper, LeftAreaDispatcher leftAreaDispatcher,
-        IngredientListOverlay ingredientListOverlay, RecipeRegistry recipeRegistry) {
+        IngredientListOverlay ingredientListOverlay, RecipeRegistry recipeRegistry,
+        GhostIngredientDragManager ghostIngredientDragManager) {
         this.guiScreenHelper = guiScreenHelper;
         this.leftAreaDispatcher = leftAreaDispatcher;
         this.ingredientListOverlay = ingredientListOverlay;
         this.recipeRegistry = recipeRegistry;
+        this.ghostIngredientDragManager = ghostIngredientDragManager;
     }
 
     @SubscribeEvent
@@ -46,6 +51,7 @@ public class GuiEventHandler {
         GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
         ingredientListOverlay.updateScreen(currentScreen, true);
         leftAreaDispatcher.updateScreen(currentScreen, false);
+        ghostIngredientDragManager.updateScreen(currentScreen, false);
     }
 
     @SubscribeEvent
@@ -53,13 +59,24 @@ public class GuiEventHandler {
         GuiScreen gui = event.gui;
         ingredientListOverlay.updateScreen(gui, false);
         leftAreaDispatcher.updateScreen(gui, false);
+        ghostIngredientDragManager.updateScreen(gui, false);
     }
 
     @SubscribeEvent
     public void onGuiOpen(GuiOpenEvent event) {
+        boolean wasDisplayed = ingredientListOverlay.isListDisplayed();
         GuiScreen gui = event.gui;
         ingredientListOverlay.updateScreen(gui, false);
         leftAreaDispatcher.updateScreen(gui, false);
+        ghostIngredientDragManager.updateScreen(gui, false);
+        if (wasDisplayed && !ingredientListOverlay.isListDisplayed()
+            && Config.isCollapseOnClose()
+            && Internal.hasIngredientFilter()) {
+            Internal.getCollapsedGroupRegistry()
+                .closeAllGroups();
+            Internal.getIngredientFilter()
+                .notifyCollapsedStateChanged();
+        }
     }
 
     @SubscribeEvent
@@ -72,6 +89,7 @@ public class GuiEventHandler {
         boolean exclusionAreasChanged = guiScreenHelper.updateGuiExclusionAreas();
         ingredientListOverlay.updateScreen(gui, exclusionAreasChanged);
         leftAreaDispatcher.updateScreen(gui, exclusionAreasChanged);
+        ghostIngredientDragManager.updateScreen(gui, false);
 
         drawnOnBackground = true;
         ingredientListOverlay.drawScreen(minecraft, event.getMouseX(), event.getMouseY());
@@ -90,6 +108,7 @@ public class GuiEventHandler {
         }
         ingredientListOverlay.drawOnForeground(minecraft, gui, event.getMouseX(), event.getMouseY());
         leftAreaDispatcher.drawOnForeground(gui, event.getMouseX(), event.getMouseY());
+        ghostIngredientDragManager.drawOnForeground(minecraft, gui, event.getMouseX(), event.getMouseY());
     }
 
     @SubscribeEvent
@@ -102,6 +121,7 @@ public class GuiEventHandler {
 
         ingredientListOverlay.updateScreen(gui, false);
         leftAreaDispatcher.updateScreen(gui, false);
+        ghostIngredientDragManager.updateScreen(gui, false);
 
         if (!drawnOnBackground) {
             if (gui instanceof GuiContainer) {
@@ -131,6 +151,7 @@ public class GuiEventHandler {
 
         ingredientListOverlay.drawTooltips(minecraft, event.mouseX, event.mouseY);
         leftAreaDispatcher.drawTooltips(minecraft, event.mouseX, event.mouseY);
+        ghostIngredientDragManager.drawTooltips(minecraft, event.mouseX, event.mouseY);
     }
 
     @SubscribeEvent
@@ -147,5 +168,11 @@ public class GuiEventHandler {
         if (Config.isOverlayEnabled()) {
             event.setCanceled(true);
         }
+    }
+
+    @SubscribeEvent
+    public void onBookmarkUpdateEvent(BookmarkUpdateEvent event) {
+        GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
+        leftAreaDispatcher.updateScreen(currentScreen, true);
     }
 }

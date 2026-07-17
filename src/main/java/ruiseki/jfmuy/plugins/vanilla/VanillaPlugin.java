@@ -69,7 +69,7 @@ public class VanillaPlugin implements IModPlugin {
     private ISubtypeRegistry subtypeRegistry;
 
     @Override
-    public void registerItemSubtypes(ISubtypeRegistry subtypeRegistry) {
+    public void registerSubtypes(ISubtypeRegistry subtypeRegistry) {
         this.subtypeRegistry = subtypeRegistry;
 
         subtypeRegistry.registerSubtypeInterpreter(Items.potionitem, PotionSubtypeInterpreter.INSTANCE);
@@ -106,17 +106,18 @@ public class VanillaPlugin implements IModPlugin {
         ItemStackHelper itemStackHelper = new ItemStackHelper(stackHelper);
         ItemStackRenderer itemStackRenderer = new ItemStackRenderer();
         ingredientRegistration.register(VanillaTypes.ITEM, itemStacks, itemStackHelper, itemStackRenderer);
-
+        ingredientRegistration.markAsCraftable(VanillaTypes.ITEM);
         List<FluidStack> fluidStacks = FluidStackListFactory.create();
         FluidStackHelper fluidStackHelper = new FluidStackHelper();
         FluidStackRenderer fluidStackRenderer = new FluidStackRenderer();
         ingredientRegistration.register(VanillaTypes.FLUID, fluidStacks, fluidStackHelper, fluidStackRenderer);
+        ingredientRegistration.markAsCraftable(VanillaTypes.FLUID);
     }
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registry) {
-        JFMUYHelpers jeiHelpers = Internal.getHelpers();
-        GuiHelper guiHelper = jeiHelpers.getGuiHelper();
+        JFMUYHelpers jfmuyHelpers = Internal.getHelpers();
+        GuiHelper guiHelper = jfmuyHelpers.getGuiHelper();
         registry.addRecipeCategories(
             new CraftingRecipeCategory(guiHelper),
             new FurnaceFuelCategory(guiHelper),
@@ -156,8 +157,14 @@ public class VanillaPlugin implements IModPlugin {
 
         IRecipeTransferRegistry recipeTransferRegistry = registry.getRecipeTransferRegistry();
 
-        recipeTransferRegistry
-            .addRecipeTransferHandler(ContainerWorkbench.class, VanillaRecipeCategoryUid.CRAFTING, 1, 9, 10, 36);
+        recipeTransferRegistry.addRecipeTransferHandlerWithOutput(
+            ContainerWorkbench.class,
+            VanillaRecipeCategoryUid.CRAFTING,
+            1,
+            9,
+            10,
+            36,
+            0);
         recipeTransferRegistry.addRecipeTransferHandler(
             new PlayerRecipeTransferHandler(jfmuyHelpers.recipeTransferHandlerHelper()),
             VanillaRecipeCategoryUid.CRAFTING);

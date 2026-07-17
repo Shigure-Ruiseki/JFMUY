@@ -1,5 +1,6 @@
 package ruiseki.jfmuy;
 
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.ResourceLocation;
 
 public class Reference {
@@ -7,7 +8,8 @@ public class Reference {
     public static final String MOD_ID = Tags.MOD_ID;
     public static final String MOD_NAME = Tags.MOD_NAME;
     public static final String VERSION = Tags.VERSION;
-    public static final String DEPENDENCIES = "required-after:okcore@[26.07.15.2,);";
+    public static final String DEPENDENCIES = "required-after:okcore@[26.07.17.2,);";
+    public static final String UPDATE_URL = "https://raw.githubusercontent.com/Shigure-Ruiseki/JFMUY/master/version/version.json";
 
     public static final String PROXY_COMMON = Tags.MOD_GROUP + ".CommonProxy";
     public static final String PROXY_CLIENT = Tags.MOD_GROUP + ".ClientProxy";
@@ -23,4 +25,6 @@ public class Reference {
     public static final String UNIVERSAL_RECIPE_TRANSFER_UID = "universal recipe transfer handler";
 
     public static final String MINECRAFT_NAME = "minecraft";
+
+    public static final boolean DEOBFUSCATED = (boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
 }

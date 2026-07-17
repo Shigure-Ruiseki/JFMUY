@@ -1,10 +1,10 @@
 package ruiseki.jfmuy.startup;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import net.minecraft.item.ItemStack;
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.okcore.datastructure.NonNullList;
 
@@ -12,7 +12,7 @@ public class UniqueItemStackListBuilder {
 
     private final StackHelper stackHelper;
     private final NonNullList<ItemStack> ingredients = NonNullList.create();
-    private final Set<String> ingredientUids = new HashSet<>();
+    private final Set<String> ingredientUids = new ObjectOpenHashSet<>();
 
     public UniqueItemStackListBuilder(StackHelper stackHelper) {
         this.stackHelper = stackHelper;

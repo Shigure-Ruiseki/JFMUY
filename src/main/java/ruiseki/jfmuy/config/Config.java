@@ -2,6 +2,10 @@ package ruiseki.jfmuy.config;
 
 import java.awt.Color;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -9,6 +13,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.MinecraftForge;
@@ -16,6 +23,7 @@ import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.base.Preconditions;
@@ -24,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.registry.GameData;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.Reference;
@@ -35,20 +44,28 @@ import ruiseki.jfmuy.color.ColorNamer;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.ingredients.IngredientListElementFactory;
-import ruiseki.jfmuy.network.packets.PacketRequestCheatPermission;
+import ruiseki.jfmuy.network.PacketRequestCheatPermission;
 import ruiseki.jfmuy.startup.ForgeModIdHelper;
 import ruiseki.jfmuy.startup.IModIdHelper;
+import ruiseki.jfmuy.util.CollapsedClickAction;
 import ruiseki.jfmuy.util.GiveMode;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
+import ruiseki.okcore.fluid.capability.CapabilityFluidHandler;
+import ruiseki.okcore.fluid.handler.IFluidHandlerItem;
+import ruiseki.okcore.helper.CapabilityHelpers;
 
 public final class Config {
 
-    private static final String configKeyPrefix = "config.jei";
+    private static final String configKeyPrefix = "config.jfmuy";
 
     public static final String CATEGORY_SEARCH = "search";
     public static final String CATEGORY_ADVANCED = "advanced";
     public static final String CATEGORY_SEARCH_COLORS = "searchColors";
+    public static final String CATEGORY_RENDERING = "rendering";
+    public static final String CATEGORY_MISC = "misc";
+    public static final String CATEGORY_CATEGORY = "category";
+    public static final String CATEGORY_COLLAPSIBLE = "collapsible";
 
     public static final String defaultModNameFormatFriendly = "blue italic";
     public static final int smallestNumColumns = 4;
@@ -65,7 +82,11 @@ public final class Config {
     @Nullable
     private static LocalizedConfiguration searchColorsConfig;
     @Nullable
+    private static CustomGroupsConfig customGroupsConfig;
+    @Nullable
     private static File bookmarkFile;
+    @Nullable
+    private static File favoriteFile;
 
     private static final ConfigValues defaultValues = new ConfigValues();
     private static final ConfigValues values = new ConfigValues();
@@ -77,6 +98,8 @@ public final class Config {
     private static final Set<String> itemBlacklist = new HashSet<>();
     private static final String[] defaultItemBlacklist = new String[] {};
 
+    public static boolean needToRebuildSearchTree;
+
     private Config() {
 
     }
@@ -85,6 +108,39 @@ public final class Config {
         return values.overlayEnabled || KeyBindings.toggleOverlay.getKeyCode() == 0; // if there is no key binding to
                                                                                      // enable it, don't allow the
                                                                                      // overlay to be disabled
+    }
+
+    public static boolean isCollapsibleGroupsEnabled() {
+        return values.collapsibleGroupsEnabled;
+    }
+
+    public static boolean isCollapseOnClose() {
+        return values.collapseOnClose;
+    }
+
+    public static CollapsedClickAction getCollapsedClickAction() {
+        return values.collapsedClickAction;
+    }
+
+    @Nullable
+    public static CustomGroupsConfig getCustomGroupsConfig() {
+        return customGroupsConfig;
+    }
+
+    public static Set<String> getDisabledGroups() {
+        return values.disabledGroups;
+    }
+
+    public static void saveDisabledGroups(Collection<String> disabledGroups) {
+        values.disabledGroups.clear();
+        values.disabledGroups.addAll(disabledGroups);
+        if (config != null) {
+            Property property = config.get(CATEGORY_COLLAPSIBLE, "disabledGroups", new String[] {});
+            property.set(disabledGroups.toArray(new String[0]));
+            if (config.hasChanged()) {
+                config.save();
+            }
+        }
     }
 
     public static void toggleOverlayEnabled() {
@@ -154,8 +210,8 @@ public final class Config {
             }
 
             if (values.cheatItemsEnabled && ServerInfo.isJFMUYOnServer()) {
-                JFMUY.getProxy()
-                    .sendPacketToServer(new PacketRequestCheatPermission());
+                JFMUY.instance.getPacketHandler()
+                    .sendToServer(new PacketRequestCheatPermission());
             }
         }
     }
@@ -181,6 +237,10 @@ public final class Config {
         MinecraftForge.EVENT_BUS.post(new EditModeToggleEvent(values.editModeEnabled));
     }
 
+    public static boolean areRecipeBookmarksEnabled() {
+        return values.recipeBookmarksEnabled;
+    }
+
     public static boolean isDebugModeEnabled() {
         return values.debugModeEnabled;
     }
@@ -193,8 +253,12 @@ public final class Config {
         return values.centerSearchBarEnabled;
     }
 
-    public static boolean isOptimizeMemoryUsage() {
-        return values.optimizeMemoryUsage;
+    public static boolean isSearchTreeBuildingAsync() {
+        return values.asyncSearchTreeBuilding;
+    }
+
+    public static boolean isUltraLowMemoryMode() {
+        return values.ultraLowMemoryUsage;
     }
 
     public static boolean isAddingBookmarksToFront() {
@@ -261,6 +325,23 @@ public final class Config {
         return values.searchAdvancedTooltips;
     }
 
+    public static boolean getSearchStrippedDiacritics() {
+        return values.searchStrippedDiacritics;
+    }
+
+    public static boolean doesSearchTreeNeedReload() {
+        if (config == null) {
+            return false;
+        }
+        boolean needToRebuildSearchTree = Config.needToRebuildSearchTree;
+        Config.needToRebuildSearchTree = false;
+        return needToRebuildSearchTree;
+    }
+
+    public static boolean isAutocraftingEnabled() {
+        return values.autocraftingEnabled && values.bookmarkOverlayEnabled;
+    }
+
     public enum SearchMode {
         ENABLED,
         REQUIRE_PREFIX,
@@ -294,6 +375,46 @@ public final class Config {
         }
     }
 
+    public static ItemStack getDefaultFluidContainerItem() {
+        return values.defaultFluidContainerItem.copy();
+    }
+
+    public static boolean bufferIngredientRenders() {
+        return values.bufferIngredientRenders;
+    }
+
+    public static boolean mouseClickToSeeRecipe() {
+        return values.mouseClickToSeeRecipes;
+    }
+
+    public static boolean getTooltipShowRecipeBy() {
+        return values.tooltipShowRecipeBy;
+    }
+
+    public static boolean getShowHiddenIngredientsInCreative() {
+        return values.showHiddenIngredientsInCreative;
+    }
+
+    public static boolean skipShowingProgressBar() {
+        return values.skipShowingProgressBar;
+    }
+
+    public static boolean hideBottomRightCornerConfigButton() {
+        return values.hideBottomRightCornerConfigButton;
+    }
+
+    public static boolean hideBottomLeftCornerBookmarkButton() {
+        return values.hideBottomLeftCornerBookmarkButton;
+    }
+
+    public static int getRecipeBookmarkGroupColor() {
+        return values.recipeBookmarkGroupColor;
+    }
+
+    public static List<String> categoryUidOrder() {
+        return values.categoryUidOrder;
+    }
+
     @Nullable
     public static LocalizedConfiguration getConfig() {
         return config;
@@ -309,19 +430,24 @@ public final class Config {
         return bookmarkFile;
     }
 
+    @Nullable
+    public static File getFavoriteFile() {
+        return favoriteFile;
+    }
+
     public static void preInit(FMLPreInitializationEvent event) {
 
-        File jeiConfigurationDir = new File(event.getModConfigurationDirectory(), Reference.MOD_ID);
-        if (!jeiConfigurationDir.exists()) {
+        File jfmuyConfigurationDir = new File(event.getModConfigurationDirectory(), Reference.MOD_ID);
+        if (!jfmuyConfigurationDir.exists()) {
             try {
-                if (!jeiConfigurationDir.mkdir()) {
+                if (!jfmuyConfigurationDir.mkdir()) {
                     Log.get()
-                        .error("Could not create config directory {}", jeiConfigurationDir);
+                        .error("Could not create config directory {}", jfmuyConfigurationDir);
                     return;
                 }
             } catch (SecurityException e) {
                 Log.get()
-                    .error("Could not create config directory {}", jeiConfigurationDir, e);
+                    .error("Could not create config directory {}", jfmuyConfigurationDir, e);
                 return;
             }
         }
@@ -330,30 +456,30 @@ public final class Config {
             Loader.instance()
                 .getConfigDir()
                 .getParent());
-        bookmarkFile = new File(minecraftDir, "jei_bookmarks.ini");
-        File oldBookmarkFile = new File(jeiConfigurationDir, "bookmarks.ini");
-        if (!bookmarkFile.exists() && oldBookmarkFile.exists()) {
+        bookmarkFile = new File(minecraftDir, "jfmuy_bookmarks.ini");
+        File oldBookmarkFile = new File(jfmuyConfigurationDir, "bookmarks.ini");
+        if (oldBookmarkFile.exists() && !bookmarkFile.exists()) {
             try {
-                if (!oldBookmarkFile.renameTo(bookmarkFile)) {
-                    Log.get()
-                        .error("Could not move the old bookmark file from {} to {}", jeiConfigurationDir, "./");
-                    return;
-                }
-            } catch (SecurityException e) {
+                FileUtils.moveFile(oldBookmarkFile, bookmarkFile);
+            } catch (IOException e) {
                 Log.get()
-                    .error("Could not move the old bookmark file from {} to {}", jeiConfigurationDir, "./", e);
+                    .error("Could not move the old bookmark file from {} to {}", jfmuyConfigurationDir, "./", e);
                 return;
             }
         }
 
-        final File configFile = new File(jeiConfigurationDir, "jfmuy.cfg");
-        final File itemBlacklistConfigFile = new File(jeiConfigurationDir, "itemBlacklist.cfg");
-        final File searchColorsConfigFile = new File(jeiConfigurationDir, "searchColors.cfg");
-        final File worldConfigFile = new File(jeiConfigurationDir, "worldSettings.cfg");
+        favoriteFile = new File("./", "hei_favorites.ini");
+        final File configFile = new File(jfmuyConfigurationDir, "jfmuy.cfg");
+        final File itemBlacklistConfigFile = new File(jfmuyConfigurationDir, "itemBlacklist.cfg");
+        final File searchColorsConfigFile = new File(jfmuyConfigurationDir, "searchColors.cfg");
+        final File worldConfigFile = new File(jfmuyConfigurationDir, "worldSettings.cfg");
         worldConfig = new Configuration(worldConfigFile, "0.1.0");
         config = new LocalizedConfiguration(configKeyPrefix, configFile, "0.4.0");
         itemBlacklistConfig = new LocalizedConfiguration(configKeyPrefix, itemBlacklistConfigFile, "0.1.0");
         searchColorsConfig = new LocalizedConfiguration(configKeyPrefix, searchColorsConfigFile, "0.1.0");
+
+        customGroupsConfig = new CustomGroupsConfig(jfmuyConfigurationDir);
+        customGroupsConfig.load();
 
         syncConfig();
         syncItemBlacklistConfig();
@@ -391,6 +517,12 @@ public final class Config {
 
         config.addCategory(CATEGORY_SEARCH);
         config.addCategory(CATEGORY_ADVANCED);
+        config.addCategory(CATEGORY_MISC);
+        config.addCategory(CATEGORY_COLLAPSIBLE);
+        // Override collapsible category lang keys from config.jfmuy.* to config.jfmuy.*
+        config.setCategoryLanguageKey(CATEGORY_COLLAPSIBLE, "config.jfmuy.collapsible");
+        config
+            .setCategoryComment(CATEGORY_COLLAPSIBLE, Translator.translateToLocal("config.jfmuy.collapsible.comment"));
 
         ConfigCategory modeCategory = config.getCategory("mode");
         if (modeCategory != null) {
@@ -408,17 +540,16 @@ public final class Config {
         }
 
         ConfigCategory searchCategory = config.getCategory(CATEGORY_SEARCH);
-        searchCategory.remove("atPrefixRequiredForModName");
-        searchCategory.remove("prefixRequiredForTooltipSearch");
-        searchCategory.remove("prefixRequiredForOreDictSearch");
-        searchCategory.remove("prefixRequiredForCreativeTabSearch");
-        searchCategory.remove("prefixRequiredForColorSearch");
-
         SearchMode[] searchModes = SearchMode.values();
 
         String loadedConfigVersion = config.getLoadedConfigVersion();
         // set new defaults moving to config version 0.3.0
         if (loadedConfigVersion != null && versionCompare(loadedConfigVersion, "0.3.0") < 0) {
+            searchCategory.remove("atPrefixRequiredForModName");
+            searchCategory.remove("prefixRequiredForTooltipSearch");
+            searchCategory.remove("prefixRequiredForOreDictSearch");
+            searchCategory.remove("prefixRequiredForCreativeTabSearch");
+            searchCategory.remove("prefixRequiredForColorSearch");
             config.setEnum("creativeTabSearchMode", CATEGORY_SEARCH, defaultValues.creativeTabSearchMode, searchModes);
             config.setEnum("oreDictSearchMode", CATEGORY_SEARCH, defaultValues.oreDictSearchMode, searchModes);
         }
@@ -435,13 +566,15 @@ public final class Config {
             .getEnum("colorSearchMode", CATEGORY_SEARCH, defaultValues.colorSearchMode, searchModes);
         values.resourceIdSearchMode = config
             .getEnum("resourceIdSearchMode", CATEGORY_SEARCH, defaultValues.resourceIdSearchMode, searchModes);
-        if (config.getCategory(CATEGORY_SEARCH)
-            .hasChanged()) {
-            needsReload = true;
-        }
-
         values.searchAdvancedTooltips = config
-            .getBoolean("searchAdvancedTooltips", CATEGORY_SEARCH, defaultValues.searchAdvancedTooltips);
+            .getBoolean(CATEGORY_SEARCH, "searchAdvancedTooltips", defaultValues.searchAdvancedTooltips);
+        values.searchStrippedDiacritics = config
+            .getBoolean(CATEGORY_SEARCH, "searchStrippedDiacritics", defaultValues.searchStrippedDiacritics);
+
+        if (searchCategory.hasChanged()) {
+            needsReload = true;
+            needToRebuildSearchTree = true;
+        }
 
         ConfigCategory categoryAdvanced = config.getCategory(CATEGORY_ADVANCED);
         categoryAdvanced.remove("nbtKeyIgnoreList");
@@ -455,8 +588,11 @@ public final class Config {
         values.centerSearchBarEnabled = config
             .getBoolean(CATEGORY_ADVANCED, "centerSearchBarEnabled", defaultValues.centerSearchBarEnabled);
 
-        values.optimizeMemoryUsage = config
-            .getBoolean(CATEGORY_ADVANCED, "optimizeMemoryUsage", defaultValues.optimizeMemoryUsage);
+        values.ultraLowMemoryUsage = config
+            .getBoolean(CATEGORY_ADVANCED, "ultraLowMemoryUsage", defaultValues.ultraLowMemoryUsage);
+
+        values.asyncSearchTreeBuilding = config
+            .getBoolean(CATEGORY_ADVANCED, "asyncSearchTreeBuilding", defaultValues.asyncSearchTreeBuilding);
 
         values.addBookmarksToFront = config
             .getBoolean(CATEGORY_ADVANCED, "addBookmarksToFront", defaultValues.addBookmarksToFront);
@@ -473,13 +609,132 @@ public final class Config {
             minRecipeGuiHeight,
             maxRecipeGuiHeight);
 
+        values.recipeBookmarkGroupColor = config.getInt(
+            "recipeBookmarkGroupColor",
+            CATEGORY_ADVANCED,
+            defaultValues.recipeBookmarkGroupColor,
+            Integer.MIN_VALUE,
+            Integer.MAX_VALUE);
+
         updateModNameFormat(config);
+
+        values.bufferIngredientRenders = config
+            .getBoolean(CATEGORY_RENDERING, "bufferIngredientRenders", defaultValues.bufferIngredientRenders);
+
+        values.mouseClickToSeeRecipes = config
+            .getBoolean(CATEGORY_MISC, "mouseClickToSeeRecipes", defaultValues.mouseClickToSeeRecipes);
+
+        values.tooltipShowRecipeBy = config
+            .getBoolean(CATEGORY_MISC, "tooltipShowRecipeBy", defaultValues.tooltipShowRecipeBy);
+
+        {
+            boolean prev = values.showHiddenIngredientsInCreative;
+            values.showHiddenIngredientsInCreative = config.getBoolean(
+                CATEGORY_MISC,
+                "showHiddenIngredientsInCreative",
+                defaultValues.showHiddenIngredientsInCreative);
+            if (prev != values.showHiddenIngredientsInCreative) {
+                needsReload = true;
+            }
+        }
+
+        values.skipShowingProgressBar = config
+            .getBoolean(CATEGORY_MISC, "skipShowingProgressBar", defaultValues.skipShowingProgressBar);
+
+        values.hideBottomRightCornerConfigButton = config.getBoolean(
+            CATEGORY_MISC,
+            "hideBottomRightCornerConfigButton",
+            defaultValues.hideBottomRightCornerConfigButton);
+
+        values.hideBottomLeftCornerBookmarkButton = config.getBoolean(
+            CATEGORY_MISC,
+            "hideBottomLeftCornerBookmarkButton",
+            defaultValues.hideBottomLeftCornerBookmarkButton);
+
+        {
+            boolean prev = values.collapsibleGroupsEnabled;
+            values.collapsibleGroupsEnabled = config
+                .getBoolean(CATEGORY_COLLAPSIBLE, "collapsibleGroupsEnabled", defaultValues.collapsibleGroupsEnabled);
+            if (prev != values.collapsibleGroupsEnabled) {
+                needsReload = true;
+            }
+        }
+
+        values.collapseOnClose = config
+            .getBoolean(CATEGORY_COLLAPSIBLE, "collapseOnClose", defaultValues.collapseOnClose);
+
+        values.collapsedClickAction = config.getEnum(
+            "collapsedClickAction",
+            CATEGORY_COLLAPSIBLE,
+            defaultValues.collapsedClickAction,
+            CollapsedClickAction.values());
+
+        // Override property lang keys and comments from config.jfmuy.collapsible.* to config.jfmuy.collapsible.*
+        {
+            String heiPrefix = "config.jfmuy.collapsible.";
+
+            Property collapsibleGroupsEnabledProp = config
+                .get(CATEGORY_COLLAPSIBLE, "collapsibleGroupsEnabled", defaultValues.collapsibleGroupsEnabled);
+            collapsibleGroupsEnabledProp.setLanguageKey(heiPrefix + "collapsibleGroupsEnabled");
+            collapsibleGroupsEnabledProp.comment = (Translator
+                .translateToLocal(heiPrefix + "collapsibleGroupsEnabled.comment"));
+
+            Property collapseOnCloseProp = config
+                .get(CATEGORY_COLLAPSIBLE, "collapseOnClose", defaultValues.collapseOnClose);
+            collapseOnCloseProp.setLanguageKey(heiPrefix + "collapseOnClose");
+            collapseOnCloseProp.comment = (Translator.translateToLocal(heiPrefix + "collapseOnClose.comment"));
+
+            Property collapsedClickActionProp = config
+                .get(CATEGORY_COLLAPSIBLE, "collapsedClickAction", defaultValues.collapsedClickAction.name());
+            collapsedClickActionProp.setLanguageKey(heiPrefix + "collapsedClickAction");
+            String defaultLocalized = Translator.translateToLocal("config.jfmuy.default");
+            String validLocalized = Translator.translateToLocal("config.jfmuy.valid");
+            collapsedClickActionProp.comment = (Translator.translateToLocal(heiPrefix + "collapsedClickAction.comment")
+                + "\n["
+                + defaultLocalized
+                + ": "
+                + defaultValues.collapsedClickAction.name()
+                    .toLowerCase(Locale.ENGLISH)
+                + "]"
+                + "\n["
+                + validLocalized
+                + ": "
+                + Arrays.toString(collapsedClickActionProp.getValidValues())
+                + ']');
+        }
+
+        // Explicit property order so the GUI shows collapsibleGroupsEnabled first, then collapseOnClose.
+        List<String> collapsibleOrder = new ArrayList<>();
+        collapsibleOrder.add("collapsibleGroupsEnabled");
+        collapsibleOrder.add("collapseOnClose");
+        collapsibleOrder.add("collapsedClickAction");
+        config.setCategoryPropertyOrder(CATEGORY_COLLAPSIBLE, collapsibleOrder);
+
+        {
+            String[] disabledGroupsArray = config
+                .getStringList("disabledGroups", CATEGORY_COLLAPSIBLE, new String[] {});
+            Property disabledProp = config.get(CATEGORY_COLLAPSIBLE, "disabledGroups", new String[] {});
+            disabledProp.setShowInGui(false);
+            values.disabledGroups.clear();
+            Collections.addAll(values.disabledGroups, disabledGroupsArray);
+        }
 
         {
             Property property = config.get(CATEGORY_ADVANCED, "debugModeEnabled", defaultValues.debugModeEnabled);
             property.setShowInGui(false);
             values.debugModeEnabled = property.getBoolean();
         }
+
+        if (!needToRebuildSearchTree) {
+            needToRebuildSearchTree = categoryAdvanced.get("ultraLowMemoryUsage")
+                .hasChanged();
+        }
+
+        String[] categoryUidOrder = config.getStringList(
+            "categoryUidOrder",
+            CATEGORY_CATEGORY,
+            defaultValues.categoryUidOrder.toArray(new String[] {}));
+        values.categoryUidOrder = Arrays.asList(categoryUidOrder);
 
         final boolean configChanged = config.hasChanged();
         if (configChanged) {
@@ -578,9 +833,61 @@ public final class Config {
         property.setShowInGui(false);
         values.bookmarkOverlayEnabled = property.getBoolean();
 
+        property = worldConfig.get(worldCategory, "autocraftingEnabled", defaultValues.recipeBookmarksEnabled);
+        property.setLanguageKey("config.jfmuy.interface.autocraftingEnabled");
+        property.comment = (Translator.translateToLocal("config.jfmuy.interface.autocraftingEnabled.comment"));
+        values.autocraftingEnabled = property.getBoolean();
+
+        property = worldConfig.get(worldCategory, "recipeBookmarksEnabled", defaultValues.autocraftingEnabled);
+        property.setLanguageKey("config.jfmuy.interface.recipeBookmarksEnabled");
+        property.comment = (Translator.translateToLocal("config.jfmuy.interface.autocraftingEnabled.comment"));
+        values.autocraftingEnabled = property.getBoolean();
+
         property = worldConfig.get(worldCategory, "filterText", defaultValues.filterText);
         property.setShowInGui(false);
         values.filterText = property.getString();
+
+        property = worldConfig.get(worldCategory, "defaultFluidContainerItem", "");
+        property.setLanguageKey("config.jfmuy.interface.defaultFluidContainerItem");
+        property.comment = Translator.translateToLocal("config.jfmuy.interface.defaultFluidContainerItem.comment");
+        String defaultFluidContainerItem = property.getString();
+        if (!defaultFluidContainerItem.isEmpty()) {
+            String[] defaultFluidContainerItemFormatted = defaultFluidContainerItem.split("@");
+            defaultFluidContainerItem = defaultFluidContainerItemFormatted[0];
+            Item item = GameData.getItemRegistry()
+                .getObject(defaultFluidContainerItem);
+            if (item != null) {
+                ItemStack stack = new ItemStack(Items.bucket);
+                if (defaultFluidContainerItemFormatted.length > 1) {
+                    try {
+                        int meta = Integer.decode(defaultFluidContainerItemFormatted[1]);
+                        stack = new ItemStack(item, 1, meta);
+                    } catch (NumberFormatException e) {
+                        new IllegalArgumentException(
+                            String.format("%s is not a valid meta", defaultFluidContainerItemFormatted[1]))
+                                .printStackTrace();
+                    }
+                } else {
+                    stack = new ItemStack(item);
+                }
+                IFluidHandlerItem container = CapabilityHelpers
+                    .getCapability(stack, CapabilityFluidHandler.FLUID_HANDLER_ITEM)
+                    .getOrNull();
+                if (container == null) {
+                    new IllegalArgumentException(
+                        String.format("%s is not a fluid container", defaultFluidContainerItem)).printStackTrace();
+                    values.defaultFluidContainerItem = new ItemStack(Items.bucket);
+                } else {
+                    values.defaultFluidContainerItem = stack;
+                }
+            } else {
+                new IllegalArgumentException(String.format("%s isn't a valid item ID", defaultFluidContainerItem))
+                    .printStackTrace();
+                values.defaultFluidContainerItem = new ItemStack(Items.bucket);
+            }
+        } else {
+            values.defaultFluidContainerItem = new ItemStack(Items.bucket);
+        }
 
         final boolean configChanged = worldConfig.hasChanged();
         if (configChanged) {

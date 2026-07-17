@@ -3,9 +3,9 @@ package ruiseki.jfmuy.plugins.vanilla.ingredients.fluid;
 import java.awt.Color;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
@@ -17,10 +17,18 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.base.Objects;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.color.ColorGetter;
+import ruiseki.jfmuy.config.Config;
+import ruiseki.okcore.fluid.capability.CapabilityFluidHandler;
+import ruiseki.okcore.fluid.handler.IFluidHandlerItem;
+import ruiseki.okcore.helper.CapabilityHelpers;
 
 public class FluidStackHelper implements IIngredientHelper<FluidStack> {
+
+    private final Map<FluidStack, Integer> hashCache = new Object2IntOpenHashMap<>();
 
     @Override
     public List<FluidStack> expandSubtypes(List<FluidStack> contained) {
@@ -45,12 +53,32 @@ public class FluidStackHelper implements IIngredientHelper<FluidStack> {
 
     @Override
     public String getUniqueId(FluidStack ingredient) {
-        if (ingredient.tag != null) {
-            return "fluid:" + ingredient.getFluid()
-                .getName() + ":" + ingredient.tag;
+        StringBuilder uniqueId = new StringBuilder("fluid:");
+        uniqueId.append(
+            ingredient.getFluid()
+                .getName());
+        String subtype = Internal.getSubtypeRegistry()
+            .getSubtypeInfo(ingredient);
+        if (subtype != null) {
+            uniqueId.append(subtype);
         }
-        return "fluid:" + ingredient.getFluid()
-            .getName();
+        return uniqueId.toString();
+    }
+
+    @Override
+    public int getHash(FluidStack ingredient) {
+        if (ingredient.amount == 0) {
+            return 0;
+        }
+        if (hashCache.containsKey(ingredient)) {
+            return hashCache.get(ingredient);
+        }
+        int hash = ingredient.amount * 31 + ingredient.getFluid()
+            .getName()
+            .hashCode();
+        hash = (hash * 31) + (ingredient.tag == null ? 0 : ingredient.tag.hashCode());
+        hashCache.put(ingredient, hash);
+        return hash;
     }
 
     @Override
@@ -93,16 +121,45 @@ public class FluidStackHelper implements IIngredientHelper<FluidStack> {
     }
 
     @Override
+    @Nullable
     public ItemStack getCheatItemStack(FluidStack ingredient) {
-        Fluid fluid = ingredient.getFluid();
-        if (fluid == FluidRegistry.WATER) {
-            return new ItemStack(Items.water_bucket);
-        } else if (fluid == FluidRegistry.LAVA) {
-            return new ItemStack(Items.lava_bucket);
-        } else if (fluid.getName()
-            .equals("milk")) {
-                return new ItemStack(Items.milk_bucket);
+        final FluidStack ingredientCopy = ingredient.copy();
+        ingredientCopy.amount = Integer.MAX_VALUE;
+
+        return CapabilityHelpers
+            .getCapability(Config.getDefaultFluidContainerItem(), CapabilityFluidHandler.FLUID_HANDLER_ITEM)
+            .map(handler -> {
+                handler.fill(ingredientCopy, true);
+                return handler.getContainer();
+            })
+            .orElse(null);
+    }
+
+    @Override
+    @Nullable
+    public ItemStack replaceWithCheatItemStack(FluidStack ingredient, ItemStack clickedWith) {
+        IFluidHandlerItem lazyHandler = CapabilityHelpers
+            .getCapability(clickedWith, CapabilityFluidHandler.FLUID_HANDLER_ITEM)
+            .getOrNull();
+
+        if (lazyHandler != null) {
+            ItemStack clickedWithCopy = clickedWith.copy();
+            clickedWithCopy.stackSize = 1;
+
+            final FluidStack ingredientCopy = ingredient.copy();
+            ingredientCopy.amount = Integer.MAX_VALUE;
+
+            IFluidHandlerItem handler = CapabilityHelpers
+                .getCapability(clickedWithCopy, CapabilityFluidHandler.FLUID_HANDLER_ITEM)
+                .getOrNull();
+            if (handler != null) {
+                ingredient = ingredient.copy();
+                ingredient.amount = Integer.MAX_VALUE;
+                if (handler.fill(ingredient, true) > 0) {
+                    return handler.getContainer();
+                }
             }
+        }
         return null;
     }
 
@@ -112,7 +169,7 @@ public class FluidStackHelper implements IIngredientHelper<FluidStack> {
     }
 
     @Override
-    public String getErrorInfo(FluidStack ingredient) {
+    public String getErrorInfo(@Nullable FluidStack ingredient) {
         if (ingredient == null) {
             return "null";
         }

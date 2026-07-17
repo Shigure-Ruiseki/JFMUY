@@ -36,4 +36,12 @@ public interface IIngredientListElement<V> {
     boolean isVisible();
 
     void setVisible(boolean visible);
+
+    int getGroupIndex();
+
+    boolean startsNewRow();
+
+    default int getOrdinal() {
+        return 0; // Preserve compatibility
+    }
 }

@@ -6,9 +6,10 @@ import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
 
+import ruiseki.jfmuy.gui.ghost.IGhostIngredientDragSource;
 import ruiseki.jfmuy.input.IShowsRecipeFocuses;
 
-public interface ILeftAreaContent extends IShowsRecipeFocuses {
+public interface ILeftAreaContent extends IShowsRecipeFocuses, IGhostIngredientDragSource {
 
     void drawScreen(Minecraft minecraft, int mouseX, int mouseY);
 
@@ -22,4 +23,7 @@ public interface ILeftAreaContent extends IShowsRecipeFocuses {
 
     boolean handleMouseClicked(int mouseX, int mouseY, int mouseButton);
 
+    boolean handleMouseReleased(int mouseX, int mouseY, int mouseButton);
+
+    boolean onKeyPressed(char typedChar, int eventKey);
 }

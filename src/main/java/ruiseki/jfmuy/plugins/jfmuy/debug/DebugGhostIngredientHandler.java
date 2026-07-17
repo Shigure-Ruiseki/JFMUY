@@ -49,6 +49,15 @@ public class DebugGhostIngredientHandler<T extends GuiContainer> implements IGho
             .info("Ghost Ingredient Handling Complete");
     }
 
+    @Override
+    public <I> boolean quickMove(T gui, I ingredient) {
+        IIngredientHelper<I> ingredientHelper = Internal.getIngredientRegistry()
+            .getIngredientHelper(ingredient);
+        Log.get()
+            .info("Attempt to Quick Move Ghost Ingredient {}", ingredientHelper.getErrorInfo(ingredient));
+        return true;
+    }
+
     private static class DebugInfoTarget<I> implements IGhostIngredientHandler.Target<I> {
 
         private final String message;

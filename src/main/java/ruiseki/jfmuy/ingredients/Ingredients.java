@@ -2,10 +2,10 @@ package ruiseki.jfmuy.ingredients;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
@@ -14,8 +14,8 @@ import ruiseki.jfmuy.api.recipe.IIngredientType;
 
 public class Ingredients implements IIngredients {
 
-    private final Map<IIngredientType, List<List>> inputs = new IdentityHashMap<>();
-    private final Map<IIngredientType, List<List>> outputs = new IdentityHashMap<>();
+    private final Map<IIngredientType, List<List>> inputs = new Reference2ObjectOpenHashMap<>();
+    private final Map<IIngredientType, List<List>> outputs = new Reference2ObjectOpenHashMap<>();
 
     @Override
     public <T> void setInput(IIngredientType<T> ingredientType, T input) {
@@ -99,7 +99,7 @@ public class Ingredients implements IIngredients {
     }
 
     public Map<IIngredientType, List> getInputIngredients() {
-        Map<IIngredientType, List> inputIngredients = new IdentityHashMap<>();
+        Map<IIngredientType, List> inputIngredients = new Reference2ObjectOpenHashMap<>();
         for (Map.Entry<IIngredientType, List<List>> entry : inputs.entrySet()) {
             List<Object> flatIngredients = new ArrayList<>();
             for (List ingredients : entry.getValue()) {
@@ -111,7 +111,7 @@ public class Ingredients implements IIngredients {
     }
 
     public Map<IIngredientType, List> getOutputIngredients() {
-        Map<IIngredientType, List> outputIngredients = new IdentityHashMap<>();
+        Map<IIngredientType, List> outputIngredients = new Reference2ObjectOpenHashMap<>();
         for (Map.Entry<IIngredientType, List<List>> entry : outputs.entrySet()) {
             List<Object> flatIngredients = new ArrayList<>();
             for (List ingredients : entry.getValue()) {

@@ -9,6 +9,7 @@ import net.minecraft.client.gui.inventory.GuiBrewingStand;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemEnchantedBook;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import cpw.mods.fml.common.registry.GameData;
 import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.api.ICollapsibleGroupRegistry;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
 import ruiseki.jfmuy.api.IModPlugin;
 import ruiseki.jfmuy.api.IModRegistry;
@@ -27,10 +29,16 @@ import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.ingredients.IModIngredientRegistration;
 import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.IRecipeCategoryRegistration;
+import ruiseki.jfmuy.bookmarks.BookmarkIngredientHelper;
+import ruiseki.jfmuy.bookmarks.BookmarkItem;
+import ruiseki.jfmuy.bookmarks.BookmarkItemRender;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.GuiProperties;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
+import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredient;
+import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredientHelper;
+import ruiseki.jfmuy.ingredients.group.CollapsibleGroupRegistry;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugGhostIngredientHandler;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugRecipe;
 import ruiseki.jfmuy.plugins.jfmuy.debug.DebugRecipeCategory;
@@ -39,6 +47,7 @@ import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredient;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredientHelper;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredientListFactory;
 import ruiseki.jfmuy.plugins.jfmuy.ingredients.DebugIngredientRenderer;
+import ruiseki.jfmuy.render.CollapsedGroupRenderer;
 import ruiseki.jfmuy.runtime.JFMUYHelpers;
 
 @JFMUYPlugin
@@ -57,12 +66,24 @@ public class JFMUYInternalPlugin implements IModPlugin {
             ingredientRegistration
                 .register(DebugIngredient.TYPE, Collections.emptyList(), ingredientHelper, ingredientRenderer);
         }
+        BookmarkIngredientHelper bookmarkIngredientHelper = new BookmarkIngredientHelper();
+        BookmarkItemRender bookmarkItemRender = new BookmarkItemRender();
+        ingredientRegistration
+            .register(BookmarkItem.TYPE, Collections.emptyList(), bookmarkIngredientHelper, bookmarkItemRender);
+
+        // Register CollapsedStack as ingredient type — addons that introspect grid items require a registered type
+        CollapsedGroupIngredientHelper csHelper = new CollapsedGroupIngredientHelper();
+        ingredientRegistration.register(
+            CollapsedGroupIngredient.TYPE,
+            Collections.emptyList(),
+            csHelper,
+            CollapsedGroupRenderer.INSTANCE);
     }
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registry) {
-        JFMUYHelpers jeiHelpers = Internal.getHelpers();
-        GuiHelper guiHelper = jeiHelpers.getGuiHelper();
+        JFMUYHelpers jfmuyHelpers = Internal.getHelpers();
+        GuiHelper guiHelper = jfmuyHelpers.getGuiHelper();
 
         registry.addRecipeCategories(new IngredientInfoRecipeCategory(guiHelper));
 
@@ -139,6 +160,20 @@ public class JFMUYInternalPlugin implements IModPlugin {
 
             registry.addGhostIngredientHandler(GuiBrewingStand.class, new DebugGhostIngredientHandler<>());
         }
+    }
+
+    @Override
+    public void registerCollapsibleGroups(ICollapsibleGroupRegistry r) {
+        CollapsibleGroupRegistry registry = (CollapsibleGroupRegistry) r;
+        registry.defaultNewGroup("enchanted_books", "Enchanted Books")
+            .addAny(VanillaTypes.ITEM, stack -> stack.getItem() instanceof ItemEnchantedBook)
+            .build();
+        registry.defaultNewGroup("potions", "Potions")
+            .addAny(VanillaTypes.ITEM, stack -> stack.getItem() == Items.potionitem)
+            .build();
+        registry.defaultNewGroup("spawn_eggs", "Spawn Eggs")
+            .addAny(VanillaTypes.ITEM, stack -> stack.getItem() == Items.spawn_egg)
+            .build();
     }
 
     @Override

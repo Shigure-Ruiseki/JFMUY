@@ -1,10 +1,6 @@
 package ruiseki.jfmuy.transfer;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -13,21 +9,26 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.api.gui.IGuiIngredient;
 import ruiseki.jfmuy.api.gui.IGuiItemStackGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
+import ruiseki.jfmuy.api.recipe.transfer.IRecipeCraftingHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
-import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferInfo;
 import ruiseki.jfmuy.config.ServerInfo;
-import ruiseki.jfmuy.network.packets.PacketRecipeTransfer;
+import ruiseki.jfmuy.network.PacketRecipeTransfer;
 import ruiseki.jfmuy.startup.StackHelper;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.Translator;
 
-public class BasicRecipeTransferHandler<C extends Container> implements IRecipeTransferHandler<C> {
+public class BasicRecipeTransferHandler<C extends Container> implements IRecipeCraftingHandler<C> {
 
     private final StackHelper stackHelper;
     private final IRecipeTransferHandlerHelper handlerHelper;
@@ -49,6 +50,11 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
     @Override
     public IRecipeTransferError transferRecipe(C container, IRecipeLayout recipeLayout, EntityPlayer player,
         boolean maxTransfer, boolean doTransfer) {
+        return transferRecipe(container, recipeLayout, player, maxTransfer ? Integer.MAX_VALUE : 1, false, doTransfer);
+    }
+
+    protected IRecipeTransferError transferRecipe(C container, IRecipeLayout recipeLayout, EntityPlayer player,
+        int maxTransfer, boolean performRecipe, boolean doTransfer) {
         if (!ServerInfo.isJFMUYOnServer()) {
             String tooltipMessage = Translator.translateToLocal("jfmuy.y.tooltip.error.recipe.transfer.no.server");
             return handlerHelper.createUserErrorWithTooltip(tooltipMessage);
@@ -58,22 +64,26 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
             return handlerHelper.createInternalError();
         }
 
-        Map<Integer, Slot> inventorySlots = new HashMap<>();
+        Int2ObjectMap<Slot> inventorySlots = new Int2ObjectArrayMap<>();
         for (Slot slot : transferHelper.getInventorySlots(container)) {
             inventorySlots.put(slot.slotNumber, slot);
         }
 
-        Map<Integer, Slot> craftingSlots = new HashMap<>();
+        Int2ObjectMap<Slot> craftingSlots = new Int2ObjectArrayMap<>();
         for (Slot slot : transferHelper.getRecipeSlots(container)) {
             craftingSlots.put(slot.slotNumber, slot);
         }
 
         int inputCount = 0;
+        boolean stackCrafting = false;
         IGuiItemStackGroup itemStackGroup = recipeLayout.getItemStacks();
         for (IGuiIngredient<ItemStack> ingredient : itemStackGroup.getGuiIngredients()
             .values()) {
             if (ingredient.isInput() && !ingredient.getAllIngredients()
                 .isEmpty()) {
+                for (ItemStack stack : ingredient.getAllIngredients()) {
+                    stackCrafting |= stack.stackSize > 1;
+                }
                 inputCount++;
             }
         }
@@ -90,7 +100,7 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
             return handlerHelper.createInternalError();
         }
 
-        Map<Integer, ItemStack> availableItemStacks = new HashMap<>();
+        Int2ObjectMap<ItemStack> availableItemStacks = new Int2ObjectArrayMap<>();
         int filledCraftSlotCount = 0;
         int emptySlotCount = 0;
 
@@ -126,24 +136,26 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
             return handlerHelper.createUserErrorWithTooltip(message);
         }
 
-        StackHelper.MatchingItemsResult matchingItemsResult = stackHelper
-            .getMatchingItems(availableItemStacks, itemStackGroup.getGuiIngredients());
+        StackHelper.MatchingItemsResult matchingItemsResult = stackCrafting
+            ? stackHelper.getMatchingItemsWithSensitiveCount(availableItemStacks, itemStackGroup.getGuiIngredients())
+            : stackHelper.getMatchingItems(availableItemStacks, itemStackGroup.getGuiIngredients());
 
-        if (matchingItemsResult.missingItems.size() > 0) {
+        if (!matchingItemsResult.missingItems.isEmpty()) {
             String message = Translator.translateToLocal("jfmuy.tooltip.error.recipe.transfer.missing");
             return handlerHelper.createUserErrorForSlots(message, matchingItemsResult.missingItems);
         }
 
-        List<Integer> craftingSlotIndexes = new ArrayList<>(craftingSlots.keySet());
+        IntList craftingSlotIndexes = new IntArrayList(craftingSlots.keySet());
         Collections.sort(craftingSlotIndexes);
 
-        List<Integer> inventorySlotIndexes = new ArrayList<>(inventorySlots.keySet());
+        IntList inventorySlotIndexes = new IntArrayList(inventorySlots.keySet());
         Collections.sort(inventorySlotIndexes);
 
+        int outputSlot = transferHelper.getOutputSlot();
+
         // check that the slots exist and can be altered
-        for (Map.Entry<Integer, Integer> entry : matchingItemsResult.matchingItems.entrySet()) {
-            int craftNumber = entry.getKey();
-            int slotNumber = craftingSlotIndexes.get(craftNumber);
+        for (Int2IntMap.Entry entry : matchingItemsResult.matchingItemsCasted.int2IntEntrySet()) {
+            int slotNumber = craftingSlotIndexes.get(entry.getIntKey());
             if (slotNumber < 0 || slotNumber >= container.inventorySlots.size()) {
                 Log.get()
                     .error(
@@ -156,17 +168,36 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeT
         }
 
         if (doTransfer) {
-            PacketRecipeTransfer packet = new PacketRecipeTransfer(
-                matchingItemsResult.matchingItems,
-                matchingItemsResult.matchingItemCounts,
-                craftingSlotIndexes,
-                inventorySlotIndexes,
-                maxTransfer,
-                transferHelper.requireCompleteSets());
-            JFMUY.getProxy()
-                .sendPacketToServer(packet);
+            PacketRecipeTransfer packet;
+            if (stackCrafting) {
+                packet = new PacketRecipeTransfer(
+                    matchingItemsResult.matchingItems,
+                    craftingSlotIndexes,
+                    inventorySlotIndexes,
+                    maxTransfer,
+                    performRecipe,
+                    transferHelper.requireCompleteSets(),
+                    ((StackHelper.SensitiveCountMatchingItemsResult) matchingItemsResult).matchingItemsCounts)
+                        .setOutputSlot(outputSlot);
+            } else {
+                packet = new PacketRecipeTransfer(
+                    matchingItemsResult.matchingItems,
+                    craftingSlotIndexes,
+                    inventorySlotIndexes,
+                    maxTransfer,
+                    performRecipe,
+                    transferHelper.requireCompleteSets()).setOutputSlot(outputSlot);
+            }
+            JFMUY.instance.getPacketHandler()
+                .sendToServer(packet);
         }
 
         return null;
+    }
+
+    @Override
+    public @Nullable IRecipeTransferError craft(C container, IRecipeLayout recipeLayout, EntityPlayer player,
+        int amount, boolean doTransfer) {
+        return this.transferRecipe(container, recipeLayout, player, amount, true, doTransfer);
     }
 }

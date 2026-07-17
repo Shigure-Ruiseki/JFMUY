@@ -49,8 +49,8 @@ public class GuiIconButtonSmall extends GuiButton {
             float alpha = (float) (color >> 24 & 255) / 255.0F;
             GlStateManager.color(red, blue, green, alpha);
 
-            double xOffset = xPosition + (height - this.icon.getWidth()) / 2.0;
-            double yOffset = yPosition + (width - this.icon.getHeight()) / 2.0;
+            double xOffset = xPosition + (width - this.icon.getWidth()) / 2.0;
+            double yOffset = yPosition + (height - this.icon.getHeight()) / 2.0;
             GlStateManager.pushMatrix();
             GlStateManager.translate(xOffset, yOffset, 0);
             this.icon.draw(mc);

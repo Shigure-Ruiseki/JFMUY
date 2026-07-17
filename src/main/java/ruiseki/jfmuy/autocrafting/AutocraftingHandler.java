@@ -1,0 +1,111 @@
+package ruiseki.jfmuy.autocrafting;
+
+import java.util.Stack;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.inventory.Container;
+
+import org.jetbrains.annotations.Nullable;
+
+import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.api.gui.IRecipeLayout;
+import ruiseki.jfmuy.api.recipe.IRecipeCategory;
+import ruiseki.jfmuy.api.recipe.transfer.IAutocraftingHandler;
+import ruiseki.jfmuy.api.recipe.transfer.IRecipeCraftingHandler;
+import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
+import ruiseki.jfmuy.recipes.RecipeRegistry;
+
+public class AutocraftingHandler implements IAutocraftingHandler {
+
+    @Nullable
+    private RecipeChain currentChain;
+    @Nullable
+    private RecipeBookmarkItem<?> currentRequester;
+    private Stack<RecipeBookmarkItem<?>> recipesToAutocraft;
+
+    public void start(RecipeChain chain) {
+        this.currentChain = chain;
+
+        recipesToAutocraft = new Stack<>();
+        chain.calculateMissingIngredients(recipesToAutocraft, null);
+        if (recipesToAutocraft.isEmpty()) {
+            stop();
+            return;
+        }
+        chain.calculateCrafting(); // Reset the displayed amounts.
+        autocraftLoop();
+    }
+
+    private boolean autocraft() {
+        if (this.currentRequester == null) {
+            stop();
+            return false;
+        }
+        Minecraft minecraft = Minecraft.getMinecraft();
+        EntityPlayerSP player = minecraft.thePlayer;
+        if (player == null) {
+            stop();
+            return false;
+        }
+        Container openContainer = player.openContainer;
+        RecipeRegistry recipeRegistry = Internal.getRuntime()
+            .getRecipeRegistry();
+        if (openContainer == null) {
+            stop();
+            return false;
+        }
+        IRecipeCategory<?> recipeCategory = currentRequester.category;
+        IRecipeLayout recipeLayout = currentRequester.createLayout();
+        IRecipeTransferHandler<?> recipeTransferHandler = recipeRegistry
+            .getRecipeTransferHandler(openContainer, recipeCategory);
+        if (!(recipeTransferHandler instanceof IRecipeCraftingHandler)) {
+            return true;
+        }
+        IRecipeCraftingHandler craftingHandler = (IRecipeCraftingHandler) recipeTransferHandler;
+        int craftAmount = (int) this.currentRequester.getMultiplier();
+        if (craftingHandler.craft(openContainer, recipeLayout, player, craftAmount, false) == null) {
+            craftingHandler.craft(openContainer, recipeLayout, player, craftAmount, true);
+            return false;
+        }
+        return true;
+    }
+
+    private void autocraftLoop() {
+        if (recipesToAutocraft.isEmpty()) {
+            stop();
+            return;
+        }
+        do {
+            this.currentRequester = recipesToAutocraft.pop();
+        } while (autocraft() && !recipesToAutocraft.isEmpty());
+        if (recipesToAutocraft != null && recipesToAutocraft.isEmpty()) {
+            stop();
+        }
+    }
+
+    @Override
+    public void stepFinished(boolean success, int amount) {
+        if (this.recipesToAutocraft == null) {
+            return;
+        }
+        if (amount < this.currentRequester.amount) {
+            this.currentRequester.amount -= amount;
+            this.recipesToAutocraft.push(this.currentRequester);
+        }
+        autocraftLoop();
+    }
+
+    @Override
+    public void stop() {
+        this.currentChain = null;
+        this.currentRequester = null;
+        this.recipesToAutocraft = null;
+    }
+
+    @Override
+    public boolean isActive() {
+        return this.currentChain != null;
+    }
+
+}

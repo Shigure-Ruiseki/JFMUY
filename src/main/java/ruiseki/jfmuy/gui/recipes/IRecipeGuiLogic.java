@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
+import ruiseki.jfmuy.api.IRecipesGui;
 import ruiseki.jfmuy.api.recipe.IFocus;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 
@@ -38,6 +39,14 @@ public interface IRecipeGuiLogic {
     boolean setCategoryFocus();
 
     boolean setCategoryFocus(List<String> recipeCategoryUids);
+
+    String getSearchFilter();
+
+    boolean setSearchFilter(String searchFilter);
+
+    IRecipesGui.RecipeSearchMode getSearchMode();
+
+    boolean setSearchMode(IRecipesGui.RecipeSearchMode searchMode);
 
     IRecipeCategory getSelectedRecipeCategory();
 

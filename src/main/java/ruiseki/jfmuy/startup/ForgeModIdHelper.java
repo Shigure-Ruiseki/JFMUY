@@ -19,7 +19,6 @@ import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
-import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.util.Log;
 
@@ -106,7 +105,7 @@ public class ForgeModIdHelper extends AbstractModIdHelper {
 
     @Override
     public <T> List<String> addModNameToIngredientTooltip(List<String> tooltip, T ingredient,
-                                                          IIngredientHelper<T> ingredientHelper) {
+        IIngredientHelper<T> ingredientHelper) {
         if (Config.isDebugModeEnabled() && Minecraft.getMinecraft().gameSettings.advancedItemTooltips) {
             tooltip = new ArrayList<>(tooltip);
             tooltip.add(EnumChatFormatting.GRAY + "JFMUY Debug:");

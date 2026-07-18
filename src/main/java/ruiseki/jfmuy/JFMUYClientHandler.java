@@ -28,7 +28,6 @@ import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.input.MouseHelper;
 import ruiseki.jfmuy.plugins.jfmuy.JFMUYInternalPlugin;
 import ruiseki.jfmuy.plugins.vanilla.VanillaPlugin;
-import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeValidatorRegistry;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
 import ruiseki.jfmuy.startup.AnnotatedInstanceUtil;
 import ruiseki.jfmuy.startup.JFMUYStarter;
@@ -94,7 +93,7 @@ public class JFMUYClientHandler {
     }
 
     public void init(FMLInitializationEvent event) {
-        CraftingRecipeValidatorRegistry.init();
+
     }
 
     public void postInit(FMLPostInitializationEvent event) {

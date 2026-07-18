@@ -19,10 +19,14 @@ import net.minecraft.inventory.ContainerFurnace;
 import net.minecraft.inventory.ContainerRepair;
 import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.ShapedRecipes;
+import net.minecraft.item.crafting.ShapelessRecipes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 import com.google.common.base.Preconditions;
 
@@ -47,7 +51,10 @@ import ruiseki.jfmuy.plugins.vanilla.brewing.BrewingRecipeCategory;
 import ruiseki.jfmuy.plugins.vanilla.brewing.BrewingRecipeMaker;
 import ruiseki.jfmuy.plugins.vanilla.brewing.PotionSubtypeInterpreter;
 import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeCategory;
-import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeMarker;
+import ruiseki.jfmuy.plugins.vanilla.crafting.CraftingRecipeChecker;
+import ruiseki.jfmuy.plugins.vanilla.crafting.ShapedOreRecipeWrapper;
+import ruiseki.jfmuy.plugins.vanilla.crafting.ShapedRecipesWrapper;
+import ruiseki.jfmuy.plugins.vanilla.crafting.ShapelessRecipesWrapper;
 import ruiseki.jfmuy.plugins.vanilla.furnace.FuelRecipeMaker;
 import ruiseki.jfmuy.plugins.vanilla.furnace.FurnaceFuelCategory;
 import ruiseki.jfmuy.plugins.vanilla.furnace.FurnaceSmeltingCategory;
@@ -107,6 +114,7 @@ public class VanillaPlugin implements IModPlugin {
         ItemStackRenderer itemStackRenderer = new ItemStackRenderer();
         ingredientRegistration.register(VanillaTypes.ITEM, itemStacks, itemStackHelper, itemStackRenderer);
         ingredientRegistration.markAsCraftable(VanillaTypes.ITEM);
+
         List<FluidStack> fluidStacks = FluidStackListFactory.create();
         FluidStackHelper fluidStackHelper = new FluidStackHelper();
         FluidStackRenderer fluidStackRenderer = new FluidStackRenderer();
@@ -132,7 +140,7 @@ public class VanillaPlugin implements IModPlugin {
         IJFMUYHelpers jfmuyHelpers = registry.getJFMUYHelpers();
         IVanillaRecipeFactory vanillaRecipeFactory = jfmuyHelpers.getVanillaRecipeFactory();
 
-        registry.addRecipes(CraftingRecipeMarker.getValidRecipes(jfmuyHelpers), VanillaRecipeCategoryUid.CRAFTING);
+        registry.addRecipes(CraftingRecipeChecker.getValidRecipes(jfmuyHelpers), VanillaRecipeCategoryUid.CRAFTING);
         registry.addRecipes(SmeltingRecipeMaker.getFurnaceRecipes(jfmuyHelpers), VanillaRecipeCategoryUid.SMELTING);
         registry.addRecipes(
             FuelRecipeMaker.getFuelRecipes(ingredientRegistry, jfmuyHelpers),
@@ -141,6 +149,23 @@ public class VanillaPlugin implements IModPlugin {
         registry.addRecipes(
             AnvilRecipeMaker.getAnvilRecipes(vanillaRecipeFactory, ingredientRegistry),
             VanillaRecipeCategoryUid.ANVIL);
+
+        registry.handleRecipes(
+            ShapedOreRecipe.class,
+            recipe -> new ShapedOreRecipeWrapper(jfmuyHelpers, recipe),
+            VanillaRecipeCategoryUid.CRAFTING);
+        registry.handleRecipes(
+            ShapedRecipes.class,
+            recipe -> new ShapedRecipesWrapper(jfmuyHelpers, recipe),
+            VanillaRecipeCategoryUid.CRAFTING);
+        registry.handleRecipes(
+            ShapelessOreRecipe.class,
+            recipe -> new ShapelessRecipesWrapper<>(jfmuyHelpers, recipe),
+            VanillaRecipeCategoryUid.CRAFTING);
+        registry.handleRecipes(
+            ShapelessRecipes.class,
+            recipe -> new ShapelessRecipesWrapper<>(jfmuyHelpers, recipe),
+            VanillaRecipeCategoryUid.CRAFTING);
 
         registry.addRecipeClickArea(GuiCrafting.class, 88, 32, 28, 23, VanillaRecipeCategoryUid.CRAFTING);
         registry.addRecipeClickArea(GuiInventory.class, 137, 29, 10, 13, VanillaRecipeCategoryUid.CRAFTING);

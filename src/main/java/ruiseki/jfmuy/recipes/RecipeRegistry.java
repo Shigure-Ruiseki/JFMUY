@@ -78,7 +78,7 @@ public class RecipeRegistry implements IRecipeRegistry {
     private final SetMultiMap<String, IRecipeWrapper> hiddenRecipes = new SetMultiMap<>(ReferenceOpenHashSet::new);
 
     public RecipeRegistry(List<IRecipeCategory> recipeCategories, ListMultiMap<String, IRecipeHandler> recipeHandlers,
-        ImmutableTable<Class, String, IRecipeTransferHandler> recipeTransferHandlers, List<Object> unsortedRecipes,
+        ImmutableTable<Class, String, IRecipeTransferHandler> recipeTransferHandlers,
         ListMultiMap<String, Object> recipes,
         ListMultiMap<Class<? extends GuiContainer>, RecipeClickableArea> recipeClickableAreasMap,
         ListMultiMap<String, Object> recipeCatalysts, IngredientRegistry ingredientRegistry,
@@ -94,7 +94,7 @@ public class RecipeRegistry implements IRecipeRegistry {
         this.recipeInputMap = new RecipeMap(recipeCategoryComparator, ingredientRegistry);
         this.recipeOutputMap = new RecipeMap(recipeCategoryComparator, ingredientRegistry);
 
-        addRecipes(unsortedRecipes, recipes);
+        addRecipes(recipes);
 
         ImmutableListMultimap.Builder<IRecipeCategory, Object> recipeCatalystsBuilder = ImmutableListMultimap.builder();
         ImmutableMultimap.Builder<String, String> categoriesForRecipeCatalystKeysBuilder = ImmutableMultimap.builder();
@@ -210,7 +210,7 @@ public class RecipeRegistry implements IRecipeRegistry {
         return listBuilder.build();
     }
 
-    private void addRecipes(List<Object> unsortedRecipes, ListMultiMap<String, Object> recipes) {
+    private void addRecipes(ListMultiMap<String, Object> recipes) {
         Collection<Map.Entry<String, List<Object>>> entries = recipes.entrySet();
         if (Config.skipShowingProgressBar()) {
             for (Map.Entry<String, List<Object>> entry : entries) {
@@ -219,22 +219,14 @@ public class RecipeRegistry implements IRecipeRegistry {
                     addRecipe(recipe, recipe.getClass(), recipeCategoryUid);
                 }
             }
-            for (Object recipe : unsortedRecipes) {
-                addRecipe(recipe, recipe.getClass(), null);
-            }
         } else {
-            ProgressManager.ProgressBar progressBar = ProgressManager
-                .push("Loading recipes", recipes.getTotalSize() + unsortedRecipes.size());
+            ProgressManager.ProgressBar progressBar = ProgressManager.push("Loading recipes", recipes.getTotalSize());
             for (Map.Entry<String, List<Object>> entry : entries) {
                 String recipeCategoryUid = entry.getKey();
                 for (Object recipe : entry.getValue()) {
                     progressBar.step("");
                     addRecipe(recipe, recipe.getClass(), recipeCategoryUid);
                 }
-            }
-            for (Object recipe : unsortedRecipes) {
-                progressBar.step("");
-                addRecipe(recipe, recipe.getClass(), null);
             }
             ProgressManager.pop(progressBar);
         }

@@ -63,8 +63,6 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
     private final List<IGlobalGuiHandler> globalGuiHandlers = new ArrayList<>();
     private final Map<Class, IGuiScreenHandler> guiScreenHandlers = new Reference2ObjectOpenHashMap<>();
     private final Map<Class, IGhostIngredientHandler> ghostIngredientHandlers = new Reference2ObjectOpenHashMap<>();
-    @Deprecated
-    private final List<Object> unsortedRecipes = new ArrayList<>();
     private final ListMultiMap<String, Object> recipes = new ListMultiMap<>();
     private final RecipeTransferRegistry recipeTransferRegistry;
     private final ListMultiMap<Class<? extends GuiContainer>, RecipeClickableArea> recipeClickableAreas = new ListMultiMap<>();
@@ -227,7 +225,7 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
         Preconditions.checkArgument(GuiScreen.class.isAssignableFrom(guiClass), "guiClass must inherit from GuiScreen");
         Preconditions.checkArgument(
             !ghostIngredientGuiBlacklist.contains(guiClass),
-            "you cannot add a ghost ingredient handler for the following Guis, it would interfere with using HEI: %s",
+            "you cannot add a ghost ingredient handler for the following Guis, it would interfere with using JFMUY: %s",
             ghostIngredientGuiBlacklist);
         ErrorUtil.checkNotNull(handler, "handler");
         this.ghostIngredientHandlers.put(guiClass, handler);
@@ -323,7 +321,6 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
             recipeCategories,
             recipeHandlers,
             recipeTransferHandlers,
-            unsortedRecipes,
             recipes,
             recipeClickableAreas,
             recipeCatalysts,

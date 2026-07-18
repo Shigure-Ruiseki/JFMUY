@@ -32,7 +32,9 @@ import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeCategoryRegistration;
+import ruiseki.jfmuy.api.recipe.IRecipeHandler;
 import ruiseki.jfmuy.api.recipe.IRecipeRegistryPlugin;
+import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapperFactory;
 import ruiseki.jfmuy.api.recipe.VanillaRecipeCategoryUid;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
@@ -55,6 +57,7 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
     private final IIngredientRegistry ingredientRegistry;
     private final List<IRecipeCategory> recipeCategories = new ArrayList<>();
     private final Set<String> recipeCategoryUids = new ObjectOpenHashSet<>();
+    private final ListMultiMap<String, IRecipeHandler> recipeHandlers = new ListMultiMap<>();
     private final SetMultiMap<String, Class> recipeHandlerClasses = new SetMultiMap<>();
     private final List<IAdvancedGuiHandler<?>> advancedGuiHandlers = new ArrayList<>();
     private final List<IGlobalGuiHandler> globalGuiHandlers = new ArrayList<>();
@@ -63,7 +66,9 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
     private final ListMultiMap<String, Object> recipes = new ListMultiMap<>();
     private final RecipeTransferRegistry recipeTransferRegistry;
     private final ListMultiMap<Class<? extends GuiContainer>, RecipeClickableArea> recipeClickableAreas = new ListMultiMap<>();
-    private final ListMultiMap<String, Object> recipeCatalysts = new ListMultiMap<>();
+    private final ListMultiMap<String, Object> recipeCatalysts = new ListMultiMap<>(
+        new Object2ObjectLinkedOpenHashMap<>(),
+        ArrayList::new);
     private final List<IRecipeRegistryPlugin> recipeRegistryPlugins = new ArrayList<>();
 
     public ModRegistry(JFMUYHelpers jfmuyHelpers, IIngredientRegistry ingredientRegistry) {
@@ -126,6 +131,29 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
         ErrorUtil.checkNotNull(recipeWrapperFactory, "recipeWrapperFactory");
         ErrorUtil.checkNotNull(recipeCategoryUid, "recipeCategoryUid");
 
+        IRecipeHandler<T> recipeHandler = new IRecipeHandler<T>() {
+
+            @Override
+            public Class<T> getRecipeClass() {
+                return recipeClass;
+            }
+
+            @Override
+            public String getRecipeCategoryUid(T recipe) {
+                return recipeCategoryUid;
+            }
+
+            @Override
+            public IRecipeWrapper getRecipeWrapper(T recipe) {
+                return recipeWrapperFactory.getRecipeWrapper(recipe);
+            }
+
+            @Override
+            public boolean isRecipeValid(T recipe) {
+                return true;
+            }
+        };
+
         if (this.recipeHandlerClasses.contains(recipeCategoryUid, recipeClass)) {
             Log.get()
                 .error(
@@ -134,6 +162,7 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
                     recipeClass.getName());
         } else {
             this.recipeHandlerClasses.put(recipeCategoryUid, recipeClass);
+            this.recipeHandlers.put(recipeCategoryUid, recipeHandler);
         }
     }
 
@@ -285,10 +314,12 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
             recipeCatalysts.clear();
             recipeCatalysts.putAll(orderedRecipeCatalysts);
         }
+
         ImmutableTable<Class, String, IRecipeTransferHandler> recipeTransferHandlers = recipeTransferRegistry
             .getRecipeTransferHandlers();
         return new RecipeRegistry(
             recipeCategories,
+            recipeHandlers,
             recipeTransferHandlers,
             recipes,
             recipeClickableAreas,

@@ -71,4 +71,15 @@ public interface IRecipeTransferRegistry {
      * Useful for mods with recipe pattern encoding, for automated recipe systems.
      */
     void addUniversalRecipeTransferHandler(IRecipeTransferHandler<?> recipeTransferHandler);
+
+    /**
+     * Queues a copy operation of all registered recipe transfer handlers from one category to another.
+     * <p>
+     * The actual cloning and registration process is deferred until the final recipe registry is built.
+     * This ensures that handlers registered late by other mods are also successfully copied.
+     *
+     * @param fromRecipeCategoryUid the source recipe category UID to copy handlers from
+     * @param toRecipeCategoryUid   the target recipe category UID to apply the copied handlers to
+     */
+    void copyRecipeTransferHandlers(String fromRecipeCategoryUid, String toRecipeCategoryUid);
 }

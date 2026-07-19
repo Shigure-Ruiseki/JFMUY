@@ -1,6 +1,12 @@
 package ruiseki.jfmuy.recipes;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import net.minecraft.inventory.Container;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.ImmutableTable;
 
@@ -18,6 +24,7 @@ import ruiseki.jfmuy.util.ErrorUtil;
 public class RecipeTransferRegistry implements IRecipeTransferRegistry {
 
     private final Table<Class, String, IRecipeTransferHandler> recipeTransferHandlers = Table.hashBasedTable();
+    private final List<Pair<String, String>> pendingCopies = new ArrayList<>();
     private final StackHelper stackHelper;
     private final IRecipeTransferHandlerHelper handlerHelper;
 
@@ -87,7 +94,35 @@ public class RecipeTransferRegistry implements IRecipeTransferRegistry {
         this.recipeTransferHandlers.put(containerClass, Reference.UNIVERSAL_RECIPE_TRANSFER_UID, recipeTransferHandler);
     }
 
+    @Override
+    public void copyRecipeTransferHandlers(String fromRecipeCategoryUid, String toRecipeCategoryUid) {
+        ErrorUtil.checkNotNull(fromRecipeCategoryUid, "fromRecipeCategoryUid");
+        ErrorUtil.checkNotNull(toRecipeCategoryUid, "toRecipeCategoryUid");
+        this.pendingCopies.add(Pair.of(fromRecipeCategoryUid, toRecipeCategoryUid));
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void executePendingCopies() {
+        ImmutableTable<Class, String, IRecipeTransferHandler> snapshot = this.recipeTransferHandlers.toImmutable();
+
+        for (Pair<String, String> pair : pendingCopies) {
+            String fromUid = pair.getLeft();
+            String toUid = pair.getRight();
+
+            Map<Class, IRecipeTransferHandler> srcHandlers = snapshot.column(fromUid);
+            for (Map.Entry<Class, IRecipeTransferHandler> entry : srcHandlers.entrySet()) {
+                Class<?> containerClass = entry.getKey();
+                if (Container.class.isAssignableFrom(containerClass)) {
+                    this.recipeTransferHandlers.put(containerClass, toUid, entry.getValue());
+                }
+            }
+        }
+        pendingCopies.clear();
+    }
+
+    @SuppressWarnings("rawtypes")
     public ImmutableTable<Class, String, IRecipeTransferHandler> getRecipeTransferHandlers() {
+        if (!pendingCopies.isEmpty()) executePendingCopies();
         return recipeTransferHandlers.toImmutable();
     }
 }

@@ -57,7 +57,7 @@ public class IngredientGrid implements IShowsRecipeFocuses {
         this.historyProvider = new IngredientGridHistoryProvider(enableHistory);
     }
 
-    public IngredientGrid(GridAlignment alignment) { // Left in for compatibility with JFMUY Utilities
+    public IngredientGrid(GridAlignment alignment) {
         this(new IngredientListBatchRenderer(), alignment, false);
     }
 
@@ -83,6 +83,11 @@ public class IngredientGrid implements IShowsRecipeFocuses {
 
         this.area = new Rectangle(x, y, width, height);
         this.guiIngredientSlots.clear();
+
+        if (historyProvider.isEnabled()) {
+            historyProvider.updateColumns(columns);
+            historyProvider.clearHistorySlots();
+        }
 
         if (rows == 0 || columns < Config.smallestNumColumns) {
             return false;
@@ -110,6 +115,7 @@ public class IngredientGrid implements IShowsRecipeFocuses {
                 this.guiIngredientSlots.add(ingredientRow);
             }
         }
+
         return true;
     }
 

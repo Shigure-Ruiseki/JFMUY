@@ -30,6 +30,7 @@ public class BookmarkGrid extends IngredientGrid {
         this.alignment = alignment;
     }
 
+    @Override
     public boolean updateBounds(Rectangle availableArea, int minWidth, Collection<Rectangle> exclusionAreas) {
         final int columns = Math.min(availableArea.width / INGREDIENT_WIDTH, Config.getMaxColumns());
         final int rows = availableArea.height / INGREDIENT_HEIGHT;
@@ -80,6 +81,7 @@ public class BookmarkGrid extends IngredientGrid {
                 this.guiIngredientSlots.add(ingredientRow);
             }
         }
+
         return true;
     }
 

@@ -184,12 +184,12 @@ public class GuiEventHandler {
         if (gui == null || gui.mc == null) return;
         int mouseX = Mouse.getEventX() * gui.width / gui.mc.displayWidth;
         int mouseY = gui.height - Mouse.getEventY() * gui.height / gui.mc.displayHeight - 1;
-        boolean overJEI = ingredientListOverlay.isMouseOver(mouseX, mouseY);
+        boolean overJFMUY = ingredientListOverlay.isMouseOver(mouseX, mouseY);
         boolean overLeft = leftAreaDispatcher.isMouseOver(mouseX, mouseY);
-        int dWheel = (overJEI || overLeft) ? Mouse.getEventDWheel() : 0;
+        int dWheel = (overJFMUY || overLeft) ? Mouse.getEventDWheel() : 0;
         if (dWheel != 0) {
             int scrollDelta = Integer.signum(dWheel);
-            if (overJEI) {
+            if (overJFMUY) {
                 ingredientListOverlay.handleMouseScrolled(mouseX, mouseY, scrollDelta);
             } else {
                 leftAreaDispatcher.handleMouseScrolled(mouseX, mouseY, scrollDelta);

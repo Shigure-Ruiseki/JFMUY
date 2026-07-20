@@ -67,7 +67,7 @@ public class ForgeModIdHelper extends AbstractModIdHelper {
         return modNameFormat + modName;
     }
 
-    private static String removeChatFormatting(String string) {
+    public static String removeChatFormatting(String string) {
         String withoutFormattingCodes = EnumChatFormatting.getTextWithoutFormattingCodes(string);
         return (withoutFormattingCodes == null) ? "" : withoutFormattingCodes;
     }
@@ -108,16 +108,46 @@ public class ForgeModIdHelper extends AbstractModIdHelper {
     @Override
     public <T> List<String> addModNameToIngredientTooltip(List<String> tooltip, T ingredient,
         IIngredientHelper<T> ingredientHelper) {
+        this.addDebugInfoIfEnabled(tooltip, ingredient, ingredientHelper);
+
+        String modId = ingredientHelper.getDisplayModId(ingredient);
+        String formattedModName = getFormattedModNameForModId(modId);
+
+        if (hasModIdentityInTooltip(tooltip, modId, getModNameForModId(modId), formattedModName)) {
+            return tooltip;
+        }
+
+        if (Config.isModNameFormatOverrideActive() && this.skipAddingModName(ingredient)) {
+            return tooltip;
+        }
+
+        return super.addModNameToIngredientTooltip(tooltip, ingredient, ingredientHelper);
+    }
+
+    private boolean hasModIdentityInTooltip(List<String> tooltip, String modId, String rawModName,
+        @Nullable String formattedModName) {
+        String cleanModId = modId.trim();
+        String cleanRawModName = removeChatFormatting(rawModName);
+        String cleanFormattedModName = removeChatFormatting(formattedModName);
+
+        for (String line : tooltip) {
+            if (line == null) continue;
+            String cleanLine = removeChatFormatting(line);
+
+            if (cleanLine.equalsIgnoreCase(cleanModId) || cleanLine.equalsIgnoreCase(cleanRawModName)
+                || cleanLine.equalsIgnoreCase(cleanFormattedModName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private <T> void addDebugInfoIfEnabled(List<String> tooltip, T ingredient, IIngredientHelper<T> ingredientHelper) {
         if (Config.isDebugModeEnabled() && Minecraft.getMinecraft().gameSettings.advancedItemTooltips) {
-            tooltip = new ArrayList<>(tooltip);
             tooltip.add(EnumChatFormatting.GRAY + "JFMUY Debug:");
             tooltip.add(EnumChatFormatting.GRAY + "info: " + ingredientHelper.getErrorInfo(ingredient));
             tooltip.add(EnumChatFormatting.GRAY + "uid: " + ingredientHelper.getUniqueId(ingredient));
         }
-        if (Config.isModNameFormatOverrideActive() && this.skipAddingModName(ingredient)) {
-            return tooltip;
-        }
-        return super.addModNameToIngredientTooltip(tooltip, ingredient, ingredientHelper);
     }
 
     private <T> boolean skipAddingModName(T ingredient) {

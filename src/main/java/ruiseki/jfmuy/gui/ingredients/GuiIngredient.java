@@ -221,15 +221,25 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
                     final String acceptsAny = String.format(oreDictionaryIngredient, oreDictEquivalent);
                     tooltip.add(EnumChatFormatting.GRAY + acceptsAny);
                 }
-                TooltipRenderer.drawHoveringText(
+                TooltipRenderer.drawHoveringTextAndExtras(
                     (ItemStack) value,
                     minecraft,
                     tooltip,
                     xOffset + mouseX,
                     yOffset + mouseY,
-                    fontRenderer);
+                    fontRenderer,
+                    ingredientRenderer,
+                    allIngredients);
             } else {
-                TooltipRenderer.drawHoveringText(minecraft, tooltip, xOffset + mouseX, yOffset + mouseY, fontRenderer);
+                TooltipRenderer.drawHoveringTextAndExtras(
+                    null,
+                    minecraft,
+                    tooltip,
+                    xOffset + mouseX,
+                    yOffset + mouseY,
+                    fontRenderer,
+                    ingredientRenderer,
+                    allIngredients);
             }
 
             GlStateManager.enableDepth();

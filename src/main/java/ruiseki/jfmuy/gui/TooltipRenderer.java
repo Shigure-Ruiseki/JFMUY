@@ -12,6 +12,7 @@ import net.minecraftforge.common.MinecraftForge;
 
 import com.google.common.collect.Lists;
 
+import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 import ruiseki.okcore.client.renderer.GlStateManager;
 import ruiseki.okcore.event.gui.RenderTooltipEvent;
@@ -69,13 +70,114 @@ public final class TooltipRenderer {
         drawHoveringText(itemStack, minecraft, textLines, x, y, maxWidth, minecraft.fontRenderer);
     }
 
-    public static void drawHoveringTextAndItems(Minecraft minecraft, List<String> textLines,
-        List<IngredientListBatchRenderer> itemLines, int x, int y) {
-        drawHoveringTextAndItems(null, minecraft, textLines, itemLines, x, y, -1, minecraft.fontRenderer);
+    public static <T> void drawHoveringTextAndExtras(ItemStack itemStack, Minecraft minecraft, List<String> textLines,
+        int x, int y, FontRenderer font, IIngredientRenderer<T> ingredientRenderer, List<T> allIngredients) {
+        drawHoveringTextAndExtras(itemStack, minecraft, textLines, x, y, -1, font, ingredientRenderer, allIngredients);
+    }
+
+    public static <T> void drawHoveringTextAndExtras(ItemStack stack, Minecraft minecraft, List<String> lines,
+        int mouseX, int mouseY, int maxTextWidth, FontRenderer font, IIngredientRenderer<T> ingredientRenderer,
+        List<T> allIngredients) {
+
+        int extraWidth = 0;
+        int extraHeight = 0;
+
+        if (ingredientRenderer != null) {
+            IIngredientRenderer.ExtraSize size = ingredientRenderer
+                .renderTooltipExtras(minecraft, mouseX, mouseY, font, lines, allIngredients);
+            if (size != null) {
+                extraWidth = size.width;
+                extraHeight = size.height;
+            }
+        }
+
+        int nextY = drawTooltipBackgroundAndText(
+            stack,
+            minecraft,
+            lines,
+            mouseX,
+            mouseY,
+            maxTextWidth,
+            font,
+            extraWidth,
+            extraHeight,
+            null);
+
+        if (nextY != -1 && ingredientRenderer != null) {
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(mouseX + 12, nextY, 300.0F);
+
+            ingredientRenderer.renderTooltipExtras(minecraft, mouseX, mouseY, font, lines, allIngredients);
+
+            GlStateManager.popMatrix();
+
+            GlStateManager.enableLighting();
+            GlStateManager.enableDepth();
+            RenderHelper.enableStandardItemLighting();
+            GlStateManager.enableRescaleNormal();
+        }
+    }
+
+    public static void drawHoveringTextAndItems(Minecraft minecraft, List<String> lines,
+        List<IngredientListBatchRenderer> itemLines, int mouseX, int mouseY) {
+        drawHoveringTextAndItems(null, minecraft, lines, itemLines, mouseX, mouseY, -1, minecraft.fontRenderer);
+    }
+
+    public static void drawHoveringTextAndItems(Minecraft minecraft, List<String> lines,
+        List<IngredientListBatchRenderer> itemLines, int mouseX, int mouseY, FontRenderer font) {
+        drawHoveringTextAndItems(null, minecraft, lines, itemLines, mouseX, mouseY, -1, font);
+    }
+
+    public static void drawHoveringTextAndItems(ItemStack stack, Minecraft minecraft, List<String> lines,
+        List<IngredientListBatchRenderer> itemLines, int mouseX, int mouseY) {
+        drawHoveringTextAndItems(stack, minecraft, lines, itemLines, mouseX, mouseY, -1, minecraft.fontRenderer);
     }
 
     public static void drawHoveringTextAndItems(ItemStack stack, Minecraft minecraft, List<String> lines,
         List<IngredientListBatchRenderer> itemLines, int mouseX, int mouseY, int maxTextWidth, FontRenderer font) {
+
+        int extraHeight = 0;
+        int extraWidth = 0;
+        if (!itemLines.isEmpty()) {
+            for (IngredientListBatchRenderer renderer : itemLines) {
+                extraHeight += renderer.getHeight();
+                extraWidth = Math.max(extraWidth, renderer.getWidth());
+            }
+        }
+
+        int nextY = drawTooltipBackgroundAndText(
+            stack,
+            minecraft,
+            lines,
+            mouseX,
+            mouseY,
+            maxTextWidth,
+            font,
+            extraWidth,
+            extraHeight,
+            itemLines);
+
+        if (nextY != -1 && !itemLines.isEmpty()) {
+            int tooltipX = mouseX + 12;
+            for (IngredientListBatchRenderer line : itemLines) {
+                GlStateManager.pushMatrix();
+                GlStateManager.translate(tooltipX, nextY, 300.0F);
+                line.render(minecraft);
+                GlStateManager.popMatrix();
+                nextY += line.getHeight();
+            }
+
+            GlStateManager.enableLighting();
+            GlStateManager.enableDepth();
+            RenderHelper.enableStandardItemLighting();
+            GlStateManager.enableRescaleNormal();
+        }
+    }
+
+    private static int drawTooltipBackgroundAndText(ItemStack stack, Minecraft minecraft, List<String> lines,
+        int mouseX, int mouseY, int maxTextWidth, FontRenderer font, int extraWidth, int extraHeight,
+        List<IngredientListBatchRenderer> itemLines) {
+
         ScaledResolution scaledresolution = new ScaledResolution(
             minecraft,
             minecraft.displayWidth,
@@ -93,8 +195,9 @@ public final class TooltipRenderer {
             maxTextWidth,
             font);
         if (MinecraftForge.EVENT_BUS.post(event)) {
-            return;
+            return -1;
         }
+
         mouseX = event.getX();
         mouseY = event.getY();
         screenWidth = event.getScreenWidth();
@@ -106,18 +209,18 @@ public final class TooltipRenderer {
         RenderHelper.disableStandardItemLighting();
         GlStateManager.disableLighting();
         GlStateManager.disableDepth();
-        int tooltipTextWidth = 0;
 
+        int tooltipTextWidth = 0;
         for (String line : lines) {
             int textLineWidth = font.getStringWidth(line);
-
             if (textLineWidth > tooltipTextWidth) {
                 tooltipTextWidth = textLineWidth;
             }
         }
 
-        boolean needsWrap = false;
+        tooltipTextWidth = Math.max(tooltipTextWidth, extraWidth);
 
+        boolean needsWrap = false;
         int titleLinesCount = 1;
         int tooltipX = mouseX + 12;
         if (tooltipX + tooltipTextWidth + 4 > screenWidth) {
@@ -154,7 +257,7 @@ public final class TooltipRenderer {
                     wrappedTextLines.add(line);
                 }
             }
-            tooltipTextWidth = wrappedTooltipWidth;
+            tooltipTextWidth = Math.max(wrappedTooltipWidth, extraWidth);
             lines = wrappedTextLines;
 
             if (mouseX > screenWidth / 2) {
@@ -163,10 +266,12 @@ public final class TooltipRenderer {
                 tooltipX = mouseX + 12;
             }
 
-            for (IngredientListBatchRenderer renderer : itemLines) {
-                renderer.moveSlotsToFit(wrappedTooltipWidth);
+            if (itemLines != null) {
+                for (IngredientListBatchRenderer renderer : itemLines) {
+                    renderer.moveSlotsToFit(tooltipTextWidth);
+                }
             }
-        } else {
+        } else if (itemLines != null) {
             for (IngredientListBatchRenderer renderer : itemLines) {
                 renderer.moveSlotsToFit(screenWidth / 2);
                 tooltipTextWidth = Math.max(tooltipTextWidth, renderer.getWidth());
@@ -184,11 +289,8 @@ public final class TooltipRenderer {
                 tooltipHeight += 2;
             }
         }
-        if (!itemLines.isEmpty()) {
-            for (IngredientListBatchRenderer renderer : itemLines) {
-                tooltipHeight += renderer.getHeight();
-            }
-        }
+
+        tooltipHeight += extraHeight;
 
         if (tooltipY < 4) {
             tooltipY = 4;
@@ -297,30 +399,20 @@ public final class TooltipRenderer {
                 font,
                 tooltipTextWidth,
                 tooltipHeight));
+
         int tooltipTop = tooltipY;
 
         for (int lineNumber = 0; lineNumber < lines.size(); ++lineNumber) {
             font.drawStringWithShadow(lines.get(lineNumber), tooltipX, tooltipY, -1);
             tooltipY += 10;
-
             if (lineNumber + 1 == titleLinesCount) {
                 tooltipY += 2;
             }
-        }
-        for (IngredientListBatchRenderer line : itemLines) {
-            GlStateManager.pushMatrix();
-            GlStateManager.translate(tooltipX, tooltipY, 300.0F);
-            line.render(minecraft);
-            GlStateManager.popMatrix();
-            tooltipY += line.getHeight();
         }
 
         MinecraftForge.EVENT_BUS.post(
             new RenderTooltipEvent.PostText(stack, lines, tooltipX, tooltipTop, font, tooltipTextWidth, tooltipHeight));
 
-        GlStateManager.enableLighting();
-        GlStateManager.enableDepth();
-        RenderHelper.enableStandardItemLighting();
-        GlStateManager.enableRescaleNormal();
+        return tooltipY;
     }
 }

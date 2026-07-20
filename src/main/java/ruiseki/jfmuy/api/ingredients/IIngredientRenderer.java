@@ -38,7 +38,6 @@ public interface IIngredientRenderer<T> {
      * @return The tooltip text for the ingredient.
      */
     default List<String> getTooltip(Minecraft minecraft, T ingredient, boolean tooltipFlag) {
-        // you should override this method. this default method is to keep old JFMUY plugins from crashing.
         return getTooltip(minecraft, ingredient, true);
     }
 
@@ -51,5 +50,45 @@ public interface IIngredientRenderer<T> {
      */
     default FontRenderer getFontRenderer(Minecraft minecraft, T ingredient) {
         return minecraft.fontRenderer;
+    }
+
+    /**
+     * Renders extra visual components below the standard tooltip text box and determines its dimensions.
+     * <p>
+     * <strong>Note on Layout Architecture:</strong> This method is invoked twice per frame by the tooltip rendering
+     * pipeline:
+     * <ol>
+     * <li><strong>Pre-pass (Measurement):</strong> Invoked prior to drawing the tooltip frame background to measure the
+     * required dynamic spatial expansion. Graphics/GL state operations are omitted or safe here.</li>
+     * <li><strong>Render-pass (Drawing):</strong> Invoked immediately after the main tooltip background and text lines
+     * have been successfully written, rendering the actual visual components (e.g., energy bars, ingredient
+     * matrices).</li>
+     * </ol>
+     *
+     * @param minecraft      The minecraft instance.
+     * @param mouseX         The absolute X position of the mouse on the screen.
+     * @param mouseY         The absolute Y position of the mouse on the screen.
+     * @param fontRenderer   The font renderer associated with this ingredient.
+     * @param tooltipStrings The list of text strings currently being displayed in the tooltip.
+     * @param allIngredients A list containing all cycled ingredient variations (e.g., OreDict equivalents) to be drawn.
+     * @return An {@link ExtraSize} object specifying the maximum width and height bounds occupied by this component.
+     *         Return {@link ExtraSize#EMPTY} or {@code null} if no extra graphics are rendered.
+     */
+    default ExtraSize renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, FontRenderer fontRenderer,
+        List<String> tooltipStrings, List<T> allIngredients) {
+        return null;
+    }
+
+    class ExtraSize {
+
+        public final int width;
+        public final int height;
+
+        public static final ExtraSize EMPTY = new ExtraSize(0, 0);
+
+        public ExtraSize(int width, int height) {
+            this.width = width;
+            this.height = height;
+        }
     }
 }

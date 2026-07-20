@@ -14,6 +14,8 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.gui.inventory.GuiInventory;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableTable;
@@ -70,6 +72,7 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
         new Object2ObjectLinkedOpenHashMap<>(),
         ArrayList::new);
     private final List<IRecipeRegistryPlugin> recipeRegistryPlugins = new ArrayList<>();
+    private final List<Pair<String, String>> pendingCopies = new ArrayList<>();
 
     public ModRegistry(JFMUYHelpers jfmuyHelpers, IIngredientRegistry ingredientRegistry) {
         this.jfmuyHelpers = jfmuyHelpers;
@@ -193,6 +196,13 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
     }
 
     @Override
+    public void copyRecipeCatalyst(String fromRecipeCategoryUid, String toRecipeCategoryUid) {
+        ErrorUtil.checkNotNull(fromRecipeCategoryUid, "fromRecipeCategoryUid");
+        ErrorUtil.checkNotNull(toRecipeCategoryUid, "toRecipeCategoryUid");
+        this.pendingCopies.add(Pair.of(fromRecipeCategoryUid, toRecipeCategoryUid));
+    }
+
+    @Override
     public void addAdvancedGuiHandlers(IAdvancedGuiHandler<?>... advancedGuiHandlers) {
         ErrorUtil.checkNotEmpty(advancedGuiHandlers, "advancedGuiHandlers");
 
@@ -286,6 +296,19 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
     }
 
     public RecipeRegistry createRecipeRegistry(IngredientRegistry ingredientRegistry) {
+        for (Pair<String, String> copyPair : pendingCopies) {
+            String fromUid = copyPair.getLeft();
+            String toUid = copyPair.getRight();
+
+            List<Object> sourceCatalysts = recipeCatalysts.get(fromUid);
+            if (sourceCatalysts != null && !sourceCatalysts.isEmpty()) {
+                for (Object catalyst : sourceCatalysts) {
+                    this.recipeCatalysts.put(toUid, catalyst);
+                }
+            }
+        }
+        pendingCopies.clear();
+
         if (!Config.categoryUidOrder()
             .isEmpty()) {
             List<IRecipeCategory> orderedCategories = new ArrayList<>();

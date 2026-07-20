@@ -76,6 +76,17 @@ public interface IModRegistry {
     void addRecipeCatalyst(Object catalystIngredient, String... recipeCategoryUids);
 
     /**
+     * Queues a copy operation of all registered recipe catalyst from one category to another.
+     * <p>
+     * The actual cloning and registration process is deferred until the final recipe registry is built.
+     * This ensures that catalyst registered late by other mods are also successfully copied.
+     *
+     * @param fromRecipeCategoryUid the source recipe category UID to copy catalyst from
+     * @param toRecipeCategoryUid   the target recipe category UID to apply the copied catalyst to
+     */
+    void copyRecipeCatalyst(String fromRecipeCategoryUid, String toRecipeCategoryUid);
+
+    /**
      * Add a handler to give JFMUY extra information about how to layout the item list next to a specific type of
      * GuiContainer.
      * Used for guis with tabs on the side that would normally intersect with JFMUY's item list.

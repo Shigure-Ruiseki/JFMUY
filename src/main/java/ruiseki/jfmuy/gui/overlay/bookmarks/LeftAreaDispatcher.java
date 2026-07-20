@@ -134,7 +134,7 @@ public class LeftAreaDispatcher implements IShowsRecipeFocuses, IGhostIngredient
     }
 
     public boolean handleMouseScrolled(int mouseX, int mouseY, int dWheel) {
-        if (canShow && hasContent()) {
+        if (isMouseOver(mouseX, mouseY)) {
             if (displayArea.contains(mouseX, mouseY)) {
                 return contents.get(current)
                     .handleMouseScrolled(mouseX, mouseY, dWheel);
@@ -151,7 +151,7 @@ public class LeftAreaDispatcher implements IShowsRecipeFocuses, IGhostIngredient
     }
 
     public boolean handleMouseClicked(int mouseX, int mouseY, int mouseButton) {
-        if (canShow && hasContent()) {
+        if (isMouseOver(mouseX, mouseY)) {
             if (displayArea.contains(mouseX, mouseY)) {
                 return contents.get(current)
                     .handleMouseClicked(mouseX, mouseY, mouseButton);
@@ -163,7 +163,7 @@ public class LeftAreaDispatcher implements IShowsRecipeFocuses, IGhostIngredient
     }
 
     public boolean handleMouseReleased(int mouseX, int mouseY, int mouseButton) {
-        if (!(canShow || hasContent())) {
+        if (!isMouseOver(mouseX, mouseY)) {
             return false;
         }
 
@@ -227,9 +227,6 @@ public class LeftAreaDispatcher implements IShowsRecipeFocuses, IGhostIngredient
     }
 
     public boolean isMouseOver(int mouseX, int mouseY) {
-        if (canShow && hasContent()) {
-            return displayArea.contains(mouseX, mouseY) || naviArea.contains(mouseX, mouseY);
-        }
-        return false;
+        return canShow && hasContent() && !guiScreenHelper.isInGuiExclusionArea(mouseX, mouseY);
     }
 }

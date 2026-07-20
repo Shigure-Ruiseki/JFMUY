@@ -63,32 +63,6 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
         }
     }
 
-    /**
-     * Formats the stack count for display
-     */
-    private String formatStackCount(int count) {
-        if (count <= 99) {
-            return String.valueOf(count);
-        }
-
-        if (count <= 9999) {
-            return String.valueOf(count);
-        }
-
-        if (count <= 999999) {
-            float k = count / 1000f;
-            return String.format(k % 1 == 0 ? "%.0fk" : "%.1fk", k);
-        }
-
-        if (count <= 999999999) {
-            float m = count / 1000000f;
-            return String.format(m % 1 == 0 ? "%.0fm" : "%.1fm", m);
-        }
-
-        float g = count / 1000000000f;
-        return String.format(g % 1 == 0 ? "%.0fg" : "%.1fg", g);
-    }
-
     @Override
     public List<String> getTooltip(Minecraft minecraft, ItemStack ingredient, boolean tooltipFlag) {
         EntityPlayer player = minecraft.thePlayer;

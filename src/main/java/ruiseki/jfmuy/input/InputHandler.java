@@ -126,6 +126,7 @@ public class InputHandler {
             int y = guiScreen.height - Mouse.getEventY() * guiScreen.height / minecraft.displayHeight - 1;
             if (handleMouseEvent(guiScreen, x, y)) {
                 event.setCanceled(true);
+                while (Mouse.next());
             }
         }
     }
@@ -160,8 +161,15 @@ public class InputHandler {
     }
 
     private boolean handleMouseScroll(int dWheel, int mouseX, int mouseY) {
-        return ingredientListOverlay.handleMouseScrolled(mouseX, mouseY, dWheel)
-            || leftAreaDispatcher.handleMouseScrolled(mouseX, mouseY, dWheel);
+        if (ingredientListOverlay.isMouseOver(mouseX, mouseY) && ingredientListOverlay.handleMouseScrolled(mouseX, mouseY, dWheel)) {
+            return true;
+        }
+
+        if (leftAreaDispatcher.isMouseOver(mouseX, mouseY) && leftAreaDispatcher.handleMouseScrolled(mouseX, mouseY, dWheel)) {
+            return true;
+        }
+
+        return false;
     }
 
     private boolean handleMouseClick(GuiScreen guiScreen, int mouseButton, int mouseX, int mouseY) {

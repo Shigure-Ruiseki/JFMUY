@@ -223,6 +223,9 @@ public class IngredientListOverlay
 
     @Override
     public boolean isMouseOver(int mouseX, int mouseY) {
+        if (guiScreenHelper.isInGuiExclusionArea(mouseX, mouseY)) {
+            return false;
+        }
         if (isListDisplayed()) {
             if (Config.isCenterSearchBarEnabled() && searchField.isMouseOver(mouseX, mouseY)) {
                 return true;

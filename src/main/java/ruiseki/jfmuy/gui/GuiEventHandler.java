@@ -177,25 +177,4 @@ public class GuiEventHandler {
         GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
         leftAreaDispatcher.updateScreen(currentScreen, true);
     }
-
-    @SubscribeEvent
-    public void onMouseInputEventPre(MouseInputEvent.Pre event) {
-        GuiScreen gui = event.gui;
-        if (gui == null || gui.mc == null) return;
-        int mouseX = Mouse.getEventX() * gui.width / gui.mc.displayWidth;
-        int mouseY = gui.height - Mouse.getEventY() * gui.height / gui.mc.displayHeight - 1;
-        boolean overJFMUY = ingredientListOverlay.isMouseOver(mouseX, mouseY);
-        boolean overLeft = leftAreaDispatcher.isMouseOver(mouseX, mouseY);
-        int dWheel = (overJFMUY || overLeft) ? Mouse.getEventDWheel() : 0;
-        if (dWheel != 0) {
-            int scrollDelta = Integer.signum(dWheel);
-            if (overJFMUY) {
-                ingredientListOverlay.handleMouseScrolled(mouseX, mouseY, scrollDelta);
-            } else {
-                leftAreaDispatcher.handleMouseScrolled(mouseX, mouseY, scrollDelta);
-            }
-            event.setCanceled(true);
-            while (Mouse.next());
-        }
-    }
 }

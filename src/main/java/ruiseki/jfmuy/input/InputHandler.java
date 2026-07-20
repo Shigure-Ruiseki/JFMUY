@@ -161,11 +161,13 @@ public class InputHandler {
     }
 
     private boolean handleMouseScroll(int dWheel, int mouseX, int mouseY) {
-        if (ingredientListOverlay.isMouseOver(mouseX, mouseY) && ingredientListOverlay.handleMouseScrolled(mouseX, mouseY, dWheel)) {
+        if (ingredientListOverlay.isMouseOver(mouseX, mouseY)
+            && ingredientListOverlay.handleMouseScrolled(mouseX, mouseY, dWheel)) {
             return true;
         }
 
-        if (leftAreaDispatcher.isMouseOver(mouseX, mouseY) && leftAreaDispatcher.handleMouseScrolled(mouseX, mouseY, dWheel)) {
+        if (leftAreaDispatcher.isMouseOver(mouseX, mouseY)
+            && leftAreaDispatcher.handleMouseScrolled(mouseX, mouseY, dWheel)) {
             return true;
         }
 

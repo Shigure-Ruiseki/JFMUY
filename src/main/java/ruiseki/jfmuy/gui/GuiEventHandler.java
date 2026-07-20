@@ -9,7 +9,6 @@ import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 
 import org.apache.logging.log4j.Level;
-import org.lwjgl.input.Mouse;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
@@ -26,7 +25,6 @@ import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.event.gui.BackgroundDrawnEvent;
 import ruiseki.okcore.event.gui.GuiContainerEvent;
 import ruiseki.okcore.event.gui.PotionShiftEvent;
-import ruiseki.okcore.event.input.MouseInputEvent;
 
 public class GuiEventHandler {
 

@@ -12,17 +12,20 @@ import net.minecraft.client.gui.inventory.GuiCrafting;
 import net.minecraft.client.gui.inventory.GuiFurnace;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentData;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerBrewingStand;
 import net.minecraft.inventory.ContainerFurnace;
 import net.minecraft.inventory.ContainerRepair;
 import net.minecraft.inventory.ContainerWorkbench;
+import net.minecraft.item.ItemEnchantedBook;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.item.crafting.ShapelessRecipes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
@@ -59,6 +62,10 @@ import ruiseki.jfmuy.plugins.vanilla.furnace.FuelRecipeMaker;
 import ruiseki.jfmuy.plugins.vanilla.furnace.FurnaceFuelCategory;
 import ruiseki.jfmuy.plugins.vanilla.furnace.FurnaceSmeltingCategory;
 import ruiseki.jfmuy.plugins.vanilla.furnace.SmeltingRecipeMaker;
+import ruiseki.jfmuy.plugins.vanilla.ingredients.enchant.EnchantDataHelper;
+import ruiseki.jfmuy.plugins.vanilla.ingredients.enchant.EnchantDataListFactory;
+import ruiseki.jfmuy.plugins.vanilla.ingredients.enchant.EnchantDataRenderer;
+import ruiseki.jfmuy.plugins.vanilla.ingredients.enchant.EnchantedBookCache;
 import ruiseki.jfmuy.plugins.vanilla.ingredients.fluid.FluidStackHelper;
 import ruiseki.jfmuy.plugins.vanilla.ingredients.fluid.FluidStackListFactory;
 import ruiseki.jfmuy.plugins.vanilla.ingredients.fluid.FluidStackRenderer;
@@ -94,7 +101,7 @@ public class VanillaPlugin implements IModPlugin {
                     int lvl = nbttagcompound.getShort("lvl");
                     Enchantment enchantment = Enchantment.enchantmentsList[id];
                     if (enchantment != null) {
-                        enchantmentNames.add(enchantment.getName() + ".lvl" + lvl);
+                        enchantmentNames.add(enchantment.getTranslatedName(lvl));
                     }
                 }
             }
@@ -108,8 +115,9 @@ public class VanillaPlugin implements IModPlugin {
         Preconditions.checkState(this.subtypeRegistry != null);
         StackHelper stackHelper = Internal.getStackHelper();
         ItemStackListFactory itemStackListFactory = new ItemStackListFactory(this.subtypeRegistry);
-
         List<ItemStack> itemStacks = itemStackListFactory.create(stackHelper);
+        itemStacks.removeIf(stack -> stack != null && stack.getItem() instanceof ItemEnchantedBook);
+
         ItemStackHelper itemStackHelper = new ItemStackHelper(stackHelper);
         ItemStackRenderer itemStackRenderer = new ItemStackRenderer();
         ingredientRegistration.register(VanillaTypes.ITEM, itemStacks, itemStackHelper, itemStackRenderer);
@@ -120,6 +128,13 @@ public class VanillaPlugin implements IModPlugin {
         FluidStackRenderer fluidStackRenderer = new FluidStackRenderer();
         ingredientRegistration.register(VanillaTypes.FLUID, fluidStacks, fluidStackHelper, fluidStackRenderer);
         ingredientRegistration.markAsCraftable(VanillaTypes.FLUID);
+
+        List<EnchantmentData> enchantments = EnchantDataListFactory.create();
+        EnchantedBookCache enchantedBookCache = new EnchantedBookCache();
+        MinecraftForge.EVENT_BUS.register(enchantedBookCache);
+        EnchantDataHelper enchantmentHelper = new EnchantDataHelper(enchantedBookCache, itemStackHelper);
+        EnchantDataRenderer enchantmentRenderer = new EnchantDataRenderer(itemStackRenderer, enchantedBookCache);
+        ingredientRegistration.register(VanillaTypes.ENCHANT, enchantments, enchantmentHelper, enchantmentRenderer);
     }
 
     @Override

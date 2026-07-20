@@ -225,4 +225,11 @@ public class LeftAreaDispatcher implements IShowsRecipeFocuses, IGhostIngredient
         return contents.get(current)
             .onKeyPressed(typedChar, eventKey);
     }
+
+    public boolean isMouseOver(int mouseX, int mouseY) {
+        if (canShow && hasContent()) {
+            return displayArea.contains(mouseX, mouseY) || naviArea.contains(mouseX, mouseY);
+        }
+        return false;
+    }
 }

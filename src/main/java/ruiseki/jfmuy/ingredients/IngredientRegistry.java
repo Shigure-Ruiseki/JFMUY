@@ -1,12 +1,20 @@
 package ruiseki.jfmuy.ingredients;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentData;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemEnchantedBook;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntityFurnace;
 
 import org.jetbrains.annotations.Nullable;
@@ -190,92 +198,15 @@ public class IngredientRegistry implements IIngredientRegistry {
         ErrorUtil.checkNotNull(ingredientType, "ingredientType");
         ErrorUtil.checkNotEmpty(ingredients, "ingredients");
 
-        Log.get()
-            .info(
-                "Ingredients are being added at runtime: {} {}",
-                ingredients.size(),
-                ingredientType.getIngredientClass()
-                    .getName());
-
-        IIngredientHelper<V> ingredientHelper = getIngredientHelper(ingredientType);
-        // noinspection unchecked
-        Set<V> set = ingredientsMap
-            .computeIfAbsent(ingredientType, k -> IngredientSet.create(ingredientType, ingredientHelper));
-        for (V ingredient : ingredients) {
-            set.add(ingredient);
-            if (ingredient instanceof ItemStack) {
-                getStackProperties((ItemStack) ingredient);
-            }
-        }
-
-        NonNullList<IIngredientListElement<V>> ingredientListElements = IngredientListElementFactory
-            .createList(this, ingredientType, ingredients, modIdHelper);
-        NonNullList<IIngredientListElement> ingredientsToAdd = NonNullList.create();
-        for (IIngredientListElement<V> element : ingredientListElements) {
-            List<IIngredientListElement<V>> matchingElements = ingredientFilter.findMatchingElements(element);
-            if (!matchingElements.isEmpty()) {
-                for (IIngredientListElement<V> matchingElement : matchingElements) {
-                    blacklist.removeIngredientFromBlacklist(matchingElement.getIngredient(), ingredientHelper);
-                    ingredientFilter.updateHiddenState(matchingElement);
-                }
-                if (Config.isDebugModeEnabled()) {
-                    Log.get()
-                        .debug("Updated ingredient: {}", ingredientHelper.getErrorInfo(element.getIngredient()));
-                }
-            } else {
-                blacklist.removeIngredientFromBlacklist(element.getIngredient(), ingredientHelper);
-                ingredientsToAdd.add(element);
-                if (Config.isDebugModeEnabled()) {
-                    Log.get()
-                        .debug("Added ingredient: {}", ingredientHelper.getErrorInfo(element.getIngredient()));
-                }
-            }
-        }
-        if (!ingredientsToAdd.isEmpty()) {
-            ingredientFilter.addIngredients(ingredientsToAdd);
-        }
-        ingredientFilter.invalidateCache();
-    }
-
-    @Override
-    public <V> void removeIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients) {
-        removeIngredientsAtRuntime(ingredientType, ingredients, Internal.getIngredientFilter());
-    }
-
-    @Override
-    public <V> IIngredientType<V> getIngredientType(V ingredient) {
-        ErrorUtil.checkNotNull(ingredient, "ingredient");
-        @SuppressWarnings("unchecked")
-        Class<? extends V> ingredientClass = (Class<? extends V>) ingredient.getClass();
-        return getIngredientType(ingredientClass);
-    }
-
-    @Override
-    public <V> IIngredientType<V> getIngredientType(Class<? extends V> ingredientClass) {
-        ErrorUtil.checkNotNull(ingredientClass, "ingredientClass");
-        @SuppressWarnings("unchecked")
-        IIngredientType<V> ingredientType = this.ingredientTypeMap.get(ingredientClass);
-        if (ingredientType != null) {
-            return ingredientType;
-        }
-        for (IIngredientType<?> type : ingredientTypeMap.values()) {
-            if (type.getIngredientClass()
-                .isAssignableFrom(ingredientClass)) {
-                @SuppressWarnings("unchecked")
-                IIngredientType<V> castType = (IIngredientType<V>) type;
-                return castType;
-            }
-        }
-        throw new IllegalArgumentException("Unknown ingredient class: " + ingredientClass);
-    }
-
-    public <V> void removeIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients,
-        IngredientFilter ingredientFilter) {
-        ErrorUtil.assertMainThread();
-        ErrorUtil.checkNotNull(ingredientType, "ingredientType");
-        ErrorUtil.checkNotEmpty(ingredients, "ingredients");
         Internal.getIngredientFilter()
             .delegateAfterBlock(() -> {
+                Collection<EnchantmentData> enchantmentData = hack_getBookEnchantmentData(ingredientType, ingredients);
+                if (!enchantmentData.isEmpty()) {
+                    addIngredientsAtRuntime(VanillaTypes.ENCHANT, enchantmentData, ingredientFilter);
+                    if (ingredients.isEmpty()) {
+                        return;
+                    }
+                }
 
                 Log.get()
                     .info(
@@ -327,6 +258,91 @@ public class IngredientRegistry implements IIngredientRegistry {
 
     }
 
+    @Override
+    public <V> void removeIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients) {
+        removeIngredientsAtRuntime(ingredientType, ingredients, Internal.getIngredientFilter());
+    }
+
+    @Override
+    public <V> IIngredientType<V> getIngredientType(V ingredient) {
+        ErrorUtil.checkNotNull(ingredient, "ingredient");
+        @SuppressWarnings("unchecked")
+        Class<? extends V> ingredientClass = (Class<? extends V>) ingredient.getClass();
+        return getIngredientType(ingredientClass);
+    }
+
+    @Override
+    public <V> IIngredientType<V> getIngredientType(Class<? extends V> ingredientClass) {
+        ErrorUtil.checkNotNull(ingredientClass, "ingredientClass");
+        @SuppressWarnings("unchecked")
+        IIngredientType<V> ingredientType = this.ingredientTypeMap.get(ingredientClass);
+        if (ingredientType != null) {
+            return ingredientType;
+        }
+        for (IIngredientType<?> type : ingredientTypeMap.values()) {
+            if (type.getIngredientClass()
+                .isAssignableFrom(ingredientClass)) {
+                @SuppressWarnings("unchecked")
+                IIngredientType<V> castType = (IIngredientType<V>) type;
+                return castType;
+            }
+        }
+        throw new IllegalArgumentException("Unknown ingredient class: " + ingredientClass);
+    }
+
+    public <V> void removeIngredientsAtRuntime(IIngredientType<V> ingredientType, Collection<V> ingredients,
+        IngredientFilter ingredientFilter) {
+        ErrorUtil.assertMainThread();
+        ErrorUtil.checkNotNull(ingredientType, "ingredientType");
+        ErrorUtil.checkNotEmpty(ingredients, "ingredients");
+
+        Internal.getIngredientFilter()
+            .delegateAfterBlock(() -> {
+                Collection<EnchantmentData> enchantmentData = hack_getBookEnchantmentData(ingredientType, ingredients);
+                if (!enchantmentData.isEmpty()) {
+                    removeIngredientsAtRuntime(VanillaTypes.ENCHANT, enchantmentData, ingredientFilter);
+                    if (ingredients.isEmpty()) {
+                        return;
+                    }
+                }
+
+                Log.get()
+                    .info(
+                        "Ingredients are being removed at runtime: {} {}",
+                        ingredients.size(),
+                        ingredientType.getIngredientClass()
+                            .getName());
+
+                @SuppressWarnings("unchecked")
+                IngredientSet<V> set = ingredientsMap.get(ingredientType);
+                if (set != null) {
+                    set.removeAll(ingredients);
+                }
+
+                IIngredientHelper<V> ingredientHelper = getIngredientHelper(ingredientType);
+
+                NonNullList<IIngredientListElement<V>> ingredientListElements = IngredientListElementFactory
+                    .createList(this, ingredientType, ingredients, modIdHelper);
+                for (IIngredientListElement<V> element : ingredientListElements) {
+                    List<IIngredientListElement<V>> matchingElements = ingredientFilter.findMatchingElements(element);
+                    if (matchingElements.isEmpty()) {
+                        V ingredient = element.getIngredient();
+                        String errorInfo = ingredientHelper.getErrorInfo(ingredient);
+                        Log.get()
+                            .error("Could not find any matching ingredients to remove: {}", errorInfo);
+                    } else if (Config.isDebugModeEnabled()) {
+                        Log.get()
+                            .debug("Removed ingredient: {}", ingredientHelper.getErrorInfo(element.getIngredient()));
+                    }
+                    for (IIngredientListElement<V> matchingElement : matchingElements) {
+                        blacklist.addIngredientToBlacklist(matchingElement.getIngredient(), ingredientHelper);
+                        matchingElement.setVisible(false);
+                    }
+                }
+            });
+
+    }
+
     public <V> boolean isIngredientVisible(V ingredient, IngredientFilter ingredientFilter) {
         IIngredientType<V> ingredientType = getIngredientType(ingredient);
         IIngredientListElement<V> element = IngredientListElementFactory
@@ -344,6 +360,63 @@ public class IngredientRegistry implements IIngredientRegistry {
             }
         }
         return false;
+    }
+
+    private <V> Collection<EnchantmentData> hack_getBookEnchantmentData(IIngredientType<V> ingredientType,
+        Collection<V> ingredients) {
+        if (ingredientType == VanillaTypes.ITEM) {
+            List<EnchantmentData> enchantmentData = new ArrayList<>();
+            for (Iterator<V> iterator = ingredients.iterator(); iterator.hasNext();) {
+                V ingredient = iterator.next();
+                ItemStack itemStack = VanillaTypes.ITEM.getIngredientClass()
+                    .cast(ingredient);
+                EnchantmentData bookEnchantmentData = getBookEnchantmentData(itemStack);
+                if (bookEnchantmentData != null) {
+                    enchantmentData.add(bookEnchantmentData);
+                    iterator.remove();
+                }
+            }
+            return enchantmentData;
+        }
+        return Collections.emptyList();
+    }
+
+    @Nullable
+    private EnchantmentData getBookEnchantmentData(ItemStack itemStack) {
+        if (itemStack == null || itemStack.getItem() == null) {
+            return null;
+        }
+        Item item = itemStack.getItem();
+        if (item instanceof ItemEnchantedBook book) {
+            NBTTagList enchantments = book.func_92110_g(itemStack);
+            return getBookEnchantmentData(enchantments);
+        }
+        return null;
+    }
+
+    @Nullable
+    private EnchantmentData getBookEnchantmentData(NBTTagList enchantments) {
+        if (enchantments == null || enchantments.tagCount() == 0) {
+            return null;
+        }
+        EnchantmentData bookEnchantment = null;
+        for (int i = 0; i < enchantments.tagCount(); i++) {
+            NBTTagCompound nbttagcompound = enchantments.getCompoundTagAt(i);
+            int id = nbttagcompound.getShort("id");
+            int level = nbttagcompound.getShort("lvl");
+
+            if (id >= 0 && id < Enchantment.enchantmentsList.length) {
+                Enchantment enchantment = Enchantment.enchantmentsList[id];
+                if (enchantment != null && level > 0) {
+                    if (bookEnchantment == null) {
+                        bookEnchantment = new EnchantmentData(enchantment, level);
+                    } else {
+                        return null;
+                    }
+                }
+            }
+        }
+        return bookEnchantment;
     }
 
     public String getUniqueId(Object ingredient) {

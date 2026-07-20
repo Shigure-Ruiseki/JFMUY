@@ -6,6 +6,7 @@ import java.util.Map;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.enchantment.EnchantmentData;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
@@ -19,6 +20,7 @@ import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.util.Log;
 
@@ -106,25 +108,43 @@ public class ForgeModIdHelper extends AbstractModIdHelper {
     @Override
     public <T> List<String> addModNameToIngredientTooltip(List<String> tooltip, T ingredient,
         IIngredientHelper<T> ingredientHelper) {
+        List<String> newTooltip = new ArrayList<>(tooltip);
+
         if (Config.isDebugModeEnabled() && Minecraft.getMinecraft().gameSettings.advancedItemTooltips) {
-            tooltip = new ArrayList<>(tooltip);
-            tooltip.add(EnumChatFormatting.GRAY + "JFMUY Debug:");
-            tooltip.add(EnumChatFormatting.GRAY + "info: " + ingredientHelper.getErrorInfo(ingredient));
-            tooltip.add(EnumChatFormatting.GRAY + "uid: " + ingredientHelper.getUniqueId(ingredient));
+            newTooltip.add(EnumChatFormatting.GRAY + "HEI Debug:");
+            newTooltip.add(EnumChatFormatting.GRAY + "info: " + ingredientHelper.getErrorInfo(ingredient));
+            newTooltip.add(EnumChatFormatting.GRAY + "uid: " + ingredientHelper.getUniqueId(ingredient));
+        }
+
+        if (this.skipAddingModName(ingredient)) {
+            return newTooltip;
         }
 
         String modId = ingredientHelper.getModId(ingredient);
         String modName = getModNameForModId(modId);
+        String formattedModName = getFormattedModNameForModId(modId);
 
-        if (modName != null && !modName.isEmpty()) {
-            for (String line : tooltip) {
+        if (modName != null && !modName.isEmpty() && formattedModName != null) {
+            for (String line : newTooltip) {
                 String cleanLine = EnumChatFormatting.getTextWithoutFormattingCodes(line);
-                if (cleanLine != null && cleanLine.equalsIgnoreCase(modName)) {
-                    return tooltip;
+                if (cleanLine != null && (cleanLine.equalsIgnoreCase(modName) || cleanLine.equalsIgnoreCase(modId))) {
+                    return newTooltip;
                 }
             }
+
+            newTooltip.add(formattedModName);
         }
 
-        return super.addModNameToIngredientTooltip(tooltip, ingredient, ingredientHelper);
+        return newTooltip;
     }
+
+    private <T> boolean skipAddingModName(T ingredient) {
+        if (ingredient == null) return false;
+        if (ingredient instanceof BookmarkItem) {
+            return this.skipAddingModName(((BookmarkItem<?>) ingredient).ingredient);
+        }
+
+        return ingredient instanceof ItemStack || ingredient instanceof EnchantmentData;
+    }
+
 }

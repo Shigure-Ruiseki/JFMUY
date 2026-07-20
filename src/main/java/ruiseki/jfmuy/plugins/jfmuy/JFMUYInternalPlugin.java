@@ -9,7 +9,6 @@ import net.minecraft.client.gui.inventory.GuiBrewingStand;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemEnchantedBook;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -166,7 +165,7 @@ public class JFMUYInternalPlugin implements IModPlugin {
     public void registerCollapsibleGroups(ICollapsibleGroupRegistry r) {
         CollapsibleGroupRegistry registry = (CollapsibleGroupRegistry) r;
         registry.defaultNewGroup("enchanted_books", "Enchanted Books")
-            .addAny(VanillaTypes.ITEM, stack -> stack.getItem() instanceof ItemEnchantedBook)
+            .addAllOf(VanillaTypes.ENCHANT)
             .build();
         registry.defaultNewGroup("potions", "Potions")
             .addAny(VanillaTypes.ITEM, stack -> stack.getItem() == Items.potionitem)

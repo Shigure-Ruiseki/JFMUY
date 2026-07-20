@@ -9,7 +9,6 @@ import net.minecraft.util.ResourceLocation;
 
 import org.jetbrains.annotations.Nullable;
 
-import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
 import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
@@ -21,7 +20,7 @@ public class ShapedRecipeWrapper implements IShapedCraftingRecipeWrapper {
     private final ShapedRecipe recipe;
     private final List<List<ItemStack>> inputs;
 
-    public ShapedRecipeWrapper(IJFMUYHelpers jfmuyHelpers, ShapedRecipe recipe) {
+    public ShapedRecipeWrapper(ShapedRecipe recipe) {
         this.recipe = recipe;
         this.inputs = new ArrayList<>();
 

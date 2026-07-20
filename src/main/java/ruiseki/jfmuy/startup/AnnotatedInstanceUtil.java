@@ -3,8 +3,10 @@ package ruiseki.jfmuy.startup;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.discovery.ASMDataTable;
 import ruiseki.jfmuy.api.IModPlugin;
 import ruiseki.jfmuy.api.JFMUYPlugin;
@@ -25,6 +27,18 @@ public class AnnotatedInstanceUtil {
         Set<ASMDataTable.ASMData> asmDatas = asmDataTable.getAll(annotationClassName);
         Collection<String> classNames = new ArrayList<>();
         for (ASMDataTable.ASMData asmData : asmDatas) {
+            Map<String, Object> annotationInfo = asmData.getAnnotationInfo();
+            String modId = "";
+            if (annotationInfo != null && annotationInfo.containsKey("value")) {
+                modId = (String) annotationInfo.get("value");
+            }
+
+            if (!modId.isEmpty() && !Loader.isModLoaded(modId)) {
+                Log.get()
+                    .info("Skipping plugin {} because required mod '{}' is not loaded.", asmData.getClassName(), modId);
+                continue;
+            }
+
             classNames.add(asmData.getClassName());
         }
         return getInstances(classNames, instanceClass);

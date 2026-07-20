@@ -659,9 +659,11 @@ public final class Config {
             "hideBottomLeftCornerBookmarkButton",
             defaultValues.hideBottomLeftCornerBookmarkButton);
 
-        values.enableHistoryPanel = config.getBoolean(CATEGORY_MISC, "enableHistoryPanel", defaultValues.enableHistoryPanel);
+        values.enableHistoryPanel = config
+            .getBoolean(CATEGORY_MISC, "enableHistoryPanel", defaultValues.enableHistoryPanel);
 
-        values.isHistoryPanelOnLeft = config.getBoolean(CATEGORY_MISC, "isHistoryPanelOnLeft", defaultValues.isHistoryPanelOnLeft);
+        values.isHistoryPanelOnLeft = config
+            .getBoolean(CATEGORY_MISC, "isHistoryPanelOnLeft", defaultValues.isHistoryPanelOnLeft);
 
         {
             boolean prev = values.collapsibleGroupsEnabled;

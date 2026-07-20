@@ -1,9 +1,23 @@
 package ruiseki.jfmuy.gui.overlay;
 
+import static ruiseki.jfmuy.gui.overlay.IngredientGrid.*;
+import static ruiseki.jfmuy.ingredients.IngredientListElementFactory.ORDER_TRACKER;
+import static ruiseki.jfmuy.plugins.jfmuy.JFMUYInternalPlugin.ingredientRegistry;
+
+import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+
+import javax.annotation.Nullable;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
+
 import org.lwjgl.opengl.GL11;
+
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.recipe.IFocus;
@@ -19,18 +33,6 @@ import ruiseki.jfmuy.startup.ForgeModIdHelper;
 import ruiseki.jfmuy.util.LegacyUtil;
 import ruiseki.jfmuy.util.MathUtil;
 import ruiseki.okcore.client.renderer.GlStateManager;
-
-import javax.annotation.Nullable;
-import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-
-import static ruiseki.jfmuy.gui.overlay.IngredientGrid.*;
-import static ruiseki.jfmuy.ingredients.IngredientListElementFactory.ORDER_TRACKER;
-import static ruiseki.jfmuy.plugins.jfmuy.JFMUYInternalPlugin.ingredientRegistry;
-
 
 /**
  * Extends the original layout logic from JFMUY to support history rows.
@@ -88,7 +90,8 @@ public class IngredientGridHistoryProvider {
         }
 
         Object normalized = normalizeIngredient(value);
-        IIngredientHelper<Object> helper = Objects.requireNonNull(ingredientRegistry).getIngredientHelper(normalized);
+        IIngredientHelper<Object> helper = Objects.requireNonNull(ingredientRegistry)
+            .getIngredientHelper(normalized);
 
         IIngredientListElement<?> ingredient = IngredientListElement.create(
             normalized,
@@ -97,7 +100,8 @@ public class IngredientGridHistoryProvider {
             ForgeModIdHelper.getInstance(),
             ORDER_TRACKER.getOrderIndex(normalized, helper));
 
-        historyIngredientElements.removeIf(element -> areIngredientsEqual(element.getIngredient(), normalized, HISTORY_MATCH_NBT));
+        historyIngredientElements
+            .removeIf(element -> areIngredientsEqual(element.getIngredient(), normalized, HISTORY_MATCH_NBT));
         historyIngredientElements.add(0, ingredient);
 
         while (historyIngredientElements.size() > USE_ROWS * Config.largestNumColumns) {
@@ -134,12 +138,7 @@ public class IngredientGridHistoryProvider {
         guiHistoryIngredientSlots.clear();
     }
 
-    public boolean updateBoundsExtra(
-        int columns,
-        int rows,
-        int y,
-        int xOffset,
-        Collection<Rectangle> exclusionAreas,
+    public boolean updateBoundsExtra(int columns, int rows, int y, int xOffset, Collection<Rectangle> exclusionAreas,
         IngredientListBatchRenderer guiIngredientSlots) {
 
         if (!enabled) {
@@ -200,10 +199,13 @@ public class IngredientGridHistoryProvider {
             return;
         }
 
-        Rectangle firstRect = guiHistoryIngredientSlots.getAllGuiIngredientSlots().get(0).getArea();
+        Rectangle firstRect = guiHistoryIngredientSlots.getAllGuiIngredientSlots()
+            .get(0)
+            .getArea();
 
         drawSpillingArea(
-            firstRect.x, firstRect.y,
+            firstRect.x,
+            firstRect.y,
             firstRect.width * columns,
             firstRect.height * USE_ROWS,
             BACKGROUND_COLOR);
@@ -227,9 +229,7 @@ public class IngredientGridHistoryProvider {
     }
 
     @Nullable
-    public IClickedIngredient<?> getIngredientUnderMouseExtra(
-        @Nullable IClickedIngredient<?> result,
-        int mouseX,
+    public IClickedIngredient<?> getIngredientUnderMouseExtra(@Nullable IClickedIngredient<?> result, int mouseX,
         int mouseY) {
 
         if (result != null) {
@@ -257,22 +257,28 @@ public class IngredientGridHistoryProvider {
         }
 
         if (ingredient1.getClass() == ingredient2.getClass()) {
-            IIngredientHelper<Object> ingredientHelper = Objects.requireNonNull(ingredientRegistry).getIngredientHelper(ingredient1);
+            IIngredientHelper<Object> ingredientHelper = Objects.requireNonNull(ingredientRegistry)
+                .getIngredientHelper(ingredient1);
             if (matchesNbt) {
-                return ingredientHelper.getUniqueId(ingredient1).equals(ingredientHelper.getUniqueId(ingredient2));
+                return ingredientHelper.getUniqueId(ingredient1)
+                    .equals(ingredientHelper.getUniqueId(ingredient2));
             }
-            return ingredientHelper.getWildcardId(ingredient1).equals(ingredientHelper.getWildcardId(ingredient2));
+            return ingredientHelper.getWildcardId(ingredient1)
+                .equals(ingredientHelper.getWildcardId(ingredient2));
         }
 
         return false;
     }
 
     private static boolean ignoreIngredient(Object ingredient) {
-        return Internal.getHelpers().getIngredientBlacklist().isIngredientBlacklisted(ingredient);
+        return Internal.getHelpers()
+            .getIngredientBlacklist()
+            .isIngredientBlacklisted(ingredient);
     }
 
     private static <T> T normalizeIngredient(T ingredient) {
-        IIngredientHelper<T> ingredientHelper = Objects.requireNonNull(ingredientRegistry).getIngredientHelper(ingredient);
+        IIngredientHelper<T> ingredientHelper = Objects.requireNonNull(ingredientRegistry)
+            .getIngredientHelper(ingredient);
         T copy = LegacyUtil.getIngredientCopy(ingredient, ingredientHelper);
         if (copy instanceof ItemStack) {
             ((ItemStack) copy).stackSize = 1;

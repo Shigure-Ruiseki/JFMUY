@@ -26,7 +26,10 @@ public class BookmarkGrid extends IngredientGrid {
     private Rectangle area = new Rectangle();
 
     public BookmarkGrid(GridAlignment alignment, BookmarkGroupOrganizer groupOrganizer) {
-        super(new BookmarkListBatchRenderer(groupOrganizer), alignment, Config.enableHistoryPanel() && Config.isHistoryPanelOnLeft());
+        super(
+            new BookmarkListBatchRenderer(groupOrganizer),
+            alignment,
+            Config.enableHistoryPanel() && Config.isHistoryPanelOnLeft());
         this.alignment = alignment;
     }
 
@@ -59,13 +62,7 @@ public class BookmarkGrid extends IngredientGrid {
             return false;
         }
 
-        if (!historyProvider.updateBoundsExtra(
-            columns,
-            rows,
-            y,
-            xOffset,
-            exclusionAreas,
-            this.guiIngredientSlots)) {
+        if (!historyProvider.updateBoundsExtra(columns, rows, y, xOffset, exclusionAreas, this.guiIngredientSlots)) {
 
             for (int row = 0; row < rows; row++) {
                 int y1 = y + (row * INGREDIENT_HEIGHT);

@@ -51,7 +51,8 @@ public class IngredientGrid implements IShowsRecipeFocuses {
     protected final IngredientListBatchRenderer guiIngredientSlots;
     protected final IngredientGridHistoryProvider historyProvider;
 
-    public IngredientGrid(IngredientListBatchRenderer guiIngredientSlots, GridAlignment alignment, boolean enableHistory) {
+    public IngredientGrid(IngredientListBatchRenderer guiIngredientSlots, GridAlignment alignment,
+        boolean enableHistory) {
         this.alignment = alignment;
         this.guiIngredientSlots = guiIngredientSlots;
         this.historyProvider = new IngredientGridHistoryProvider(enableHistory);
@@ -93,13 +94,7 @@ public class IngredientGrid implements IShowsRecipeFocuses {
             return false;
         }
 
-        if (!historyProvider.updateBoundsExtra(
-            columns,
-            rows,
-            y,
-            xOffset,
-            exclusionAreas,
-            this.guiIngredientSlots)) {
+        if (!historyProvider.updateBoundsExtra(columns, rows, y, xOffset, exclusionAreas, this.guiIngredientSlots)) {
 
             for (int row = 0; row < rows; row++) {
                 List<IngredientListSlot> ingredientRow = new ArrayList<>();
@@ -167,7 +162,8 @@ public class IngredientGrid implements IShowsRecipeFocuses {
                         CollapsedGroupIngredient expandedGroup = guiIngredientSlots
                             .getExpandedCollapsedGroupAt(mouseX, mouseY);
                         if (expandedGroup != null) {
-                            String hint = EnumChatFormatting.YELLOW + Translator.translateToLocal("jfmuy.tooltip.collapsed.collapse");
+                            String hint = EnumChatFormatting.YELLOW
+                                + Translator.translateToLocal("jfmuy.tooltip.collapsed.collapse");
                             hovered.drawTooltip(minecraft, mouseX, mouseY, Collections.singletonList(hint));
                         } else {
                             hovered.drawTooltip(minecraft, mouseX, mouseY);

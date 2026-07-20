@@ -16,6 +16,10 @@ A backport of the modern JEI item utility system to Minecraft 1.7.10 for learnin
 - Lightweight for 1.7.10
 - Designed for compatibility with 1.7.10 modpacks
 
+## Integration
+
+- [JFI](https://github.com/Shigure-Ruiseki/JFI)
+
 ## Original Mod
 
 Check out the modern JEI project here:

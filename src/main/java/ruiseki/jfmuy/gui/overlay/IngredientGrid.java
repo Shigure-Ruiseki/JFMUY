@@ -3,6 +3,7 @@ package ruiseki.jfmuy.gui.overlay;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
@@ -48,14 +49,16 @@ public class IngredientGrid implements IShowsRecipeFocuses {
 
     private Rectangle area = new Rectangle();
     protected final IngredientListBatchRenderer guiIngredientSlots;
+    protected final IngredientGridHistoryProvider historyProvider;
 
-    public IngredientGrid(IngredientListBatchRenderer guiIngredientSlots, GridAlignment alignment) {
+    public IngredientGrid(IngredientListBatchRenderer guiIngredientSlots, GridAlignment alignment, boolean enableHistory) {
         this.alignment = alignment;
         this.guiIngredientSlots = guiIngredientSlots;
+        this.historyProvider = new IngredientGridHistoryProvider(enableHistory);
     }
 
     public IngredientGrid(GridAlignment alignment) { // Left in for compatibility with JFMUY Utilities
-        this(new IngredientListBatchRenderer(), alignment);
+        this(new IngredientListBatchRenderer(), alignment, false);
     }
 
     public int size() {
@@ -85,18 +88,27 @@ public class IngredientGrid implements IShowsRecipeFocuses {
             return false;
         }
 
-        for (int row = 0; row < rows; row++) {
-            List<IngredientListSlot> ingredientRow = new ArrayList<>();
-            int y1 = y + (row * INGREDIENT_HEIGHT);
-            for (int column = 0; column < columns; column++) {
-                int x1 = xOffset + (column * INGREDIENT_WIDTH);
-                IngredientListSlot ingredientListSlot = new IngredientListSlot(x1, y1, INGREDIENT_PADDING);
-                Rectangle stackArea = ingredientListSlot.getArea();
-                final boolean blocked = MathUtil.intersects(exclusionAreas, stackArea);
-                ingredientListSlot.setBlocked(blocked);
-                ingredientRow.add(ingredientListSlot);
+        if (!historyProvider.updateBoundsExtra(
+            columns,
+            rows,
+            y,
+            xOffset,
+            exclusionAreas,
+            this.guiIngredientSlots)) {
+
+            for (int row = 0; row < rows; row++) {
+                List<IngredientListSlot> ingredientRow = new ArrayList<>();
+                int y1 = y + (row * INGREDIENT_HEIGHT);
+                for (int column = 0; column < columns; column++) {
+                    int x1 = xOffset + (column * INGREDIENT_WIDTH);
+                    IngredientListSlot ingredientListSlot = new IngredientListSlot(x1, y1, INGREDIENT_PADDING);
+                    Rectangle stackArea = ingredientListSlot.getArea();
+                    final boolean blocked = MathUtil.intersects(exclusionAreas, stackArea);
+                    ingredientListSlot.setBlocked(blocked);
+                    ingredientRow.add(ingredientListSlot);
+                }
+                this.guiIngredientSlots.add(ingredientRow);
             }
-            this.guiIngredientSlots.add(ingredientRow);
         }
         return true;
     }
@@ -114,6 +126,10 @@ public class IngredientGrid implements IShowsRecipeFocuses {
 
         guiIngredientSlots.render(minecraft);
         guiIngredientSlots.renderExpandedGroupOutlines();
+
+        if (historyProvider.isEnabled()) {
+            historyProvider.drawExtra(minecraft);
+        }
 
         if (!shouldDeleteItemOnClick(minecraft, mouseX, mouseY) && isMouseOver(mouseX, mouseY)) {
             CollapsedGroupRenderer collapsedHovered = guiIngredientSlots.getHoveredCollapsed(mouseX, mouseY);
@@ -145,12 +161,15 @@ public class IngredientGrid implements IShowsRecipeFocuses {
                         CollapsedGroupIngredient expandedGroup = guiIngredientSlots
                             .getExpandedCollapsedGroupAt(mouseX, mouseY);
                         if (expandedGroup != null) {
-                            String hint = EnumChatFormatting.YELLOW
-                                + Translator.translateToLocal("jfmuy.tooltip.collapsed.collapse");
-                            hovered.drawTooltip(minecraft, mouseX, mouseY, java.util.Collections.singletonList(hint));
+                            String hint = EnumChatFormatting.YELLOW + Translator.translateToLocal("jfmuy.tooltip.collapsed.collapse");
+                            hovered.drawTooltip(minecraft, mouseX, mouseY, Collections.singletonList(hint));
                         } else {
                             hovered.drawTooltip(minecraft, mouseX, mouseY);
                         }
+                    }
+
+                    if (historyProvider.isEnabled()) {
+                        historyProvider.drawTooltipsExtra(minecraft, mouseX, mouseY);
                     }
                 }
             }
@@ -227,16 +246,23 @@ public class IngredientGrid implements IShowsRecipeFocuses {
     }
 
     @Override
-    @Nullable
     public IClickedIngredient<?> getIngredientUnderMouse(int mouseX, int mouseY) {
+        IClickedIngredient<?> result;
         if (isMouseOver(mouseX, mouseY)) {
             ClickedIngredient<?> clicked = guiIngredientSlots.getIngredientUnderMouse(mouseX, mouseY);
             if (clicked != null) {
                 clicked.setAllowsCheating();
             }
-            return clicked;
+            result = clicked;
+        } else {
+            result = null;
         }
-        return null;
+
+        if (historyProvider.isEnabled()) {
+            result = historyProvider.getIngredientUnderMouseExtra(result, mouseX, mouseY);
+        }
+
+        return result;
     }
 
     @Override

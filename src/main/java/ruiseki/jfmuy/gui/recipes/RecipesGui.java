@@ -36,6 +36,7 @@ import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.gui.elements.DrawableNineSliceTexture;
 import ruiseki.jfmuy.gui.elements.GuiIconButtonSmall;
 import ruiseki.jfmuy.gui.ingredients.GuiIngredient;
+import ruiseki.jfmuy.gui.overlay.IngredientGridHistoryProvider;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.input.ClickedIngredient;
@@ -511,6 +512,8 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         if (logic.setFocus(focus)) {
             open();
         }
+
+        IngredientGridHistoryProvider.onSetFocus(focus);
     }
 
     @Override

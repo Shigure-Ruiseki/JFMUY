@@ -55,6 +55,8 @@ public class ConfigValues {
     public boolean skipShowingProgressBar = false;
     public boolean hideBottomRightCornerConfigButton = false;
     public boolean hideBottomLeftCornerBookmarkButton = false;
+    public boolean enableHistoryPanel = true;
+    public boolean isHistoryPanelOnLeft = true;
 
     // category
     public List<String> categoryUidOrder = new ArrayList<>();

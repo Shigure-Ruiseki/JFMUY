@@ -55,27 +55,29 @@ public interface IIngredientRenderer<T> {
     /**
      * Renders extra visual components below the standard tooltip text box and determines its dimensions.
      * <p>
-     * <strong>Note on Layout Architecture:</strong> This method is invoked twice per frame by the tooltip rendering
-     * pipeline:
+     * <strong>Layout Pipeline Architecture:</strong>
+     * This method is invoked exactly twice per frame during the tooltip rendering pipeline:
      * <ol>
-     * <li><strong>Pre-pass (Measurement):</strong> Invoked prior to drawing the tooltip frame background to measure the
-     * required dynamic spatial expansion. Graphics/GL state operations are omitted or safe here.</li>
-     * <li><strong>Render-pass (Drawing):</strong> Invoked immediately after the main tooltip background and text lines
-     * have been successfully written, rendering the actual visual components (e.g., energy bars, ingredient
-     * matrices).</li>
+     * <li><strong>Pre-pass (Measurement):</strong> Executed with {@code isDrawingPass = false} to calculate and
+     * return the required spatial expansion. Graphical drawing operations should be omitted here.</li>
+     * <li><strong>Render-pass (Drawing):</strong> Executed with {@code isDrawingPass = true} after the main tooltip
+     * background and text lines have been rendered, allowing the component to safely perform actual GL draws.</li>
      * </ol>
      *
      * @param minecraft      The minecraft instance.
      * @param mouseX         The absolute X position of the mouse on the screen.
      * @param mouseY         The absolute Y position of the mouse on the screen.
-     * @param fontRenderer   The font renderer associated with this ingredient.
-     * @param tooltipStrings The list of text strings currently being displayed in the tooltip.
-     * @param allIngredients A list containing all cycled ingredient variations (e.g., OreDict equivalents) to be drawn.
+     * @param allIngredients A list containing all variations of the ingredient (e.g., OreDict equivalents) to cycle
+     *                       through.
+     * @param activeIndex    The currently active index in the {@code allIngredients} list, managed and updated by the
+     *                       parent GUI's cycle timer animation state.
+     * @param isDrawingPass  {@code true} if this call is the actual Render-pass (drawing graphical elements),
+     *                       {@code false} if it is the Pre-pass (measuring required bounds).
      * @return An {@link ExtraSize} object specifying the maximum width and height bounds occupied by this component.
      *         Return {@link ExtraSize#EMPTY} or {@code null} if no extra graphics are rendered.
      */
-    default ExtraSize renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, FontRenderer fontRenderer,
-        List<String> tooltipStrings, List<T> allIngredients) {
+    default ExtraSize renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, List<T> allIngredients,
+        int activeIndex, boolean isDrawingPass) {
         return null;
     }
 

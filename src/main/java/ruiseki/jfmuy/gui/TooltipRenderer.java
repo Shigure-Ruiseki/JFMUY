@@ -71,20 +71,31 @@ public final class TooltipRenderer {
     }
 
     public static <T> void drawHoveringTextAndExtras(ItemStack itemStack, Minecraft minecraft, List<String> textLines,
-        int x, int y, FontRenderer font, IIngredientRenderer<T> ingredientRenderer, List<T> allIngredients) {
-        drawHoveringTextAndExtras(itemStack, minecraft, textLines, x, y, -1, font, ingredientRenderer, allIngredients);
+        int x, int y, FontRenderer font, IIngredientRenderer<T> ingredientRenderer, List<T> allIngredients,
+        int activeIndex) {
+        drawHoveringTextAndExtras(
+            itemStack,
+            minecraft,
+            textLines,
+            x,
+            y,
+            -1,
+            font,
+            ingredientRenderer,
+            allIngredients,
+            activeIndex);
     }
 
     public static <T> void drawHoveringTextAndExtras(ItemStack stack, Minecraft minecraft, List<String> lines,
         int mouseX, int mouseY, int maxTextWidth, FontRenderer font, IIngredientRenderer<T> ingredientRenderer,
-        List<T> allIngredients) {
+        List<T> allIngredients, int activeIndex) { // <-- Thêm activeIndex ở đây
 
         int extraWidth = 0;
         int extraHeight = 0;
 
         if (ingredientRenderer != null) {
             IIngredientRenderer.ExtraSize size = ingredientRenderer
-                .renderTooltipExtras(minecraft, mouseX, mouseY, font, lines, allIngredients);
+                .renderTooltipExtras(minecraft, mouseX, mouseY, allIngredients, activeIndex, false);
             if (size != null) {
                 extraWidth = size.width;
                 extraHeight = size.height;
@@ -107,7 +118,7 @@ public final class TooltipRenderer {
             GlStateManager.pushMatrix();
             GlStateManager.translate(mouseX + 12, nextY, 300.0F);
 
-            ingredientRenderer.renderTooltipExtras(minecraft, mouseX, mouseY, font, lines, allIngredients);
+            ingredientRenderer.renderTooltipExtras(minecraft, mouseX, mouseY, allIngredients, activeIndex, true);
 
             GlStateManager.popMatrix();
 

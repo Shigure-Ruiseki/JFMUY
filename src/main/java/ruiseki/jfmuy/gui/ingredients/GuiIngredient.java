@@ -211,6 +211,14 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
                 tooltipCallback.onTooltip(slotIndex, input, value, tooltip);
             }
 
+            int activeIndex = 0;
+            if (!this.displayIngredients.isEmpty()) {
+                activeIndex = this.displayIngredients.indexOf(value);
+                if (activeIndex == -1) {
+                    activeIndex = 0;
+                }
+            }
+
             FontRenderer fontRenderer = ingredientRenderer.getFontRenderer(minecraft, value);
             if (value instanceof ItemStack) {
                 // noinspection unchecked
@@ -229,7 +237,8 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
                     yOffset + mouseY,
                     fontRenderer,
                     ingredientRenderer,
-                    allIngredients);
+                    allIngredients,
+                    activeIndex);
             } else {
                 TooltipRenderer.drawHoveringTextAndExtras(
                     null,
@@ -239,7 +248,8 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
                     yOffset + mouseY,
                     fontRenderer,
                     ingredientRenderer,
-                    allIngredients);
+                    allIngredients,
+                    activeIndex);
             }
 
             GlStateManager.enableDepth();

@@ -34,8 +34,6 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
     private static final RenderItem itemRender = RenderItem.getInstance();
 
-    private static boolean isNextCallDrawingPass = false;
-
     @Override
     public void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable ItemStack ingredient) {
         if (ingredient != null) {
@@ -117,38 +115,30 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
     }
 
     @Override
-    public ExtraSize renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, FontRenderer fontRenderer,
-        List<String> tooltipStrings, List<ItemStack> allIngredients) {
+    public ExtraSize renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, List<ItemStack> allIngredients,
+        int activeIndex, boolean isDrawingPass) {
         if (allIngredients == null || allIngredients.isEmpty() || allIngredients.size() == 1) {
             return null;
         }
 
         int totalItems = allIngredients.size();
         int columns = Math.min(totalItems, MAX_COLUMNS);
-        int rows = (int) Math.ceil((double) totalItems / MAX_COLUMNS);
+        int rows = (totalItems + MAX_COLUMNS - 1) / MAX_COLUMNS;
 
         int extraWidth = columns * SLOT_SIZE;
         int extraHeight = rows * SLOT_SIZE + MARGIN_TOP;
 
-        boolean isDrawingPass = isNextCallDrawingPass;
-        isNextCallDrawingPass = !isNextCallDrawingPass;
-
         if (isDrawingPass) {
-            int x = 0;
-            int y = MARGIN_TOP;
-
-            GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+            GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
             GL11.glEnable(GL12.GL_RESCALE_NORMAL);
             RenderHelper.enableGUIStandardItemLighting();
 
-            int activeIndex = (int) ((System.currentTimeMillis() / 1000L) % allIngredients.size());
-
-            for (int i = 0; i < allIngredients.size(); i++) {
+            for (int i = 0; i < totalItems; i++) {
                 ItemStack stack = allIngredients.get(i);
                 if (stack == null) continue;
 
-                final int currentX = x;
-                final int currentY = y;
+                int currentX = (i % MAX_COLUMNS) * SLOT_SIZE;
+                int currentY = MARGIN_TOP + (i / MAX_COLUMNS) * SLOT_SIZE;
 
                 if (i == activeIndex) {
                     GL11.glDisable(GL11.GL_LIGHTING);
@@ -164,6 +154,7 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
                 GL11.glPushMatrix();
                 GL11.glTranslatef(0.0F, 0.0F, 300.0F);
 
+                FontRenderer fontRenderer = getFontRenderer(minecraft, stack);
                 itemRender
                     .renderItemAndEffectIntoGUI(fontRenderer, minecraft.getTextureManager(), stack, currentX, currentY);
                 itemRender.renderItemOverlayIntoGUI(
@@ -175,12 +166,6 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
                     null);
 
                 GL11.glPopMatrix();
-
-                x += SLOT_SIZE;
-                if ((i + 1) % MAX_COLUMNS == 0) {
-                    x = 0;
-                    y += SLOT_SIZE;
-                }
             }
 
             RenderHelper.disableStandardItemLighting();

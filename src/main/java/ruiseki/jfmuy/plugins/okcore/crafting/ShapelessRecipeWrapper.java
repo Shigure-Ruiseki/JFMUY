@@ -8,7 +8,6 @@ import net.minecraft.util.ResourceLocation;
 
 import org.jetbrains.annotations.Nullable;
 
-import ruiseki.jfmuy.api.IJFMUYHelpers;
 import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
 import ruiseki.okcore.json.item.CompoundItemMaterial;
@@ -19,7 +18,7 @@ public class ShapelessRecipeWrapper implements ICraftingRecipeWrapper {
     private final ShapelessRecipe recipe;
     private final List<List<ItemStack>> inputs;
 
-    public ShapelessRecipeWrapper(IJFMUYHelpers jfmuyHelpers, ShapelessRecipe recipe) {
+    public ShapelessRecipeWrapper(ShapelessRecipe recipe) {
         this.recipe = recipe;
         this.inputs = new ArrayList<>();
 

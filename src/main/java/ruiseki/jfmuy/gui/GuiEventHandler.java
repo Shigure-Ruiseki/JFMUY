@@ -9,6 +9,7 @@ import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 
 import org.apache.logging.log4j.Level;
+import org.lwjgl.input.Mouse;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
@@ -25,6 +26,7 @@ import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.event.gui.BackgroundDrawnEvent;
 import ruiseki.okcore.event.gui.GuiContainerEvent;
 import ruiseki.okcore.event.gui.PotionShiftEvent;
+import ruiseki.okcore.event.input.MouseInputEvent;
 
 public class GuiEventHandler {
 
@@ -174,5 +176,26 @@ public class GuiEventHandler {
     public void onBookmarkUpdateEvent(BookmarkUpdateEvent event) {
         GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
         leftAreaDispatcher.updateScreen(currentScreen, true);
+    }
+
+    @SubscribeEvent
+    public void onMouseInputEventPre(MouseInputEvent.Pre event) {
+        GuiScreen gui = event.gui;
+        if (gui == null || gui.mc == null) return;
+        int mouseX = Mouse.getEventX() * gui.width / gui.mc.displayWidth;
+        int mouseY = gui.height - Mouse.getEventY() * gui.height / gui.mc.displayHeight - 1;
+        boolean overJFMUY = ingredientListOverlay.isMouseOver(mouseX, mouseY);
+        boolean overLeft = leftAreaDispatcher.isMouseOver(mouseX, mouseY);
+        int dWheel = (overJFMUY || overLeft) ? Mouse.getEventDWheel() : 0;
+        if (dWheel != 0) {
+            int scrollDelta = Integer.signum(dWheel);
+            if (overJFMUY) {
+                ingredientListOverlay.handleMouseScrolled(mouseX, mouseY, scrollDelta);
+            } else {
+                leftAreaDispatcher.handleMouseScrolled(mouseX, mouseY, scrollDelta);
+            }
+            event.setCanceled(true);
+            while (Mouse.next());
+        }
     }
 }

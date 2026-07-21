@@ -76,14 +76,20 @@ public class IngredientUtil {
     }
 
     public static <T> T normalizeCopy(T orig) {
+        if (orig == null) return null;
+
         T ingredient = LegacyUtil.getIngredientCopy(
             orig,
             Internal.getIngredientRegistry()
                 .getIngredientHelper(orig));
         if (ingredient instanceof ItemStack) {
-            ((ItemStack) ingredient).stackSize = 1;
+            ItemStack copyStack = ((ItemStack) ingredient).copy();
+            copyStack.stackSize = 1;
+            return (T) copyStack;
         } else if (ingredient instanceof FluidStack) {
-            ((FluidStack) ingredient).amount = 1000;
+            FluidStack copyFluid = ((FluidStack) ingredient).copy();
+            copyFluid.amount = 1000;
+            return (T) copyFluid;
         }
         return ingredient;
     }

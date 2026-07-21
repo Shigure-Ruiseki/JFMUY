@@ -343,9 +343,16 @@ public final class BasicRecipeTransferHandlerServer {
             // You may be asking yourself why I'm not just getting the result from the below method.
             // As it turns out, Minecraft gets the output one click at a time, overwriting the stack every single time.
             // So, we have to hook into the listener system and see how many times the output slot updates to figure
-            // this out!
             itemsCrafted = 0;
-            playerMP.openContainer.slotClick(outputSlot, 0, 1, player);
+            playerMP.openContainer.slotClick(outputSlot, 0, 0, player);
+            ItemStack heldStack = playerMP.inventory.getItemStack();
+            if (heldStack != null) {
+                itemsCrafted = heldStack.stackSize;
+                if (!player.inventory.addItemStackToInventory(heldStack)) {
+                    player.dropPlayerItemWithRandomChoice(heldStack, false);
+                }
+                playerMP.inventory.setItemStack(null);
+            }
             playerMP.updateHeldItem();
             playerMP.openContainer.detectAndSendChanges();
             JFMUY.instance.getPacketHandler()

@@ -171,7 +171,7 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
                 continue;
             }
             List inputAliases = removeNulls(typeInputs.get(i));
-            if (inputAliases.isEmpty()) { // Yet another edge case! A recipe input is completely null.
+            if (inputAliases.isEmpty()) {
                 continue;
             }
             boolean reusable = checkReusableInputStatus(reusableInputs, i);

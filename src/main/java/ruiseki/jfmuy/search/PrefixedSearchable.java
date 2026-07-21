@@ -64,7 +64,9 @@ public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>
                 String modname = ingredient.getModNameForSorting();
                 if (!Objects.equals(currentModName, modname)) {
                     currentModName = modname;
-                    progressBar.step(modname);
+                    if (progressBar != null) {
+                        progressBar.step(modname);
+                    }
                 }
                 submit(ingredient);
             }
@@ -76,10 +78,14 @@ public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>
             ProgressManager.ProgressBar progressBar = ProgressManager
                 .push("Adding ingredients at runtime", ingredients.size());
             for (IIngredientListElement ingredient : ingredients) {
-                progressBar.step(ingredient.getDisplayName());
+                if (progressBar != null) {
+                    progressBar.step(ingredient.getDisplayName());
+                }
                 submit(ingredient);
             }
-            ProgressManager.pop(progressBar);
+            if (progressBar != null) {
+                ProgressManager.pop(progressBar);
+            }
         }
     }
 

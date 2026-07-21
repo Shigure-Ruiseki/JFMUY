@@ -50,6 +50,16 @@ public class BookmarkGroupOrganizer {
         this.area = availableArea;
     }
 
+    public void clearLayout() {
+        this.area = new Rectangle();
+        this.groups.clear();
+        this.hoveredGroupId = -1;
+        this.missingIngredients = 0;
+        this.missingIngredientRenderer.clear();
+        this.prevMouseY = 0;
+        stopDrag();
+    }
+
     public void setBookmarkGroupIds(List<Integer> bookmarkGroupIds) {
         // Find contiguous groups
         this.groups.clear();

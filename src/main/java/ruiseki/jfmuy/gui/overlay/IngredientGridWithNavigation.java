@@ -18,6 +18,7 @@ import ruiseki.jfmuy.gui.GuiScreenHelper;
 import ruiseki.jfmuy.gui.PageNavigation;
 import ruiseki.jfmuy.gui.ghost.IGhostIngredientDragSource;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.gui.navigation.NavigationLayout;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.input.IClickedIngredient;
 import ruiseki.jfmuy.input.IMouseHandler;
@@ -70,32 +71,46 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
     }
 
     public boolean updateBounds(Rectangle availableArea, Set<Rectangle> guiExclusionAreas, int minWidth) {
-        Rectangle estimatedNavigationArea = new Rectangle(
+        clearLayout();
+
+        Rectangle initialContentArea = new Rectangle(
             availableArea.x,
-            availableArea.y,
+            availableArea.y + NAVIGATION_HEIGHT,
             availableArea.width,
-            NAVIGATION_HEIGHT);
-        Rectangle movedNavigationArea = MathUtil
-            .moveDownToAvoidIntersection(guiExclusionAreas, estimatedNavigationArea);
-        int navigationMaxY = movedNavigationArea.y + movedNavigationArea.height;
-        Rectangle boundsWithoutNavigation = new Rectangle(
-            availableArea.x,
-            navigationMaxY,
-            availableArea.width,
-            availableArea.height - navigationMaxY);
-        boolean gridHasRoom = this.ingredientGrid.updateBounds(boundsWithoutNavigation, minWidth, guiExclusionAreas);
-        if (!gridHasRoom) {
+            availableArea.height - NAVIGATION_HEIGHT);
+        if (!this.ingredientGrid.updateBoundsForNavigation(initialContentArea, minWidth, guiExclusionAreas)) {
             return false;
         }
+
+        int maximumNavigationWidth = this.ingredientGrid.getArea().width;
+        NavigationLayout.Result layout = NavigationLayout.calculate(
+            availableArea,
+            guiExclusionAreas,
+            NavigationLayout.Alignment.RIGHT,
+            NAVIGATION_HEIGHT,
+            minWidth,
+            maximumNavigationWidth);
+        if (layout == null) {
+            clearLayout();
+            return false;
+        }
+
+        if (!this.ingredientGrid.updateBounds(layout.getContentArea(), minWidth, guiExclusionAreas)) {
+            clearLayout();
+            return false;
+        }
+
         Rectangle displayArea = this.ingredientGrid.getArea();
-        Rectangle navigationArea = new Rectangle(
-            displayArea.x,
-            movedNavigationArea.y,
-            displayArea.width,
-            NAVIGATION_HEIGHT);
+        Rectangle navigationArea = layout.getNavigationArea();
         this.navigation.updateBounds(navigationArea);
         this.area = displayArea.union(navigationArea);
         return true;
+    }
+
+    private void clearLayout() {
+        this.area = new Rectangle();
+        this.navigation.updateBounds(new Rectangle());
+        this.ingredientGrid.clearLayout();
     }
 
     public void invalidateBuffer() {

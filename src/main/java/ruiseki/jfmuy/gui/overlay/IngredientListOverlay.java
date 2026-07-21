@@ -127,50 +127,41 @@ public class IngredientListOverlay
 
                 hasRoom = this.contents.updateBounds(availableContentsArea, guiExclusionAreas, 4 * BUTTON_SIZE);
 
-                // update area to match contents size
-                Rectangle contentsArea = this.contents.getArea();
-                displayArea.x = contentsArea.x;
-                displayArea.width = contentsArea.width;
+                final int visibleButtonSize = Config.hideBottomRightCornerConfigButton() ? 0 : BUTTON_SIZE;
+                Rectangle searchArea;
+                int configButtonX;
+                int configButtonY;
+                if (hasRoom) {
+                    // update area to match contents size
+                    Rectangle contentsArea = this.contents.getArea();
+                    displayArea.x = contentsArea.x;
+                    displayArea.width = contentsArea.width;
 
-                if (Config.hideBottomRightCornerConfigButton()) {
-                    if (searchBarCentered && isListDisplayed()) searchField.updateBounds(
-                        new Rectangle(
-                            guiProperties.getGuiLeft(),
-                            guiProperties.getScreenHeight() - SEARCH_HEIGHT - BORDER_PADDING,
-                            guiProperties.getGuiXSize() + 1,
-                            SEARCH_HEIGHT));
-                    else searchField.updateBounds(
-                        new Rectangle(
-                            displayArea.x,
-                            displayArea.y + displayArea.height - SEARCH_HEIGHT - BORDER_PADDING,
-                            displayArea.width + 1,
-                            SEARCH_HEIGHT));
+                    boolean centerSearchBar = searchBarCentered && isListDisplayed();
+                    int searchX = centerSearchBar ? guiProperties.getGuiLeft() : displayArea.x;
+                    int searchY = centerSearchBar ? guiProperties.getScreenHeight() - SEARCH_HEIGHT - BORDER_PADDING
+                        : displayArea.y + displayArea.height - SEARCH_HEIGHT - BORDER_PADDING;
+                    int availableSearchWidth = centerSearchBar ? guiProperties.getGuiXSize() : displayArea.width;
+                    searchArea = new Rectangle(
+                        searchX,
+                        searchY,
+                        availableSearchWidth - visibleButtonSize + 1,
+                        SEARCH_HEIGHT);
+                    configButtonX = searchArea.x + searchArea.width - 1;
+                    configButtonY = searchArea.y;
                 } else {
-                    if (searchBarCentered && isListDisplayed()) searchField.updateBounds(
-                        new Rectangle(
-                            guiProperties.getGuiLeft(),
-                            guiProperties.getScreenHeight() - SEARCH_HEIGHT - BORDER_PADDING,
-                            guiProperties.getGuiXSize() - BUTTON_SIZE + 1,
-                            SEARCH_HEIGHT));
-                    else searchField.updateBounds(
-                        new Rectangle(
-                            displayArea.x,
-                            displayArea.y + displayArea.height - SEARCH_HEIGHT - BORDER_PADDING,
-                            displayArea.width - BUTTON_SIZE + 1,
-                            SEARCH_HEIGHT));
+                    searchArea = new Rectangle();
+                    if (visibleButtonSize == 0) {
+                        configButtonX = 0;
+                        configButtonY = 0;
+                    } else {
+                        configButtonX = (int) Math.floor(displayArea.getMaxX()) - visibleButtonSize;
+                        configButtonY = (int) Math.floor(displayArea.getMaxY()) - visibleButtonSize - BORDER_PADDING;
+                    }
                 }
-
-                if (Config.hideBottomRightCornerConfigButton()) {
-                    this.configButton.updateBounds(
-                        new Rectangle(searchField.xPosition + searchField.width - 1, searchField.yPosition, 0, 0));
-                } else {
-                    this.configButton.updateBounds(
-                        new Rectangle(
-                            searchField.xPosition + searchField.width - 1,
-                            searchField.yPosition,
-                            BUTTON_SIZE,
-                            BUTTON_SIZE));
-                }
+                this.searchField.updateBounds(searchArea);
+                this.configButton
+                    .updateBounds(new Rectangle(configButtonX, configButtonY, visibleButtonSize, visibleButtonSize));
 
                 updateLayout(false);
             }

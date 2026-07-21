@@ -34,28 +34,9 @@ public class BookmarkGrid extends IngredientGrid {
     }
 
     @Override
-    public void clearLayout() {
-        super.clearLayout();
-        this.area = new Rectangle();
-    }
-
-    boolean updateBoundsForNavigation(Rectangle availableArea, int minWidth, Collection<Rectangle> exclusionAreas) {
-        return updateBounds(availableArea, minWidth, exclusionAreas, false);
-    }
-
-    @Override
     public boolean updateBounds(Rectangle availableArea, int minWidth, Collection<Rectangle> exclusionAreas) {
-        return updateBounds(availableArea, minWidth, exclusionAreas, true);
-    }
-
-    private boolean updateBounds(Rectangle availableArea, int minWidth, Collection<Rectangle> exclusionAreas,
-        boolean requireFreeSlot) {
-        clearLayout();
         final int columns = Math.min(availableArea.width / INGREDIENT_WIDTH, Config.getMaxColumns());
         final int rows = availableArea.height / INGREDIENT_HEIGHT;
-        if (rows <= 0 || columns < Config.smallestNumColumns) {
-            return false;
-        }
 
         final int ingredientsWidth = columns * INGREDIENT_WIDTH;
         final int width = Math.max(ingredientsWidth, minWidth);
@@ -70,11 +51,15 @@ public class BookmarkGrid extends IngredientGrid {
         final int xOffset = x + Math.max(0, (width - ingredientsWidth) / 2);
 
         this.area = new Rectangle(x, y, width, height);
-        boolean hasFreeSlot = false;
+        this.guiIngredientSlots.clear();
 
         if (historyProvider.isEnabled()) {
             historyProvider.updateColumns(columns);
             historyProvider.clearHistorySlots();
+        }
+
+        if (rows == 0 || columns < Config.smallestNumColumns) {
+            return false;
         }
 
         if (!historyProvider.updateBoundsExtra(columns, rows, y, xOffset, exclusionAreas, this.guiIngredientSlots)) {
@@ -88,18 +73,12 @@ public class BookmarkGrid extends IngredientGrid {
                     Rectangle stackArea = ingredientListSlot.getArea();
                     final boolean blocked = MathUtil.intersects(exclusionAreas, stackArea);
                     ingredientListSlot.setBlocked(blocked);
-                    if (!blocked) {
-                        hasFreeSlot = true;
-                    }
                     ingredientRow.add(ingredientListSlot);
                 }
                 this.guiIngredientSlots.add(ingredientRow);
             }
         }
-        if (requireFreeSlot && !hasFreeSlot) {
-            clearLayout();
-            return false;
-        }
+
         return true;
     }
 

@@ -15,11 +15,11 @@ public class ConfigValues {
 
     // advanced
     public boolean debugModeEnabled = false;
-    public boolean centerSearchBarEnabled = false;
-    public boolean ultraLowMemoryUsage = true;
+    public boolean centerSearchBarEnabled = true;
+    public boolean ultraLowMemoryUsage = false;
     public boolean asyncSearchTreeBuilding = true;
     public boolean addBookmarksToFront = true;
-    public GiveMode giveMode = GiveMode.MOUSE_PICKUP;
+    public GiveMode giveMode = GiveMode.INVENTORY;
     public String modNameFormat = Config.parseFriendlyModNameFormat(Config.defaultModNameFormatFriendly);
     public int maxColumns = 9;
     public int maxRecipeGuiHeight = 350;
@@ -52,11 +52,11 @@ public class ConfigValues {
     public boolean mouseClickToSeeRecipes = true;
     public boolean tooltipShowRecipeBy = true;
     public boolean showHiddenIngredientsInCreative = false;
-    public boolean skipShowingProgressBar = false;
+    public boolean skipShowingProgressBar = true;
     public boolean hideBottomRightCornerConfigButton = false;
     public boolean hideBottomLeftCornerBookmarkButton = false;
     public boolean enableHistoryPanel = true;
-    public boolean isHistoryPanelOnLeft = true;
+    public boolean isHistoryPanelOnLeft = false;
 
     // category
     public List<String> categoryUidOrder = new ArrayList<>();

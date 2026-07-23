@@ -30,21 +30,6 @@ public interface IIngredientRenderer<T> {
     void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable T ingredient);
 
     /**
-     * Renders extra decorations like amount/stack size, durability bar, or custom overlays.
-     * <p>
-     * By default, this delegates to rendering an amount text if a string amount is provided,
-     * or can be overridden by specific ingredient renderers (e.g., ItemStack count, Fluid volume).
-     *
-     * @param minecraft  The minecraft instance.
-     * @param xPosition  The x position where the ingredient was rendered.
-     * @param yPosition  The y position where the ingredient was rendered.
-     * @param ingredient The ingredient being rendered.
-     */
-    default void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable T ingredient, int amount) {
-        render(minecraft, xPosition, yPosition, ingredient);
-    }
-
-    /**
      * Get the tooltip text for this ingredient. JFMUY renders the tooltip based on this.
      *
      * @param minecraft   The minecraft instance.

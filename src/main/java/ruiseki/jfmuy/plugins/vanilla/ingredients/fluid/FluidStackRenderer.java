@@ -84,12 +84,6 @@ public class FluidStackRenderer implements IIngredientRenderer<FluidStack> {
         GlStateManager.disableBlend();
     }
 
-    @Override
-    public void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable FluidStack ingredient, int amount) {
-        if (ingredient != null) ingredient.amount = amount;
-        render(minecraft, xPosition, yPosition, ingredient);
-    }
-
     private void drawFluid(Minecraft minecraft, final int xPosition, final int yPosition,
         @Nullable FluidStack fluidStack) {
         if (fluidStack == null) {

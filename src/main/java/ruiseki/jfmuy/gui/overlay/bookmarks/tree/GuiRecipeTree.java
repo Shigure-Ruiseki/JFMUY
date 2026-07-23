@@ -198,7 +198,7 @@ public class GuiRecipeTree extends GuiScreen {
                     .getIngredientRenderer(ingredientType);
                 if (renderer != null) {
                     RenderHelper.enableGUIStandardItemLighting();
-                    renderer.render(mc, 1, 1, ingredient, (int) node.item.amount);
+                    renderer.render(mc, 1, 1, ingredient);
                     RenderHelper.disableStandardItemLighting();
                 }
             }

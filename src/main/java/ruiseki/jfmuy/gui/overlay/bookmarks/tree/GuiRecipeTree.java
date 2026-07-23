@@ -79,7 +79,7 @@ public class GuiRecipeTree extends GuiScreen {
         Set<RecipeBookmarkItem<?>> childRecipes = new HashSet<>();
 
         for (BookmarkItem<?> item : group.getItems()) {
-            if (item instanceof RecipeBookmarkItem<?> recipeItem) {
+            if (item instanceof RecipeBookmarkItem<?>recipeItem) {
                 if (recipeItem.secondaryTo == null) {
                     RecipeTreeNode.buildTree(recipeItem, group, childRecipes);
                 }
@@ -87,7 +87,7 @@ public class GuiRecipeTree extends GuiScreen {
         }
 
         for (BookmarkItem<?> item : group.getItems()) {
-            if (item instanceof RecipeBookmarkItem<?> recipeItem) {
+            if (item instanceof RecipeBookmarkItem<?>recipeItem) {
                 if (recipeItem.secondaryTo == null && !childRecipes.contains(recipeItem)) {
                     RecipeTreeNode root = RecipeTreeNode.buildTree(recipeItem, group);
                     currentY = root.layout(0, currentY, X_PADDING, Y_PADDING);
@@ -293,13 +293,18 @@ public class GuiRecipeTree extends GuiScreen {
                     int catMinY = -14;
 
                     if (nodeRelMouseX >= catMinX && nodeRelMouseX <= catMinX + 16
-                        && nodeRelMouseY >= catMinY && nodeRelMouseY <= catMinY + 16) {
+                        && nodeRelMouseY >= catMinY
+                        && nodeRelMouseY <= catMinY + 16) {
 
                         IDrawable categoryIcon = hovered.item.category.getIcon();
                         if (categoryIcon != null) {
                             String categoryTitle = hovered.item.category.getTitle();
                             if (categoryTitle != null && !categoryTitle.isEmpty()) {
-                                drawHoveringText(Collections.singletonList(categoryTitle), mouseX, mouseY, mc.fontRenderer);
+                                drawHoveringText(
+                                    Collections.singletonList(categoryTitle),
+                                    mouseX,
+                                    mouseY,
+                                    mc.fontRenderer);
                                 break;
                             }
                         } else {

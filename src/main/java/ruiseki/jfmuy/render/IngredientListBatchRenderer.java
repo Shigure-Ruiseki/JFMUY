@@ -91,12 +91,26 @@ public class IngredientListBatchRenderer {
         return size;
     }
 
-    public int getWidth() {
-        return width;
+    public int getHeight() {
+        if (height > 0) {
+            return height;
+        }
+        int rows = slots.size();
+        return rows * INGREDIENT_HEIGHT;
     }
 
-    public int getHeight() {
-        return height;
+    public int getWidth() {
+        if (width > 0) {
+            return width;
+        }
+        if (maxWidth > 0) {
+            return maxWidth;
+        }
+        int maxW = 0;
+        for (List<IngredientListSlot> row : slots) {
+            maxW = Math.max(maxW, row.size() * INGREDIENT_WIDTH);
+        }
+        return maxW;
     }
 
     public void add(List<IngredientListSlot> ingredientListSlot) {

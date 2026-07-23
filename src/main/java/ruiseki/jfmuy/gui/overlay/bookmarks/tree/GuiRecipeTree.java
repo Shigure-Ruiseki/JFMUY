@@ -51,7 +51,7 @@ public class GuiRecipeTree extends GuiScreen {
     private boolean isDragging = false;
 
     private static final int X_PADDING = 40;
-    private static final int Y_PADDING = 20;
+    private static final int Y_PADDING = 30;
     private static final float SCROLL_SPEED = 20.0f;
     private static final float ZOOM_SPEED = 0.1f;
     private static final float MIN_ZOOM = 0.2f;

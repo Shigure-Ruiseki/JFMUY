@@ -156,21 +156,29 @@ public class RecipeTreeNode {
 
         for (int i = 0; i < children.size(); i++) {
             RecipeTreeNode child = children.get(i);
+            int subTreeHeight = child.getSubtreeHeight(yPadding);
 
+            child.layout(depth + 1, currentChildY, xPadding, yPadding);
+
+            int childCenterY = currentChildY + (subTreeHeight / 2);
             if (i == 0) {
-                firstChildCenterY = currentChildY + child.height / 2;
+                firstChildCenterY = childCenterY;
             }
             if (i == children.size() - 1) {
-                lastChildCenterY = currentChildY + child.height / 2;
+                lastChildCenterY = childCenterY;
             }
 
-            currentChildY = child.layout(depth + 1, currentChildY, xPadding, yPadding);
+            currentChildY += subTreeHeight + yPadding;
         }
 
         int childrenCenterY = (firstChildCenterY + lastChildCenterY) / 2;
         this.y = childrenCenterY - (this.height / 2);
 
-        return Math.max(startY + getSubtreeHeight(yPadding) + yPadding, currentChildY);
+        if (this.y < startY) {
+            this.y = startY;
+        }
+
+        return Math.max(this.y + this.height + yPadding, currentChildY);
     }
 
     public void updateXPosition(int currentX, int xSpacing) {

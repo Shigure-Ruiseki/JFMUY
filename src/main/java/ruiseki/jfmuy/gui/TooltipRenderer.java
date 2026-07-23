@@ -88,7 +88,7 @@ public final class TooltipRenderer {
 
     public static <T> void drawHoveringTextAndExtras(ItemStack stack, Minecraft minecraft, List<String> lines,
         int mouseX, int mouseY, int maxTextWidth, FontRenderer font, IIngredientRenderer<T> ingredientRenderer,
-        List<T> allIngredients, int activeIndex) { // <-- Thêm activeIndex ở đây
+        List<T> allIngredients, int activeIndex) {
 
         int extraWidth = 0;
         int extraHeight = 0;
@@ -411,19 +411,19 @@ public final class TooltipRenderer {
                 tooltipTextWidth,
                 tooltipHeight));
 
-        int tooltipTop = tooltipY;
+        int currentTextY = tooltipY;
 
         for (int lineNumber = 0; lineNumber < lines.size(); ++lineNumber) {
-            font.drawStringWithShadow(lines.get(lineNumber), tooltipX, tooltipY, -1);
-            tooltipY += 10;
+            font.drawStringWithShadow(lines.get(lineNumber), tooltipX, currentTextY, -1);
+            currentTextY += 10;
             if (lineNumber + 1 == titleLinesCount) {
-                tooltipY += 2;
+                currentTextY += 2;
             }
         }
 
         MinecraftForge.EVENT_BUS.post(
-            new RenderTooltipEvent.PostText(stack, lines, tooltipX, tooltipTop, font, tooltipTextWidth, tooltipHeight));
+            new RenderTooltipEvent.PostText(stack, lines, tooltipX, tooltipY, font, tooltipTextWidth, tooltipHeight));
 
-        return tooltipY;
+        return currentTextY;
     }
 }

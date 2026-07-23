@@ -25,6 +25,7 @@ public class KeyBindings {
     public static final KeyBindingOK toggleEditMode;
     public static final KeyBindingOK showRecipe;
     public static final KeyBindingOK showUses;
+    public static final KeyBindingOK showRecipeTree;
     public static final KeyBindingOK recipeBack;
     public static final KeyBindingOK previousPage;
     public static final KeyBindingOK nextPage;
@@ -63,6 +64,12 @@ public class KeyBindings {
                 categoryName),
             showRecipe = new KeyBindingOK("key.jfmuy.showRecipe", KeyConflictContext.GUI, Keyboard.KEY_R, categoryName),
             showUses = new KeyBindingOK("key.jfmuy.showUses", KeyConflictContext.GUI, Keyboard.KEY_U, categoryName),
+            showRecipeTree = new KeyBindingOK(
+                "key.jfmuy.showRecipeTree",
+                KeyConflictContext.GUI,
+                KeyModifier.SHIFT,
+                Keyboard.KEY_T,
+                categoryName),
             recipeBack = new KeyBindingOK(
                 "key.jfmuy.recipeBack",
                 KeyConflictContext.GUI,

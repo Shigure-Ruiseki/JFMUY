@@ -46,6 +46,7 @@ key.jfmuy.toggleOverlay=Show/Hide JFMUY
 key.jfmuy.focusSearch=Select Search Bar
 key.jfmuy.showRecipe=Show Recipe
 key.jfmuy.showUses=Show Uses
+key.jfmuy.showRecipeTree=Show Recipe Tree
 key.jfmuy.recipeBack=Show Previously Viewed Recipe
 key.jfmuy.toggleCheatMode=Toggle Cheat Mode
 key.jfmuy.toggleEditMode=Toggle Hide/Edit Mode
@@ -220,6 +221,7 @@ jfmuy.tooltip.unfavorite=Remove Favorite Recipe
 jfmuy.tooltip.favorite=Add Favorite Recipe
 jfmuy.tooltip.favorite_scroll=Scroll to Change Favorited Item
 jfmuy.tooltip.recipe_bookmark=Bookmark Recipe
+jfmuy.tooltip.missing_ingredients=§cMissing Ingredients:
 
 jfmuy.tooltip.item_group=§7Item Group
 jfmuy.tooltip.recipe_group=§7Recipe Group
@@ -228,6 +230,7 @@ jfmuy.tooltip.organizer.1=§6CTRL + LEFT CLICK§7: Move Bookmarks Between Groups
 jfmuy.tooltip.organizer.2=§6UP§r or §6DOWN§7: Move Group Up or Down
 jfmuy.tooltip.organizer.3=§6CTRL + SCROLL§7: Change Final Output
 jfmuy.tooltip.organizer.4=§6%s§7: Autocraft
+jfmuy.tooltip.organizer.5=§6%s§7: Recipe Tree
 
 jfmuy.gui.collapsible.title=Manage Groups
 jfmuy.gui.collapsible.back=Back
@@ -246,7 +249,12 @@ jfmuy.gui.collapsible.editor.save=Save
 jfmuy.gui.collapsible.editor.clear=Clear
 jfmuy.gui.collapsible.editor.selected=%d selected
 jfmuy.gui.collapsible.confirmDelete=Delete?
-jfmuy.tooltip.missing_ingredients=§cMissing Ingredients:
+
+jfmuy.gui.tree.zoom=Zoom: %.0f%%
+jfmuy.gui.tree.help.zoom=Scroll: Zoom
+jfmuy.gui.tree.help.moveX=Ctrl + Scroll: Move X
+jfmuy.gui.tree.help.moveY=Shift + Scroll: Move Y
+jfmuy.gui.tree.help.reset=Middle Click: Reset View
 
 jfmuy.tooltip.search.title=Search Recipes
 jfmuy.tooltip.search.info=Cycle mode by clicking. Hold §6SHIFT§r to reverse direction.

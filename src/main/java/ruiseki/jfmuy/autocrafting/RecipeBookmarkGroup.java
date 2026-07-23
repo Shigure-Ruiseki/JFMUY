@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.recipe.transfer.IAutocraftingHandler;
@@ -12,6 +15,7 @@ import ruiseki.jfmuy.bookmarks.BookmarkGroup;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.gui.overlay.bookmarks.tree.GuiRecipeTree;
 
 public class RecipeBookmarkGroup extends BookmarkGroup {
 
@@ -116,5 +120,11 @@ public class RecipeBookmarkGroup extends BookmarkGroup {
             .map(this::getIngredientListElement)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
+    }
+
+    public void showRecipeTree() {
+        Minecraft mc = Minecraft.getMinecraft();
+        GuiScreen currentScreen = mc.currentScreen;
+        mc.displayGuiScreen(new GuiRecipeTree(this, currentScreen));
     }
 }

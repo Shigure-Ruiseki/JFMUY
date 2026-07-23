@@ -69,6 +69,12 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
     }
 
     @Override
+    public void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable ItemStack ingredient, int amount) {
+        if (ingredient != null) ingredient.stackSize = amount;
+        render(minecraft, xPosition, yPosition, ingredient);
+    }
+
+    @Override
     public List<String> getTooltip(Minecraft minecraft, ItemStack ingredient, boolean tooltipFlag) {
         EntityPlayer player = minecraft.thePlayer;
         List<String> list = new ArrayList<>();

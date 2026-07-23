@@ -7,6 +7,9 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -241,7 +244,7 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
     }
 
     @Nonnull
-    private net.minecraft.inventory.InventoryCrafting getInventory() {
+    private InventoryCrafting getInventory() {
         int width = 3;
         int height = 3;
         if (recipe instanceof IShapedCraftingRecipeWrapper) {
@@ -249,10 +252,10 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
             width = shapedRecipe.getWidth();
             height = shapedRecipe.getHeight();
         }
-        return new net.minecraft.inventory.InventoryCrafting(new net.minecraft.inventory.Container() {
+        return new InventoryCrafting(new Container() {
 
             @Override
-            public boolean canInteractWith(net.minecraft.entity.player.EntityPlayer playerIn) {
+            public boolean canInteractWith(EntityPlayer playerIn) {
                 return false;
             }
         }, width, height);

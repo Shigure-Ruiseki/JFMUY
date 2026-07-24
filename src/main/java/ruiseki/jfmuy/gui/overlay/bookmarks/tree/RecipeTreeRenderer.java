@@ -31,7 +31,7 @@ public class RecipeTreeRenderer {
     }
 
     public void render(Minecraft mc, int mouseX, int mouseY, List<RecipeTreeNode> rootNodes, RecipeBookmarkGroup group,
-                       float offsetX, float offsetY, float zoomScale) {
+        float offsetX, float offsetY, float zoomScale) {
         GlStateManager.pushMatrix();
         GlStateManager.translate(offsetX, offsetY, 0);
         GlStateManager.scale(zoomScale, zoomScale, 1.0f);
@@ -125,9 +125,11 @@ public class RecipeTreeRenderer {
         int col1X = row1X + 1;
         int col1Y = row1Y + 1;
         if (ingredient != null) {
-            IIngredientType ingredientType = Internal.getIngredientRegistry().getIngredientType(ingredient);
+            IIngredientType ingredientType = Internal.getIngredientRegistry()
+                .getIngredientType(ingredient);
             if (ingredientType != null) {
-                IIngredientRenderer renderer = Internal.getIngredientRegistry().getIngredientRenderer(ingredientType);
+                IIngredientRenderer renderer = Internal.getIngredientRegistry()
+                    .getIngredientRenderer(ingredientType);
                 if (renderer != null) {
                     RenderHelper.enableGUIStandardItemLighting();
                     renderer.render(mc, col1X + 1, col1Y + 1, ingredient);
@@ -145,12 +147,15 @@ public class RecipeTreeRenderer {
             } else {
                 JFMUYRuntime runtime = Internal.getRuntime();
                 if (runtime != null) {
-                    List<Object> catalysts = runtime.getRecipeRegistry().getRecipeCatalysts(node.item.category);
+                    List<Object> catalysts = runtime.getRecipeRegistry()
+                        .getRecipeCatalysts(node.item.category);
                     if (!catalysts.isEmpty()) {
                         Object catalyst = catalysts.get(0);
-                        IIngredientType catType = Internal.getIngredientRegistry().getIngredientType(catalyst);
+                        IIngredientType catType = Internal.getIngredientRegistry()
+                            .getIngredientType(catalyst);
                         if (catType != null) {
-                            IIngredientRenderer catRenderer = Internal.getIngredientRegistry().getIngredientRenderer(catType);
+                            IIngredientRenderer catRenderer = Internal.getIngredientRegistry()
+                                .getIngredientRenderer(catType);
                             if (catRenderer != null) {
                                 RenderHelper.enableGUIStandardItemLighting();
                                 catRenderer.render(mc, col2X + 1, col2Y + 1, catalyst);
@@ -165,7 +170,8 @@ public class RecipeTreeRenderer {
         int col3X = col2X + COL_WIDTH;
         int col3Y = row1Y + 1;
         boolean isHoveredButton = (relMouseX >= col3X && relMouseX <= col3X + BUTTON_WIDTH
-            && relMouseY >= col3Y && relMouseY <= col3Y + 18);
+            && relMouseY >= col3Y
+            && relMouseY <= col3Y + 18);
 
         if (isHoveredButton) {
             gui.drawRectPublic(col3X, col3Y, col3X + BUTTON_WIDTH, col3Y + 18, 0x44FFFFFF);
@@ -183,7 +189,8 @@ public class RecipeTreeRenderer {
             int recipeRelMouseY = relMouseY - previewOffsetY;
 
             if (node.item.category.getBackground() != null) {
-                node.item.category.getBackground().draw(mc, 0, 0);
+                node.item.category.getBackground()
+                    .draw(mc, 0, 0);
             }
 
             node.item.category.drawExtras(mc);
@@ -210,7 +217,7 @@ public class RecipeTreeRenderer {
     }
 
     private void drawNodeTooltips(Minecraft mc, int mouseX, int mouseY, List<RecipeTreeNode> rootNodes, float offsetX,
-                                  float offsetY, float zoomScale) {
+        float offsetY, float zoomScale) {
         int scaledMouseX = (int) ((mouseX - offsetX) / zoomScale);
         int scaledMouseY = (int) ((mouseY - offsetY) / zoomScale);
 
@@ -229,7 +236,8 @@ public class RecipeTreeRenderer {
                     }
 
                     if (nodeRelMouseX > COL_WIDTH && nodeRelMouseX <= COL_WIDTH * 2
-                        && hasRecipe && hovered.item.category != null) {
+                        && hasRecipe
+                        && hovered.item.category != null) {
                         IDrawable categoryIcon = hovered.item.category.getIcon();
                         if (categoryIcon != null) {
                             String categoryTitle = hovered.item.category.getTitle();
@@ -244,7 +252,8 @@ public class RecipeTreeRenderer {
                         } else {
                             JFMUYRuntime runtime = Internal.getRuntime();
                             if (runtime != null) {
-                                List<Object> catalysts = runtime.getRecipeRegistry().getRecipeCatalysts(hovered.item.category);
+                                List<Object> catalysts = runtime.getRecipeRegistry()
+                                    .getRecipeCatalysts(hovered.item.category);
                                 if (!catalysts.isEmpty()) {
                                     renderIngredientTooltip(mc, catalysts.get(0), mouseX, mouseY);
                                     break;
@@ -307,7 +316,8 @@ public class RecipeTreeRenderer {
 
         String label = Translator.translateToLocal("jfmuy.tooltip.missing_ingredients");
         int labelWidth = mc.fontRenderer.getStringWidth(label);
-        mc.fontRenderer.drawStringWithShadow(label, padding * 2, footerY + (height - mc.fontRenderer.FONT_HEIGHT) / 2, 0xFF5555);
+        mc.fontRenderer
+            .drawStringWithShadow(label, padding * 2, footerY + (height - mc.fontRenderer.FONT_HEIGHT) / 2, 0xFF5555);
 
         int startX = padding * 3 + labelWidth;
         int currentX = startX;
@@ -322,10 +332,12 @@ public class RecipeTreeRenderer {
             }
 
             Object ingredient = element.getIngredient();
-            IIngredientType ingredientType = Internal.getIngredientRegistry().getIngredientType(ingredient);
+            IIngredientType ingredientType = Internal.getIngredientRegistry()
+                .getIngredientType(ingredient);
 
             if (ingredientType != null) {
-                IIngredientRenderer renderer = Internal.getIngredientRegistry().getIngredientRenderer(ingredientType);
+                IIngredientRenderer renderer = Internal.getIngredientRegistry()
+                    .getIngredientRenderer(ingredientType);
                 if (renderer != null) {
                     gui.drawRectPublic(
                         currentX - 1,
@@ -356,9 +368,11 @@ public class RecipeTreeRenderer {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T> void renderIngredientTooltip(Minecraft mc, T ingredient, int mouseX, int mouseY) {
-        IIngredientType<T> ingredientType = (IIngredientType<T>) Internal.getIngredientRegistry().getIngredientType(ingredient);
+        IIngredientType<T> ingredientType = (IIngredientType<T>) Internal.getIngredientRegistry()
+            .getIngredientType(ingredient);
         if (ingredientType != null) {
-            IIngredientRenderer<T> renderer = Internal.getIngredientRegistry().getIngredientRenderer(ingredientType);
+            IIngredientRenderer<T> renderer = Internal.getIngredientRegistry()
+                .getIngredientRenderer(ingredientType);
             if (renderer != null) {
                 boolean advancedItemTooltips = mc.gameSettings.advancedItemTooltips;
                 List<String> tooltip = renderer.getTooltip(mc, ingredient, advancedItemTooltips);

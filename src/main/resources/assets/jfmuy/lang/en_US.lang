@@ -255,6 +255,8 @@ jfmuy.gui.tree.help.zoom=Scroll: Zoom
 jfmuy.gui.tree.help.moveX=Ctrl + Scroll: Move X
 jfmuy.gui.tree.help.moveY=Shift + Scroll: Move Y
 jfmuy.gui.tree.help.reset=Middle Click: Reset View
+jfmuy.gui.tree.hide_recipe=Hide Recipe
+jfmuy.gui.tree.show_recipe=Show Recipe
 
 jfmuy.tooltip.search.title=Search Recipes
 jfmuy.tooltip.search.info=Cycle mode by clicking. Hold §6SHIFT§r to reverse direction.

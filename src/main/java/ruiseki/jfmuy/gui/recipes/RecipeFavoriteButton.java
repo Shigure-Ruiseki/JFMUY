@@ -1,6 +1,6 @@
 package ruiseki.jfmuy.gui.recipes;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

@@ -26,8 +26,14 @@ public class RecipeTreeNode {
 
     public int x;
     public int y;
-    public int width = 18;
-    public int height = 18;
+
+    public static final int HEADER_WIDTH = 62;
+    public static final int HEADER_HEIGHT = 20;
+
+    public int width = HEADER_WIDTH;
+    public int height = HEADER_HEIGHT;
+
+    public boolean showRecipePreview = false;
 
     public RecipeTreeNode(RecipeBookmarkItem<?> item) {
         this.item = item;
@@ -39,19 +45,6 @@ public class RecipeTreeNode {
         if (item.isPopulated() && item.category != null && item.recipe != null) {
             this.recipeLayout = item.createLayout();
 
-            int bgWidth = 0;
-            int bgHeight = 0;
-
-            if (item.category.getBackground() != null) {
-                IDrawable bg = item.category.getBackground();
-                bgWidth = bg.getWidth();
-                bgHeight = bg.getHeight();
-            }
-
-            int iconWidth = (item.ingredient != null) ? 22 : 0;
-            this.width = iconWidth + bgWidth;
-            this.height = Math.max(18, bgHeight);
-
             try {
                 Ingredients ingredients = new Ingredients();
                 item.recipe.getIngredients(ingredients);
@@ -61,9 +54,48 @@ public class RecipeTreeNode {
 
                 category.setRecipe(this.recipeLayout, recipeWrapper, ingredients);
             } catch (Exception ignored) {}
+        }
+        recalculateSize();
+    }
+
+    public void recalculateSize() {
+        int bgWidth = 0;
+        int bgHeight = 0;
+
+        if (item.category != null && item.category.getBackground() != null) {
+            IDrawable bg = item.category.getBackground();
+            bgWidth = bg.getWidth();
+            bgHeight = bg.getHeight();
+        }
+
+        if (showRecipePreview && recipeLayout != null && item.category != null) {
+            this.width = Math.max(HEADER_WIDTH, bgWidth);
+            this.height = HEADER_HEIGHT + 2 + Math.max(18, bgHeight);
         } else {
-            this.width = 18;
-            this.height = 18;
+            this.width = HEADER_WIDTH;
+            this.height = HEADER_HEIGHT;
+        }
+    }
+
+    public void toggleRecipePreview() {
+        this.showRecipePreview = !this.showRecipePreview;
+        recalculateSize();
+    }
+
+    public void setRecipePreview(boolean show) {
+        this.showRecipePreview = show;
+        recalculateSize();
+    }
+
+    public void setRecipePreviewRecursive(boolean show) {
+        if (this.recipeLayout != null && this.item != null && this.item.category != null) {
+            setRecipePreview(show);
+        } else {
+            setRecipePreview(false);
+        }
+
+        for (RecipeTreeNode child : children) {
+            child.setRecipePreviewRecursive(show);
         }
     }
 

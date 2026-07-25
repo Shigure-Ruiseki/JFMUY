@@ -19,6 +19,7 @@ A backport of the modern JEI item utility system to Minecraft 1.7.10 for learnin
 ## Integration
 
 - [JFI](https://github.com/Shigure-Ruiseki/JFI)
+- [JFIC2C](https://github.com/Shigure-Ruiseki/JFIC2C)
 
 ## Original Mod
 

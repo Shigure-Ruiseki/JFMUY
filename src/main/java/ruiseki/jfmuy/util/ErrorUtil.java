@@ -243,7 +243,7 @@ public final class ErrorUtil {
 
     // Helper check to replace 1.11+ ItemStack.isEmpty() logic
     private static boolean isStackEmpty(@Nullable ItemStack stack) {
-        return stack == null || stack.getItem() == null || stack.stackSize <= 0;
+        return stack == null || stack.getItem() == null;
     }
 
     public static void checkNotEmpty(@Nullable ItemStack itemStack) {

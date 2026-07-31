@@ -12,14 +12,14 @@ import ruiseki.jfmuy.api.IModRegistry;
 import ruiseki.jfmuy.api.JFMUYPlugin;
 
 @JFMUYPlugin(value = "modularui2")
-public class ModularUIJeiPlugin implements IModPlugin {
+public class ModularUIPlugin implements IModPlugin {
 
     @Override
     public void register(@NotNull IModRegistry registry) {
-        ModularScreenJEIHandler.register(GuiContainerWrapper.class, registry);
-        ModularScreenJEIHandler.register(GuiScreenWrapper.class, registry);
-        ModularContainerJEIHandler.register(ModularContainer.class, registry);
-        ModularContainerJEIHandler.register(CraftingModularContainer.class, registry);
+        ModularScreenHandler.register(GuiContainerWrapper.class, registry);
+        ModularScreenHandler.register(GuiScreenWrapper.class, registry);
+        ModularContainerHandler.register(ModularContainer.class, registry);
+        ModularContainerHandler.register(CraftingModularContainer.class, registry);
     }
 
 }

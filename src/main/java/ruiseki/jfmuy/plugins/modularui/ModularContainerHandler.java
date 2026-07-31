@@ -13,15 +13,15 @@ import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferError;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandler;
 
-public class ModularContainerJEIHandler<T extends ModularContainer> implements IRecipeTransferHandler<T> {
+public class ModularContainerHandler<T extends ModularContainer> implements IRecipeTransferHandler<T> {
 
     public static <T extends ModularContainer> void register(Class<T> clz, IModRegistry registry) {
-        new ModularContainerJEIHandler<>(clz).register(registry);
+        new ModularContainerHandler<>(clz).register(registry);
     }
 
     private final Class<T> clazz;
 
-    private ModularContainerJEIHandler(Class<T> clazz) {
+    private ModularContainerHandler(Class<T> clazz) {
         this.clazz = clazz;
     }
 

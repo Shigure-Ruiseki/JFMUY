@@ -20,20 +20,20 @@ import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
 import ruiseki.jfmuy.api.gui.IGuiProperties;
 import ruiseki.jfmuy.api.gui.IGuiScreenHandler;
 
-public class ModularScreenJEIHandler<T extends GuiScreen & IMuiScreen> implements IGuiScreenHandler<T> {
+public class ModularScreenHandler<T extends GuiScreen & IMuiScreen> implements IGuiScreenHandler<T> {
 
     public static <T extends GuiScreen & IMuiScreen, T2 extends GuiContainer & IMuiScreen> void register(Class<T> clz,
         IModRegistry registry) {
         if (GuiContainer.class.isAssignableFrom(clz)) {
             new ContainerScreen<>((Class<T2>) clz).register(registry);
         } else {
-            new ModularScreenJEIHandler<>(clz).register(registry);
+            new ModularScreenHandler<>(clz).register(registry);
         }
     }
 
     private final Class<T> clazz;
 
-    private ModularScreenJEIHandler(Class<T> clazz) {
+    private ModularScreenHandler(Class<T> clazz) {
         this.clazz = clazz;
     }
 
@@ -54,7 +54,7 @@ public class ModularScreenJEIHandler<T extends GuiScreen & IMuiScreen> implement
             .isEnabled(guiScreen.getScreen()) ? new ModularUIProperties(guiScreen) : null;
     }
 
-    public static class ContainerScreen<T extends GuiContainer & IMuiScreen> extends ModularScreenJEIHandler<T>
+    public static class ContainerScreen<T extends GuiContainer & IMuiScreen> extends ModularScreenHandler<T>
         implements IAdvancedGuiHandler<T> {
 
         private ContainerScreen(Class<T> clazz) {

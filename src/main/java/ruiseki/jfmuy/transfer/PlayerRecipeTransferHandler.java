@@ -201,7 +201,7 @@ public class PlayerRecipeTransferHandler implements IRecipeCraftingHandler<Conta
                 maxTransfer,
                 performRecipe,
                 false).setOutputSlot(transferHelper.getOutputSlot());
-            JFMUY.instance.getPacketHandler()
+            JFMUY._instance.getPacketHandler()
                 .sendToServer(packet);
         }
 

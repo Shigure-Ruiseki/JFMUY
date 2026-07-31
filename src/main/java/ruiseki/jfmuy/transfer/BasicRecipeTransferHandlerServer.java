@@ -355,12 +355,12 @@ public final class BasicRecipeTransferHandlerServer {
             }
             playerMP.updateHeldItem();
             playerMP.openContainer.detectAndSendChanges();
-            JFMUY.instance.getPacketHandler()
+            JFMUY._instance.getPacketHandler()
                 .sendToPlayer(new PacketCraftUpdate(true, itemsCrafted), playerMP);
             return;
         }
         playerMP.openContainer.detectAndSendChanges();
-        JFMUY.instance.getPacketHandler()
+        JFMUY._instance.getPacketHandler()
             .sendToPlayer(new PacketCraftUpdate(false, 0), playerMP);
     }
 }

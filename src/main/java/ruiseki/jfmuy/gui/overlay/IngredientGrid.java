@@ -222,7 +222,7 @@ public class IngredientGrid implements IShowsRecipeFocuses {
                     if (itemStack != null) {
                         player.inventory.setItemStack(null);
                         PacketDeletePlayerItem packet = new PacketDeletePlayerItem(itemStack);
-                        JFMUY.instance.getPacketHandler()
+                        JFMUY._instance.getPacketHandler()
                             .sendToServer(packet);
                         return true;
                     }

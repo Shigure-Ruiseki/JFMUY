@@ -57,6 +57,7 @@ public class ConfigValues {
     public boolean hideBottomLeftCornerBookmarkButton = false;
     public boolean enableHistoryPanel = true;
     public boolean isHistoryPanelOnLeft = false;
+    public boolean versionChecker = true;
 
     // category
     public List<String> categoryUidOrder = new ArrayList<>();

@@ -54,6 +54,7 @@ import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.fluid.capability.CapabilityFluidHandler;
 import ruiseki.okcore.fluid.handler.IFluidHandlerItem;
 import ruiseki.okcore.helper.CapabilityHelpers;
+import ruiseki.okcore.tracking.Versions;
 
 public final class Config {
 
@@ -210,7 +211,7 @@ public final class Config {
             }
 
             if (values.cheatItemsEnabled && ServerInfo.isJFMUYOnServer()) {
-                JFMUY.instance.getPacketHandler()
+                JFMUY._instance.getPacketHandler()
                     .sendToServer(new PacketRequestCheatPermission());
             }
         }
@@ -415,6 +416,10 @@ public final class Config {
         return values.isHistoryPanelOnLeft;
     }
 
+    public static boolean isVersionChecker() {
+        return values.versionChecker;
+    }
+
     public static int getRecipeBookmarkGroupColor() {
         return values.recipeBookmarkGroupColor;
     }
@@ -492,6 +497,8 @@ public final class Config {
         syncConfig();
         syncItemBlacklistConfig();
         syncSearchColorsConfig();
+
+        Versions.registerMod(JFMUY._instance, JFMUY._instance, Reference.VERSION_URL);
     }
 
     public static boolean syncAllConfig() {
@@ -664,6 +671,8 @@ public final class Config {
 
         values.isHistoryPanelOnLeft = config
             .getBoolean(CATEGORY_MISC, "isHistoryPanelOnLeft", defaultValues.isHistoryPanelOnLeft);
+
+        values.versionChecker = config.getBoolean(CATEGORY_MISC, "versionChecker", defaultValues.versionChecker);
 
         {
             boolean prev = values.collapsibleGroupsEnabled;

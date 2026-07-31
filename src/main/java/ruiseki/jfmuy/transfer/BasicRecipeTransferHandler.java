@@ -188,7 +188,7 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeC
                     performRecipe,
                     transferHelper.requireCompleteSets()).setOutputSlot(outputSlot);
             }
-            JFMUY.instance.getPacketHandler()
+            JFMUY._instance.getPacketHandler()
                 .sendToServer(packet);
         }
 

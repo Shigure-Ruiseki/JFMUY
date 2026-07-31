@@ -45,7 +45,7 @@ public final class CommandUtil {
         } else if (ServerInfo.isJFMUYOnServer()) {
             final int amount = giveMode.getStackSize(itemStack, mouseButton);
             ItemStack sendStack = ItemHandlerHelpers.copyStackWithSize(itemStack, amount);
-            JFMUY.instance.getPacketHandler()
+            JFMUY._instance.getPacketHandler()
                 .sendToServer(new PacketGiveItemStack(sendStack, giveMode));
         } else {
             int amount = GiveMode.INVENTORY.getStackSize(itemStack, mouseButton);
@@ -56,7 +56,7 @@ public final class CommandUtil {
     public static void setHotbarStack(ItemStack itemStack, int hotbarSlot) {
         if (ServerInfo.isJFMUYOnServer()) {
             ItemStack sendStack = ItemHandlerHelpers.copyStackWithSize(itemStack, itemStack.getMaxStackSize());
-            JFMUY.instance.getPacketHandler()
+            JFMUY._instance.getPacketHandler()
                 .sendToServer(new PacketSetHotbarItemStack(sendStack, hotbarSlot));
         }
     }

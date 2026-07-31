@@ -24,26 +24,25 @@ import cpw.mods.fml.relauncher.Side;
 import ruiseki.jfmuy.command.CommandLoadBookmarks;
 import ruiseki.jfmuy.config.ServerInfo;
 import ruiseki.okcore.helper.MinecraftHelpers;
-import ruiseki.okcore.init.ModBase;
 import ruiseki.okcore.init.ModBaseVersionable;
 import ruiseki.okcore.proxy.ICommonProxy;
 
 @Mod(
     modid = Reference.MOD_ID,
     name = Reference.MOD_NAME,
-    version = Reference.VERSION,
+    version = Reference.MOD_VERSION,
     guiFactory = Reference.GUI_FACTORY,
-    dependencies = Reference.DEPENDENCIES)
+    dependencies = Reference.MOD_DEPENDENCIES)
 public class JFMUY extends ModBaseVersionable {
 
     @SidedProxy(serverSide = Reference.PROXY_COMMON, clientSide = Reference.PROXY_CLIENT)
     public static ICommonProxy proxy;
 
     @Mod.Instance(Reference.MOD_ID)
-    public static JFMUY instance;
+    public static JFMUY _instance;
 
     public JFMUY() {
-        super(Reference.MOD_ID, Reference.MOD_NAME, Reference.VERSION);
+        super(Reference.MOD_ID, Reference.MOD_NAME, Reference.MOD_VERSION);
     }
 
     @NetworkCheckHandler

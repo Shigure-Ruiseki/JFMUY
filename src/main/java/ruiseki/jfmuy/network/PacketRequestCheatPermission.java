@@ -25,7 +25,7 @@ public class PacketRequestCheatPermission extends PacketCodec {
     @Override
     public void actionServer(World world, EntityPlayerMP player) {
         boolean hasPermission = CommandUtilServer.hasPermission(player, new ItemStack(Items.nether_star, 64));
-        JFMUY.instance.getPacketHandler()
+        JFMUY._instance.getPacketHandler()
             .sendToPlayer(new PacketCheatPermission(hasPermission), player);
     }
 }

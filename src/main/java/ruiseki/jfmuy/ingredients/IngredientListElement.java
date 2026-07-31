@@ -13,12 +13,12 @@ import com.google.common.collect.ImmutableSet;
 
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import ruiseki.jfmuy.proxy.ClientProxy;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.proxy.ClientProxy;
 import ruiseki.jfmuy.startup.IModIdHelper;
 import ruiseki.jfmuy.util.LegacyUtil;
 import ruiseki.jfmuy.util.Log;

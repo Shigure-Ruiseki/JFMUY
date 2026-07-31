@@ -140,7 +140,7 @@ public class JFMUYModConfigGui extends GuiConfig {
         super.actionPerformed(button);
 
         if (Config.isCheatItemsEnabled() && ServerInfo.isJFMUYOnServer()) {
-            JFMUY.instance.getPacketHandler()
+            JFMUY._instance.getPacketHandler()
                 .sendToServer(new PacketRequestCheatPermission());
         }
     }

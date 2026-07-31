@@ -19,7 +19,7 @@ public class CommonProxy extends CommonProxyComponent {
 
     @Override
     public ModBase getMod() {
-        return JFMUY.instance;
+        return JFMUY._instance;
     }
 
     @Override

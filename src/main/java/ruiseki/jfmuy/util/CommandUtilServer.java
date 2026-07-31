@@ -98,7 +98,7 @@ public final class CommandUtilServer {
                 mousePickupItemStack(sender, itemStack);
             }
         } else {
-            JFMUY.instance.getPacketHandler()
+            JFMUY._instance.getPacketHandler()
                 .sendToPlayer(new PacketCheatPermission(false), sender);
         }
     }
@@ -129,7 +129,7 @@ public final class CommandUtilServer {
             sender.inventoryContainer.detectAndSendChanges();
             notifyGive(sender, originalStack, count);
         } else {
-            JFMUY.instance.getPacketHandler()
+            JFMUY._instance.getPacketHandler()
                 .sendToPlayer(new PacketCheatPermission(false), sender);
         }
     }

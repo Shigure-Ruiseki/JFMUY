@@ -35,11 +35,10 @@
  */
 dependencies {
 
-    implementation("com.github.Shigure-Ruiseki:OKCore:3fc26baee3:dev") { transitive = false }
+    implementation("com.github.Shigure-Ruiseki:OKCore:26.07.31.0:dev") { transitive = false }
 
     devOnlyNonPublishable("com.github.GTNewHorizons:waila:1.19.30:dev") { transitive = false }
 
-    runtimeOnlyNonPublishable("com.github.Shigure-Ruiseki:JFI:4adfb2dae5:dev"){ transitive = false }
     runtimeOnlyNonPublishable('net.industrial-craft:industrialcraft-2:2.2.828-experimental:dev')
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:GTNHLib:0.11.21:dev")

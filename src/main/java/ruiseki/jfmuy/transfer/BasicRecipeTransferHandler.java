@@ -151,7 +151,7 @@ public class BasicRecipeTransferHandler<C extends Container> implements IRecipeC
         IntList inventorySlotIndexes = new IntArrayList(inventorySlots.keySet());
         Collections.sort(inventorySlotIndexes);
 
-        int outputSlot = transferHelper.getOutputSlot();
+        int outputSlot = transferHelper.getOutputSlot(container);
 
         // check that the slots exist and can be altered
         for (Int2IntMap.Entry entry : matchingItemsResult.matchingItemsCasted.int2IntEntrySet()) {

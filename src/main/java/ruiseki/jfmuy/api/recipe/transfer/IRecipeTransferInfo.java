@@ -38,6 +38,10 @@ public interface IRecipeTransferInfo<C extends Container> {
         return -1;
     }
 
+    default int getOutputSlot(C container) {
+        return getOutputSlot();
+    }
+
     /**
      * Return a list of slots for the recipe area.
      */

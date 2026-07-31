@@ -200,7 +200,7 @@ public class PlayerRecipeTransferHandler implements IRecipeCraftingHandler<Conta
                 inventorySlotIndexes,
                 maxTransfer,
                 performRecipe,
-                false).setOutputSlot(transferHelper.getOutputSlot());
+                false).setOutputSlot(transferHelper.getOutputSlot(container));
             JFMUY._instance.getPacketHandler()
                 .sendToServer(packet);
         }

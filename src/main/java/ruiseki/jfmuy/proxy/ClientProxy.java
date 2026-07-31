@@ -1,21 +1,14 @@
-package ruiseki.jfmuy;
-
-import java.util.ArrayList;
-import java.util.List;
+package ruiseki.jfmuy.proxy;
 
 import net.minecraft.client.Minecraft;
 
-import ruiseki.jfmuy.api.IModPlugin;
+import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.config.KeyBindings;
-import ruiseki.jfmuy.startup.JFMUYStarter;
 import ruiseki.okcore.client.key.IKeyRegistry;
 import ruiseki.okcore.init.ModBase;
 import ruiseki.okcore.proxy.ClientProxyComponent;
 
 public class ClientProxy extends ClientProxyComponent {
-
-    private List<IModPlugin> plugins = new ArrayList<>();
-    private final JFMUYStarter starter = new JFMUYStarter();
 
     public ClientProxy() {
         super(new CommonProxy());

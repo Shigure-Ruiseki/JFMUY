@@ -11,8 +11,8 @@ public class Reference {
     public static final String DEPENDENCIES = "required-after:okcore@[26.07.17.2,);";
     public static final String UPDATE_URL = "https://raw.githubusercontent.com/Shigure-Ruiseki/JFMUY/master/version/version.json";
 
-    public static final String PROXY_COMMON = Tags.MOD_GROUP + ".CommonProxy";
-    public static final String PROXY_CLIENT = Tags.MOD_GROUP + ".ClientProxy";
+    public static final String PROXY_COMMON = Tags.MOD_GROUP + ".proxy.CommonProxy";
+    public static final String PROXY_CLIENT = Tags.MOD_GROUP + ".proxy.ClientProxy";
     public static final String GUI_FACTORY = Tags.MOD_GROUP + ".config.JFMUYModGuiFactory";
 
     public static final String TEXTURE_GUI_PATH = "textures/gui/";

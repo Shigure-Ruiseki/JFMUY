@@ -13,7 +13,7 @@ import com.google.common.collect.ImmutableSet;
 
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import ruiseki.jfmuy.ClientProxy;
+import ruiseki.jfmuy.proxy.ClientProxy;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;

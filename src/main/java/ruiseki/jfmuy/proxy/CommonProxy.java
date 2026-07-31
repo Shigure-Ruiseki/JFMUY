@@ -1,7 +1,9 @@
-package ruiseki.jfmuy;
+package ruiseki.jfmuy.proxy;
 
 import net.minecraftforge.common.MinecraftForge;
 
+import ruiseki.jfmuy.JFMUY;
+import ruiseki.jfmuy.JFMUYHandler;
 import ruiseki.jfmuy.network.PacketCheatPermission;
 import ruiseki.jfmuy.network.PacketCraftUpdate;
 import ruiseki.jfmuy.network.PacketDeletePlayerItem;

@@ -25,6 +25,7 @@ import ruiseki.jfmuy.command.CommandLoadBookmarks;
 import ruiseki.jfmuy.config.ServerInfo;
 import ruiseki.okcore.helper.MinecraftHelpers;
 import ruiseki.okcore.init.ModBase;
+import ruiseki.okcore.init.ModBaseVersionable;
 import ruiseki.okcore.proxy.ICommonProxy;
 
 @Mod(
@@ -33,7 +34,7 @@ import ruiseki.okcore.proxy.ICommonProxy;
     version = Reference.VERSION,
     guiFactory = Reference.GUI_FACTORY,
     dependencies = Reference.DEPENDENCIES)
-public class JFMUY extends ModBase {
+public class JFMUY extends ModBaseVersionable {
 
     @SidedProxy(serverSide = Reference.PROXY_COMMON, clientSide = Reference.PROXY_CLIENT)
     public static ICommonProxy proxy;
@@ -42,9 +43,7 @@ public class JFMUY extends ModBase {
     public static JFMUY instance;
 
     public JFMUY() {
-        super(Reference.MOD_ID, Reference.MOD_NAME);
-        putGenericReference(REFKEY_MOD_VERSION, Reference.VERSION);
-        putGenericReference(REFKEY_VERSION_CHECKER_URL, Reference.UPDATE_URL);
+        super(Reference.MOD_ID, Reference.MOD_NAME, Reference.VERSION);
     }
 
     @NetworkCheckHandler

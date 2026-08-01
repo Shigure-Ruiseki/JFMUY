@@ -118,6 +118,7 @@ public class JFMUYClientHandler {
                 }
                 Translator.invalidateLocale();
             });
+            this.starter.start(plugins);
         }
     }
 

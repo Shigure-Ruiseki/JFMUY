@@ -116,6 +116,7 @@ public class IngredientRegistry implements IIngredientRegistry {
     }
 
     @Nullable
+    @Override
     public <V> V getIngredientByUid(IIngredientType<V> ingredientType, String uid) {
         @SuppressWarnings("unchecked")
         IngredientSet<V> ingredients = ingredientsMap.get(ingredientType);

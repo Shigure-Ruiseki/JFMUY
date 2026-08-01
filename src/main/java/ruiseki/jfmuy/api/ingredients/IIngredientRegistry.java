@@ -21,6 +21,8 @@ public interface IIngredientRegistry {
      */
     <V> Collection<V> getAllIngredients(IIngredientType<V> ingredientType);
 
+    <V> V getIngredientByUid(IIngredientType<V> ingredientType, String uid);
+
     /**
      * Returns the appropriate ingredient helper for this ingredient.
      */

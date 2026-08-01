@@ -17,9 +17,9 @@ import net.minecraft.inventory.Container;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableTable;
 
 import cpw.mods.fml.common.ProgressManager;
@@ -64,7 +64,7 @@ public class RecipeRegistry implements IRecipeRegistry {
     private final List<IRecipeCategory> recipeCategoriesVisibleCache = new ArrayList<>();
     private final ImmutableTable<Class, String, IRecipeTransferHandler> recipeTransferHandlers;
     private final ImmutableMultimap<Class<? extends GuiContainer>, RecipeClickableArea> recipeClickableAreasMap;
-    private final ImmutableListMultimap<IRecipeCategory, Object> recipeCatalysts;
+    private final ImmutableSetMultimap<IRecipeCategory, Object> recipeCatalysts;
     private final ImmutableMap<String, IRecipeCategory> recipeCategoriesMap;
     private final RecipeCategoryComparator recipeCategoryComparator;
     private final Table<String, Object, IRecipeWrapper> wrapperMaps = new Table<>(
@@ -81,7 +81,7 @@ public class RecipeRegistry implements IRecipeRegistry {
         ImmutableTable<Class, String, IRecipeTransferHandler> recipeTransferHandlers,
         ListMultiMap<String, Object> recipes,
         ListMultiMap<Class<? extends GuiContainer>, RecipeClickableArea> recipeClickableAreasMap,
-        ListMultiMap<String, Object> recipeCatalysts, IngredientRegistry ingredientRegistry,
+        SetMultiMap<String, Object> recipeCatalysts, IngredientRegistry ingredientRegistry,
         List<IRecipeRegistryPlugin> plugins) {
         this.ingredientRegistry = ingredientRegistry;
         this.recipeTransferHandlers = recipeTransferHandlers;
@@ -96,10 +96,10 @@ public class RecipeRegistry implements IRecipeRegistry {
 
         addRecipes(recipes);
 
-        ImmutableListMultimap.Builder<IRecipeCategory, Object> recipeCatalystsBuilder = ImmutableListMultimap.builder();
+        ImmutableSetMultimap.Builder<IRecipeCategory, Object> recipeCatalystsBuilder = ImmutableSetMultimap.builder();
         ImmutableMultimap.Builder<String, String> categoriesForRecipeCatalystKeysBuilder = ImmutableMultimap.builder();
 
-        for (Map.Entry<String, List<Object>> recipeCatalystEntry : recipeCatalysts.entrySet()) {
+        for (Map.Entry<String, Set<Object>> recipeCatalystEntry : recipeCatalysts.entrySet()) {
             String recipeCategoryUid = recipeCatalystEntry.getKey();
             IRecipeCategory recipeCategory = recipeCategoriesMap.get(recipeCategoryUid);
             if (recipeCategory != null) {
@@ -109,7 +109,6 @@ public class RecipeRegistry implements IRecipeRegistry {
                     IIngredientType ingredientType = ingredientRegistry.getIngredientType(catalystIngredient);
                     @SuppressWarnings("unchecked")
                     IIngredientHelper ingredientHelper = ingredientRegistry.getIngredientHelper(ingredientType);
-                    // noinspection unchecked
                     recipeInputMap.addRecipeCategory(recipeCategory, catalystIngredient, ingredientHelper);
                     String catalystIngredientKey = getUniqueId(catalystIngredient);
                     categoriesForRecipeCatalystKeysBuilder.put(catalystIngredientKey, recipeCategoryUid);
@@ -565,9 +564,9 @@ public class RecipeRegistry implements IRecipeRegistry {
 
     public List<Object> getRecipeCatalysts(IRecipeCategory recipeCategory, boolean includeHidden) {
         ErrorUtil.checkNotNull(recipeCategory, "recipeCategory");
-        ImmutableList<Object> catalysts = recipeCatalysts.get(recipeCategory);
+        Set<Object> catalysts = recipeCatalysts.get(recipeCategory);
         if (includeHidden) {
-            return catalysts;
+            return ImmutableList.copyOf(catalysts);
         }
         List<Object> visibleCatalysts = new ArrayList<>();
         IngredientFilter ingredientFilter = Internal.getIngredientFilter();

@@ -34,7 +34,7 @@ public class BasicRecipeTransferInfo<C extends Container> implements IRecipeTran
     }
 
     @Override
-    public int getOutputSlot() {
+    public int getOutputSlot(C container) {
         return craftingSlot;
     }
 

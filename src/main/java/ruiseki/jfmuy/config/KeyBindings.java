@@ -13,7 +13,6 @@ import cpw.mods.fml.client.registry.ClientRegistry;
 import ruiseki.jfmuy.Reference;
 import ruiseki.okcore.client.key.KeyBindingOK;
 import ruiseki.okcore.client.key.KeyConflictContext;
-import ruiseki.okcore.client.key.KeyModifier;
 
 public class KeyBindings {
 
@@ -43,13 +42,11 @@ public class KeyBindings {
             toggleOverlay = new KeyBindingOK(
                 "key.jfmuy.toggleOverlay",
                 KeyConflictContext.GUI,
-                KeyModifier.CONTROL,
                 Keyboard.KEY_O,
                 categoryName),
             focusSearch = new KeyBindingOK(
                 "key.jfmuy.focusSearch",
                 KeyConflictContext.GUI,
-                KeyModifier.CONTROL,
                 Keyboard.KEY_F,
                 categoryName),
             toggleCheatMode = new KeyBindingOK(
@@ -67,7 +64,6 @@ public class KeyBindings {
             showRecipeTree = new KeyBindingOK(
                 "key.jfmuy.showRecipeTree",
                 KeyConflictContext.GUI,
-                KeyModifier.SHIFT,
                 Keyboard.KEY_T,
                 categoryName),
             recipeBack = new KeyBindingOK(
@@ -88,44 +84,30 @@ public class KeyBindings {
             previousCategory = new KeyBindingOK(
                 "key.jfmuy.previousCategory",
                 KeyConflictContext.GUI,
-                KeyModifier.SHIFT,
                 Keyboard.KEY_PRIOR,
                 categoryName),
             nextCategory = new KeyBindingOK(
                 "key.jfmuy.nextCategory",
                 KeyConflictContext.GUI,
-                KeyModifier.SHIFT,
                 Keyboard.KEY_NEXT,
                 categoryName),
-            bookmark = new KeyBindingOK(
-                "key.jfmuy.bookmark",
-                KeyConflictContext.GUI,
-                KeyModifier.NONE,
-                Keyboard.KEY_A,
-                categoryName),
+            bookmark = new KeyBindingOK("key.jfmuy.bookmark", KeyConflictContext.GUI, Keyboard.KEY_A, categoryName),
             bookmarkToTop = new KeyBindingOK(
                 "key.jfmuy.bookmarkToTop",
                 KeyConflictContext.GUI,
-                KeyModifier.SHIFT,
-                Keyboard.KEY_A,
+                Keyboard.KEY_NONE,
                 categoryName),
             recipeBookmark = new KeyBindingOK(
                 "key.jfmuy.recipeBookmark",
                 KeyConflictContext.GUI,
-                KeyModifier.CONTROL,
-                Keyboard.KEY_A,
+                Keyboard.KEY_NONE,
                 categoryName),
             toggleBookmarkOverlay = new KeyBindingOK(
                 "key.jfmuy.toggleBookmarkOverlay",
                 KeyConflictContext.GUI,
                 Keyboard.KEY_NONE,
                 categoryName),
-            crafting = new KeyBindingOK(
-                "key.jfmuy.crafting",
-                KeyConflictContext.GUI,
-                KeyModifier.SHIFT,
-                Keyboard.KEY_C,
-                categoryName));
+            crafting = new KeyBindingOK("key.jfmuy.crafting", KeyConflictContext.GUI, Keyboard.KEY_C, categoryName));
     }
 
     public static void init() {

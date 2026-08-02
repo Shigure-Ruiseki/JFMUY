@@ -54,7 +54,8 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
         this.guiScreenHelper = guiScreenHelper;
         this.pageDelegate = new BookmarkGridPaged();
         this.navigation = new BookmarkPageNavigation(this.pageDelegate, false);
-        ((BookmarkListBatchRenderer) this.bookmarkGrid.getGuiIngredientSlots()).addBookmarkCollapseListener(() -> this.updateLayout(false));
+        ((BookmarkListBatchRenderer) this.bookmarkGrid.getGuiIngredientSlots())
+            .addBookmarkCollapseListener(() -> this.updateLayout(false));
     }
 
     public void updateLayoutForBookmarkListChange() {
@@ -62,8 +63,8 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
         int previousPageCount = pageBoundaries == null ? 0 : pageBoundaries.size();
         updateLayout(false);
         int lastPageIndex = pageBoundaries.size() - 1;
-        if (lastPageIndex >= 0 && (bookmarkCount > previousBookmarkCount || pageBoundaries.size() != previousPageCount) &&
-            firstItemIndex != pageBoundaries.getInt(lastPageIndex)) {
+        if (lastPageIndex >= 0 && (bookmarkCount > previousBookmarkCount || pageBoundaries.size() != previousPageCount)
+            && firstItemIndex != pageBoundaries.getInt(lastPageIndex)) {
             firstItemIndex = pageBoundaries.getInt(lastPageIndex);
             updateLayout(false);
         }

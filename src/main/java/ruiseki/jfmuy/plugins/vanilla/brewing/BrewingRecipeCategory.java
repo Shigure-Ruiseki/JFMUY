@@ -24,7 +24,7 @@ public class BrewingRecipeCategory implements IRecipeCategory<BrewingRecipeWrapp
     private static final int brewPotionSlot2 = 1;
     private static final int brewPotionSlot3 = 2;
     private static final int brewIngredientSlot = 3;
-    private static final int outputSlot = 4; // for display only
+    private static final int outputSlot = 4;
 
     private final IDrawable background;
     private final IDrawable icon;
@@ -98,7 +98,11 @@ public class BrewingRecipeCategory implements IRecipeCategory<BrewingRecipeWrapp
 
         itemStacks.setBackground(outputSlot, slotDrawable);
 
-        itemStacks.set(ingredients);
+        itemStacks.set(brewPotionSlot1, recipeWrapper.getPotionInput());
+        itemStacks.set(brewPotionSlot2, recipeWrapper.getPotionInput());
+        itemStacks.set(brewPotionSlot3, recipeWrapper.getPotionInput());
+        itemStacks.set(brewIngredientSlot, recipeWrapper.getIngredientsList());
+        itemStacks.set(outputSlot, recipeWrapper.getPotionOutput());
     }
 
     private static class BrewingBubblesTickTimer implements ITickTimer {

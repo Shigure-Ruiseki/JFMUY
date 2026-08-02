@@ -41,7 +41,7 @@ public class VanillaRecipeFactory implements IVanillaRecipeFactory {
     }
 
     @Override
-    public IRecipeWrapper createSmeltingRecipe(List<ItemStack> inputs, ItemStack output) {
+    public IRecipeWrapper createSmeltingRecipe(ItemStack inputs, ItemStack output) {
         ErrorUtil.checkNotEmpty(inputs, "inputs");
         ErrorUtil.checkNotEmpty(output, "output");
 

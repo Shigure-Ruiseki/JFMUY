@@ -3,14 +3,15 @@ package ruiseki.jfmuy.autocrafting;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -24,57 +25,54 @@ import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
 import ruiseki.jfmuy.autocrafting.favorites.FavoriteRecipes;
 import ruiseki.jfmuy.bookmarks.BookmarkGroup;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
-import ruiseki.jfmuy.bookmarks.DummyBookmarkItem;
 import ruiseki.jfmuy.gui.recipes.RecipeLayout;
+import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.ingredients.Ingredients;
 import ruiseki.jfmuy.plugins.vanilla.crafting.ShapelessRecipesWrapper;
 
+/**
+ * One step of a crafting chain: an ingredient, and the recipe that makes it once one is known.
+ * <p>
+ * A node carries no running total of its own. What the chain needs of it is worked out by
+ * {@link ChainSolution} and read back through {@link #getDisplayAmount()}, so that what the overlay
+ * draws is always the figure the chain planned around rather than whatever a traversal last left behind.
+ */
 public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
 
-    // How much of this item is produced by its recipe.
     public long outputAmount = 0L;
-    // How much of this item the player requested apart from the recipe chain.
     public long selfOutputAmount = 0L;
     public IRecipeWrapper recipe;
     public IRecipeCategory<?> category;
     public List<RecipeBookmarkItem<?>> inputs;
     public BookmarkItem<?> secondaryTo;
-    // These are possible ingredients, which are helpful for OreDictionary.
     public List<I> aliases;
     public boolean foundAliases = false;
     public boolean reusableInCrafting = false;
-    private List<DummyBookmarkItem<?>> inputDummyItems; // Cached for performance
 
     public RecipeBookmarkItem(I ingredient) {
         super(ingredient);
         this.aliases = new ObjectArrayList<>();
-        this.aliases.add(this.ingredient);
+        this.aliases.add(getIngredient());
     }
 
     public RecipeBookmarkItem(List<I> aliases) {
-        super(aliases.get(0));
-        this.aliases = aliases;
-        this.aliases.set(0, this.ingredient); // In case it needed to be normalized.
+        this(aliases, 0L, false);
     }
 
-    public RecipeBookmarkItem(List<I> aliases, int amount) {
-        this(aliases, amount, false);
-    }
-
-    public RecipeBookmarkItem(List<I> aliases, int amount, boolean reusableInCrafting) {
+    public RecipeBookmarkItem(List<I> aliases, long amount, boolean reusableInCrafting) {
         super(aliases.get(0));
-        this.aliases = aliases;
-        this.aliases.set(0, this.ingredient); // In case it needed to be normalized.
-        this.amount = amount;
+        this.aliases = new ObjectArrayList<>(aliases);
+        this.aliases.set(0, getIngredient()); // In case it needed to be normalized
+        setAmount(amount);
         this.reusableInCrafting = reusableInCrafting;
     }
 
     public RecipeBookmarkItem(RecipeBookmarkItem<I> other) {
-        super(other.ingredient);
-        this.aliases = other.aliases;
+        super(other.getIngredient());
+        this.aliases = new ObjectArrayList<>(other.aliases);
         this.foundAliases = other.foundAliases;
         this.reusableInCrafting = other.reusableInCrafting;
-        this.amount = other.amount;
+        setAmount(other.getAmount());
         this.outputAmount = other.outputAmount;
         this.selfOutputAmount = other.selfOutputAmount;
         this.recipe = other.recipe;
@@ -97,10 +95,11 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
                     .stream()
                     .map(BookmarkGroup::getItemsInternal)
                     .flatMap(Collection::stream)
-                    .filter(
-                        item -> item instanceof RecipeBookmarkItem && item != this
-                            && ((RecipeBookmarkItem<?>) item).recipe != null
-                            && IngredientUtil.aliasesContains(((RecipeBookmarkItem<?>) item).aliases, alias))
+                    .filter(item -> item != this)
+                    .filter(RecipeBookmarkItem.class::isInstance)
+                    .map(RecipeBookmarkItem.class::cast)
+                    .filter(item -> item.recipe != null)
+                    .filter(item -> IngredientUtil.aliasesContains(item.aliases, alias))
                     .findFirst()
                     .orElse(null);
                 if (found != null) {
@@ -111,7 +110,7 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
                 favoriteCategory = FavoriteRecipes.getFavoriteCategory(alias);
             }
             if (favorite != null) {
-                this.ingredient = alias;
+                setIngredientUnchecked(alias);
                 populateWith(favorite, favoriteCategory);
                 return;
             }
@@ -120,14 +119,14 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
 
     public void populateWith(IRecipeWrapper recipe, IRecipeCategory<?> category) {
         if (!Internal.getIngredientRegistry()
-            .isIngredientCraftable(this.ingredient)) {
+            .isIngredientCraftable(getIngredient())) {
             return;
         }
         this.recipe = recipe;
         this.category = category;
         Ingredients ingredients = new Ingredients();
         this.recipe.getIngredients(ingredients);
-        inputs = new ObjectArrayList<>();
+        this.inputs = new ObjectArrayList<>();
         for (IIngredientType<?> type : ingredients.getInputIngredients()
             .keySet()) {
             List<List> typeInputs = (List) ingredients.getInputs(type);
@@ -135,6 +134,7 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
             populateInputType(typeInputs, reusableInputs);
         }
         this.outputAmount = 0L;
+        I ingredient = getIngredient();
         for (Object other : ingredients.getOutputIngredients()
             .get(
                 Internal.getIngredientRegistry()
@@ -143,27 +143,27 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
                 this.outputAmount += IngredientUtil.getCount(other);
             }
         }
-
-        inputDummyItems = inputs.stream()
-            .map((input) -> {
-                final long initialSize = input.amount;
-                return new DummyBookmarkItem<>(input.aliases.get(0), getGroup(), () -> {
-                    long amount = initialSize * getMultiplier();
-                    if (input.reusableInCrafting && amount > 1) {
-                        return 1L;
-                    }
-                    return amount;
-                });
-            })
-            .collect(Collectors.toList());
     }
 
-    public void populateSelf(RecipeChain chain) {
-        populateWith(recipe, category);
-        RecipeBookmarkItem<?> possibleSecondary = chain.findOutputWithSameRecipe(this);
-        if (possibleSecondary != null) {
-            secondaryTo = possibleSecondary;
+    /**
+     * How much of {@code input} this recipe consumes in total, given how many times it has to run.
+     * <p>
+     * A reusable ingredient such as a bucket or a crafting tool is handed back after each craft, so one
+     * set covers every run. This matches how {@link ChainSolution} weighs a reusable edge, so the number
+     * shown on an ingredient slot is the same one the chain planned around.
+     */
+    static long totalConsumed(RecipeBookmarkItem<?> input, long crafts) {
+        if (input.reusableInCrafting) {
+            return input.inputAmount();
         }
+        return input.inputAmount() * crafts;
+    }
+
+    /**
+     * Reads this node's inputs back off its recipe after a load.
+     */
+    public void populateSelf() {
+        populateWith(recipe, category);
     }
 
     private void populateInputType(List<List> typeInputs, List<Boolean> reusableInputs) {
@@ -174,14 +174,14 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
                 continue;
             }
             List inputAliases = removeNulls(typeInputs.get(i));
-            if (inputAliases.isEmpty()) {
+            if (inputAliases.isEmpty()) { // Yet another edge case! A recipe input is completely null.
                 continue;
             }
-            boolean reusable = checkReusableInputStatus(reusableInputs, i);
+            boolean reusable = isReusableInput(reusableInputs, i);
             int count = IngredientUtil.getCount(inputAliases.get(0));
             for (int j = i + 1; j < typeSize; j++) {
                 List other = typeInputs.get(j);
-                if (reusable == checkReusableInputStatus(reusableInputs, j)
+                if (reusable == isReusableInput(reusableInputs, j)
                     && IngredientUtil.aliasesEquals(inputAliases, other)) {
                     count += IngredientUtil.getCount(other.get(0));
                     seen[j] = true;
@@ -192,38 +192,33 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
         inputs.forEach(input -> input.foundAliases = true);
     }
 
-    private boolean checkReusableInputStatus(List<Boolean> reusableInputs, int index) {
+    private boolean isReusableInput(List<Boolean> reusableInputs, int index) {
         return reusableInputs != null && index < reusableInputs.size() && reusableInputs.get(index);
     }
 
     private List<Boolean> getReusableInputs(List<List<ItemStack>> typeInputs) {
-        List<Boolean> reusableInputs = new java.util.ArrayList<>(typeInputs.size());
+        List<Boolean> reusableInputs = new ObjectArrayList<>(typeInputs.size());
         for (int i = 0; i < typeInputs.size(); i++) {
             reusableInputs.add(false);
         }
-
         if (!(recipe instanceof ShapelessRecipesWrapper<?>)) {
             return reusableInputs;
         }
-
+        IRecipe rawRecipe = ((ShapelessRecipesWrapper<?>) recipe).getRawRecipe();
         for (int i = 0; i < typeInputs.size(); i++) {
-            if (isReusableInput(typeInputs, i)) {
+            if (isReusableInput(typeInputs, i, rawRecipe)) {
                 reusableInputs.set(i, true);
             }
         }
         return reusableInputs;
     }
 
-    private boolean isReusableInput(List<List<ItemStack>> typeInputs, int inputIndex) {
+    private boolean isReusableInput(List<List<ItemStack>> typeInputs, int inputIndex, IRecipe rawRecipe) {
         List<ItemStack> aliases = removeNulls(typeInputs.get(inputIndex));
         if (aliases.isEmpty()) {
             return false;
         }
-
         for (ItemStack alias : aliases) {
-            if (alias == null || alias.getItem() == null) {
-                continue;
-            }
             try {
                 if (alias.getItem()
                     .hasContainerItem(alias)) {
@@ -241,6 +236,23 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
             }
         }
         return true;
+    }
+
+    private InventoryCrafting createCraftingInventory(List<List<ItemStack>> typeInputs, int selectedInputIndex,
+        ItemStack selectedStack) {
+        InventoryCrafting crafting = this.getInventory();
+        int size = Math.min(typeInputs.size(), crafting.getSizeInventory());
+        for (int i = 0; i < size; i++) {
+            List<ItemStack> aliases = removeNulls(typeInputs.get(i));
+            if (!aliases.isEmpty()) {
+                ItemStack stack = i == selectedInputIndex ? selectedStack.copy()
+                    : aliases.get(0)
+                        .copy();
+                stack.stackSize = 1;
+                crafting.setInventorySlotContents(i, stack);
+            }
+        }
+        return crafting;
     }
 
     @Nonnull
@@ -284,47 +296,113 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
         return list;
     }
 
+    /** The ingredients that can satisfy this node, never null. */
+    public List<I> aliases() {
+        return aliases;
+    }
+
+    /** The ingredients this node's recipe consumes. Empty until the node knows its recipe. */
+    public List<RecipeBookmarkItem<?>> inputs() {
+        return inputs == null ? Collections.emptyList() : inputs;
+    }
+
+    /**
+     * How much of this ingredient one application of the consuming recipe takes.
+     * <p>
+     * Only meaningful on the input templates hanging off {@link #inputs()}; a node in the graph carries no
+     * amount of its own, since what the chain needs of it is worked out by {@link ChainSolution}.
+     */
+    public long inputAmount() {
+        return getAmount();
+    }
+
+    /**
+     * Builds a graph node standing for this input.
+     * <p>
+     * The node takes a copy of the alias list rather than sharing this template's: a node's aliases get
+     * narrowed as the chain works out what every recipe involved will accept, and that must not reach back
+     * into the recipe this input was read from.
+     */
+    RecipeBookmarkItem<I> asChainNode() {
+        return new RecipeBookmarkItem<>(new ObjectArrayList<>(this.aliases), 0, this.reusableInCrafting);
+    }
+
+    /**
+     * Adopts another node's aliases and ingredient, used when this node turns out to stand for the same
+     * ingredient as one reached from a different recipe.
+     */
+    @SuppressWarnings("unchecked")
+    void adoptAliasesOf(RecipeBookmarkItem<?> other) {
+        this.aliases = new ObjectArrayList<>((List<I>) other.aliases);
+        setIngredient(other.getIngredient());
+    }
+
+    /**
+     * Narrows this node's aliases to those in {@code keptUniqueIds}.
+     * <p>
+     * A node fed by several recipes can only be satisfied by ingredients every one of them accepts, so
+     * each time it is matched its aliases are cut down to the intersection. The last alias is never
+     * dropped, so a node always has something to stand for.
+     */
+    void retainAliases(Collection<String> keptUniqueIds) {
+        IngredientRegistry ingredientRegistry = Internal.getIngredientRegistry();
+        List<I> kept = new ObjectArrayList<>(this.aliases.size());
+        for (I alias : this.aliases) {
+            if (keptUniqueIds.contains(ingredientRegistry.getUniqueId(alias))) {
+                kept.add(alias);
+            }
+        }
+        if (!kept.isEmpty()) {
+            this.aliases = kept;
+        }
+    }
+
     public boolean isPopulated() {
-        return recipe != null;
+        return recipe != null && category != null;
+    }
+
+    public boolean isExplicitlyRequested() {
+        return selfOutputAmount > 0L;
     }
 
     @Override
     public boolean startsNewRow() {
-        return secondaryTo == null && this.inputs != null;
-    }
-
-    public List<DummyBookmarkItem<?>> getInputs() {
-        return inputDummyItems;
-    }
-
-    public long getMultiplier() {
-        if (outputAmount == 0) {
-            return 0;
-        }
-        return (amount + outputAmount - 1) / outputAmount;
+        return secondaryTo == null && !inputs().isEmpty();
     }
 
     @Override
     public void changeAmount(long delta) {
-        this.selfOutputAmount = Math.round(this.selfOutputAmount / delta) * delta;
-        this.selfOutputAmount += delta;
-        this.selfOutputAmount = Math.max(0, this.selfOutputAmount);
+        if (delta == 0L) {
+            return;
+        }
+        BookmarkGroup owner = getGroup();
+        // A step something else in the chain needs may be taken down to zero — that just means no extra
+        // beyond what the chain works out. A step nothing needs may not: it is a row the player put there,
+        // and zero of it is not an amount, it is a removal.
+        long floor = owner instanceof RecipeBookmarkGroup && ((RecipeBookmarkGroup) owner).isChainRoot(this) ? 1L : 0L;
+        // Snap to a multiple of the step first, so repeated scrolling lands on round numbers.
+        long snapped = (this.selfOutputAmount / delta) * delta;
+        this.selfOutputAmount = Math.max(floor, snapped + delta);
 
-        if (this.getGroup() instanceof RecipeBookmarkGroup) {
-            ((RecipeBookmarkGroup) this.getGroup()).update();
+        if (owner instanceof RecipeBookmarkGroup) {
+            ((RecipeBookmarkGroup) owner).onRequestedAmountChanged();
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public IRecipeLayout createLayout() {
         return RecipeLayout.create(-1, (IRecipeCategory) category, recipe, null, 0, 0);
     }
 
     @Override
     public long getDisplayAmount() {
-        if (outputAmount == 0) {
-            return amount;
+        // The chain-wide total, so a step needed only by a later recipe still shows how many will be made.
+        BookmarkGroup owner = getGroup();
+        if (owner instanceof RecipeBookmarkGroup) {
+            return ((RecipeBookmarkGroup) owner).solution()
+                .producedOf(this);
         }
-        return outputAmount * getMultiplier();
+        return getAmount();
     }
 
     @Override
@@ -340,9 +418,19 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
         return category != null && recipe != null;
     }
 
+    @Override
+    @Nullable
     public String serialize() {
+        // Nodes the chain created for itself carry no recipe and are rebuilt on load, so they are not saved.
+        if (!isPopulated()) {
+            return null;
+        }
+        I ingredient = getIngredient();
         NBTTagCompound tag = getNBTOfIngredient(ingredient);
-        tag.setLong("amount", amount);
+        if (tag == null) {
+            return null;
+        }
+        tag.setLong("amount", getAmount());
         tag.setLong("selfOutputAmount", selfOutputAmount);
         tag.setString("category", category.getUid());
         tag.setLong(
@@ -355,14 +443,6 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
             return MARKER_RECIPE + MARKER_STACK + tag;
         } else {
             return MARKER_RECIPE + MARKER_OTHER + tag;
-        }
-    }
-
-    @Override
-    public void setGroup(BookmarkGroup group) {
-        super.setGroup(group);
-        if (this.inputDummyItems != null) {
-            this.inputDummyItems.forEach(item -> item.setGroup(group));
         }
     }
 

@@ -2,10 +2,6 @@ package ruiseki.jfmuy.plugins.vanilla.furnace;
 
 import java.awt.Color;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
@@ -22,15 +18,16 @@ import ruiseki.jfmuy.util.Translator;
 
 public class FuelRecipe implements IRecipeWrapper {
 
-    private final List<List<ItemStack>> inputs;
+    private final ItemStack input;
+    private final int burnTime;
     private final String burnTimeString;
     private final String smeltCountString;
     private final IDrawableAnimated flame;
 
-    public FuelRecipe(IGuiHelper guiHelper, Collection<ItemStack> input, int burnTime) {
+    public FuelRecipe(IGuiHelper guiHelper, ItemStack input, int burnTime) {
         Preconditions.checkArgument(burnTime > 0, "burn time must be greater than 0");
-        List<ItemStack> inputList = new ArrayList<>(input);
-        this.inputs = Collections.singletonList(inputList);
+        this.input = input;
+        this.burnTime = burnTime;
         this.burnTimeString = Translator.translateToLocalFormatted("jfmuy.generic.ticks", burnTime);
         if (burnTime == 200) {
             this.smeltCountString = Translator.translateToLocal("gui.jfmuy.category.fuel.smeltCount.single");
@@ -46,9 +43,13 @@ public class FuelRecipe implements IRecipeWrapper {
             .buildAnimated(burnTime, IDrawableAnimated.StartDirection.TOP, true);
     }
 
+    public int getBurnTime() {
+        return this.burnTime;
+    }
+
     @Override
     public void getIngredients(IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, inputs);
+        ingredients.setInput(VanillaTypes.ITEM, this.input);
     }
 
     @Override

@@ -133,6 +133,10 @@ public class LeftAreaDispatcher implements IShowsRecipeFocuses, IGhostIngredient
         return false;
     }
 
+    public boolean isMouseOver(int mouseX, int mouseY) {
+        return canShow && hasContent() && !guiScreenHelper.isInGuiExclusionArea(mouseX, mouseY);
+    }
+
     public boolean handleMouseScrolled(int mouseX, int mouseY, int dWheel) {
         if (isMouseOver(mouseX, mouseY)) {
             if (displayArea.contains(mouseX, mouseY)) {
@@ -224,9 +228,5 @@ public class LeftAreaDispatcher implements IShowsRecipeFocuses, IGhostIngredient
     public boolean onKeyPressed(char typedChar, int eventKey) {
         return contents.get(current)
             .onKeyPressed(typedChar, eventKey);
-    }
-
-    public boolean isMouseOver(int mouseX, int mouseY) {
-        return canShow && hasContent() && !guiScreenHelper.isInGuiExclusionArea(mouseX, mouseY);
     }
 }

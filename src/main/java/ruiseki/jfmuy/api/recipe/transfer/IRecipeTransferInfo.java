@@ -34,12 +34,8 @@ public interface IRecipeTransferInfo<C extends Container> {
     /**
      * Return the output/crafting slot index. Return -1 if there is no output slot or if this is unsupported.
      */
-    default int getOutputSlot() {
-        return -1;
-    }
-
     default int getOutputSlot(C container) {
-        return getOutputSlot();
+        return -1;
     }
 
     /**

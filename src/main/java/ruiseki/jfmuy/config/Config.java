@@ -481,7 +481,7 @@ public final class Config {
             }
         }
 
-        favoriteFile = new File("./", "hei_favorites.ini");
+        favoriteFile = new File("./", "jfmuy_favorites.ini");
         final File configFile = new File(jfmuyConfigurationDir, "jfmuy.cfg");
         final File itemBlacklistConfigFile = new File(jfmuyConfigurationDir, "itemBlacklist.cfg");
         final File searchColorsConfigFile = new File(jfmuyConfigurationDir, "searchColors.cfg");

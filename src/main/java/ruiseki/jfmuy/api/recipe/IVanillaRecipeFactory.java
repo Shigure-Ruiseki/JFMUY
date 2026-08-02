@@ -46,7 +46,7 @@ public interface IVanillaRecipeFactory {
      * @param output the output
      * @return the {@link IRecipeWrapper} for this recipe.
      */
-    IRecipeWrapper createSmeltingRecipe(List<ItemStack> inputs, ItemStack output);
+    IRecipeWrapper createSmeltingRecipe(ItemStack inputs, ItemStack output);
 
     /**
      * Create a new brewing recipe.

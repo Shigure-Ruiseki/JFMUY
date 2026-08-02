@@ -3,6 +3,7 @@ package ruiseki.jfmuy.startup;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,6 +31,7 @@ import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
 import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
 import ruiseki.jfmuy.api.gui.IGlobalGuiHandler;
 import ruiseki.jfmuy.api.gui.IGuiScreenHandler;
+import ruiseki.jfmuy.api.gui.ISlotIngredientProvider;
 import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
@@ -65,12 +67,13 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
     private final List<IGlobalGuiHandler> globalGuiHandlers = new ArrayList<>();
     private final Map<Class, IGuiScreenHandler> guiScreenHandlers = new Reference2ObjectOpenHashMap<>();
     private final Map<Class, IGhostIngredientHandler> ghostIngredientHandlers = new Reference2ObjectOpenHashMap<>();
+    private final Map<Class, ISlotIngredientProvider> slotIngredientProviders = new Reference2ObjectOpenHashMap<>();
     private final ListMultiMap<String, Object> recipes = new ListMultiMap<>();
     private final RecipeTransferRegistry recipeTransferRegistry;
     private final ListMultiMap<Class<? extends GuiContainer>, RecipeClickableArea> recipeClickableAreas = new ListMultiMap<>();
-    private final ListMultiMap<String, Object> recipeCatalysts = new ListMultiMap<>(
+    private final SetMultiMap<String, Object> recipeCatalysts = new SetMultiMap<>(
         new Object2ObjectLinkedOpenHashMap<>(),
-        ArrayList::new);
+        HashSet::new);
     private final List<IRecipeRegistryPlugin> recipeRegistryPlugins = new ArrayList<>();
     private final List<Pair<String, String>> pendingCopies = new ArrayList<>();
 
@@ -242,6 +245,16 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
     }
 
     @Override
+    public <T extends GuiContainer> void addSlotIngredientProvider(Class<T> guiClass,
+        ISlotIngredientProvider<T> provider) {
+        ErrorUtil.checkNotNull(guiClass, "guiClass");
+        Preconditions
+            .checkArgument(GuiContainer.class.isAssignableFrom(guiClass), "guiClass must inherit from GuiContainer");
+        ErrorUtil.checkNotNull(provider, "provider");
+        this.slotIngredientProviders.put(guiClass, provider);
+    }
+
+    @Override
     public <T> void addIngredientInfo(T ingredient, IIngredientType<T> ingredientType, String... descriptionKeys) {
         ErrorUtil.checkIsValidIngredient(ingredient, "ingredient");
         ErrorUtil.checkNotNull(ingredientType, "ingredientType");
@@ -295,12 +308,16 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
         return ghostIngredientHandlers;
     }
 
+    public Map<Class, ISlotIngredientProvider> getSlotIngredientProviders() {
+        return slotIngredientProviders;
+    }
+
     public RecipeRegistry createRecipeRegistry(IngredientRegistry ingredientRegistry) {
         for (Pair<String, String> copyPair : pendingCopies) {
             String fromUid = copyPair.getLeft();
             String toUid = copyPair.getRight();
 
-            List<Object> sourceCatalysts = recipeCatalysts.get(fromUid);
+            Set<Object> sourceCatalysts = recipeCatalysts.get(fromUid);
             if (sourceCatalysts != null && !sourceCatalysts.isEmpty()) {
                 for (Object catalyst : sourceCatalysts) {
                     this.recipeCatalysts.put(toUid, catalyst);
@@ -312,9 +329,9 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
         if (!Config.categoryUidOrder()
             .isEmpty()) {
             List<IRecipeCategory> orderedCategories = new ArrayList<>();
-            ListMultiMap<String, Object> orderedRecipeCatalysts = new ListMultiMap<>(
+            SetMultiMap<String, Object> orderedRecipeCatalysts = new SetMultiMap<>(
                 new Object2ObjectLinkedOpenHashMap<>(),
-                ArrayList::new);
+                HashSet::new);
 
             for (String uid : Config.categoryUidOrder()) {
                 Stream<IRecipeCategory> stream = recipeCategories.stream()
@@ -326,7 +343,7 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
                     IRecipeCategory category = first.get();
                     orderedCategories.add(category);
                     recipeCategories.remove(category);
-                    List<Object> catalysts = recipeCatalysts.get(uid);
+                    Set<Object> catalysts = recipeCatalysts.get(uid);
                     orderedRecipeCatalysts.put(uid, catalysts);
                     recipeCatalysts.remove(uid);
                 }

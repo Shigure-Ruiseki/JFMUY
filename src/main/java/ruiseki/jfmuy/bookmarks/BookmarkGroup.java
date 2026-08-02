@@ -49,7 +49,7 @@ public class BookmarkGroup {
         IIngredientListElement<?> element = getIngredientListElement(item);
         if (element == null) {
             Log.get()
-                .error("Failed to create ingredient list element for bookmark item: {}", item.ingredient);
+                .error("Failed to create ingredient list element for bookmark item: {}", item.getIngredient());
             return;
         }
         items.add(item);
@@ -62,6 +62,15 @@ public class BookmarkGroup {
     }
 
     public void removeItem(BookmarkItem<?> item) {
+        removeItemInternal(item);
+    }
+
+    /**
+     * Drops an item from the group's own lists without any of the bookkeeping a subclass attaches to
+     * {@link #removeItem}. Counterpart to {@link #addItemInternal}, for callers already partway through
+     * that bookkeeping themselves.
+     */
+    public void removeItemInternal(BookmarkItem<?> item) {
         int index = items.indexOf(item);
         if (index != -1) {
             items.remove(index);

@@ -1,8 +1,6 @@
 package ruiseki.jfmuy.plugins.vanilla.furnace;
 
 import java.awt.Color;
-import java.util.Collections;
-import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -16,19 +14,19 @@ import ruiseki.jfmuy.util.Translator;
 
 public class SmeltingRecipe implements IRecipeWrapper {
 
-    private final List<ItemStack> input;
+    private final ItemStack input;
     private final ItemStack output;
     private float experience = -1;
 
-    public SmeltingRecipe(List<ItemStack> input, ItemStack output) {
+    public SmeltingRecipe(ItemStack input, ItemStack output) {
         this.input = input;
         this.output = output;
     }
 
     @Override
     public void getIngredients(IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Collections.singletonList(this.input));
-        ingredients.setOutput(VanillaTypes.ITEM, output);
+        ingredients.setInput(VanillaTypes.ITEM, this.input);
+        ingredients.setOutput(VanillaTypes.ITEM, this.output);
     }
 
     @Override

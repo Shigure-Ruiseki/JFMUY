@@ -1,5 +1,6 @@
 package ruiseki.jfmuy.api.ingredients;
 
+import java.awt.Rectangle;
 import java.util.Collection;
 import java.util.List;
 
@@ -73,24 +74,10 @@ public interface IIngredientRenderer<T> {
      *                       parent GUI's cycle timer animation state.
      * @param isDrawingPass  {@code true} if this call is the actual Render-pass (drawing graphical elements),
      *                       {@code false} if it is the Pre-pass (measuring required bounds).
-     * @return An {@link ExtraSize} object specifying the maximum width and height bounds occupied by this component.
-     *         Return {@link ExtraSize#EMPTY} or {@code null} if no extra graphics are rendered.
+     * @return An {@link Rectangle} object specifying the maximum width and height bounds occupied by this component.
      */
-    default ExtraSize renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, List<T> allIngredients,
+    default Rectangle renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, List<T> allIngredients,
         int activeIndex, boolean isDrawingPass) {
         return null;
-    }
-
-    class ExtraSize {
-
-        public final int width;
-        public final int height;
-
-        public static final ExtraSize EMPTY = new ExtraSize(0, 0);
-
-        public ExtraSize(int width, int height) {
-            this.width = width;
-            this.height = height;
-        }
     }
 }

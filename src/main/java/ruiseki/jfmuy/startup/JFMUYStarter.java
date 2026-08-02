@@ -13,6 +13,7 @@ import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
 import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
 import ruiseki.jfmuy.api.gui.IGlobalGuiHandler;
 import ruiseki.jfmuy.api.gui.IGuiScreenHandler;
+import ruiseki.jfmuy.api.gui.ISlotIngredientProvider;
 import ruiseki.jfmuy.autocrafting.favorites.FavoriteRecipes;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
@@ -113,11 +114,13 @@ public class JFMUYStarter {
         List<IGlobalGuiHandler> globalGuiHandlers = modRegistry.getGlobalGuiHandlers();
         Map<Class, IGuiScreenHandler> guiScreenHandlers = modRegistry.getGuiScreenHandlers();
         Map<Class, IGhostIngredientHandler> ghostIngredientHandlers = modRegistry.getGhostIngredientHandlers();
+        Map<Class, ISlotIngredientProvider> slotIngredientProviders = modRegistry.getSlotIngredientProviders();
         GuiScreenHelper guiScreenHelper = new GuiScreenHelper(
             ingredientRegistry,
             globalGuiHandlers,
             advancedGuiHandlers,
             ghostIngredientHandlers,
+            slotIngredientProviders,
             guiScreenHandlers);
         GhostIngredientDragManager ghostIngredientDragManager = new GhostIngredientDragManager(
             guiScreenHelper,

@@ -137,8 +137,9 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
 
                     Object ingredient = element.getIngredient();
                     if (ingredient instanceof BookmarkItem
-                        && ((BookmarkItem<?>) ingredient).ingredient instanceof CollapsedGroupIngredient) {
-                        CollapsedGroupIngredient collapsed = (CollapsedGroupIngredient) ((BookmarkItem<?>) ingredient).ingredient;
+                        && ((BookmarkItem<?>) ingredient).getIngredient() instanceof CollapsedGroupIngredient) {
+                        CollapsedGroupIngredient collapsed = (CollapsedGroupIngredient) ((BookmarkItem<?>) ingredient)
+                            .getIngredient();
                         CollapsedGroupRenderer renderer = new CollapsedGroupRenderer(collapsed);
                         renderer.setArea(ingredientListSlot.getArea());
                         renderer.setPadding(1);
@@ -198,9 +199,9 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
         for (IIngredientListElement element : collapsedList) {
             Object ingredient = element.getIngredient();
             if (ingredient instanceof BookmarkItem
-                && ((BookmarkItem<?>) ingredient).ingredient instanceof CollapsedGroupIngredient) {
+                && ((BookmarkItem<?>) ingredient).getIngredient() instanceof CollapsedGroupIngredient) {
                 BookmarkItem<?> bookmarkItem = (BookmarkItem<?>) ingredient;
-                CollapsedGroupIngredient collapsed = (CollapsedGroupIngredient) bookmarkItem.ingredient;
+                CollapsedGroupIngredient collapsed = (CollapsedGroupIngredient) bookmarkItem.getIngredient();
                 int groupIndex = element.getGroupIndex();
                 if (isBookmarkItemExpanded(bookmarkItem)) {
                     for (IIngredientListElement<?> subElement : collapsed.getIngredients()) {
@@ -270,9 +271,9 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
 
                 Object ingredient = displayItem.getIngredient();
                 if (ingredient instanceof BookmarkItem
-                    && ((BookmarkItem<?>) ingredient).ingredient instanceof CollapsedGroupIngredient) {
+                    && ((BookmarkItem<?>) ingredient).getIngredient() instanceof CollapsedGroupIngredient) {
                     BookmarkItem<?> bookmarkItem = (BookmarkItem<?>) ingredient;
-                    CollapsedGroupIngredient collapsed = (CollapsedGroupIngredient) bookmarkItem.ingredient;
+                    CollapsedGroupIngredient collapsed = (CollapsedGroupIngredient) bookmarkItem.getIngredient();
                     CollapsedGroupRenderer renderer = new CollapsedGroupRenderer(collapsed);
                     renderer.setArea(ingredientListSlot.getArea());
                     renderer.setPadding(1);

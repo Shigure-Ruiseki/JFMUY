@@ -1,5 +1,6 @@
 package ruiseki.jfmuy.plugins.vanilla.ingredients.item;
 
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +29,7 @@ import ruiseki.okcore.client.renderer.GlStateManager;
 
 public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
-    protected static final int SLOT_SIZE = 18;
+    protected static final int SLOT_SIZE = 20;
     protected static final int MAX_COLUMNS = 11;
     protected static final int MARGIN_TOP = 2;
 
@@ -115,7 +116,7 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
     }
 
     @Override
-    public ExtraSize renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, List<ItemStack> allIngredients,
+    public Rectangle renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, List<ItemStack> allIngredients,
         int activeIndex, boolean isDrawingPass) {
         if (allIngredients == null || allIngredients.isEmpty() || allIngredients.size() == 1) {
             return null;
@@ -143,10 +144,10 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
                 if (i == activeIndex) {
                     GL11.glDisable(GL11.GL_LIGHTING);
                     Gui.drawRect(
-                        currentX - 1,
-                        currentY - 1,
-                        currentX + SLOT_SIZE - 1,
-                        currentY + SLOT_SIZE - 1,
+                        currentX - 2,
+                        currentY - 2,
+                        currentX + SLOT_SIZE - 2,
+                        currentY + SLOT_SIZE - 2,
                         0x66555555);
                     GL11.glEnable(GL11.GL_LIGHTING);
                 }
@@ -172,7 +173,7 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
             GL11.glPopAttrib();
         }
 
-        return new ExtraSize(extraWidth, extraHeight);
+        return new Rectangle(extraWidth, extraHeight);
     }
 
     @Override

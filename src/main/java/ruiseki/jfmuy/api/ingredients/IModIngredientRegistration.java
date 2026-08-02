@@ -28,10 +28,11 @@ public interface IModIngredientRegistration {
 
     /**
      * Mark a type of ingredient as being craftable.
-     * This is accessed in {@link IIngredientRegistry#getCraftableIngredientTypes()} to determine which types of
-     * ingredients can be hashed, have favorite recipes, and be autocrafted.
+     * <p>
+     * Craftable types are reported by {@link IIngredientRegistry#getCraftableIngredientTypes()} and are the only
+     * types that can be hashed, have favourite recipes, and be autocrafted.
      *
      * @param ingredientType The type of the ingredient.
      */
-    <V> void markAsCraftable(IIngredientType<V> ingredientType);
+    default <V> void markAsCraftable(IIngredientType<V> ingredientType) {}
 }

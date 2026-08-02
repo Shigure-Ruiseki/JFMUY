@@ -16,7 +16,6 @@ import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.Nullable;
 
-import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.network.PacketCraftUpdate;
 import ruiseki.okcore.helper.ItemStackHelpers;
@@ -313,8 +312,8 @@ public final class BasicRecipeTransferHandlerServer {
             if (slotNumber >= 0 && slotNumber < container.inventorySlots.size()) {
                 Slot slot = container.getSlot(slotNumber);
                 ItemStack slotStack = slot.getStack();
-                if (slotStack != null && Internal.getStackHelper()
-                    .isEquivalent(itemStack, slotStack)) {
+                if (ItemStackHelpers.areStacksEqual(itemStack, slotStack)
+                    && ItemStack.areItemStackTagsEqual(itemStack, slotStack)) {
                     return slot;
                 }
             }

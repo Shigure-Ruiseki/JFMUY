@@ -1,19 +1,21 @@
 package ruiseki.jfmuy.autocrafting.favorites;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
+import javax.annotation.Nullable;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
@@ -22,239 +24,203 @@ import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
 import ruiseki.jfmuy.util.Log;
 
+/**
+ * The recipe a player has chosen as the default way to make a given ingredient.
+ * <p>
+ * Recipe chains consult this if they do not know how to craft ingredients inside a recipe bookmark.
+ * <p>
+ * Favourites are stored as a flat text file, grouped under a {@code #categoryUid} header so
+ * a recipe id only has to be resolved against the one category it belongs to:
+ * 
+ * <pre>
+ * #minecraft.crafting
+ * 1234%minecraft:chest
+ * </pre>
+ */
 public class FavoriteRecipes {
 
-    private static final Map<String, IRecipeWrapper> ingredients = new Object2ObjectOpenHashMap<>();
-    private static final Object2ObjectOpenHashMap<IRecipeWrapper, IRecipeCategory<?>> recipeCategories = new Object2ObjectOpenHashMap<>(
-        8192);
+    private static final char CATEGORY_MARKER = '#';
+    private static final String FIELD_SEPARATOR = "%";
+    private static final Map<String, IRecipeWrapper> recipesByIngredient = new Object2ObjectLinkedOpenHashMap<>();
+    private static final Map<IRecipeWrapper, IRecipeCategory<?>> recipeCategories = new Object2ObjectLinkedOpenHashMap<>();
+    private static final Object2IntOpenHashMap<IRecipeWrapper> favoriteCounts = new Object2IntOpenHashMap<>();
 
-    private static IngredientRegistry getIngredientRegistry() {
-        return Internal.getIngredientRegistry();
-    }
-
-    private static RecipeRegistry getRecipeRegistry() {
-        return Internal.getRuntime()
-            .getRecipeRegistry();
-    }
+    private FavoriteRecipes() {}
 
     public static void load() {
-        ingredients.clear();
-        recipeCategories.clear();
-
+        clear();
         File file = Config.getFavoriteFile();
         if (file == null || !file.exists()) {
             return;
         }
 
-        List<String> strings;
-        try (FileReader reader = new FileReader(file)) {
-            strings = IOUtils.readLines(reader);
+        List<String> lines;
+        try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
+            lines = new ArrayList<>();
+            for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                lines.add(line);
+            }
         } catch (IOException e) {
             Log.get()
-                .error("Failed to load favorite recipes from file {}", file, e);
+                .error("Failed to load favourite recipes from file {}", file, e);
             return;
         }
 
-        Long2ObjectMap<String> rawRecipes = new Long2ObjectOpenHashMap<>(8192);
+        RecipeRegistry recipeRegistry = Internal.getRuntime()
+            .getRecipeRegistry();
+        Long2ObjectMap<String> pendingRecipes = new Long2ObjectOpenHashMap<>();
         IRecipeCategory<?> currentCategory = null;
-        RecipeRegistry recipeRegistry = getRecipeRegistry();
 
-        for (String string : strings) {
-            if (string.isEmpty()) continue;
-            if (string.charAt(0) == '#') {
-                addRecipesForCategory(currentCategory, rawRecipes, recipeRegistry);
-                currentCategory = recipeRegistry.getRecipeCategory(string.substring(1));
+        for (String line : lines) {
+            if (line.isEmpty()) {
                 continue;
             }
-            String[] split = string.split("%");
-            if (split.length >= 2) {
-                try {
-                    long recipeIdString = Long.parseLong(split[0]);
-                    String ingredientString = split[1];
-                    rawRecipes.put(recipeIdString, ingredientString);
-                } catch (NumberFormatException ignored) {}
+            if (line.charAt(0) == CATEGORY_MARKER) {
+                resolveCategory(currentCategory, pendingRecipes, recipeRegistry);
+                currentCategory = recipeRegistry.getRecipeCategory(line.substring(1));
+                continue;
+            }
+            String[] split = line.split(FIELD_SEPARATOR, 2);
+            if (split.length != 2) {
+                Log.get()
+                    .warn("Skipping malformed favorite recipe entry: {}", line);
+                continue;
+            }
+            try {
+                pendingRecipes.put(Long.parseLong(split[0]), split[1]);
+            } catch (NumberFormatException e) {
+                Log.get()
+                    .warn("Skipping favorite recipe entry with an unreadable recipe id: {}", line);
             }
         }
-        addRecipesForCategory(currentCategory, rawRecipes, recipeRegistry);
+        resolveCategory(currentCategory, pendingRecipes, recipeRegistry);
     }
 
-    public static void addRecipesForCategory(IRecipeCategory<?> category, Long2ObjectMap<String> rawRecipes,
+    private static void resolveCategory(@Nullable IRecipeCategory<?> category, Long2ObjectMap<String> pendingRecipes,
         RecipeRegistry recipeRegistry) {
-        if (category != null && !rawRecipes.isEmpty()) {
-            for (Long2ObjectMap.Entry<String> entry : rawRecipes.long2ObjectEntrySet()) {
-                IRecipeWrapper recipe = recipeRegistry.getRecipeById(entry.getLongKey(), category);
-                if (recipe != null) {
-                    ingredients.put(entry.getValue(), recipe);
-                    recipeCategories.put(recipe, category);
-                } else {
-                    Log.get()
-                        .warn(
-                            "Could not find recipe with id {} in category {}!",
-                            entry.getLongKey(),
-                            category.getUid());
-                }
-            }
+        if (category == null || pendingRecipes.isEmpty()) {
+            pendingRecipes.clear();
+            return;
         }
-        rawRecipes.clear();
+        for (Long2ObjectMap.Entry<String> entry : pendingRecipes.long2ObjectEntrySet()) {
+            IRecipeWrapper recipe = recipeRegistry.getRecipeById(entry.getLongKey(), category);
+            if (recipe == null) {
+                Log.get()
+                    .warn("Could not find recipe with id {} in category {}!", entry.getLongKey(), category.getUid());
+                continue;
+            }
+            addFavorite(entry.getValue(), recipe, category);
+        }
+        pendingRecipes.clear();
     }
 
     public static void save() {
         File file = Config.getFavoriteFile();
-        if (file == null) return;
-
-        List<String> strings = new ArrayList<>();
-        RecipeRegistry recipeRegistry = getRecipeRegistry();
-
-        Map<IRecipeCategory<?>, Map<String, IRecipeWrapper>> categoryMap = ingredients.entrySet()
-            .stream()
-            .collect(Object2ObjectOpenHashMap::new, (map, entry) -> {
-                IRecipeCategory<?> category = recipeCategories.get(entry.getValue());
-                if (category != null) {
-                    map.computeIfAbsent(category, k -> new Object2ObjectOpenHashMap<>())
-                        .put(entry.getKey(), entry.getValue());
-                }
-            }, Object2ObjectOpenHashMap::putAll);
-
-        for (Map.Entry<IRecipeCategory<?>, Map<String, IRecipeWrapper>> categoryEntry : categoryMap.entrySet()) {
-            strings.add(
-                "#" + categoryEntry.getKey()
-                    .getUid());
-            for (Map.Entry<String, IRecipeWrapper> ingredientAndRecipe : categoryEntry.getValue()
-                .entrySet()) {
-                long recipeId = recipeRegistry.getRecipeId(ingredientAndRecipe.getValue());
-                if (recipeId != -1) {
-                    strings.add(recipeId + "%" + ingredientAndRecipe.getKey());
-                }
-            }
+        if (file == null) {
+            return;
         }
 
-        try (FileWriter writer = new FileWriter(file)) {
-            IOUtils.writeLines(strings, "\n", writer);
+        Map<IRecipeCategory<?>, Map<String, IRecipeWrapper>> byCategory = new Object2ObjectLinkedOpenHashMap<>();
+        for (Map.Entry<String, IRecipeWrapper> entry : recipesByIngredient.entrySet()) {
+            IRecipeCategory<?> category = recipeCategories.get(entry.getValue());
+            if (category == null) {
+                continue;
+            }
+            byCategory.computeIfAbsent(category, k -> new Object2ObjectLinkedOpenHashMap<>())
+                .put(entry.getKey(), entry.getValue());
+        }
+
+        RecipeRegistry recipeRegistry = Internal.getRuntime()
+            .getRecipeRegistry();
+        try (BufferedWriter writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8)) {
+            for (Map.Entry<IRecipeCategory<?>, Map<String, IRecipeWrapper>> categoryEntry : byCategory.entrySet()) {
+                writer.write(
+                    CATEGORY_MARKER + categoryEntry.getKey()
+                        .getUid());
+                writer.write('\n');
+                for (Map.Entry<String, IRecipeWrapper> favorite : categoryEntry.getValue()
+                    .entrySet()) {
+                    writer.write(recipeRegistry.getRecipeId(favorite.getValue()) + FIELD_SEPARATOR + favorite.getKey());
+                    writer.write('\n');
+                }
+            }
         } catch (IOException e) {
             Log.get()
-                .error("Failed to save favorite recipes to file {}", file, e);
+                .error("Failed to save favourite recipes to file {}", file, e);
         }
     }
 
     public static boolean isFavorite(IRecipeWrapper recipe) {
-        return ingredients.containsValue(recipe);
+        return favoriteCounts.getInt(recipe) > 0;
     }
 
     public static boolean isFavoriteFor(IRecipeWrapper recipe, Object ingredient) {
         return getFavorite(ingredient) == recipe;
     }
 
-    public static void toggleFavorite(Object ingredient, Object displayIngredient, IRecipeWrapper recipe,
-        IRecipeCategory<?> category) {
-        if (ingredient == null || recipe == null) return;
-
-        List<Object> allVariants = getAllIngredientVariants(ingredient, displayIngredient);
-
-        Object primaryObj = (displayIngredient != null) ? displayIngredient : ingredient;
-        if (primaryObj instanceof Collection && !((Collection<?>) primaryObj).isEmpty()) {
-            primaryObj = ((Collection<?>) primaryObj).iterator()
-                .next();
-        }
-
-        String mainId = getIngredientRegistry().getIngredientHelper(primaryObj)
-            .getUniqueId(primaryObj);
-        boolean isAlreadyFavorite = ingredients.containsKey(mainId) && ingredients.get(mainId) == recipe;
-
-        if (isAlreadyFavorite) {
-            ingredients.entrySet()
-                .removeIf(entry -> entry.getValue() == recipe);
-            recipeCategories.remove(recipe);
+    public static void toggleFavorite(Object ingredient, IRecipeWrapper recipe, IRecipeCategory<?> category) {
+        String uniqueId = uniqueIdOf(ingredient);
+        if (recipe.equals(recipesByIngredient.get(uniqueId))) {
+            removeFavorite(uniqueId);
         } else {
-            for (Object variant : allVariants) {
-                if (variant != null) {
-                    String id = getIngredientRegistry().getIngredientHelper(variant)
-                        .getUniqueId(variant);
-                    ingredients.put(id, recipe);
-                }
-            }
-            recipeCategories.put(recipe, category);
+            addFavorite(uniqueId, recipe, category);
         }
         save();
-    }
-
-    public static void toggleFavorite(Object ingredient, IRecipeWrapper recipe, IRecipeCategory<?> category) {
-        toggleFavorite(ingredient, null, recipe, category);
     }
 
     public static void removeFavorite(IRecipeWrapper recipe) {
-        if (recipe == null) return;
-        ingredients.entrySet()
-            .removeIf(entry -> entry.getValue() == recipe);
-        recipeCategories.remove(recipe);
+        List<String> ingredients = new ArrayList<>();
+        for (Map.Entry<String, IRecipeWrapper> entry : recipesByIngredient.entrySet()) {
+            if (entry.getValue()
+                .equals(recipe)) {
+                ingredients.add(entry.getKey());
+            }
+        }
+        for (String uniqueId : ingredients) {
+            removeFavorite(uniqueId);
+        }
         save();
     }
 
-    public static IRecipeWrapper getFavorite(Object ingredient, Object displayIngredient) {
-        if (displayIngredient != null) {
-            String displayId = getIngredientRegistry().getIngredientHelper(displayIngredient)
-                .getUniqueId(displayIngredient);
-            IRecipeWrapper recipe = ingredients.get(displayId);
-            if (recipe != null) {
-                return recipe;
-            }
-        }
-
-        if (ingredient == null) return null;
-
-        if (!(ingredient instanceof Collection)) {
-            String id = getIngredientRegistry().getIngredientHelper(ingredient)
-                .getUniqueId(ingredient);
-            IRecipeWrapper recipe = ingredients.get(id);
-            if (recipe != null) {
-                return recipe;
-            }
-        }
-
-        if (ingredient instanceof Collection) {
-            for (Object item : (Collection<?>) ingredient) {
-                if (item != null) {
-                    String subId = getIngredientRegistry().getIngredientHelper(item)
-                        .getUniqueId(item);
-                    IRecipeWrapper subRecipe = ingredients.get(subId);
-                    if (subRecipe != null) return subRecipe;
-                }
-            }
-        }
-
-        return null;
-    }
-
+    @Nullable
     public static IRecipeWrapper getFavorite(Object ingredient) {
-        return getFavorite(ingredient, null);
+        return recipesByIngredient.get(uniqueIdOf(ingredient));
     }
 
+    @Nullable
     public static IRecipeCategory<?> getFavoriteCategory(Object ingredient) {
         IRecipeWrapper recipe = getFavorite(ingredient);
-        return recipe != null ? recipeCategories.get(recipe) : null;
+        return recipe == null ? null : recipeCategories.get(recipe);
     }
 
-    public static IRecipeCategory<?> getFavoriteCategory(Object ingredient, Object displayIngredient) {
-        IRecipeWrapper recipe = getFavorite(ingredient, displayIngredient);
-        return recipe != null ? recipeCategories.get(recipe) : null;
+    private static void addFavorite(String ingredientUniqueId, IRecipeWrapper recipe, IRecipeCategory<?> category) {
+        removeFavorite(ingredientUniqueId);
+        recipesByIngredient.put(ingredientUniqueId, recipe);
+        recipeCategories.put(recipe, category);
+        favoriteCounts.addTo(recipe, 1);
     }
 
-    private static List<Object> getAllIngredientVariants(Object ingredient, Object displayIngredient) {
-        List<Object> variants = new ArrayList<>();
-
-        if (displayIngredient != null) {
-            variants.add(displayIngredient);
+    private static void removeFavorite(String ingredientUniqueId) {
+        IRecipeWrapper previous = recipesByIngredient.remove(ingredientUniqueId);
+        if (previous == null) {
+            return;
         }
-
-        if (ingredient instanceof Collection) {
-            for (Object item : (Collection<?>) ingredient) {
-                if (item != null && !item.equals(displayIngredient)) {
-                    variants.add(item);
-                }
-            }
-        } else if (ingredient != null && !ingredient.equals(displayIngredient)) {
-            variants.add(ingredient);
+        int remaining = favoriteCounts.addTo(previous, -1) - 1;
+        if (remaining <= 0) {
+            favoriteCounts.removeInt(previous);
+            recipeCategories.remove(previous);
         }
+    }
 
-        return variants;
+    private static void clear() {
+        recipesByIngredient.clear();
+        recipeCategories.clear();
+        favoriteCounts.clear();
+    }
+
+    private static String uniqueIdOf(Object ingredient) {
+        IngredientRegistry ingredientRegistry = Internal.getIngredientRegistry();
+        return ingredientRegistry.getIngredientHelper(ingredient)
+            .getUniqueId(ingredient);
     }
 }

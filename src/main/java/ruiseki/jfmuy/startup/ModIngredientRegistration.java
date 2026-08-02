@@ -1,13 +1,12 @@
 package ruiseki.jfmuy.startup;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
@@ -23,7 +22,7 @@ public class ModIngredientRegistration implements IModIngredientRegistration {
     private final Map<IIngredientType, Collection> allIngredientsMap = new Reference2ObjectOpenHashMap<>();
     private final Map<IIngredientType, IIngredientHelper> ingredientHelperMap = new Reference2ObjectOpenHashMap<>();
     private final Map<IIngredientType, IIngredientRenderer> ingredientRendererMap = new Reference2ObjectOpenHashMap<>();
-    private final List<IIngredientType> craftableIngredientsMap = new ObjectArrayList<>();
+    private final Set<IIngredientType<?>> craftableIngredientTypes = new ObjectLinkedOpenHashSet<>();
 
     @Override
     public <V> void register(IIngredientType<V> ingredientType, Collection<V> allIngredients,
@@ -40,7 +39,8 @@ public class ModIngredientRegistration implements IModIngredientRegistration {
 
     @Override
     public <V> void markAsCraftable(IIngredientType<V> ingredientType) {
-        craftableIngredientsMap.add(ingredientType);
+        ErrorUtil.checkNotNull(ingredientType, "ingredientType");
+        craftableIngredientTypes.add(ingredientType);
     }
 
     public IngredientRegistry createIngredientRegistry(IModIdHelper modIdHelper,
@@ -59,7 +59,7 @@ public class ModIngredientRegistration implements IModIngredientRegistration {
             ingredientsMap,
             ImmutableMap.copyOf(ingredientHelperMap),
             ImmutableMap.copyOf(ingredientRendererMap),
-            ImmutableList.copyOf(craftableIngredientsMap));
+            new ObjectLinkedOpenHashSet<>(craftableIngredientTypes));
     }
 
     private <T> IngredientSet<T> createIngredientSet(IIngredientType<T> ingredientType, Collection<T> ingredients) {

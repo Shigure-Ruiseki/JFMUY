@@ -36,7 +36,6 @@ import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.gui.elements.DrawableNineSliceTexture;
 import ruiseki.jfmuy.gui.elements.GuiIconButtonSmall;
 import ruiseki.jfmuy.gui.ingredients.GuiIngredient;
-import ruiseki.jfmuy.gui.overlay.IngredientGridHistoryProvider;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.input.ClickedIngredient;
@@ -92,6 +91,7 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
     private int guiTop;
 
     private boolean init = false;
+    private boolean openingGui = false;
 
     public RecipesGui(IRecipeRegistry recipeRegistry, IngredientRegistry ingredientRegistry) {
         this.logic = new RecipeGuiLogic(recipeRegistry, this, ingredientRegistry);
@@ -505,23 +505,30 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         }
     }
 
-    @Override
     public <V> void show(IFocus<V> focus) {
         focus = Focus.check(focus);
 
-        if (logic.setFocus(focus)) {
-            open();
+        openingGui = true;
+        try {
+            if (logic.setFocus(focus)) {
+                open();
+            }
+        } finally {
+            openingGui = false;
         }
-
-        IngredientGridHistoryProvider.onSetFocus(focus);
     }
 
     @Override
     public void showCategories(List<String> recipeCategoryUids) {
         ErrorUtil.checkNotEmpty(recipeCategoryUids, "recipeCategoryUids");
 
-        if (logic.setCategoryFocus(recipeCategoryUids)) {
-            open();
+        openingGui = true;
+        try {
+            if (logic.setCategoryFocus(recipeCategoryUids)) {
+                open();
+            }
+        } finally {
+            openingGui = false;
         }
     }
 
@@ -704,11 +711,16 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
 
     @Override
     public void onStateChange() {
-        updateLayout();
+        if (!openingGui) {
+            updateLayout();
+        }
     }
 
     @Nullable
     public RecipeLayout getRecipeLayout(int mouseX, int mouseY) {
+        if (!isOpen()) {
+            return null;
+        }
         for (RecipeLayout layout : recipeLayouts) {
             if (layout.isMouseOver(mouseX, mouseY)) {
                 return layout;

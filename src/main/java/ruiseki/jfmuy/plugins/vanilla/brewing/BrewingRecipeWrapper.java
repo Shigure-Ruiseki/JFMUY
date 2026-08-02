@@ -55,8 +55,16 @@ public class BrewingRecipeWrapper implements IRecipeWrapper {
         ingredients.setOutput(VanillaTypes.ITEM, potionOutput);
     }
 
-    public List getInputs() {
-        return inputs;
+    public ItemStack getPotionInput() {
+        return potionInput;
+    }
+
+    public ItemStack getPotionOutput() {
+        return potionOutput;
+    }
+
+    public List<ItemStack> getIngredientsList() {
+        return ingredients;
     }
 
     @Override

@@ -19,6 +19,7 @@ import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.GuiScreenHelper;
 import ruiseki.jfmuy.gui.ghost.IGhostIngredientDragSource;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.gui.navigation.NavigationLayout;
 import ruiseki.jfmuy.gui.overlay.GridAlignment;
 import ruiseki.jfmuy.gui.overlay.IIngredientGridSource;
 import ruiseki.jfmuy.gui.overlay.bookmarks.group.BookmarkGroupOrganizer;
@@ -27,22 +28,22 @@ import ruiseki.jfmuy.input.IMouseHandler;
 import ruiseki.jfmuy.input.IPaged;
 import ruiseki.jfmuy.input.IShowsRecipeFocuses;
 import ruiseki.jfmuy.render.BookmarkListBatchRenderer;
-import ruiseki.jfmuy.util.MathUtil;
 
 public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHandler, IGhostIngredientDragSource {
 
     private static final int NAVIGATION_HEIGHT = 20;
     public static final int BOOKMARK_TAB_WIDTH = 10;
 
-    private int firstItemIndex = 0;
     private final IPaged pageDelegate;
-    private IntList pageBoundaries;
     private final BookmarkPageNavigation navigation;
 
-    private BookmarkGroupOrganizer groupOrganizer;
     private final GuiScreenHelper guiScreenHelper;
     private final BookmarkGrid bookmarkGrid;
     private final IIngredientGridSource ingredientSource;
+    private IntList pageBoundaries;
+    private int firstItemIndex = 0;
+    private int bookmarkCount;
+    private BookmarkGroupOrganizer groupOrganizer;
     private Rectangle area = new Rectangle();
 
     public BookmarkGridWithNavigation(IIngredientGridSource ingredientSource, GuiScreenHelper guiScreenHelper,
@@ -57,12 +58,25 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
             .addBookmarkCollapseListener(() -> this.updateLayout(false));
     }
 
+    public void updateLayoutForBookmarkListChange() {
+        int previousBookmarkCount = bookmarkCount;
+        int previousPageCount = pageBoundaries == null ? 0 : pageBoundaries.size();
+        updateLayout(false);
+        int lastPageIndex = pageBoundaries.size() - 1;
+        if (lastPageIndex >= 0 && (bookmarkCount > previousBookmarkCount || pageBoundaries.size() != previousPageCount)
+            && firstItemIndex != pageBoundaries.getInt(lastPageIndex)) {
+            firstItemIndex = pageBoundaries.getInt(lastPageIndex);
+            updateLayout(false);
+        }
+    }
+
     public void updateLayout(boolean resetToFirstPage) {
         if (resetToFirstPage) {
             firstItemIndex = 0;
         }
         @SuppressWarnings("rawtypes")
         List<IIngredientListElement> ingredientList = ingredientSource.getIngredientList();
+        bookmarkCount = ingredientList.size();
         BookmarkListBatchRenderer renderer = (BookmarkListBatchRenderer) this.bookmarkGrid.getGuiIngredientSlots();
         // Bounds check
         int prevDisplaySize = renderer.getDisplaySize();
@@ -84,34 +98,55 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
     }
 
     public boolean updateBounds(Rectangle availableArea, Set<Rectangle> guiExclusionAreas, int minWidth) {
-        Rectangle estimatedNavigationArea = new Rectangle(
-            availableArea.x,
-            availableArea.y,
-            availableArea.width,
-            NAVIGATION_HEIGHT);
-        Rectangle movedNavigationArea = MathUtil
-            .moveDownToAvoidIntersection(guiExclusionAreas, estimatedNavigationArea);
-        int navigationMaxY = movedNavigationArea.y + movedNavigationArea.height;
-        Rectangle boundsWithoutNavigation = new Rectangle(
-            availableArea.x + (Config.areRecipeBookmarksEnabled() ? BOOKMARK_TAB_WIDTH : 0),
-            navigationMaxY,
-            availableArea.width - (Config.areRecipeBookmarksEnabled() ? BOOKMARK_TAB_WIDTH : 0),
-            availableArea.height - navigationMaxY);
-        Rectangle groupOrganizerBounds = new Rectangle(
-            availableArea.x,
-            navigationMaxY,
-            availableArea.width,
-            availableArea.height - navigationMaxY);
-        boolean gridHasRoom = this.bookmarkGrid.updateBounds(boundsWithoutNavigation, minWidth, guiExclusionAreas);
-        if (!gridHasRoom) {
+        clearLayout();
+
+        int bookmarkTabWidth = Config.areRecipeBookmarksEnabled() ? BOOKMARK_TAB_WIDTH : 0;
+        Rectangle initialContentArea = new Rectangle(
+            availableArea.x + bookmarkTabWidth,
+            availableArea.y + NAVIGATION_HEIGHT,
+            availableArea.width - bookmarkTabWidth,
+            availableArea.height - NAVIGATION_HEIGHT);
+        if (!this.bookmarkGrid.updateBoundsForNavigation(initialContentArea, minWidth, guiExclusionAreas)) {
             return false;
         }
+
+        int maximumNavigationWidth = this.bookmarkGrid.getArea().width;
+        NavigationLayout.Result layout = NavigationLayout.calculate(
+            availableArea,
+            guiExclusionAreas,
+            NavigationLayout.Alignment.LEFT,
+            NAVIGATION_HEIGHT,
+            minWidth,
+            maximumNavigationWidth);
+        if (layout == null) {
+            clearLayout();
+            return false;
+        }
+
+        Rectangle contentArea = layout.getContentArea();
+        Rectangle gridContentArea = new Rectangle(
+            contentArea.x + bookmarkTabWidth,
+            contentArea.y,
+            contentArea.width - bookmarkTabWidth,
+            contentArea.height);
+        if (!this.bookmarkGrid.updateBounds(gridContentArea, minWidth, guiExclusionAreas)) {
+            clearLayout();
+            return false;
+        }
+
         Rectangle displayArea = this.bookmarkGrid.getArea();
-        Rectangle navigationArea = new Rectangle(2, movedNavigationArea.y, displayArea.width, NAVIGATION_HEIGHT);
+        Rectangle navigationArea = layout.getNavigationArea();
         this.navigation.updateBounds(navigationArea);
-        this.groupOrganizer.updateBounds(groupOrganizerBounds);
+        this.groupOrganizer.updateBounds(contentArea);
         this.area = displayArea.union(navigationArea);
         return true;
+    }
+
+    private void clearLayout() {
+        this.area = new Rectangle();
+        this.navigation.updateBounds(new Rectangle());
+        this.bookmarkGrid.clearLayout();
+        this.groupOrganizer.clearLayout();
     }
 
     public Rectangle getArea() {
@@ -158,10 +193,10 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
             && element != null) {
             BookmarkItem<?> item = (BookmarkItem<?>) element.getIngredient();
             if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
-                if (item.ingredient instanceof ItemStack) {
-                    int stackSize = ((ItemStack) item.ingredient).getMaxStackSize();
+                if (item.getIngredient() instanceof ItemStack) {
+                    int stackSize = ((ItemStack) item.getIngredient()).getMaxStackSize();
                     item.changeAmount(scrollDelta < 0 ? -stackSize : stackSize);
-                } else if (item.ingredient instanceof FluidStack) {
+                } else if (item.getIngredient() instanceof FluidStack) {
                     item.changeAmount(scrollDelta < 0 ? -1000 : 1000);
                 } else {
                     item.changeAmount(scrollDelta < 0 ? -1 : 1);
@@ -173,6 +208,8 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
                 .saveBookmarks();
             bookmarkGrid.getGuiIngredientSlots()
                 .invalidateBuffer();
+            // Changing a requested amount changes what the chain is short of.
+            this.groupOrganizer.invalidateMissingIngredients();
             return true;
         } else {
             if (scrollDelta < 0) {
@@ -232,14 +269,12 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
 
         @Override
         public boolean hasNext() {
-            // true if there is more than one page because this wraps around
-            return true;
+            return getPageCount() > 1;
         }
 
         @Override
         public boolean hasPrevious() {
-            // true if there is more than one page because this wraps around
-            return true;
+            return getPageCount() > 1;
         }
 
         @Override

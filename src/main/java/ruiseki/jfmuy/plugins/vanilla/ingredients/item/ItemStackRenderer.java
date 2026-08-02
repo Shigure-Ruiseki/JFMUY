@@ -1,5 +1,6 @@
 package ruiseki.jfmuy.plugins.vanilla.ingredients.item;
 
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,7 +116,7 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
     }
 
     @Override
-    public ExtraSize renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, List<ItemStack> allIngredients,
+    public Rectangle renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, List<ItemStack> allIngredients,
         int activeIndex, boolean isDrawingPass) {
         if (allIngredients == null || allIngredients.isEmpty() || allIngredients.size() == 1) {
             return null;
@@ -172,7 +173,7 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
             GL11.glPopAttrib();
         }
 
-        return new ExtraSize(extraWidth, extraHeight);
+        return new Rectangle(extraWidth, extraHeight);
     }
 
     @Override

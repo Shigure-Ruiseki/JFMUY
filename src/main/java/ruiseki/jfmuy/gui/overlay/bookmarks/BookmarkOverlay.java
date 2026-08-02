@@ -94,10 +94,6 @@ public class BookmarkOverlay implements ILeftAreaContent, IBookmarkOverlay {
         displayArea = new Rectangle(parentArea);
 
         final int minWidth = getMinWidth();
-        if (displayArea.width < minWidth) {
-            return false;
-        }
-
         Rectangle availableContentsArea = new Rectangle(
             displayArea.x,
             displayArea.y,
@@ -105,10 +101,12 @@ public class BookmarkOverlay implements ILeftAreaContent, IBookmarkOverlay {
             displayArea.height - (BUTTON_SIZE + 4));
         boolean contentsHasRoom = this.contents.updateBounds(availableContentsArea, guiExclusionAreas, minWidth);
 
-        // update area to match contents size
-        Rectangle contentsArea = this.contents.getArea();
-        displayArea.x = contentsArea.x;
-        displayArea.width = contentsArea.width;
+        if (contentsHasRoom) {
+            // update area to match contents size
+            Rectangle contentsArea = this.contents.getArea();
+            displayArea.x = contentsArea.x;
+            displayArea.width = contentsArea.width;
+        }
 
         if (Config.hideBottomLeftCornerBookmarkButton()) {
             this.bookmarkButton.updateBounds(new Rectangle(0, 0, 0, 0));

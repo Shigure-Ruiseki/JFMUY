@@ -1,5 +1,6 @@
 package ruiseki.jfmuy.gui;
 
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -94,7 +95,7 @@ public final class TooltipRenderer {
         int extraHeight = 0;
 
         if (ingredientRenderer != null) {
-            IIngredientRenderer.ExtraSize size = ingredientRenderer
+            Rectangle size = ingredientRenderer
                 .renderTooltipExtras(minecraft, mouseX, mouseY, allIngredients, activeIndex, false);
             if (size != null) {
                 extraWidth = size.width;

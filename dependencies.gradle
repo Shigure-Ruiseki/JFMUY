@@ -37,6 +37,7 @@ dependencies {
 
     implementation("com.github.Shigure-Ruiseki:OKCore:26.07.31.0:dev") { transitive = false }
 
+    devOnlyNonPublishable('com.github.GTNewHorizons:NotEnoughItems:2.8.102-GTNH:dev')
     devOnlyNonPublishable("com.github.GTNewHorizons:waila:1.19.30:dev") { transitive = false }
     devOnlyNonPublishable("com.github.GTNewHorizons:ModularUI2:2.3.79-1.7.10:dev")
 

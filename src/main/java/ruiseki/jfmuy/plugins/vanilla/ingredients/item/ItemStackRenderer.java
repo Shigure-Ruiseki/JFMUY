@@ -28,7 +28,7 @@ import ruiseki.okcore.client.renderer.GlStateManager;
 
 public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
 
-    protected static final int SLOT_SIZE = 18;
+    protected static final int SLOT_SIZE = 20;
     protected static final int MAX_COLUMNS = 11;
     protected static final int MARGIN_TOP = 2;
 
@@ -143,10 +143,10 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
                 if (i == activeIndex) {
                     GL11.glDisable(GL11.GL_LIGHTING);
                     Gui.drawRect(
-                        currentX - 1,
-                        currentY - 1,
-                        currentX + SLOT_SIZE - 1,
-                        currentY + SLOT_SIZE - 1,
+                        currentX - 2,
+                        currentY - 2,
+                        currentX + SLOT_SIZE - 2,
+                        currentY + SLOT_SIZE - 2,
                         0x66555555);
                     GL11.glEnable(GL11.GL_LIGHTING);
                 }

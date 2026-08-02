@@ -95,6 +95,8 @@ public class BookmarkGrid extends IngredientGrid {
                 }
                 this.guiIngredientSlots.add(ingredientRow);
             }
+        } else {
+            hasFreeSlot = true;
         }
         if (requireFreeSlot && !hasFreeSlot) {
             clearLayout();

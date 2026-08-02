@@ -126,6 +126,8 @@ public class IngredientGrid implements IShowsRecipeFocuses {
                 }
                 this.guiIngredientSlots.add(ingredientRow);
             }
+        } else {
+            hasFreeSlot = true;
         }
         if (requireFreeSlot && !hasFreeSlot) {
             clearLayout();

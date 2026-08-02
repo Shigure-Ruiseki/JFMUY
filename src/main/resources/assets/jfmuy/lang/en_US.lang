@@ -54,11 +54,14 @@ key.jfmuy.previousPage=Show Previous Page
 key.jfmuy.nextPage=Show Next Page
 key.jfmuy.previousCategory=Show Previous Recipe Category
 key.jfmuy.nextCategory=Show Next Recipe Category
-key.jfmuy.bookmark=Add/Remove a Bookmarked Ingredient
-key.jfmuy.bookmarkToTop=Add a Bookmarked Ingredient to the top
-key.jfmuy.recipeBookmark=Add/Remove a Bookmarked Recipe
+key.jfmuy.bookmark=Bookmark Ingredient/Recipe (Append)
+key.jfmuy.bookmarkToTop=Bookmark Ingredient/Recipe (Prepend)
+key.jfmuy.bookmarkNewGroup=Bookmark to New Group (Append)
+key.jfmuy.bookmarkNewGroupToTop=Bookmark to New Group (Prepend)
 key.jfmuy.toggleBookmarkOverlay=Show/Hide Bookmarked Ingredients
-key.jfmuy.crafting=Autocraft Selected Bookmarked Recipes
+key.jfmuy.crafting=Autocraft Bookmarked Recipe
+key.jfmuy.moveGroupUp=Move Bookmark Group Up
+key.jfmuy.moveGroupDown=Move Bookmark Group Down
 
 # Config
 config.jfmuy.default=Default
@@ -225,6 +228,7 @@ jfmuy.tooltip.favorite=Add Favorite Recipe
 jfmuy.tooltip.favorite_scroll=Scroll to Change Favorited Item
 jfmuy.tooltip.recipe_bookmark=Bookmark Recipe
 jfmuy.tooltip.missing_ingredients=§cMissing Ingredients:
+jfmuy.tooltip.autocraft.wrong_container=This container cannot craft %s recipes on its own.
 
 jfmuy.tooltip.item_group=§7Item Group
 jfmuy.tooltip.recipe_group=§7Recipe Group

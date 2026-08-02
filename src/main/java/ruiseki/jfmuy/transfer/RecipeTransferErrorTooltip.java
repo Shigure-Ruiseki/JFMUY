@@ -20,7 +20,7 @@ public class RecipeTransferErrorTooltip implements IRecipeTransferError {
 
     public RecipeTransferErrorTooltip(String message) {
         this.reason = message;
-        this.message.add(Translator.translateToLocal("jei.tooltip.transfer"));
+        this.message.add(Translator.translateToLocal("jfmuy.tooltip.transfer"));
         this.message.add(EnumChatFormatting.RED + message);
     }
 

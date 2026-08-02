@@ -10,6 +10,7 @@ import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
 import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
 import ruiseki.jfmuy.api.gui.IGlobalGuiHandler;
 import ruiseki.jfmuy.api.gui.IGuiScreenHandler;
+import ruiseki.jfmuy.api.gui.ISlotIngredientProvider;
 import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.api.recipe.IRecipeRegistryPlugin;
@@ -111,6 +112,12 @@ public interface IModRegistry {
      * for setting recipes or anything else that does not need the real ingredient to exist.
      */
     <T extends GuiScreen> void addGhostIngredientHandler(Class<T> guiClass, IGhostIngredientHandler<T> handler);
+
+    /**
+     * Lets mods tell JFMUY what a slot's item actually represents, for GUIs that show something which is
+     * not an item by putting a placeholder item in an ordinary slot.
+     */
+    <T extends GuiContainer> void addSlotIngredientProvider(Class<T> guiClass, ISlotIngredientProvider<T> provider);
 
     /**
      * Add an info page for an ingredient.

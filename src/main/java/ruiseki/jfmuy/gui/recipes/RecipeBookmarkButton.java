@@ -48,9 +48,10 @@ public class RecipeBookmarkButton extends GuiIconButtonSmall {
         if (!super.mousePressed(mc, mouseX, mouseY)) {
             return false;
         }
-        if (!Config.isBookmarkOverlayEnabled()) {
+        boolean added = recipeLayout.addToBookmarks();
+        if (added && !Config.isBookmarkOverlayEnabled()) {
             Config.toggleBookmarkEnabled();
         }
-        return recipeLayout.addToBookmarks();
+        return added;
     }
 }

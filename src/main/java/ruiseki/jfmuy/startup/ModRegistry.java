@@ -31,6 +31,7 @@ import ruiseki.jfmuy.api.gui.IAdvancedGuiHandler;
 import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
 import ruiseki.jfmuy.api.gui.IGlobalGuiHandler;
 import ruiseki.jfmuy.api.gui.IGuiScreenHandler;
+import ruiseki.jfmuy.api.gui.ISlotIngredientProvider;
 import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
@@ -66,6 +67,7 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
     private final List<IGlobalGuiHandler> globalGuiHandlers = new ArrayList<>();
     private final Map<Class, IGuiScreenHandler> guiScreenHandlers = new Reference2ObjectOpenHashMap<>();
     private final Map<Class, IGhostIngredientHandler> ghostIngredientHandlers = new Reference2ObjectOpenHashMap<>();
+    private final Map<Class, ISlotIngredientProvider> slotIngredientProviders = new Reference2ObjectOpenHashMap<>();
     private final ListMultiMap<String, Object> recipes = new ListMultiMap<>();
     private final RecipeTransferRegistry recipeTransferRegistry;
     private final ListMultiMap<Class<? extends GuiContainer>, RecipeClickableArea> recipeClickableAreas = new ListMultiMap<>();
@@ -243,6 +245,16 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
     }
 
     @Override
+    public <T extends GuiContainer> void addSlotIngredientProvider(Class<T> guiClass,
+        ISlotIngredientProvider<T> provider) {
+        ErrorUtil.checkNotNull(guiClass, "guiClass");
+        Preconditions
+            .checkArgument(GuiContainer.class.isAssignableFrom(guiClass), "guiClass must inherit from GuiContainer");
+        ErrorUtil.checkNotNull(provider, "provider");
+        this.slotIngredientProviders.put(guiClass, provider);
+    }
+
+    @Override
     public <T> void addIngredientInfo(T ingredient, IIngredientType<T> ingredientType, String... descriptionKeys) {
         ErrorUtil.checkIsValidIngredient(ingredient, "ingredient");
         ErrorUtil.checkNotNull(ingredientType, "ingredientType");
@@ -294,6 +306,10 @@ public class ModRegistry implements IModRegistry, IRecipeCategoryRegistration {
 
     public Map<Class, IGhostIngredientHandler> getGhostIngredientHandlers() {
         return ghostIngredientHandlers;
+    }
+
+    public Map<Class, ISlotIngredientProvider> getSlotIngredientProviders() {
+        return slotIngredientProviders;
     }
 
     public RecipeRegistry createRecipeRegistry(IngredientRegistry ingredientRegistry) {

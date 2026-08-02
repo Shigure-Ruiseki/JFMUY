@@ -32,9 +32,13 @@ public class KeyBindings {
     public static final KeyBindingOK nextCategory;
     public static final KeyBindingOK bookmark;
     public static final KeyBindingOK bookmarkToTop;
-    public static final KeyBindingOK recipeBookmark;
+    public static final KeyBindingOK bookmarkNewGroup;
+    public static final KeyBindingOK bookmarkNewGroupToTop;
     public static final KeyBindingOK toggleBookmarkOverlay;
     public static final KeyBindingOK crafting;
+    public static final KeyBindingOK moveGroupUp;
+    public static final KeyBindingOK moveGroupDown;
+
     private static final List<KeyBindingOK> allBindings;
 
     static {
@@ -97,8 +101,13 @@ public class KeyBindings {
                 KeyConflictContext.GUI,
                 Keyboard.KEY_NONE,
                 categoryName),
-            recipeBookmark = new KeyBindingOK(
-                "key.jfmuy.recipeBookmark",
+            bookmarkNewGroup = new KeyBindingOK(
+                "key.jfmuy.bookmarkNewGroup",
+                KeyConflictContext.GUI,
+                Keyboard.KEY_A,
+                categoryName),
+            bookmarkNewGroupToTop = new KeyBindingOK(
+                "key.jfmuy.bookmarkNewGroupToTop",
                 KeyConflictContext.GUI,
                 Keyboard.KEY_NONE,
                 categoryName),
@@ -107,7 +116,17 @@ public class KeyBindings {
                 KeyConflictContext.GUI,
                 Keyboard.KEY_NONE,
                 categoryName),
-            crafting = new KeyBindingOK("key.jfmuy.crafting", KeyConflictContext.GUI, Keyboard.KEY_C, categoryName));
+            crafting = new KeyBindingOK("key.jfmuy.crafting", KeyConflictContext.GUI, Keyboard.KEY_C, categoryName),
+            moveGroupUp = new KeyBindingOK(
+                "key.jfmuy.moveGroupUp",
+                KeyConflictContext.GUI,
+                Keyboard.KEY_UP,
+                categoryName),
+            moveGroupDown = new KeyBindingOK(
+                "key.jfmuy.moveGroupDown",
+                KeyConflictContext.GUI,
+                Keyboard.KEY_DOWN,
+                categoryName));
     }
 
     public static void init() {

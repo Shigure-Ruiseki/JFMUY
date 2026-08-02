@@ -79,14 +79,14 @@ public interface IRecipeLayout {
     /**
      * Sets the recipe favourite button's position.
      * <p>
-     * Positioning it is optional. A layout that does not place it leaves it where HEI puts it by default.
+     * Positioning it is optional. A layout that does not place it leaves it where JFMUY puts it by default.
      */
     default void setRecipeFavoriteButton(int posX, int posY) {}
 
     /**
      * Sets the recipe bookmark button's position.
      * <p>
-     * Positioning it is optional. A layout that does not place it leaves it where HEI puts it by default.
+     * Positioning it is optional. A layout that does not place it leaves it where JFMUY puts it by default.
      */
     default void setRecipeBookmarkButton(int posX, int posY) {}
 }

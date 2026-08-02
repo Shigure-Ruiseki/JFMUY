@@ -228,7 +228,7 @@ public class RecipeBookmarkGroup extends BookmarkGroup {
             if (error.getSimpleReason() != null) {
                 return error.getSimpleReason();
             }
-            return Translator.translateToLocal("jei.tooltip.error.recipe.transfer.unknown");
+            return Translator.translateToLocal("jfmuy.tooltip.error.recipe.transfer.unknown");
         }
         return null;
     }

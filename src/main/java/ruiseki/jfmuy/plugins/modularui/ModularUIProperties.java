@@ -13,7 +13,7 @@ import com.cleanroommc.modularui.widget.sizer.Area;
 import ruiseki.jfmuy.api.gui.IGuiProperties;
 
 /**
- * This needs to be an immutable class, otherwise JEI shits itself.
+ * This needs to be an immutable class, otherwise JFMUY shits itself.
  */
 public class ModularUIProperties implements IGuiProperties {
 

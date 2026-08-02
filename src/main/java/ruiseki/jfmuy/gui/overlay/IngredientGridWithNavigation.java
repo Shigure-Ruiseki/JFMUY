@@ -38,12 +38,12 @@ public class IngredientGridWithNavigation implements IShowsRecipeFocuses, IMouse
 
     private static final int NAVIGATION_HEIGHT = 20;
 
-    private int firstItemIndex = 0;
     private final IPaged pageDelegate;
     private final PageNavigation navigation;
     private final GuiScreenHelper guiScreenHelper;
     private final IngredientGrid ingredientGrid;
     private final IIngredientGridSource ingredientSource;
+    private int firstItemIndex = 0;
     private Rectangle area = new Rectangle();
 
     public IngredientGridWithNavigation(IIngredientGridSource ingredientSource, GuiScreenHelper guiScreenHelper,

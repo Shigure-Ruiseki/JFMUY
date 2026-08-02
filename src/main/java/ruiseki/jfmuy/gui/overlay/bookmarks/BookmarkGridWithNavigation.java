@@ -34,15 +34,16 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
     private static final int NAVIGATION_HEIGHT = 20;
     public static final int BOOKMARK_TAB_WIDTH = 10;
 
-    private int firstItemIndex = 0;
     private final IPaged pageDelegate;
-    private IntList pageBoundaries;
     private final BookmarkPageNavigation navigation;
 
-    private BookmarkGroupOrganizer groupOrganizer;
     private final GuiScreenHelper guiScreenHelper;
     private final BookmarkGrid bookmarkGrid;
     private final IIngredientGridSource ingredientSource;
+    private IntList pageBoundaries;
+    private int firstItemIndex = 0;
+    private int bookmarkCount;
+    private BookmarkGroupOrganizer groupOrganizer;
     private Rectangle area = new Rectangle();
 
     public BookmarkGridWithNavigation(IIngredientGridSource ingredientSource, GuiScreenHelper guiScreenHelper,
@@ -53,8 +54,19 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
         this.guiScreenHelper = guiScreenHelper;
         this.pageDelegate = new BookmarkGridPaged();
         this.navigation = new BookmarkPageNavigation(this.pageDelegate, false);
-        ((BookmarkListBatchRenderer) this.bookmarkGrid.getGuiIngredientSlots())
-            .addBookmarkCollapseListener(() -> this.updateLayout(false));
+        ((BookmarkListBatchRenderer) this.bookmarkGrid.getGuiIngredientSlots()).addBookmarkCollapseListener(() -> this.updateLayout(false));
+    }
+
+    public void updateLayoutForBookmarkListChange() {
+        int previousBookmarkCount = bookmarkCount;
+        int previousPageCount = pageBoundaries == null ? 0 : pageBoundaries.size();
+        updateLayout(false);
+        int lastPageIndex = pageBoundaries.size() - 1;
+        if (lastPageIndex >= 0 && (bookmarkCount > previousBookmarkCount || pageBoundaries.size() != previousPageCount) &&
+            firstItemIndex != pageBoundaries.getInt(lastPageIndex)) {
+            firstItemIndex = pageBoundaries.getInt(lastPageIndex);
+            updateLayout(false);
+        }
     }
 
     public void updateLayout(boolean resetToFirstPage) {
@@ -63,6 +75,7 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
         }
         @SuppressWarnings("rawtypes")
         List<IIngredientListElement> ingredientList = ingredientSource.getIngredientList();
+        bookmarkCount = ingredientList.size();
         BookmarkListBatchRenderer renderer = (BookmarkListBatchRenderer) this.bookmarkGrid.getGuiIngredientSlots();
         // Bounds check
         int prevDisplaySize = renderer.getDisplaySize();
@@ -255,14 +268,12 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
 
         @Override
         public boolean hasNext() {
-            // true if there is more than one page because this wraps around
-            return true;
+            return getPageCount() > 1;
         }
 
         @Override
         public boolean hasPrevious() {
-            // true if there is more than one page because this wraps around
-            return true;
+            return getPageCount() > 1;
         }
 
         @Override

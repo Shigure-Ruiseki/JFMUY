@@ -62,24 +62,31 @@ public interface IRecipeLayout {
     void setRecipeTransferButton(int posX, int posY);
 
     /**
-     * Moves the recipe transfer button's position relative to the recipe layout.
-     * If moveAll is true, it also moves the recipe favorite button and recipe bookmark button to be to the right of the
-     * recipe transfer button.
-     */
-    void setRecipeTransferButton(int posX, int posY, boolean moveAll);
-
-    /**
-     * Sets the recipe favourite button's position
-     */
-    void setRecipeFavoriteButton(int posX, int posY);
-
-    /**
-     * Sets the recipe bookmark button's position
-     */
-    void setRecipeBookmarkButton(int posX, int posY);
-
-    /**
      * Adds a shapeless icon to the top right of the recipe, that shows a tooltip saying "shapeless" when hovered over.
      */
     void setShapeless();
+
+    /**
+     * Moves the recipe transfer button's position relative to the recipe layout.
+     * <p>
+     * If moveAll is true, it also moves the recipe favorite button and recipe bookmark button
+     * to the right of the recipe transfer button.
+     */
+    default void setRecipeTransferButton(int posX, int posY, boolean moveAll) {
+        setRecipeTransferButton(posX, posY);
+    }
+
+    /**
+     * Sets the recipe favourite button's position.
+     * <p>
+     * Positioning it is optional. A layout that does not place it leaves it where HEI puts it by default.
+     */
+    default void setRecipeFavoriteButton(int posX, int posY) {}
+
+    /**
+     * Sets the recipe bookmark button's position.
+     * <p>
+     * Positioning it is optional. A layout that does not place it leaves it where HEI puts it by default.
+     */
+    default void setRecipeBookmarkButton(int posX, int posY) {}
 }

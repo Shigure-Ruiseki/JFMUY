@@ -1,44 +1,41 @@
 package ruiseki.jfmuy.bookmarks;
 
-import java.util.function.Supplier;
+import java.util.function.LongSupplier;
 
 import net.minecraft.nbt.NBTTagCompound;
 
 import org.jetbrains.annotations.Nullable;
 
 /**
- * The dummy bookmark item is used to represent the inputs of a recipe.
- * These are generated automatically by the recipe bookmark group and are not saved to disk, nor are they editable.
- * This lack of implementation warrants the name "dummy".
- *
- * @param <I> The type of the internal ingredient.
+ * One ingredient slot of a recipe row in the bookmark overlay.
+ * <p>
+ * These stand for a recipe's ingredients rather than for bookmarks the player made,
+ * thus they are not saved nor editable.
  */
 public class DummyBookmarkItem<I> extends BookmarkItem<I> {
 
-    private final Supplier<Long> displayAmountSupplier;
+    private final LongSupplier displayAmount;
 
-    public DummyBookmarkItem(I ingredient, @Nullable BookmarkGroup group, Supplier<Long> displayAmountSupplier) {
+    public DummyBookmarkItem(I ingredient, @Nullable BookmarkGroup group, LongSupplier displayAmount) {
         super(ingredient);
         this.setGroup(group);
-        this.displayAmountSupplier = displayAmountSupplier;
+        this.displayAmount = displayAmount;
+    }
+
+    public DummyBookmarkItem(I ingredient, @Nullable BookmarkGroup group, long displayAmount) {
+        this(ingredient, group, () -> displayAmount);
     }
 
     @Override
-    public int getGroupIndex() {
-        return super.getGroupIndex();
-    }
-
-    @Override
-    public void changeAmount(long delta) {
-        // It would be rather weird to change the amount of a dummy item in a recipe...
-    }
+    public void changeAmount(long delta) {}
 
     @Override
     public long getDisplayAmount() {
-        return displayAmountSupplier.get();
+        return displayAmount.getAsLong();
     }
 
     @Override
+    @Nullable
     public String serialize() {
         return null;
     }

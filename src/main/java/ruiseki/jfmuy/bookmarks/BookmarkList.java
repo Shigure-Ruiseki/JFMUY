@@ -57,7 +57,7 @@ public class BookmarkList implements IIngredientGridSource {
     public <T> boolean add(BookmarkItem<T> ingredient, boolean forceFront) {
         BookmarkItem<T> normalized = IngredientUtil.normalizeBookmark(ingredient);
         boolean addToFront = forceFront || Config.isAddingBookmarksToFront();
-        boolean alreadyExists = normalized.ingredient instanceof CollapsedGroupIngredient
+        boolean alreadyExists = normalized.getIngredient() instanceof CollapsedGroupIngredient
             ? groupContains(getAddingGroup(addToFront), normalized)
             : contains(normalized);
         if (!alreadyExists) {
@@ -79,15 +79,42 @@ public class BookmarkList implements IIngredientGridSource {
         return false;
     }
 
+    @Deprecated
+    public <T> boolean add(T ingredient) {
+        return add(ingredient, false);
+    }
+
+    @Deprecated
+    public <T> boolean add(T ingredient, boolean forceFront) {
+        StackTraceElement caller = Thread.currentThread()
+            .getStackTrace()[2];
+        Log.get()
+            .error(
+                "Deprecated BookmarkList#add method called. Use BookmarkList#add(BookmarkItem<T>) instead. Caller: {}#{}",
+                caller.getClassName(),
+                caller.getMethodName());
+        return add(new BookmarkItem<>(ingredient), forceFront);
+    }
+
+    /**
+     * Identifies a bookmark for the purpose of spotting duplicates.
+     * <p>
+     * This is the full id, including metadata and NBT, rather than the ordinary one.
+     * player already had.
+     */
+    private String bookmarkUid(Object ingredient) {
+        IIngredientHelper<Object> ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
+        return ingredientHelper.getFullUniqueId(ingredient);
+    }
+
     private boolean groupContains(BookmarkGroup group, BookmarkItem<?> item) {
-        IIngredientHelper<Object> ingredientHelper = ingredientRegistry.getIngredientHelper(item);
-        String uid = ingredientHelper.getUniqueId(item);
+        String uid = bookmarkUid(item);
         for (BookmarkItem<?> existing : group.getItems()) {
             if (item == existing) {
                 return true;
             }
             if (existing != null && existing.getClass() == item.getClass()) {
-                if (uid.equals(ingredientHelper.getUniqueId(existing))) {
+                if (uid.equals(bookmarkUid(existing))) {
                     return true;
                 }
             }
@@ -97,7 +124,7 @@ public class BookmarkList implements IIngredientGridSource {
 
     private boolean contains(Object ingredient) {
         // We cannot assume that ingredients have a working equals() implementation. Even ItemStack doesn't have one...
-        IIngredientHelper<Object> ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
+        String uid = bookmarkUid(ingredient);
 
         for (BookmarkGroup group : list) {
             for (BookmarkItem existing : group.getItems()) {
@@ -105,8 +132,7 @@ public class BookmarkList implements IIngredientGridSource {
                     return true;
                 }
                 if (existing != null && existing.getClass() == ingredient.getClass()) {
-                    if (ingredientHelper.getUniqueId(existing)
-                        .equals(ingredientHelper.getUniqueId(ingredient))) {
+                    if (uid.equals(bookmarkUid(existing))) {
                         return true;
                     }
                 }
@@ -295,11 +321,24 @@ public class BookmarkList implements IIngredientGridSource {
 
     @Override
     public int size() {
-        return getIngredientList().size();
+        // Counted per group rather than via getIngredientList, which the overlay calls while drawing and
+        // which would otherwise merge every group into a throwaway list once a frame.
+        int size = 0;
+        for (BookmarkGroup group : this.list) {
+            size += group.getIngredientListElements()
+                .size();
+        }
+        return size;
     }
 
     public boolean isEmpty() {
-        return getIngredientList().isEmpty();
+        for (BookmarkGroup group : this.list) {
+            if (!group.getIngredientListElements()
+                .isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

@@ -108,7 +108,7 @@ public class RecipeTreeRenderer {
 
         boolean hasRecipe = (node.recipeLayout != null && node.item.category != null);
         boolean showPreview = node.showRecipePreview;
-        Object ingredient = node.item.ingredient;
+        Object ingredient = node.item.getIngredient();
 
         int row1X = 0;
         int row1Y = 0;
@@ -230,8 +230,8 @@ public class RecipeTreeRenderer {
                 boolean hasRecipe = (hovered.recipeLayout != null && hovered.item.category != null);
 
                 if (nodeRelMouseY >= 0 && nodeRelMouseY <= ROW1_HEIGHT) {
-                    if (nodeRelMouseX >= 0 && nodeRelMouseX <= COL_WIDTH && hovered.item.ingredient != null) {
-                        renderIngredientTooltip(mc, hovered.item.ingredient, mouseX, mouseY);
+                    if (nodeRelMouseX >= 0 && nodeRelMouseX <= COL_WIDTH && hovered.item.getIngredient() != null) {
+                        renderIngredientTooltip(mc, hovered.item.getIngredient(), mouseX, mouseY);
                         break;
                     }
 

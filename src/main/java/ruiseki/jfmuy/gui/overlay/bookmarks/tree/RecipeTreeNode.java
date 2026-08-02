@@ -130,7 +130,7 @@ public class RecipeTreeNode {
 
         for (BookmarkItem<?> bItem : group.getItems()) {
             if (bItem instanceof RecipeBookmarkItem<?>recipe) {
-                if (isSameIngredient(recipe.ingredient, ingredientItem.ingredient)) {
+                if (isSameIngredient(recipe.getIngredient(), ingredientItem.getIngredient())) {
                     return recipe;
                 }
             }

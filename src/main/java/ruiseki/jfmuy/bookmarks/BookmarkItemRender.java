@@ -22,39 +22,41 @@ public class BookmarkItemRender implements IIngredientRenderer<BookmarkItem> {
     public void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable BookmarkItem ingredient) {
         if (ingredient != null) {
             IngredientRegistry registry = Internal.getIngredientRegistry();
-            IIngredientType<Object> ingredientType = registry.getIngredientType(ingredient.ingredient);
+            IIngredientType<Object> ingredientType = registry.getIngredientType(ingredient.getIngredient());
             registry.getIngredientRenderer(ingredientType)
-                .render(minecraft, xPosition, yPosition, ingredient.ingredient);
+                .render(minecraft, xPosition, yPosition, ingredient.getIngredient());
 
             FontRenderer fontRenderer = getFontRenderer(minecraft, ingredient);
-            if (ingredient instanceof RecipeBookmarkItem<?>recipeBookmarkItem) {
-                if (recipeBookmarkItem.selfOutputAmount > 1L) {
+            long displayAmount = ingredient.getDisplayAmount();
+            if (displayAmount > 1L) {
+                if (ingredient instanceof RecipeBookmarkItem
+                    && ((RecipeBookmarkItem<?>) ingredient).isExplicitlyRequested()) {
                     CountUtil.renderStringAsCount(
                         fontRenderer,
-                        'x' + CountUtil.minifyCountString(recipeBookmarkItem.selfOutputAmount),
+                        'x' + CountUtil.minifyCountString(displayAmount),
                         xPosition,
                         yPosition,
                         0xBBBBBBBB,
                         true,
                         true);
+                } else {
+                    CountUtil.renderCountString(fontRenderer, displayAmount, xPosition, yPosition, true);
                 }
-            } else if (ingredient.getDisplayAmount() > 1L) {
-                CountUtil.renderCountString(fontRenderer, ingredient.getDisplayAmount(), xPosition, yPosition, true);
             }
         }
-        // We need no lighting and plain color for continued ingredient rendering
         GlStateManager.disableLighting();
         GlStateManager.color(1, 1, 1, 1);
     }
 
     @Override
     public FontRenderer getFontRenderer(Minecraft minecraft, BookmarkItem ingredient) {
-        return getIngredientRenderer(ingredient.ingredient).getFontRenderer(minecraft, ingredient.ingredient);
+        return getIngredientRenderer(ingredient.getIngredient()).getFontRenderer(minecraft, ingredient.getIngredient());
     }
 
     @Override
     public List<String> getTooltip(Minecraft minecraft, BookmarkItem ingredient, boolean advanced) {
-        return getIngredientRenderer(ingredient.ingredient).getTooltip(minecraft, ingredient.ingredient, advanced);
+        return getIngredientRenderer(ingredient.getIngredient())
+            .getTooltip(minecraft, ingredient.getIngredient(), advanced);
     }
 
     private static <E> IIngredientRenderer<E> getIngredientRenderer(E ingredient) {

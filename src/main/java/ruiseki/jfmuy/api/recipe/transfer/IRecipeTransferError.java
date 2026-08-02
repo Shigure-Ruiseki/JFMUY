@@ -4,6 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 
+import org.jetbrains.annotations.Nullable;
+
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 
 /**
@@ -56,4 +58,16 @@ public interface IRecipeTransferError {
      * Called on {@link Type#USER_FACING} errors.
      */
     void showError(Minecraft minecraft, int mouseX, int mouseY, IRecipeLayout recipeLayout, int recipeX, int recipeY);
+
+    /**
+     * A reason that a recipe transfer couldn't happen, as a string.
+     * <p>
+     * Nullable as it is a later addition to the API.
+     *
+     * @return reason of why the error has occurred
+     */
+    @Nullable
+    default String getSimpleReason() {
+        return null;
+    }
 }

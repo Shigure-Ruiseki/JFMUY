@@ -1,11 +1,11 @@
 package ruiseki.jfmuy.api.ingredients;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import net.minecraft.item.ItemStack;
-
-import com.google.common.collect.ImmutableList;
 
 import ruiseki.jfmuy.api.IModRegistry;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
@@ -82,12 +82,19 @@ public interface IIngredientRegistry {
     <V> IIngredientType<V> getIngredientType(Class<? extends V> ingredientClass);
 
     /**
-     * Returns a list of all the craftable ingredient types.
+     * Returns the ingredient types that plugins have marked as craftable.
+     * <p>
+     * Types opt in with {@link IModIngredientRegistration#markAsCraftable(IIngredientType)}.
+     * Only these types can be hashed, favourited, and autocrafted.
      */
-    ImmutableList<IIngredientType> getCraftableIngredientTypes();
+    default Set<IIngredientType<?>> getCraftableIngredientTypes() {
+        return Collections.emptySet();
+    }
 
     /**
-     * A helper method that returns true if the ingredient is craftable.
+     * Returns true if the given ingredient's type has been marked craftable.
      */
-    boolean isIngredientCraftable(Object ingredient);
+    default boolean isIngredientCraftable(Object ingredient) {
+        return false;
+    }
 }

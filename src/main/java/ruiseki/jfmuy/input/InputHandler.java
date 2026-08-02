@@ -434,7 +434,7 @@ public class InputHandler {
 
         Object value = clicked.getValue();
         recipesGui
-            .show(new Focus<>(mode, value instanceof BookmarkItem ? ((BookmarkItem<?>) value).ingredient : value));
+            .show(new Focus<>(mode, value instanceof BookmarkItem ? ((BookmarkItem<?>) value).getIngredient() : value));
         clicked.onClickHandled();
         return true;
     }

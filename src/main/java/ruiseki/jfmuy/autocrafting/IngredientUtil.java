@@ -63,7 +63,7 @@ public class IngredientUtil {
         IIngredientHelper<BookmarkItem<T>> ingredientHelper = Internal.getIngredientRegistry()
             .getIngredientHelper(ingredient);
         BookmarkItem<T> copy = LegacyUtil.getIngredientCopy(ingredient, ingredientHelper);
-        copy.ingredient = normalizeCopy(copy.ingredient);
+        copy.setIngredient(normalizeCopy(copy.getIngredient()));
         return copy;
     }
 

@@ -7,6 +7,8 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -15,6 +17,7 @@ import org.lwjgl.input.Keyboard;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
+import ruiseki.jfmuy.autocrafting.CraftingPlan;
 import ruiseki.jfmuy.autocrafting.RecipeBookmarkGroup;
 import ruiseki.jfmuy.autocrafting.RecipeBookmarkItem;
 import ruiseki.jfmuy.bookmarks.BookmarkGroup;
@@ -40,6 +43,9 @@ public class BookmarkGroupOrganizer {
     private Rectangle area = new Rectangle();
     private int hoveredGroupId = -1;
     private int missingIngredients = 0;
+    /** Why the hovered group cannot be crafted in the open container, or null if it can. */
+    @Nullable
+    private String craftingBlocker = null;
     private int draggedGroupId = -1;
     private boolean dragWholeGroup = false;
     private int prevMouseY = 0;
@@ -61,6 +67,8 @@ public class BookmarkGroupOrganizer {
     }
 
     public void setBookmarkGroupIds(List<Integer> bookmarkGroupIds) {
+        // The grid was rebuilt, so anything derived from the old chain is no longer trustworthy.
+        invalidateMissingIngredients();
         // Find contiguous groups
         this.groups.clear();
         if (bookmarkGroupIds.isEmpty()) {
@@ -157,6 +165,7 @@ public class BookmarkGroupOrganizer {
             }
             List<String> tooltips = new ArrayList<>();
             List<IngredientListBatchRenderer> slotRows = new ArrayList<>();
+
             if (group.group instanceof RecipeBookmarkGroup) {
                 tooltips.add(Translator.translateToLocal("jfmuy.tooltip.recipe_group"));
             } else {
@@ -175,32 +184,26 @@ public class BookmarkGroupOrganizer {
                                 "jfmuy.tooltip.organizer.4",
                                 KeyBindings.crafting.getDisplayName()));
                     }
-                    tooltips.add(
-                        Translator.translateToLocalFormatted(
-                            "jfmuy.tooltip.organizer.5",
-                            KeyBindings.showRecipeTree.getDisplayName()));
                 }
             } else {
                 hovered = true;
                 tooltips.add(Translator.translateToLocal("jfmuy.tooltip.press_alt"));
                 if (group.group instanceof RecipeBookmarkGroup) {
+                    // Working out what is missing walks the whole chain and scans the inventory, so it is
+                    // only redone when the hovered group changes or the chain itself is invalidated.
                     if (group.group.id != hoveredGroupId) {
-                        List<IIngredientListElement> missing = ((RecipeBookmarkGroup) group.group)
-                            .getMissingIngredients();
-                        this.missingIngredients = missing.size();
-                        this.missingIngredientRenderer.clear();
-                        List<IngredientListSlot> slots = new ObjectArrayList<>();
-                        for (IIngredientListElement any : missing) {
-                            slots.add(new IngredientListSlot(0, 0, INGREDIENT_PADDING));
-                        }
-                        this.missingIngredientRenderer.add(slots);
-                        this.missingIngredientRenderer.set(0, missing);
+                        rebuildMissingIngredients((RecipeBookmarkGroup) group.group);
                     }
                     if (missingIngredients > 0) {
                         tooltips.add(Translator.translateToLocal("jfmuy.tooltip.missing_ingredients"));
                         slotRows.add(this.missingIngredientRenderer);
+                    } else if (craftingBlocker != null) {
+                        // Nothing is missing, so the only thing standing in the way is where the player is
+                        // standing. Say which, rather than letting autocrafting look like it did nothing.
+                        tooltips.add("§c" + craftingBlocker);
                     }
                 }
+                hoveredGroupId = group.group.id;
             }
             TooltipRenderer.drawHoveringTextAndItems(minecraft, tooltips, slotRows, mouseX, mouseY);
             break;
@@ -208,6 +211,30 @@ public class BookmarkGroupOrganizer {
         if (!hovered) {
             hoveredGroupId = -1;
         }
+    }
+
+    private void rebuildMissingIngredients(RecipeBookmarkGroup group) {
+        // One plan, read twice: computing it walks the whole chain and scans the inventory.
+        CraftingPlan plan = group.plan();
+        this.craftingBlocker = group.getCraftingBlocker(plan);
+        List<IIngredientListElement> missing = group.getMissingIngredients(plan);
+        this.missingIngredients = missing.size();
+        this.missingIngredientRenderer.clear();
+        List<IngredientListSlot> slots = new ObjectArrayList<>(missing.size());
+        for (int i = 0; i < missing.size(); i++) {
+            // Positions are placeholders; the tooltip lays these out with moveSlotsToFit once it knows its width.
+            slots.add(new IngredientListSlot(0, 0, INGREDIENT_PADDING));
+        }
+        this.missingIngredientRenderer.add(slots);
+        this.missingIngredientRenderer.set(0, missing);
+    }
+
+    /**
+     * Forces the missing-ingredient tooltip to be worked out again, because the chain it was derived from
+     * has changed underneath it.
+     */
+    public void invalidateMissingIngredients() {
+        this.hoveredGroupId = -1;
     }
 
     public <I> List<IGhostIngredientHandler.Target<I>> getTargets(I ingredient) {
@@ -224,7 +251,7 @@ public class BookmarkGroupOrganizer {
     public boolean onKeyPressed(char typedChar, int eventKey) {
         int mouseX = MouseHelper.getX();
         int mouseY = MouseHelper.getY();
-        if (mouseX >= area.x + BookmarkGridWithNavigation.BOOKMARK_TAB_WIDTH) {
+        if (mouseX > area.x + BookmarkGridWithNavigation.BOOKMARK_TAB_WIDTH) {
             return false;
         }
         for (BookmarkGroupDisplay group : groups) {
@@ -253,16 +280,12 @@ public class BookmarkGroupOrganizer {
                     return true;
                 }
             }
-            if (KeyBindings.showRecipeTree.isActiveAndMatches(eventKey)) {
-                if (group.group instanceof RecipeBookmarkGroup) {
-                    ((RecipeBookmarkGroup) group.group).showRecipeTree();
-                    return true;
-                }
-            }
         }
+
         if (KeyBindings.isInventoryCloseKey(eventKey) || KeyBindings.isInventoryToggleKey(eventKey)) {
             stopDrag();
         }
+
         return false;
     }
 

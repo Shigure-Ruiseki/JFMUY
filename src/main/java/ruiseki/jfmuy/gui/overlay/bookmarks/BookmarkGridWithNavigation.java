@@ -179,10 +179,10 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
             && element != null) {
             BookmarkItem<?> item = (BookmarkItem<?>) element.getIngredient();
             if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
-                if (item.ingredient instanceof ItemStack) {
-                    int stackSize = ((ItemStack) item.ingredient).getMaxStackSize();
+                if (item.getIngredient() instanceof ItemStack) {
+                    int stackSize = ((ItemStack) item.getIngredient()).getMaxStackSize();
                     item.changeAmount(scrollDelta < 0 ? -stackSize : stackSize);
-                } else if (item.ingredient instanceof FluidStack) {
+                } else if (item.getIngredient() instanceof FluidStack) {
                     item.changeAmount(scrollDelta < 0 ? -1000 : 1000);
                 } else {
                     item.changeAmount(scrollDelta < 0 ? -1 : 1);
@@ -194,6 +194,8 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
                 .saveBookmarks();
             bookmarkGrid.getGuiIngredientSlots()
                 .invalidateBuffer();
+            // Changing a requested amount changes what the chain is short of.
+            this.groupOrganizer.invalidateMissingIngredients();
             return true;
         } else {
             if (scrollDelta < 0) {

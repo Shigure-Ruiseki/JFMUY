@@ -19,7 +19,6 @@ import net.minecraft.tileentity.TileEntityFurnace;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import ruiseki.jfmuy.Internal;
@@ -44,7 +43,7 @@ public class IngredientRegistry implements IIngredientRegistry {
     private final ImmutableMap<IIngredientType, IIngredientHelper> ingredientHelperMap;
     private final ImmutableMap<IIngredientType, IIngredientRenderer> ingredientRendererMap;
     private final ImmutableMap<Class, IIngredientType> ingredientTypeMap;
-    private final ImmutableList<IIngredientType> craftableIngredientTypes;
+    private final Set<IIngredientType<?>> craftableIngredientTypes;
 
     private final NonNullList<ItemStack> fuels = NonNullList.create();
     private final NonNullList<ItemStack> potionIngredients = NonNullList.create();
@@ -53,7 +52,7 @@ public class IngredientRegistry implements IIngredientRegistry {
         Map<IIngredientType, IngredientSet> ingredientsMap,
         ImmutableMap<IIngredientType, IIngredientHelper> ingredientHelperMap,
         ImmutableMap<IIngredientType, IIngredientRenderer> ingredientRendererMap,
-        ImmutableList<IIngredientType> craftableIngredientTypes) {
+        Set<IIngredientType<?>> craftableIngredientTypes) {
         this.modIdHelper = modIdHelper;
         this.blacklist = blacklist;
         this.ingredientsMap = ingredientsMap;
@@ -72,12 +71,13 @@ public class IngredientRegistry implements IIngredientRegistry {
     }
 
     @Override
-    public ImmutableList<IIngredientType> getCraftableIngredientTypes() {
+    public Set<IIngredientType<?>> getCraftableIngredientTypes() {
         return craftableIngredientTypes;
     }
 
     @Override
     public boolean isIngredientCraftable(Object ingredient) {
+        // Hot path: called for every ingredient while building recipe chains, so this must not scan a list
         return craftableIngredientTypes.contains(getIngredientType(ingredient));
     }
 

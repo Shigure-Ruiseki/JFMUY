@@ -154,12 +154,12 @@ public class GuiRecipeTree extends GuiScreen {
                 if (nodeRelMouseY >= 0 && nodeRelMouseY <= RecipeTreeRenderer.ROW1_HEIGHT) {
 
                     if (nodeRelMouseX >= 0 && nodeRelMouseX <= RecipeTreeRenderer.COL_WIDTH) {
-                        if (hovered.item.ingredient != null) {
+                        if (hovered.item.getIngredient() != null) {
                             JFMUYRuntime runtime = Internal.getRuntime();
                             if (runtime != null) {
                                 IFocus.Mode mode = (mouseButton == 1) ? IFocus.Mode.INPUT : IFocus.Mode.OUTPUT;
                                 runtime.getRecipesGui()
-                                    .show(new Focus<>(mode, hovered.item.ingredient));
+                                    .show(new Focus<>(mode, hovered.item.getIngredient()));
                                 return;
                             }
                         }
@@ -273,17 +273,17 @@ public class GuiRecipeTree extends GuiScreen {
 
                 if (nodeRelMouseY >= 0 && nodeRelMouseY <= RecipeTreeRenderer.ROW1_HEIGHT) {
                     if (nodeRelMouseX >= 0 && nodeRelMouseX <= RecipeTreeRenderer.COL_WIDTH
-                        && hovered.item.ingredient != null) {
+                        && hovered.item.getIngredient() != null) {
                         JFMUYRuntime runtime = Internal.getRuntime();
                         if (runtime != null) {
                             if (KeyBindings.showRecipe.isActiveAndMatches(keyCode)) {
                                 runtime.getRecipesGui()
-                                    .show(new Focus<>(IFocus.Mode.OUTPUT, hovered.item.ingredient));
+                                    .show(new Focus<>(IFocus.Mode.OUTPUT, hovered.item.getIngredient()));
                                 return;
                             }
                             if (KeyBindings.showUses.isActiveAndMatches(keyCode)) {
                                 runtime.getRecipesGui()
-                                    .show(new Focus<>(IFocus.Mode.INPUT, hovered.item.ingredient));
+                                    .show(new Focus<>(IFocus.Mode.INPUT, hovered.item.getIngredient()));
                                 return;
                             }
                         }

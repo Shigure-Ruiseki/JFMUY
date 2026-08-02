@@ -26,8 +26,8 @@ public class BookmarkItem<I> {
     @SuppressWarnings("rawtypes")
     public static final IIngredientType<BookmarkItem> TYPE = () -> BookmarkItem.class;
 
-    public I ingredient;
-    public long amount = 0L;
+    private I ingredient;
+    private long amount = 0L;
     @Nullable
     protected BookmarkGroup group;
 
@@ -124,7 +124,6 @@ public class BookmarkItem<I> {
             // Old format; deserialize whole string as ingredient and add as bookmark item
             ingredient = parseIngredientOld(ingredientJsonString, otherIngredientTypes);
             if (ingredient == null) {
-
                 return null;
             }
             item = new BookmarkItem<>(ingredient);
@@ -250,11 +249,27 @@ public class BookmarkItem<I> {
         }
     }
 
+    public I getIngredient() {
+        return ingredient;
+    }
+
     public <O> void setIngredient(O ingredient) {
         if (this.ingredient.getClass()
             .isAssignableFrom(ingredient.getClass())) { // Incredible instanceof
             this.ingredient = (I) ingredient;
         }
+    }
+
+    protected void setIngredientUnchecked(I ingredient) {
+        this.ingredient = ingredient;
+    }
+
+    protected long getAmount() {
+        return amount;
+    }
+
+    protected void setAmount(long amount) {
+        this.amount = amount;
     }
 
     public void setGroup(@Nullable BookmarkGroup group) {

@@ -16,6 +16,7 @@ import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferInfo;
 import ruiseki.jfmuy.api.recipe.transfer.IRecipeTransferRegistry;
 import ruiseki.jfmuy.collect.Table;
+import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.startup.StackHelper;
 import ruiseki.jfmuy.transfer.BasicRecipeTransferHandler;
 import ruiseki.jfmuy.transfer.BasicRecipeTransferInfo;
@@ -69,6 +70,9 @@ public class RecipeTransferRegistry implements IRecipeTransferRegistry {
     @Override
     public <C extends Container> void addRecipeTransferHandler(IRecipeTransferInfo<C> recipeTransferInfo) {
         ErrorUtil.checkNotNull(recipeTransferInfo, "recipeTransferInfo");
+        if (Config.isRecipeCategoryDisabled(recipeTransferInfo.getRecipeCategoryUid())) {
+            return;
+        }
 
         IRecipeTransferHandler<C> recipeTransferHandler = new BasicRecipeTransferHandler<>(
             stackHelper,
@@ -81,6 +85,9 @@ public class RecipeTransferRegistry implements IRecipeTransferRegistry {
     public void addRecipeTransferHandler(IRecipeTransferHandler<?> recipeTransferHandler, String recipeCategoryUid) {
         ErrorUtil.checkNotNull(recipeTransferHandler, "recipeTransferHandler");
         ErrorUtil.checkNotNull(recipeCategoryUid, "recipeCategoryUid");
+        if (Config.isRecipeCategoryDisabled(recipeCategoryUid)) {
+            return;
+        }
 
         Class<?> containerClass = recipeTransferHandler.getContainerClass();
         this.recipeTransferHandlers.put(containerClass, recipeCategoryUid, recipeTransferHandler);

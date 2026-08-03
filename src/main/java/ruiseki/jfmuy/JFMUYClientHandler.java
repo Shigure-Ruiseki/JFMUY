@@ -25,7 +25,6 @@ import ruiseki.jfmuy.api.IModPlugin;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.ServerInfo;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
-import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.input.MouseHelper;
 import ruiseki.jfmuy.plugins.jfmuy.JFMUYInternalPlugin;
 import ruiseki.jfmuy.plugins.vanilla.VanillaPlugin;
@@ -172,8 +171,8 @@ public class JFMUYClientHandler {
         if (this.starter.hasStarted()) {
             Log.get()
                 .info("Recipes updated from server. Reloading JFMUY...");
-            IngredientFilter.firstBuild = true;
-            this.starter.start(this.plugins);
+            Config.needToRebuildSearchTree = true;
+            reloadItemList();
         }
     }
 }

@@ -61,6 +61,7 @@ public class ConfigValues {
 
     // category
     public List<String> categoryUidOrder = new ArrayList<>();
+    public Set<String> disabledRecipeCategoryUids = new HashSet<>();
 
     // collapsible groups
     public boolean collapsibleGroupsEnabled = true;

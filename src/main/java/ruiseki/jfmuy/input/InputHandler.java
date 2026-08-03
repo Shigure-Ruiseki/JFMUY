@@ -375,7 +375,6 @@ public class InputHandler {
         switch (pressedKey) {
             case BOOKMARK:
                 return addBookmark(false, false);
-
             case BOOKMARK_TO_TOP:
                 return addBookmark(false, true);
             case BOOKMARK_NEW_GROUP:

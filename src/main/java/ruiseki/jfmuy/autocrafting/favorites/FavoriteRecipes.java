@@ -24,7 +24,6 @@ import ruiseki.jfmuy.gui.recipes.RecipeLayout;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
 import ruiseki.jfmuy.util.Log;
-import ruiseki.okcore.datastructure.ThreadsafeCache;
 
 public final class FavoriteRecipes {
 
@@ -33,10 +32,7 @@ public final class FavoriteRecipes {
     private static final Map<String, IRecipeWrapper> recipesByIngredient = new Object2ObjectLinkedOpenHashMap<>();
     private static final Map<IRecipeWrapper, IRecipeCategory<?>> recipeCategories = new Object2ObjectLinkedOpenHashMap<>();
     private static final Object2IntOpenHashMap<IRecipeWrapper> favoriteCounts = new Object2IntOpenHashMap<>();
-    private static final ThreadsafeCache<IRecipeWrapper, RecipeLayout> layoutCache = new ThreadsafeCache<>(
-        256,
-        key -> createRecipeLayout((IRecipeWrapper) key),
-        false);
+    private static final Map<String, RecipeLayout> layoutCacheByUniqueId = new Object2ObjectLinkedOpenHashMap<>();
 
     private FavoriteRecipes() {}
 
@@ -177,6 +173,7 @@ public final class FavoriteRecipes {
 
     @Nullable
     public static IRecipeWrapper getFavorite(Object ingredient) {
+        if (ingredient == null || recipesByIngredient.isEmpty()) return null;
         return recipesByIngredient.get(uniqueIdOf(ingredient));
     }
 
@@ -188,17 +185,14 @@ public final class FavoriteRecipes {
 
     @Nullable
     public static RecipeLayout getRecipeLayout(Object ingredient) {
-        IRecipeWrapper recipe = getFavorite(ingredient);
-        if (recipe == null) return null;
-        return layoutCache.get(recipe);
+        if (ingredient == null || recipesByIngredient.isEmpty()) return null;
+        return layoutCacheByUniqueId.get(uniqueIdOf(ingredient));
     }
 
     @Nullable
-    private static RecipeLayout createRecipeLayout(IRecipeWrapper recipe) {
-        @SuppressWarnings("unchecked")
-        IRecipeCategory<IRecipeWrapper> category = (IRecipeCategory<IRecipeWrapper>) recipeCategories.get(recipe);
-        if (category == null) return null;
-        return RecipeLayout.create(-1, category, recipe, null, 0, 0);
+    @SuppressWarnings("unchecked")
+    private static RecipeLayout createRecipeLayout(IRecipeWrapper recipe, IRecipeCategory<?> category) {
+        return RecipeLayout.create(-1, (IRecipeCategory<IRecipeWrapper>) category, recipe, null, 0, 0);
     }
 
     private static void addFavorite(String ingredientUniqueId, IRecipeWrapper recipe, IRecipeCategory<?> category) {
@@ -206,13 +200,17 @@ public final class FavoriteRecipes {
         recipesByIngredient.put(ingredientUniqueId, recipe);
         recipeCategories.put(recipe, category);
         favoriteCounts.addTo(recipe, 1);
+        RecipeLayout layout = createRecipeLayout(recipe, category);
+        if (layout != null) {
+            layoutCacheByUniqueId.put(ingredientUniqueId, layout);
+        }
     }
 
     private static void removeFavorite(String ingredientUniqueId) {
         IRecipeWrapper previous = recipesByIngredient.remove(ingredientUniqueId);
-        if (previous == null) {
-            return;
-        }
+        if (previous == null) return;
+
+        layoutCacheByUniqueId.remove(ingredientUniqueId);
         int remaining = favoriteCounts.addTo(previous, -1) - 1;
         if (remaining <= 0) {
             favoriteCounts.removeInt(previous);
@@ -224,7 +222,7 @@ public final class FavoriteRecipes {
         recipesByIngredient.clear();
         recipeCategories.clear();
         favoriteCounts.clear();
-        layoutCache.clear();
+        layoutCacheByUniqueId.clear();
     }
 
     private static String uniqueIdOf(Object ingredient) {

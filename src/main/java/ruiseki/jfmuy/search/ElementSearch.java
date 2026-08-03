@@ -8,6 +8,7 @@ import java.util.Set;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.search.ISearchIndex;
 import ruiseki.jfmuy.api.search.ISearchIndexBuilder;
 import ruiseki.jfmuy.api.search.ISearchIndexBuilderFactory;
@@ -54,7 +55,7 @@ public class ElementSearch implements IElementSearch {
         for (PrefixedSearchable prefixedSearchable : this.prefixedSearchables.values()) {
             prefixedSearchable.build();
         }
-        if (!this.loggedStatistics && FMLLaunchHandler.isDeobfuscatedEnvironment()) {
+        if (!this.loggedStatistics && Reference.DEOBFUSCATED) {
             this.loggedStatistics = true;
             this.logStatistics();
         }

@@ -1,5 +1,6 @@
 package ruiseki.jfmuy.gui.overlay.bookmarks.tree;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -7,13 +8,19 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.RenderHelper;
 
+import net.minecraft.util.EnumChatFormatting;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IDrawable;
+import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
+import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.autocrafting.RecipeBookmarkGroup;
+import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
+import ruiseki.jfmuy.startup.ForgeModIdHelper;
+import ruiseki.jfmuy.util.LegacyUtil;
 import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.client.renderer.GlStateManager;
 
@@ -251,22 +258,49 @@ public class RecipeTreeRenderer {
             break;
         }
     }
-
     private boolean renderCategoryTooltip(Minecraft mc, RecipeTreeNode node, int mouseX, int mouseY) {
         if (node.item == null || node.item.category == null) return false;
 
-        IDrawable categoryIcon = node.item.category.getIcon();
+        IRecipeCategory<?> category = node.item.category;
+        IDrawable categoryIcon = category.getIcon();
+
         if (categoryIcon != null) {
-            String categoryTitle = node.item.category.getTitle();
-            if (categoryTitle != null && !categoryTitle.isEmpty()) {
-                gui.drawHoveringText(Collections.singletonList(categoryTitle), mouseX, mouseY, mc.fontRenderer);
+            List<String> tooltip = new ArrayList<>();
+            String title = category.getTitle();
+            if (title != null && !title.isEmpty()) {
+                tooltip.add(title);
+            }
+
+            if (mc.gameSettings.advancedItemTooltips) {
+                tooltip.add(EnumChatFormatting.DARK_GRAY + category.getUid());
+            }
+
+            String modName = LegacyUtil.getModName(category);
+            if (modName != null) {
+                modName = ForgeModIdHelper.getInstance()
+                    .getFormattedModNameForModId(modName);
+                if (modName != null) {
+                    tooltip.add(modName);
+                }
+            }
+
+            if (!tooltip.isEmpty()) {
+                GlStateManager.pushMatrix();
+                RenderHelper.enableGUIStandardItemLighting();
+
+                gui.drawHoveringText(tooltip, mouseX, mouseY, mc.fontRenderer);
+
+                RenderHelper.disableStandardItemLighting();
+                GlStateManager.disableLighting();
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                GlStateManager.popMatrix();
                 return true;
             }
         } else {
             JFMUYRuntime runtime = Internal.getRuntime();
             if (runtime != null) {
                 List<Object> catalysts = runtime.getRecipeRegistry()
-                    .getRecipeCatalysts(node.item.category);
+                    .getRecipeCatalysts(category);
                 if (catalysts != null && !catalysts.isEmpty()) {
                     renderIngredientTooltip(mc, catalysts.getFirst(), mouseX, mouseY);
                     return true;
@@ -282,17 +316,17 @@ public class RecipeTreeRenderer {
         if (ingredientType == null) return;
 
         IIngredientRenderer<T> renderer = registry.getIngredientRenderer(ingredientType);
+        IIngredientHelper<T> helper = registry.getIngredientHelper(ingredientType);
         if (renderer == null) return;
 
         boolean advancedItemTooltips = mc.gameSettings.advancedItemTooltips;
         List<String> tooltip = renderer.getTooltip(mc, ingredient, advancedItemTooltips);
+        tooltip = ForgeModIdHelper.getInstance()
+            .addModNameToIngredientTooltip(tooltip, ingredient, helper);
         if (tooltip != null && !tooltip.isEmpty()) {
-            FontRenderer font = renderer.getFontRenderer(mc, ingredient);
-            if (font == null) {
-                font = mc.fontRenderer;
-            }
+            FontRenderer fontRenderer = renderer.getFontRenderer(mc, ingredient);
             RenderHelper.enableGUIStandardItemLighting();
-            gui.drawHoveringText(tooltip, mouseX, mouseY, font);
+            TooltipRenderer.drawHoveringTextWithFavorite(ingredient, null, mc, tooltip, mouseX, mouseY, -1, fontRenderer);
             RenderHelper.disableStandardItemLighting();
         }
     }

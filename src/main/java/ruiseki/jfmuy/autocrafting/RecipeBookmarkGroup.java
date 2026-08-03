@@ -46,6 +46,8 @@ public class RecipeBookmarkGroup extends BookmarkGroup {
     private List<BookmarkItem<?>> displayRows;
     @Nullable
     private List<IIngredientListElement<?>> displayElements;
+    @Nullable
+    private List<IIngredientListElement> displayRawInputElements;
     private boolean builtWithRecipeBookmarksEnabled;
 
     public RecipeBookmarkGroup(int id) {
@@ -65,6 +67,7 @@ public class RecipeBookmarkGroup extends BookmarkGroup {
     void onChainChanged() {
         this.displayRows = null;
         this.displayElements = null;
+        this.displayRawInputElements = null;
     }
 
     /**
@@ -257,6 +260,38 @@ public class RecipeBookmarkGroup extends BookmarkGroup {
             }
         }
         return elements;
+    }
+
+    public List<IIngredientListElement> getRawInputElements() {
+        if (displayRawInputElements != null) {
+            return displayRawInputElements;
+        }
+
+        ChainSolution solution = chain.solution();
+        RecipeGraph graph = chain.graph();
+        if (solution.isEmpty()) {
+            displayRawInputElements = Collections.emptyList();
+            return displayRawInputElements;
+        }
+
+        List<IIngredientListElement> elements = new ObjectArrayList<>();
+        for (RecipeBookmarkItem<?> node : solution.order()) {
+            if (node == null) continue;
+
+            boolean isRawInput = (node.category == null || node.recipe == null) || graph.successors(node)
+                .isEmpty();
+
+            if (isRawInput) {
+                IIngredientListElement<?> element = getIngredientListElement(
+                    new DummyBookmarkItem<>(node.getIngredient(), this, () -> solution().requiredOf(node)));
+                if (element != null) {
+                    elements.add(element);
+                }
+            }
+        }
+
+        displayRawInputElements = elements;
+        return displayRawInputElements;
     }
 
     public void autocraft() {

@@ -1,14 +1,14 @@
 package ruiseki.jfmuy.gui.overlay.bookmarks.tree;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.RenderHelper;
-
 import net.minecraft.util.EnumChatFormatting;
+
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
@@ -18,6 +18,7 @@ import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.autocrafting.RecipeBookmarkGroup;
 import ruiseki.jfmuy.gui.TooltipRenderer;
+import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
 import ruiseki.jfmuy.startup.ForgeModIdHelper;
 import ruiseki.jfmuy.util.LegacyUtil;
@@ -28,9 +29,11 @@ public class RecipeTreeRenderer {
 
     public static final int ROW_HEIGHT = 20;
     public static final int COL_WIDTH = 20;
+    private static final int ITEMS_PER_ROW = 10;
 
     private static final int COLOR_LINE = 0xFFFFFFFF;
     private static final int COLOR_BORDER = 0xFFFFFFFF;
+    private static final int COLOR_BORDER_HOVER = 0xFF87CEFA;
     private static final int COLOR_HELP_TEXT = 0xFFA500;
 
     private final GuiRecipeTree gui;
@@ -44,6 +47,7 @@ public class RecipeTreeRenderer {
         int screenWidth = mc.displayWidth;
         int screenHeight = mc.displayHeight;
 
+        // === 1. VẼ CÂY RECIPE (CÓ ZOOM/PAN) ===
         GlStateManager.pushMatrix();
         GlStateManager.translate(offsetX, offsetY, 0);
         GlStateManager.scale(zoomScale, zoomScale, 1.0f);
@@ -51,27 +55,109 @@ public class RecipeTreeRenderer {
         int scaledMouseX = (int) ((mouseX - offsetX) / zoomScale);
         int scaledMouseY = (int) ((mouseY - offsetY) / zoomScale);
 
-        for (RecipeTreeNode root : rootNodes) {
-            drawNodeConnections(root);
-        }
+        if (rootNodes != null) {
+            for (RecipeTreeNode root : rootNodes) {
+                drawNodeConnections(root);
+            }
 
-        for (RecipeTreeNode root : rootNodes) {
-            drawNodeRecipes(
-                mc,
-                root,
-                scaledMouseX,
-                scaledMouseY,
-                offsetX,
-                offsetY,
-                zoomScale,
-                screenWidth,
-                screenHeight);
+            for (RecipeTreeNode root : rootNodes) {
+                drawNodeRecipes(
+                    mc,
+                    root,
+                    scaledMouseX,
+                    scaledMouseY,
+                    offsetX,
+                    offsetY,
+                    zoomScale,
+                    screenWidth,
+                    screenHeight);
+            }
         }
 
         GlStateManager.popMatrix();
 
-        drawNodeTooltips(mc, mouseX, mouseY, rootNodes, offsetX, offsetY, zoomScale);
+        if (rootNodes != null && !rootNodes.isEmpty()) {
+            drawRawInputsPanel(mc, group);
+        }
+
+        boolean hoveredPanel = drawRawInputsPanelTooltip(mc, group, mouseX, mouseY);
+        if (!hoveredPanel && rootNodes != null && !rootNodes.isEmpty()) {
+            drawNodeTooltips(mc, mouseX, mouseY, rootNodes, offsetX, offsetY, zoomScale);
+        }
+
         drawHelpOverlay(mc, zoomScale);
+    }
+
+    private void drawRawInputsPanel(Minecraft mc, RecipeBookmarkGroup group) {
+        if (group == null) return;
+
+        List<IIngredientListElement> ingredients = group.getRawInputElements();
+        if (ingredients == null || ingredients.isEmpty()) return;
+
+        ScaledResolution scaledRes = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+        int screenHeight = scaledRes.getScaledHeight();
+
+        int rows = (int) Math.ceil((double) ingredients.size() / ITEMS_PER_ROW);
+
+        int panelHeight = 16 + (rows * ROW_HEIGHT);
+
+        int panelX = 10;
+        int panelY = screenHeight - panelHeight - 10;
+
+        mc.fontRenderer.drawStringWithShadow(
+            Translator.translateToLocal("jfmuy.tooltip.tree.totalCost"),
+            panelX + 5,
+            panelY + 4,
+            COLOR_LINE);
+
+        for (int i = 0; i < ingredients.size(); i++) {
+            IIngredientListElement<?> element = ingredients.get(i);
+            if (element == null) continue;
+
+            Object ingredient = element.getIngredient();
+            if (ingredient == null) continue;
+
+            int itemX = panelX + 5 + (i % ITEMS_PER_ROW) * COL_WIDTH;
+            int itemY = panelY + 16 + (i / ITEMS_PER_ROW) * ROW_HEIGHT;
+
+            drawIngredient(mc, ingredient, itemX, itemY);
+        }
+    }
+
+    private boolean drawRawInputsPanelTooltip(Minecraft mc, RecipeBookmarkGroup group, int mouseX, int mouseY) {
+        if (group == null) return false;
+
+        List<IIngredientListElement> ingredients = group.getMissingIngredients();
+        if (ingredients == null || ingredients.isEmpty()) return false;
+
+        ScaledResolution scaledRes = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+        int screenHeight = scaledRes.getScaledHeight();
+
+        int rows = (int) Math.ceil((double) ingredients.size() / ITEMS_PER_ROW);
+
+        int panelHeight = 16 + (rows * ROW_HEIGHT);
+
+        int panelX = 10;
+        int panelY = screenHeight - panelHeight - 10;
+
+        for (int i = 0; i < ingredients.size(); i++) {
+            IIngredientListElement<?> element = ingredients.get(i);
+            if (element == null) continue;
+
+            Object ingredient = element.getIngredient();
+            if (ingredient == null) continue;
+
+            int itemX = panelX + 5 + (i % ITEMS_PER_ROW) * COL_WIDTH;
+            int itemY = panelY + 16 + (i / ITEMS_PER_ROW) * ROW_HEIGHT;
+
+            if (mouseX >= itemX && mouseX <= itemX + 16 && mouseY >= itemY && mouseY <= itemY + 16) {
+
+                renderIngredientTooltip(mc, ingredient, mouseX, mouseY);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void drawHelpOverlay(Minecraft mc, float zoomScale) {
@@ -155,8 +241,12 @@ public class RecipeTreeRenderer {
             GlStateManager.translate(node.x, node.y, 0);
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
+            boolean isHovered = scaledMouseX >= node.x && scaledMouseX <= node.x + node.width
+                && scaledMouseY >= node.y
+                && scaledMouseY <= node.y + node.height;
+
             if (node.hasSecondColumn()) {
-                drawNodeBorder(node.width, node.height);
+                drawNodeBorder(node.width, node.height, isHovered);
                 drawCategoryOrCatalyst(mc, node);
             }
 
@@ -184,17 +274,20 @@ public class RecipeTreeRenderer {
         }
     }
 
-    private void drawNodeBorder(int width, int height) {
-        gui.drawRectPublic(0, 0, width, 1, COLOR_BORDER);
-        gui.drawRectPublic(0, height - 1, width, height, COLOR_BORDER);
-        gui.drawRectPublic(0, 0, 1, height, COLOR_BORDER);
-        gui.drawRectPublic(width - 1, 0, width, height, COLOR_BORDER);
+    private void drawNodeBorder(int width, int height, boolean isHovered) {
+        int color = isHovered ? COLOR_BORDER_HOVER : COLOR_BORDER;
+
+        gui.drawRectPublic(0, 0, width, 1, color);
+        gui.drawRectPublic(0, height - 1, width, height, color);
+        gui.drawRectPublic(0, 0, 1, height, color);
+        gui.drawRectPublic(width - 1, 0, width, height, color);
     }
 
     private void drawCategoryOrCatalyst(Minecraft mc, RecipeTreeNode node) {
         if (node.item == null || node.item.category == null) return;
 
-        IDrawable categoryIcon = node.item.category.getIcon();
+        IRecipeCategory<?> category = node.item.category;
+        IDrawable categoryIcon = category.getIcon();
         if (categoryIcon != null) {
             categoryIcon.draw(mc, 2, 2);
             return;
@@ -243,14 +336,13 @@ public class RecipeTreeRenderer {
                         if (renderCategoryTooltip(mc, hovered, mouseX, mouseY)) break;
                     }
 
-                    if (nodeRelMouseX > COL_WIDTH && nodeRelMouseX <= hovered.width
-                        && hovered.item.getIngredient() != null) {
-                        renderIngredientTooltip(mc, hovered.item.getIngredient(), mouseX, mouseY);
+                    if (nodeRelMouseX > COL_WIDTH && nodeRelMouseX <= hovered.width && hovered.item != null) {
+                        renderIngredientTooltip(mc, hovered.item, mouseX, mouseY);
                         break;
                     }
                 } else {
-                    if (nodeRelMouseX >= 0 && nodeRelMouseX <= hovered.width && hovered.item.getIngredient() != null) {
-                        renderIngredientTooltip(mc, hovered.item.getIngredient(), mouseX, mouseY);
+                    if (nodeRelMouseX >= 0 && nodeRelMouseX <= hovered.width && hovered.item != null) {
+                        renderIngredientTooltip(mc, hovered.item, mouseX, mouseY);
                         break;
                     }
                 }
@@ -258,6 +350,7 @@ public class RecipeTreeRenderer {
             break;
         }
     }
+
     private boolean renderCategoryTooltip(Minecraft mc, RecipeTreeNode node, int mouseX, int mouseY) {
         if (node.item == null || node.item.category == null) return false;
 
@@ -326,8 +419,42 @@ public class RecipeTreeRenderer {
         if (tooltip != null && !tooltip.isEmpty()) {
             FontRenderer fontRenderer = renderer.getFontRenderer(mc, ingredient);
             RenderHelper.enableGUIStandardItemLighting();
-            TooltipRenderer.drawHoveringTextWithFavorite(ingredient, null, mc, tooltip, mouseX, mouseY, -1, fontRenderer);
+            TooltipRenderer
+                .drawHoveringTextWithFavorite(ingredient, null, mc, tooltip, mouseX, mouseY, -1, fontRenderer);
             RenderHelper.disableStandardItemLighting();
         }
+    }
+
+    public Object getRawInputIngredientUnderMouse(Minecraft mc, RecipeBookmarkGroup group, int mouseX, int mouseY) {
+        if (group == null) return null;
+
+        List<IIngredientListElement> ingredients = group.getRawInputElements();
+        if (ingredients == null || ingredients.isEmpty()) return null;
+
+        ScaledResolution scaledRes = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+        int screenHeight = scaledRes.getScaledHeight();
+
+        int rows = (int) Math.ceil((double) ingredients.size() / ITEMS_PER_ROW);
+        int panelHeight = 16 + (rows * ROW_HEIGHT);
+
+        int panelX = 10;
+        int panelY = screenHeight - panelHeight - 10;
+
+        for (int i = 0; i < ingredients.size(); i++) {
+            IIngredientListElement<?> element = ingredients.get(i);
+            if (element == null) continue;
+
+            Object ingredient = element.getIngredient();
+            if (ingredient == null) continue;
+
+            int itemX = panelX + 5 + (i % ITEMS_PER_ROW) * COL_WIDTH;
+            int itemY = panelY + 16 + (i / ITEMS_PER_ROW) * ROW_HEIGHT;
+
+            if (mouseX >= itemX && mouseX <= itemX + 16 && mouseY >= itemY && mouseY <= itemY + 16) {
+                return ingredient;
+            }
+        }
+
+        return null;
     }
 }

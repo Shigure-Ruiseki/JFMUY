@@ -193,8 +193,9 @@ public class BookmarkGroupOrganizer {
                     }
                 }
                 tooltips.add(
-                    Translator
-                        .translateToLocalFormatted("jfmuy.tooltip.organizer.6", KeyBindings.showRecipeTree.getDisplayName()));
+                    Translator.translateToLocalFormatted(
+                        "jfmuy.tooltip.organizer.6",
+                        KeyBindings.showRecipeTree.getDisplayName()));
             } else {
                 hovered = true;
                 tooltips.add(Translator.translateToLocal("jfmuy.tooltip.press_alt"));

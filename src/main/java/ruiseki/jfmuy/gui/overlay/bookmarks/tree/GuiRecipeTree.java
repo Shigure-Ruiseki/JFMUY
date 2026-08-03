@@ -191,6 +191,17 @@ public class GuiRecipeTree extends GuiScreen {
             return;
         }
 
+        Object rawIngredient = renderer.getRawInputIngredientUnderMouse(mc, group, mouseX, mouseY);
+        if (rawIngredient != null) {
+            JFMUYRuntime runtime = Internal.getRuntime();
+            if (runtime != null) {
+                IFocus.Mode mode = (mouseButton == 1) ? IFocus.Mode.INPUT : IFocus.Mode.OUTPUT;
+                runtime.getRecipesGui()
+                    .show(new Focus<>(mode, rawIngredient));
+                return;
+            }
+        }
+
         HoverResult result = getHoveredResultAt(mouseX, mouseY);
         if (result != null) {
             RecipeTreeNode hovered = result.node();
@@ -277,6 +288,23 @@ public class GuiRecipeTree extends GuiScreen {
 
         int mouseX = Mouse.getX() * this.width / this.mc.displayWidth;
         int mouseY = this.height - Mouse.getY() * this.height / this.mc.displayHeight - 1;
+
+        Object rawIngredient = renderer.getRawInputIngredientUnderMouse(mc, group, mouseX, mouseY);
+        if (rawIngredient != null) {
+            JFMUYRuntime runtime = Internal.getRuntime();
+            if (runtime != null) {
+                if (KeyBindings.showRecipe.isActiveAndMatches(keyCode)) {
+                    runtime.getRecipesGui()
+                        .show(new Focus<>(IFocus.Mode.OUTPUT, rawIngredient));
+                    return;
+                }
+                if (KeyBindings.showUses.isActiveAndMatches(keyCode)) {
+                    runtime.getRecipesGui()
+                        .show(new Focus<>(IFocus.Mode.INPUT, rawIngredient));
+                    return;
+                }
+            }
+        }
 
         HoverResult result = getHoveredResultAt(mouseX, mouseY);
         if (result != null) {

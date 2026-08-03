@@ -76,12 +76,12 @@ public class KeyBindings {
                 Keyboard.KEY_BACK,
                 categoryName),
             previousPage = new KeyBindingOK(
-                "key.jfmuy.previousCategory",
+                "key.jfmuy.previousPage",
                 KeyConflictContext.GUI,
                 Keyboard.KEY_PRIOR,
                 categoryName),
             nextPage = new KeyBindingOK(
-                "key.jfmuy.nextCategory",
+                "key.jfmuy.nextPage",
                 KeyConflictContext.GUI,
                 Keyboard.KEY_NEXT,
                 categoryName),

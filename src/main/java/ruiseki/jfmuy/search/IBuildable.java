@@ -9,7 +9,13 @@ public interface IBuildable {
 
     void stop();
 
+    /**
+     * Bakes everything submitted so far into a searchable storage. Must be idempotent.
+     */
+    void build();
+
     void submit(IIngredientListElement<?> ingredient);
 
     void submitAll(NonNullList<IIngredientListElement> ingredients);
+
 }

@@ -2,13 +2,11 @@ package ruiseki.jfmuy.ingredients;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import net.minecraft.client.Minecraft;
@@ -47,9 +45,6 @@ import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.datastructure.NonNullList;
 
 public class IngredientFilter implements IIngredientFilter, IIngredientGridSource {
-
-    public static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
-    public static final Pattern FILTER_SPLIT_PATTERN = Pattern.compile("(-?\".*?(?:\"|$)|\\S+)");
 
     public static boolean firstBuild = true;
     public static boolean rebuild = false;
@@ -407,10 +402,7 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         if (filterText.isEmpty()) {
             return new ArrayList<>(getAllVisibleIngredients());
         }
-        List<SearchToken> tokens = Arrays.stream(filterText.split("\\|"))
-            .map(SearchToken::parseSearchToken)
-            .filter(s -> !s.search.isEmpty())
-            .collect(Collectors.toList());
+        List<SearchToken> tokens = SearchToken.parseSearchTokens(filterText);
         if (tokens.isEmpty()) {
             return new ArrayList<>(getAllVisibleIngredients());
         }

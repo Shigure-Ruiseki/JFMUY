@@ -1,14 +1,13 @@
 package ruiseki.jfmuy.gui.overlay.bookmarks.tree;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.RenderHelper;
-
 import net.minecraft.util.EnumChatFormatting;
+
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
@@ -258,6 +257,7 @@ public class RecipeTreeRenderer {
             break;
         }
     }
+
     private boolean renderCategoryTooltip(Minecraft mc, RecipeTreeNode node, int mouseX, int mouseY) {
         if (node.item == null || node.item.category == null) return false;
 
@@ -326,7 +326,8 @@ public class RecipeTreeRenderer {
         if (tooltip != null && !tooltip.isEmpty()) {
             FontRenderer fontRenderer = renderer.getFontRenderer(mc, ingredient);
             RenderHelper.enableGUIStandardItemLighting();
-            TooltipRenderer.drawHoveringTextWithFavorite(ingredient, null, mc, tooltip, mouseX, mouseY, -1, fontRenderer);
+            TooltipRenderer
+                .drawHoveringTextWithFavorite(ingredient, null, mc, tooltip, mouseX, mouseY, -1, fontRenderer);
             RenderHelper.disableStandardItemLighting();
         }
     }

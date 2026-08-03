@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
@@ -36,6 +37,7 @@ public class BookmarkList implements IIngredientGridSource {
     private final List<BookmarkGroup> list = new LinkedList<>();
     private final IngredientRegistry ingredientRegistry;
     private final List<IIngredientGridSource.Listener> listeners = new ArrayList<>();
+    private final List<Consumer<BookmarkItem<?>>> additionListeners = new ArrayList<>();
     private int nextId = 0;
     private BookmarkGroupOrganizer bookmarkGroupOrganizer;
 
@@ -56,6 +58,9 @@ public class BookmarkList implements IIngredientGridSource {
             list.add(0, group);
         } else {
             list.add(group);
+        }
+        for (BookmarkItem<?> item : group.getItems()) {
+            notifyListenersOfAddition(item);
         }
         notifyListenersOfChange();
         saveBookmarks();
@@ -360,6 +365,16 @@ public class BookmarkList implements IIngredientGridSource {
     @Override
     public void addListener(IIngredientGridSource.Listener listener) {
         listeners.add(listener);
+    }
+
+    public void addAdditionListener(Consumer<BookmarkItem<?>> listener) {
+        additionListeners.add(listener);
+    }
+
+    public void notifyListenersOfAddition(BookmarkItem<?> item) {
+        for (Consumer<BookmarkItem<?>> listener : additionListeners) {
+            listener.accept(item);
+        }
     }
 
     public void notifyListenersOfChange() {

@@ -23,10 +23,13 @@ public class ItemStackFastRenderer extends IngredientRenderer<ItemStack> {
     }
 
     public void renderItemAndEffectIntoGUI() {
+        boolean transformed = beginRenderTransform();
         try {
             uncheckedRenderItemAndEffectIntoGUI();
         } catch (RuntimeException | LinkageError e) {
             throw ErrorUtil.createRenderIngredientException(e, element.getIngredient());
+        } finally {
+            endRenderTransform(transformed);
         }
     }
 
@@ -69,10 +72,13 @@ public class ItemStackFastRenderer extends IngredientRenderer<ItemStack> {
 
     public void renderOverlay() {
         ItemStack itemStack = element.getIngredient();
+        boolean transformed = beginRenderTransform();
         try {
             renderOverlay(itemStack, area, padding);
         } catch (RuntimeException | LinkageError e) {
             throw ErrorUtil.createRenderIngredientException(e, element.getIngredient());
+        } finally {
+            endRenderTransform(transformed);
         }
     }
 

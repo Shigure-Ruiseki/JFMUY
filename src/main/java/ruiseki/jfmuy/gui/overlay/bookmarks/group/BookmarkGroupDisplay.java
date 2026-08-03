@@ -6,6 +6,7 @@ import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
 import ruiseki.jfmuy.bookmarks.BookmarkGroup;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
+import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
 
 public class BookmarkGroupDisplay implements IGhostIngredientHandler.Target {
@@ -45,10 +46,10 @@ public class BookmarkGroupDisplay implements IGhostIngredientHandler.Target {
             BookmarkItem<?> item = new BookmarkItem<>(ingredient);
             if (group.addItem(item, toFront)) {
                 if (!Config.isBookmarkOverlayEnabled()) Config.toggleBookmarkEnabled();
-                Internal.getBookmarkList()
-                    .saveBookmarks();
-                Internal.getBookmarkList()
-                    .notifyListenersOfChange();
+                BookmarkList bookmarkList = Internal.getBookmarkList();
+                bookmarkList.notifyListenersOfAddition(item);
+                bookmarkList.saveBookmarks();
+                bookmarkList.notifyListenersOfChange();
             }
         }
     }

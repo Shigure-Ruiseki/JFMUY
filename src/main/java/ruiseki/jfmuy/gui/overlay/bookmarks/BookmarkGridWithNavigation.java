@@ -15,6 +15,7 @@ import org.lwjgl.input.Keyboard;
 import it.unimi.dsi.fastutil.ints.IntList;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
+import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.GuiScreenHelper;
 import ruiseki.jfmuy.gui.ghost.IGhostIngredientDragSource;
@@ -46,10 +47,10 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
     private BookmarkGroupOrganizer groupOrganizer;
     private Rectangle area = new Rectangle();
 
-    public BookmarkGridWithNavigation(IIngredientGridSource ingredientSource, GuiScreenHelper guiScreenHelper,
+    public BookmarkGridWithNavigation(BookmarkList ingredientSource, GuiScreenHelper guiScreenHelper,
         GridAlignment alignment) {
         this.groupOrganizer = new BookmarkGroupOrganizer();
-        this.bookmarkGrid = new BookmarkGrid(alignment, groupOrganizer);
+        this.bookmarkGrid = new BookmarkGrid(alignment, groupOrganizer, ingredientSource);
         this.ingredientSource = ingredientSource;
         this.guiScreenHelper = guiScreenHelper;
         this.pageDelegate = new BookmarkGridPaged();

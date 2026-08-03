@@ -1,6 +1,7 @@
 package ruiseki.jfmuy.api;
 
 import ruiseki.jfmuy.api.recipe.transfer.IAutocraftingHandler;
+import ruiseki.jfmuy.api.search.ISearchIndexBuilderFactory;
 
 /**
  * Gives access to JFMUY functions that are available once everything has loaded.
@@ -19,4 +20,6 @@ public interface IJFMUYRuntime {
     IBookmarkOverlay getBookmarkOverlay();
 
     IAutocraftingHandler getAutocraftingHandler();
+
+    ISearchIndexBuilderFactory getSearchIndexBuilderFactory();
 }

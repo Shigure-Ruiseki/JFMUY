@@ -7,6 +7,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import cpw.mods.fml.common.ProgressManager;
+import ruiseki.jfmuy.api.search.ISearchIndex;
+import ruiseki.jfmuy.api.search.ISearchIndexBuilder;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
@@ -15,7 +17,7 @@ import ruiseki.okcore.datastructure.NonNullList;
 
 public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>>, IBuildable {
 
-    protected final ISearchStorageBuilder<IIngredientListElement<?>> searchStorageBuilder;
+    protected final ISearchIndexBuilder<IIngredientListElement<?>> searchIndexBuilder;
     protected final PrefixInfo prefixInfo;
 
     /**
@@ -23,19 +25,19 @@ public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>
      * Submits that arrive afterwards go straight to the storage, which handles them itself.
      */
     @Nullable
-    protected volatile ISearchStorage<IIngredientListElement<?>> searchStorage;
+    protected volatile ISearchIndex<IIngredientListElement<?>> searchIndex;
 
     protected LoggedTimer timer;
 
-    public PrefixedSearchable(ISearchStorageBuilder<IIngredientListElement<?>> searchStorageBuilder,
+    public PrefixedSearchable(ISearchIndexBuilder<IIngredientListElement<?>> searchIndexBuilder,
         PrefixInfo prefixInfo) {
-        this.searchStorageBuilder = searchStorageBuilder;
+        this.searchIndexBuilder = searchIndexBuilder;
         this.prefixInfo = prefixInfo;
     }
 
     @Nullable
-    public ISearchStorage<IIngredientListElement<?>> getSearchStorage() {
-        return searchStorage;
+    public ISearchIndex<IIngredientListElement<?>> getSearchIndex() {
+        return searchIndex;
     }
 
     public Collection<String> getStrings(IIngredientListElement<?> element) {
@@ -53,12 +55,12 @@ public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>
             return;
         }
         Collection<String> strings = prefixInfo.getStrings(ingredient);
-        ISearchStorage<IIngredientListElement<?>> storage = this.searchStorage;
+        ISearchIndex<IIngredientListElement<?>> index = this.searchIndex;
         for (String string : strings) {
-            if (storage == null) {
-                searchStorageBuilder.put(string, ingredient);
+            if (index == null) {
+                searchIndexBuilder.put(string, ingredient);
             } else {
-                storage.put(string, ingredient);
+                index.put(string, ingredient);
             }
         }
     }
@@ -108,17 +110,17 @@ public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>
 
     @Override
     public void getSearchResults(String token, Set<IIngredientListElement<?>> results) {
-        ISearchStorage<IIngredientListElement<?>> storage = this.searchStorage;
-        if (storage != null) {
-            storage.getSearchResults(token, results);
+        ISearchIndex<IIngredientListElement<?>> index = this.searchIndex;
+        if (index != null) {
+            index.getSearchResults(token, results);
         }
     }
 
     @Override
     public void getAllElements(Set<IIngredientListElement<?>> results) {
-        ISearchStorage<IIngredientListElement<?>> storage = this.searchStorage;
-        if (storage != null) {
-            storage.getAllElements(results);
+        ISearchIndex<IIngredientListElement<?>> index = this.searchIndex;
+        if (index != null) {
+            index.getAllElements(results);
         }
     }
 
@@ -128,8 +130,8 @@ public class PrefixedSearchable implements ISearchable<IIngredientListElement<?>
      */
     @Override
     public void build() {
-        if (this.searchStorage == null) {
-            this.searchStorage = this.searchStorageBuilder.build();
+        if (this.searchIndex == null) {
+            this.searchIndex = this.searchIndexBuilder.build();
         }
     }
 

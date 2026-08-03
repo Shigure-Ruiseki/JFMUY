@@ -3,13 +3,11 @@ package ruiseki.jfmuy.search;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.function.Supplier;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
+import ruiseki.jfmuy.api.search.ISearchIndexBuilder;
+import ruiseki.jfmuy.api.search.ISearchIndexBuilderFactory;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.util.StringUtil;
@@ -17,13 +15,9 @@ import ruiseki.jfmuy.util.Translator;
 
 public class PrefixInfo implements Comparable<PrefixInfo> {
 
-    private static final Logger LOGGER = LogManager.getLogger(PrefixInfo.class);
-
     public static final PrefixInfo NO_PREFIX;
+
     private static final Char2ObjectMap<PrefixInfo> instances = new Char2ObjectArrayMap<>(6);
-    private static final Supplier<ISearchStorageBuilder<IIngredientListElement<?>>> BAKED = BakedSubstringIndexBuilder::new;
-    private static final Supplier<ISearchStorageBuilder<IIngredientListElement<?>>> LIMITED_BAKED = () -> new LimitedStringStorageBuilder<IIngredientListElement<?>>(
-        BakedSubstringIndexBuilder::new);
 
     static {
         NO_PREFIX = new PrefixInfo(
@@ -33,7 +27,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
             "default",
             () -> Config.SearchMode.ENABLED,
             i -> Collections.singleton(Translator.toLowercaseWithLocale(i.getDisplayName())),
-            BAKED);
+            false);
         addPrefix(
             new PrefixInfo(
                 '#',
@@ -43,7 +37,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
                 "tooltip",
                 Config::getTooltipSearchMode,
                 IIngredientListElement::getTooltipStrings,
-                BAKED));
+                false));
         addPrefix(
             new PrefixInfo(
                 '&',
@@ -52,7 +46,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
                 "resource_id",
                 Config::getResourceIdSearchMode,
                 e -> Collections.singleton(Translator.toLowercaseWithLocale(e.getResourceId())),
-                BAKED));
+                false));
         addPrefix(
             new PrefixInfo(
                 '^',
@@ -61,7 +55,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
                 "color",
                 Config::getColorSearchMode,
                 IIngredientListElement::getColorStrings,
-                LIMITED_BAKED));
+                true));
         addPrefix(
             new PrefixInfo(
                 '$',
@@ -70,7 +64,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
                 "oredict",
                 Config::getOreDictSearchMode,
                 IIngredientListElement::getOreDictStrings,
-                LIMITED_BAKED));
+                true));
         addPrefix(
             new PrefixInfo(
                 '@',
@@ -79,7 +73,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
                 "mod_name",
                 Config::getModNameSearchMode,
                 IIngredientListElement::getModNameStrings,
-                LIMITED_BAKED));
+                true));
         addPrefix(
             new PrefixInfo(
                 '%',
@@ -88,7 +82,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
                 "creative_tab",
                 Config::getCreativeTabSearchMode,
                 IIngredientListElement::getCreativeTabsStrings,
-                LIMITED_BAKED));
+                true));
     }
 
     private static void addPrefix(PrefixInfo info) {
@@ -109,17 +103,15 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
     private final String desc;
     private final IModeGetter modeGetter;
     private final IStringsGetter stringsGetter;
-    private final Supplier<ISearchStorageBuilder<IIngredientListElement<?>>> storage;
+    private final boolean limitedStringIndex;
 
     public PrefixInfo(char prefix, int priority, boolean potentialDialecticInclusion, String desc,
-        IModeGetter modeGetter, IStringsGetter stringsGetter,
-        Supplier<ISearchStorageBuilder<IIngredientListElement<?>>> storage) {
-        this(prefix, priority, potentialDialecticInclusion, true, desc, modeGetter, stringsGetter, storage);
+        IModeGetter modeGetter, IStringsGetter stringsGetter, boolean limitedStringIndex) {
+        this(prefix, priority, potentialDialecticInclusion, true, desc, modeGetter, stringsGetter, limitedStringIndex);
     }
 
     public PrefixInfo(char prefix, int priority, boolean potentialDialecticInclusion, boolean async, String desc,
-        IModeGetter modeGetter, IStringsGetter stringsGetter,
-        Supplier<ISearchStorageBuilder<IIngredientListElement<?>>> storage) {
+        IModeGetter modeGetter, IStringsGetter stringsGetter, boolean limitedStringIndex) {
         this.prefix = prefix;
         this.priority = priority;
         this.potentialDialecticInclusion = potentialDialecticInclusion;
@@ -127,7 +119,7 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
         this.desc = desc;
         this.modeGetter = modeGetter;
         this.stringsGetter = stringsGetter;
-        this.storage = storage;
+        this.limitedStringIndex = limitedStringIndex;
     }
 
     public char getPrefix() {
@@ -154,48 +146,34 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
         return modeGetter.getMode();
     }
 
-    public ISearchStorageBuilder<IIngredientListElement<?>> createStorageBuilder() {
-        return this.storage.get();
+    public ISearchIndexBuilder<IIngredientListElement<?>> createIndexBuilder(ISearchIndexBuilderFactory factory) {
+        if (limitedStringIndex) {
+            return new LimitedStringIndexBuilder<>(factory, desc);
+        }
+        return factory.create(desc);
     }
 
     public Collection<String> getStrings(IIngredientListElement<?> element) {
-        if (element == null) {
-            LOGGER.error("[PrefixInfo:{}] Element truyen vao getStrings bi NULL!", desc);
-            return Collections.emptyList();
+        if (!Config.getSearchStrippedDiacritics() || !this.potentialDialecticInclusion) {
+            return this.stringsGetter.getStrings(element);
         }
-
-        try {
-            Collection<String> strings = this.stringsGetter.getStrings(element);
-            if (strings == null) {
-                LOGGER.warn("[PrefixInfo:{}] stringsGetter tra ve NULL cho element: {}", desc, element);
-                return Collections.emptyList();
-            }
-
-            if (!Config.getSearchStrippedDiacritics() || !this.potentialDialecticInclusion) {
-                return strings;
-            }
-
-            Collection<String> newStrings = null;
-            for (String string : strings) {
-                if (string == null) continue;
-                for (int i = 0; i < string.length(); i++) {
-                    if (string.charAt(i) > 0x7F) {
-                        String stripped = StringUtil.stripAccents(string);
-                        if (!stripped.equals(string)) {
-                            if (newStrings == null) {
-                                newStrings = new ArrayList<>(strings);
-                            }
-                            newStrings.add(stripped);
+        Collection<String> strings = this.stringsGetter.getStrings(element);
+        Collection<String> newStrings = null;
+        for (String string : strings) {
+            for (int i = 0; i < string.length(); i++) {
+                if (string.charAt(i) > 0x7F) {
+                    String stripped = StringUtil.stripAccents(string);
+                    if (!stripped.equals(string)) {
+                        if (newStrings == null) {
+                            newStrings = new ArrayList<>(strings);
                         }
-                        break;
+                        newStrings.add(stripped);
                     }
+                    break;
                 }
             }
-            return newStrings == null ? strings : newStrings;
-        } catch (Throwable t) {
-            LOGGER.error("[PrefixInfo:{}] Loi khi lay chuoi tu element: {}", desc, element, t);
-            throw t;
         }
+        return newStrings == null ? strings : newStrings;
     }
 
     @Override
@@ -219,4 +197,5 @@ public class PrefixInfo implements Comparable<PrefixInfo> {
     public String toString() {
         return "PrefixInfo{" + desc + '}';
     }
+
 }

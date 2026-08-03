@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
+import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.overlay.GridAlignment;
 import ruiseki.jfmuy.gui.overlay.IngredientGrid;
@@ -25,9 +26,9 @@ public class BookmarkGrid extends IngredientGrid {
     private final GridAlignment alignment;
     private Rectangle area = new Rectangle();
 
-    public BookmarkGrid(GridAlignment alignment, BookmarkGroupOrganizer groupOrganizer) {
+    public BookmarkGrid(GridAlignment alignment, BookmarkGroupOrganizer groupOrganizer, BookmarkList bookmarkList) {
         super(
-            new BookmarkListBatchRenderer(groupOrganizer),
+            new BookmarkListBatchRenderer(groupOrganizer, bookmarkList),
             alignment,
             Config.enableHistoryPanel() && Config.isHistoryPanelOnLeft());
         this.alignment = alignment;

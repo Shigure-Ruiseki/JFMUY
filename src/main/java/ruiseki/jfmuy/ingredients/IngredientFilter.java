@@ -2,18 +2,17 @@ package ruiseki.jfmuy.ingredients;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import net.minecraft.client.Minecraft;
+import javax.annotation.Nullable;
 
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.client.Minecraft;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -22,7 +21,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -47,9 +45,6 @@ import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.datastructure.NonNullList;
 
 public class IngredientFilter implements IIngredientFilter, IIngredientGridSource {
-
-    public static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
-    public static final Pattern FILTER_SPLIT_PATTERN = Pattern.compile("(-?\".*?(?:\"|$)|\\S+)");
 
     public static boolean firstBuild = true;
     public static boolean rebuild = false;
@@ -108,9 +103,12 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     }
 
     public void addIngredients(NonNullList<IIngredientListElement> ingredients) {
+        for (IIngredientListElement<?> ingredient : ingredients) {
+            updateHiddenState(ingredient);
+        }
         ingredients.sort(IngredientListElementComparator.INSTANCE);
         this.elementSearch.addAll(ingredients);
-        this.filterCached = null;
+        invalidateCache();
     }
 
     public <V> void addIngredient(IIngredientListElement<V> element) {
@@ -142,7 +140,6 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
                     invalidateCache();
                     this.delegatedActions.forEach(Runnable::run);
                     this.delegatedActions = null;
-                    this.afterBlock = true;
                     updateHidden();
                 });
         } else {
@@ -297,6 +294,7 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
             rebuild = false;
             this.afterBlock = true;
         }
+        updateHidden();
     }
 
     @SubscribeEvent
@@ -321,7 +319,7 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     public <V> void updateHiddenState(IIngredientListElement<V> element) {
         V ingredient = element.getIngredient();
         IIngredientHelper<V> ingredientHelper = element.getIngredientHelper();
-        boolean visible = !blacklist.isIngredientBlacklistedByApi(ingredient, ingredientHelper)
+        boolean visible = !blacklist.isIngredientBlacklistedByApiOrRuntime(ingredient, ingredientHelper)
             && ingredientHelper.isIngredientOnServer(ingredient)
             && (Config.isEditModeEnabled() || !Config.isIngredientOnConfigBlacklist(ingredient, ingredientHelper));
         if (element.isVisible() != visible) {
@@ -407,10 +405,7 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         if (filterText.isEmpty()) {
             return new ArrayList<>(getAllVisibleIngredients());
         }
-        List<SearchToken> tokens = Arrays.stream(filterText.split("\\|"))
-            .map(SearchToken::parseSearchToken)
-            .filter(s -> !s.search.isEmpty())
-            .collect(Collectors.toList());
+        List<SearchToken> tokens = SearchToken.parseSearchTokens(filterText);
         if (tokens.isEmpty()) {
             return new ArrayList<>(getAllVisibleIngredients());
         }
@@ -434,6 +429,7 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     private List<IIngredientListElement<?>> withGroupNameMatches(List<IIngredientListElement<?>> baseList,
         String filterText) {
         Multimap<CollapsibleGroup, IIngredientListElement<?>> groupToElements = getGroupToElements();
+
         // Collect groups whose display name matches the search text.
         // We intentionally do NOT expand groups just because a member matched — that produced
         // "full group" results when the user typed e.g. "orange", expecting individual items.
@@ -613,6 +609,7 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
 
     public void replaceBlacklist(IngredientBlacklistInternal blacklist) {
         this.blacklist = blacklist;
+        updateHidden();
     }
 
     public void notifyListenersOfChange() {

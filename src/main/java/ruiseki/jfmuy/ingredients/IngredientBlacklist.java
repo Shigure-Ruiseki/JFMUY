@@ -1,5 +1,6 @@
 package ruiseki.jfmuy.ingredients;
 
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.ingredients.IIngredientBlacklist;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
@@ -21,6 +22,7 @@ public class IngredientBlacklist implements IIngredientBlacklist {
 
         IIngredientHelper<V> ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
         internal.addIngredientToBlacklist(ingredient, ingredientHelper);
+        refreshIngredientFilter();
     }
 
     @Override
@@ -29,6 +31,7 @@ public class IngredientBlacklist implements IIngredientBlacklist {
 
         IIngredientHelper<V> ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
         internal.removeIngredientFromBlacklist(ingredient, ingredientHelper);
+        refreshIngredientFilter();
     }
 
     @Override
@@ -45,5 +48,13 @@ public class IngredientBlacklist implements IIngredientBlacklist {
 
         IIngredientHelper<V> ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
         return internal.isIngredientBlacklistedByApi(ingredient, ingredientHelper);
+    }
+
+    private static void refreshIngredientFilter() {
+        if (Internal.hasIngredientFilter()) {
+            IngredientFilter ingredientFilter = Internal.getIngredientFilter();
+            ingredientFilter.updateHidden();
+            ingredientFilter.notifyListenersOfChange();
+        }
     }
 }

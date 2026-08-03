@@ -217,6 +217,8 @@ config.jfmuy.collapsible.collapsedClickAction.FIRST_ITEM=First Item
 
 config.jfmuy.category.categoryUidOrder=Category UID Order
 config.jfmuy.category.categoryUidOrder.comment=Determines the display order of recipe categories in JFMUY. Categories listed earlier appear first in the JFMUY interface.
+config.jfmuy.category.disabledRecipeCategoryUids=Disabled Recipe Category UIDs
+config.jfmuy.category.disabledRecipeCategoryUids.comment=Recipe category UIDs that JFMUY should skip loading. A game restart is required after changing this list.
 
 jfmuy.generic.ticks=%d Ticks
 

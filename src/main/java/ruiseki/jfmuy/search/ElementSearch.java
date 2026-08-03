@@ -26,15 +26,16 @@ public class ElementSearch implements IElementSearch {
             AsyncPrefixedSearchable.startService();
         }
 
-        ISearchStorage<IIngredientListElement<?>> storage = PrefixInfo.NO_PREFIX.createStorage();
-        PrefixedSearchable searchable = new PrefixedSearchable(storage, PrefixInfo.NO_PREFIX);
+        ISearchStorageBuilder<IIngredientListElement<?>> storageBuilder = PrefixInfo.NO_PREFIX.createStorageBuilder();
+        PrefixedSearchable searchable = new PrefixedSearchable(storageBuilder, PrefixInfo.NO_PREFIX);
         this.prefixedSearchables.put(PrefixInfo.NO_PREFIX, searchable);
         this.combinedSearchables.addSearchable(searchable);
+
         for (PrefixInfo prefixInfo : PrefixInfo.all()) {
-            storage = prefixInfo.createStorage();
+            storageBuilder = prefixInfo.createStorageBuilder();
             searchable = Config.isSearchTreeBuildingAsync() && prefixInfo.isAsyncable()
-                ? new AsyncPrefixedSearchable(storage, prefixInfo)
-                : new PrefixedSearchable(storage, prefixInfo);
+                ? new AsyncPrefixedSearchable(storageBuilder, prefixInfo)
+                : new PrefixedSearchable(storageBuilder, prefixInfo);
             this.prefixedSearchables.put(prefixInfo, searchable);
             this.combinedSearchables.addSearchable(searchable);
         }
@@ -46,6 +47,9 @@ public class ElementSearch implements IElementSearch {
             for (PrefixedSearchable prefixedSearchable : this.prefixedSearchables.values()) {
                 prefixedSearchable.stop();
             }
+        }
+        for (PrefixedSearchable prefixedSearchable : this.prefixedSearchables.values()) {
+            prefixedSearchable.build();
         }
         if (!this.loggedStatistics && Reference.DEOBFUSCATED) {
             this.loggedStatistics = true;
@@ -103,6 +107,11 @@ public class ElementSearch implements IElementSearch {
             if (prefixInfo.getMode() != Config.SearchMode.DISABLED) {
                 ISearchStorage<IIngredientListElement<?>> storage = entry.getValue()
                     .getSearchStorage();
+                if (storage == null) {
+                    Log.get()
+                        .info("ElementSearch {} Storage Stats: not built yet", prefixInfo);
+                    continue;
+                }
                 Log.get()
                     .info("ElementSearch {} Storage Stats: {}", prefixInfo, storage.statistics());
                 try {

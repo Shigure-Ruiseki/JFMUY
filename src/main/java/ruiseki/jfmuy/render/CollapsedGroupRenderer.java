@@ -36,12 +36,14 @@ public class CollapsedGroupRenderer implements IIngredientRenderer<CollapsedGrou
     /** Singleton registered with the ingredient type system - {@code collapsedStack} is null. */
     public static final CollapsedGroupRenderer INSTANCE = new CollapsedGroupRenderer(null);
 
-    private final CollapsedGroupIngredient collapsedGroupIngredient;
+    private final CollapsedGroupIngredient collapsedStack;
+
     private Rectangle area = new Rectangle(0, 0, 16, 16);
     private int padding;
+    private float renderScale = 1.0F;
 
-    public CollapsedGroupRenderer(CollapsedGroupIngredient collapsedGroupIngredient) {
-        this.collapsedGroupIngredient = collapsedGroupIngredient;
+    public CollapsedGroupRenderer(CollapsedGroupIngredient collapsedStack) {
+        this.collapsedStack = collapsedStack;
     }
 
     public void setArea(Rectangle area) {
@@ -53,19 +55,40 @@ public class CollapsedGroupRenderer implements IIngredientRenderer<CollapsedGrou
     }
 
     public CollapsedGroupIngredient getCollapsedStack() {
-        return collapsedGroupIngredient;
+        return collapsedStack;
     }
 
     public Rectangle getArea() {
         return area;
     }
 
-    /** Grid overlay render — uses this instance's stack and area+padding. */
-    public void render(Minecraft minecraft) {
-        if (collapsedGroupIngredient == null || collapsedGroupIngredient.isEmpty()) {
+    public void setRenderScale(float renderScale) {
+        this.renderScale = renderScale;
+    }
+
+    protected void beginRenderTransform() {
+        GlStateManager.pushMatrix();
+        if (renderScale == 1.0F) {
             return;
         }
-        renderAt(minecraft, collapsedGroupIngredient, area.x + padding, area.y + padding);
+        float centerX = area.x + area.width / 2.0F;
+        float centerY = area.y + area.height / 2.0F;
+        GlStateManager.translate(centerX, centerY, 0.0F);
+        GlStateManager.scale(renderScale, renderScale, renderScale);
+        GlStateManager.translate(-centerX, -centerY, 0.0F);
+    }
+
+    /** Grid overlay render — uses this instance's stack and area+padding. */
+    public void render(Minecraft minecraft) {
+        if (collapsedStack == null || collapsedStack.isEmpty()) {
+            return;
+        }
+        beginRenderTransform();
+        try {
+            renderAt(minecraft, collapsedStack, area.x + padding, area.y + padding);
+        } finally {
+            GlStateManager.popMatrix();
+        }
     }
 
     /**
@@ -224,7 +247,7 @@ public class CollapsedGroupRenderer implements IIngredientRenderer<CollapsedGrou
     }
 
     public void drawTooltip(Minecraft minecraft, int mouseX, int mouseY) {
-        List<IIngredientListElement<?>> ingredients = collapsedGroupIngredient.getDisplayIngredients();
+        List<IIngredientListElement<?>> ingredients = collapsedStack.getDisplayIngredients();
         if (ingredients.isEmpty()) return;
 
         // Single-item group (e.g. search filtered to one result): show the item's native tooltip
@@ -253,7 +276,7 @@ public class CollapsedGroupRenderer implements IIngredientRenderer<CollapsedGrou
             overflowPadding = Math.max(0, overWidth - SLOT);
         }
 
-        String header = EnumChatFormatting.GOLD + collapsedGroupIngredient
+        String header = EnumChatFormatting.GOLD + collapsedStack
             .getDisplayName() + EnumChatFormatting.GRAY + " (" + total + " items)";
         // In OPEN_GROUP mode, alt+click uses first item; show that as the hint.
         // In FIRST_ITEM mode, alt+click expands; show that instead.
@@ -344,12 +367,12 @@ public class CollapsedGroupRenderer implements IIngredientRenderer<CollapsedGrou
      */
     @Nullable
     public ClickedIngredient<?> getClickedIngredient() {
-        List<IIngredientListElement<?>> ingredients = collapsedGroupIngredient.getIngredients();
+        List<IIngredientListElement<?>> ingredients = collapsedStack.getIngredients();
         if (ingredients.isEmpty()) {
             return null;
         }
         // Return CollapsedStack directly — it is a registered IIngredientType
-        return ClickedIngredient.create(collapsedGroupIngredient, area);
+        return ClickedIngredient.create(collapsedStack, area);
     }
 
     public boolean isMouseOver(int mouseX, int mouseY) {

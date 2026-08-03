@@ -171,7 +171,8 @@ public class JFMUYClientHandler {
         if (this.starter.hasStarted()) {
             Log.get()
                 .info("Recipes updated from server. Reloading JFMUY...");
-            this.starter.start(this.plugins);
+            Config.needToRebuildSearchTree = true;
+            reloadItemList();
         }
     }
 }

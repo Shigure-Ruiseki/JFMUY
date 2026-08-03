@@ -25,6 +25,19 @@ import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
 import ruiseki.jfmuy.util.Log;
 
+/**
+ * The recipe a player has chosen as the default way to make a given ingredient.
+ * <p>
+ * Recipe chains consult this if they do not know how to craft ingredients inside a recipe bookmark.
+ * <p>
+ * Favourites are stored as a flat text file, grouped under a {@code #categoryUid} header so
+ * a recipe id only has to be resolved against the one category it belongs to:
+ *
+ * <pre>
+ * #minecraft.crafting
+ * 1234%minecraft:chest
+ * </pre>
+ */
 public final class FavoriteRecipes {
 
     private static final char CATEGORY_MARKER = '#';

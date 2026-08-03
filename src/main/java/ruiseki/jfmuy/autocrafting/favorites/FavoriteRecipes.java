@@ -20,30 +20,23 @@ import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.config.Config;
+import ruiseki.jfmuy.gui.recipes.RecipeLayout;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
 import ruiseki.jfmuy.util.Log;
+import ruiseki.okcore.datastructure.ThreadsafeCache;
 
-/**
- * The recipe a player has chosen as the default way to make a given ingredient.
- * <p>
- * Recipe chains consult this if they do not know how to craft ingredients inside a recipe bookmark.
- * <p>
- * Favourites are stored as a flat text file, grouped under a {@code #categoryUid} header so
- * a recipe id only has to be resolved against the one category it belongs to:
- * 
- * <pre>
- * #minecraft.crafting
- * 1234%minecraft:chest
- * </pre>
- */
-public class FavoriteRecipes {
+public final class FavoriteRecipes {
 
     private static final char CATEGORY_MARKER = '#';
     private static final String FIELD_SEPARATOR = "%";
     private static final Map<String, IRecipeWrapper> recipesByIngredient = new Object2ObjectLinkedOpenHashMap<>();
     private static final Map<IRecipeWrapper, IRecipeCategory<?>> recipeCategories = new Object2ObjectLinkedOpenHashMap<>();
     private static final Object2IntOpenHashMap<IRecipeWrapper> favoriteCounts = new Object2IntOpenHashMap<>();
+    private static final ThreadsafeCache<IRecipeWrapper, RecipeLayout> layoutCache = new ThreadsafeCache<>(
+        256,
+        key -> createRecipeLayout((IRecipeWrapper) key),
+        false);
 
     private FavoriteRecipes() {}
 
@@ -193,6 +186,21 @@ public class FavoriteRecipes {
         return recipe == null ? null : recipeCategories.get(recipe);
     }
 
+    @Nullable
+    public static RecipeLayout getRecipeLayout(Object ingredient) {
+        IRecipeWrapper recipe = getFavorite(ingredient);
+        if (recipe == null) return null;
+        return layoutCache.get(recipe);
+    }
+
+    @Nullable
+    private static RecipeLayout createRecipeLayout(IRecipeWrapper recipe) {
+        @SuppressWarnings("unchecked")
+        IRecipeCategory<IRecipeWrapper> category = (IRecipeCategory<IRecipeWrapper>) recipeCategories.get(recipe);
+        if (category == null) return null;
+        return RecipeLayout.create(-1, category, recipe, null, 0, 0);
+    }
+
     private static void addFavorite(String ingredientUniqueId, IRecipeWrapper recipe, IRecipeCategory<?> category) {
         removeFavorite(ingredientUniqueId);
         recipesByIngredient.put(ingredientUniqueId, recipe);
@@ -216,6 +224,7 @@ public class FavoriteRecipes {
         recipesByIngredient.clear();
         recipeCategories.clear();
         favoriteCounts.clear();
+        layoutCache.clear();
     }
 
     private static String uniqueIdOf(Object ingredient) {

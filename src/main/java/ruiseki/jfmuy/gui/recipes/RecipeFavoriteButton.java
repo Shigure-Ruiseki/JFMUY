@@ -143,6 +143,7 @@ public class RecipeFavoriteButton extends GuiIconButton {
 
     @Nullable
     public Object getDisplayedIngredient() {
+        if (supportedIngredients == null || supportedIngredients.isEmpty()) return null;
         return supportedIngredients.get(selectedSlot)
             .getDisplayedIngredient();
     }

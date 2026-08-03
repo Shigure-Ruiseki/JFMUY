@@ -281,6 +281,12 @@ public class BookmarkGroupOrganizer {
                     return true;
                 }
             }
+            if (KeyBindings.showRecipeTree.isActiveAndMatches(eventKey)) {
+                if (group.group instanceof RecipeBookmarkGroup) {
+                    ((RecipeBookmarkGroup) group.group).showRecipeTree();
+                    return true;
+                }
+            }
         }
 
         if (KeyBindings.isInventoryCloseKey(eventKey) || KeyBindings.isInventoryToggleKey(eventKey)) {

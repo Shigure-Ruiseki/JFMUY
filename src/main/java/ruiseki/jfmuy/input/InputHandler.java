@@ -120,6 +120,7 @@ public class InputHandler {
 
     @SubscribeEvent
     public void onGuiMouseEvent(MouseInputEvent.Pre event) {
+        if (!Config.isOverlayEnabled()) return;
         GuiScreen guiScreen = event.gui;
         Minecraft minecraft = guiScreen.mc;
         if (minecraft != null) {

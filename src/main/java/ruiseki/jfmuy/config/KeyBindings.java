@@ -80,11 +80,7 @@ public class KeyBindings {
                 KeyConflictContext.GUI,
                 Keyboard.KEY_PRIOR,
                 categoryName),
-            nextPage = new KeyBindingOK(
-                "key.jfmuy.nextPage",
-                KeyConflictContext.GUI,
-                Keyboard.KEY_NEXT,
-                categoryName),
+            nextPage = new KeyBindingOK("key.jfmuy.nextPage", KeyConflictContext.GUI, Keyboard.KEY_NEXT, categoryName),
             previousCategory = new KeyBindingOK(
                 "key.jfmuy.previousCategory",
                 KeyConflictContext.GUI,

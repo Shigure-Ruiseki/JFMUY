@@ -14,6 +14,8 @@ import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
 import ruiseki.jfmuy.api.gui.IGlobalGuiHandler;
 import ruiseki.jfmuy.api.gui.IGuiScreenHandler;
 import ruiseki.jfmuy.api.gui.ISlotIngredientProvider;
+import ruiseki.jfmuy.api.search.ISearchIndexBuilder;
+import ruiseki.jfmuy.api.search.ISearchIndexBuilderFactory;
 import ruiseki.jfmuy.autocrafting.favorites.FavoriteRecipes;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
@@ -33,9 +35,11 @@ import ruiseki.jfmuy.ingredients.group.CollapsibleGroupRegistry;
 import ruiseki.jfmuy.input.InputHandler;
 import ruiseki.jfmuy.plugins.vanilla.VanillaPlugin;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
+import ruiseki.jfmuy.runtime.AdvancedSearchRegistry;
 import ruiseki.jfmuy.runtime.JFMUYHelpers;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
 import ruiseki.jfmuy.runtime.SubtypeRegistry;
+import ruiseki.jfmuy.search.BakedSubstringIndexBuilder;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.LoggedTimer;
@@ -89,14 +93,24 @@ public class JFMUYStarter {
         timer.stop();
 
         IngredientFilter ingredientFilter;
+        ISearchIndexBuilderFactory searchIndexBuilderFactory;
         if (recipesOnly && Internal.hasIngredientFilter()) {
             ingredientFilter = Internal.getIngredientFilter();
             ingredientFilter.replaceBlacklist(blacklist);
+            searchIndexBuilderFactory = ingredientFilter.getSearchIndexBuilderFactory();
         } else {
+            timer.start("Registering advanced search");
+            AdvancedSearchRegistry advancedSearchRegistry = new AdvancedSearchRegistry(
+                createDefaultSearchIndexBuilderFactory());
+            registerAdvancedSearches(plugins, advancedSearchRegistry);
+            searchIndexBuilderFactory = advancedSearchRegistry.getSearchIndexBuilderFactory();
+            timer.stop();
+
             timer.start("Building ingredient filter and search trees");
             ingredientFilter = new IngredientFilter(
                 blacklist,
-                IngredientListElementFactory.createBaseList(ingredientRegistry, modIdHelper));
+                IngredientListElementFactory.createBaseList(ingredientRegistry, modIdHelper),
+                searchIndexBuilderFactory);
             Internal.setIngredientFilter(ingredientFilter);
             timer.stop();
         }
@@ -141,7 +155,8 @@ public class JFMUYStarter {
             ingredientListOverlay,
             bookmarkOverlay,
             recipesGui,
-            ingredientFilter);
+            ingredientFilter,
+            searchIndexBuilderFactory);
         Internal.setRuntime(jfmuyRuntime);
         timer.stop();
 
@@ -390,6 +405,30 @@ public class JFMUYStarter {
             ProgressManager.pop(progressBar);
         }
 
+    }
+
+    private static ISearchIndexBuilderFactory createDefaultSearchIndexBuilderFactory() {
+        return new ISearchIndexBuilderFactory() {
+
+            @Override
+            public <T> ISearchIndexBuilder<T> create() {
+                return new BakedSubstringIndexBuilder<>();
+            }
+        };
+    }
+
+    private static void registerAdvancedSearches(List<IModPlugin> plugins, AdvancedSearchRegistry registry) {
+        Iterator<IModPlugin> iterator = plugins.iterator();
+        while (iterator.hasNext()) {
+            IModPlugin plugin = iterator.next();
+            try {
+                plugin.registerAdvancedSearch(registry);
+            } catch (RuntimeException | LinkageError e) {
+                Log.get()
+                    .error("Failed to register advanced search for mod plugin: {}", plugin.getClass(), e);
+                iterator.remove();
+            }
+        }
     }
 
     private static void sendRuntime(List<IModPlugin> plugins, IJFMUYRuntime jfmuyRuntime) {

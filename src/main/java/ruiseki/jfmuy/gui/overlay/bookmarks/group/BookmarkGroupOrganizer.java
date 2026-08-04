@@ -192,6 +192,10 @@ public class BookmarkGroupOrganizer {
                                 KeyBindings.crafting.getDisplayName()));
                     }
                 }
+                tooltips.add(
+                    Translator.translateToLocalFormatted(
+                        "jfmuy.tooltip.organizer.6",
+                        KeyBindings.showRecipeTree.getDisplayName()));
             } else {
                 hovered = true;
                 tooltips.add(Translator.translateToLocal("jfmuy.tooltip.press_alt"));
@@ -278,6 +282,12 @@ public class BookmarkGroupOrganizer {
             if (KeyBindings.crafting.isActiveAndMatches(eventKey) && Config.isAutocraftingEnabled()) {
                 if (group.group instanceof RecipeBookmarkGroup) {
                     ((RecipeBookmarkGroup) group.group).autocraft();
+                    return true;
+                }
+            }
+            if (KeyBindings.showRecipeTree.isActiveAndMatches(eventKey)) {
+                if (group.group instanceof RecipeBookmarkGroup) {
+                    ((RecipeBookmarkGroup) group.group).showRecipeTree();
                     return true;
                 }
             }

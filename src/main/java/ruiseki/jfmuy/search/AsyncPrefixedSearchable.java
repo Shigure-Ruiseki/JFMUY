@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 
 import org.apache.commons.lang3.concurrent.ConcurrentRuntimeException;
 
+import ruiseki.jfmuy.api.search.ISearchIndexBuilder;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.jfmuy.util.LoggedTimer;
@@ -44,9 +45,9 @@ public class AsyncPrefixedSearchable extends PrefixedSearchable {
     private boolean firstBuild = true;
     private List<IIngredientListElement> leftovers; // strictly written by service thread and read by main thread
 
-    public AsyncPrefixedSearchable(ISearchStorageBuilder<IIngredientListElement<?>> searchStorageBuilder,
+    public AsyncPrefixedSearchable(ISearchIndexBuilder<IIngredientListElement<?>> searchIndexBuilder,
         PrefixInfo prefixInfo) {
-        super(searchStorageBuilder, prefixInfo);
+        super(searchIndexBuilder, prefixInfo);
     }
 
     @Override

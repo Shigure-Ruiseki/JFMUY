@@ -3,6 +3,7 @@ package ruiseki.jfmuy.runtime;
 import ruiseki.jfmuy.api.IBookmarkOverlay;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
 import ruiseki.jfmuy.api.recipe.transfer.IAutocraftingHandler;
+import ruiseki.jfmuy.api.search.ISearchIndexBuilderFactory;
 import ruiseki.jfmuy.autocrafting.AutocraftingHandler;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
@@ -17,15 +18,18 @@ public class JFMUYRuntime implements IJFMUYRuntime {
     private final RecipesGui recipesGui;
     private final IngredientFilter ingredientFilter;
     private final IAutocraftingHandler autocraftingHandler;
+    private final ISearchIndexBuilderFactory searchIndexBuilderFactory;
 
     public JFMUYRuntime(RecipeRegistry recipeRegistry, IngredientListOverlay ingredientListOverlay,
-        IBookmarkOverlay bookmarkOverlay, RecipesGui recipesGui, IngredientFilter ingredientFilter) {
+        IBookmarkOverlay bookmarkOverlay, RecipesGui recipesGui, IngredientFilter ingredientFilter,
+        ISearchIndexBuilderFactory searchIndexBuilderFactory) {
         this.recipeRegistry = recipeRegistry;
         this.ingredientListOverlay = ingredientListOverlay;
         this.bookmarkOverlay = bookmarkOverlay;
         this.recipesGui = recipesGui;
         this.ingredientFilter = ingredientFilter;
         this.autocraftingHandler = new AutocraftingHandler();
+        this.searchIndexBuilderFactory = searchIndexBuilderFactory;
     }
 
     public void close() {
@@ -55,6 +59,11 @@ public class JFMUYRuntime implements IJFMUYRuntime {
     @Override
     public IAutocraftingHandler getAutocraftingHandler() {
         return autocraftingHandler;
+    }
+
+    @Override
+    public ISearchIndexBuilderFactory getSearchIndexBuilderFactory() {
+        return searchIndexBuilderFactory;
     }
 
     @Override

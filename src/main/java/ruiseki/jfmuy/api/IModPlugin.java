@@ -49,6 +49,13 @@ public interface IModPlugin {
     }
 
     /**
+     * Register advanced ingredient-search behavior.
+     */
+    default void registerAdvancedSearch(IAdvancedSearchRegistry registry) {
+
+    }
+
+    /**
      * Register this mod plugin with the mod registry.
      */
     default void register(IModRegistry registry) {

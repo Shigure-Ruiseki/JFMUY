@@ -9,6 +9,9 @@ import java.util.Set;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import ruiseki.jfmuy.Reference;
+import ruiseki.jfmuy.api.search.ISearchIndex;
+import ruiseki.jfmuy.api.search.ISearchIndexBuilder;
+import ruiseki.jfmuy.api.search.ISearchIndexBuilderFactory;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.util.Log;
@@ -21,21 +24,22 @@ public class ElementSearch implements IElementSearch {
 
     private boolean loggedStatistics = false;
 
-    public ElementSearch() {
+    public ElementSearch(ISearchIndexBuilderFactory searchIndexBuilderFactory) {
         if (Config.isSearchTreeBuildingAsync()) {
             AsyncPrefixedSearchable.startService();
         }
 
-        ISearchStorageBuilder<IIngredientListElement<?>> storageBuilder = PrefixInfo.NO_PREFIX.createStorageBuilder();
-        PrefixedSearchable searchable = new PrefixedSearchable(storageBuilder, PrefixInfo.NO_PREFIX);
+        ISearchIndexBuilder<IIngredientListElement<?>> indexBuilder = PrefixInfo.NO_PREFIX
+            .createIndexBuilder(searchIndexBuilderFactory);
+        PrefixedSearchable searchable = new PrefixedSearchable(indexBuilder, PrefixInfo.NO_PREFIX);
         this.prefixedSearchables.put(PrefixInfo.NO_PREFIX, searchable);
         this.combinedSearchables.addSearchable(searchable);
 
         for (PrefixInfo prefixInfo : PrefixInfo.all()) {
-            storageBuilder = prefixInfo.createStorageBuilder();
+            indexBuilder = prefixInfo.createIndexBuilder(searchIndexBuilderFactory);
             searchable = Config.isSearchTreeBuildingAsync() && prefixInfo.isAsyncable()
-                ? new AsyncPrefixedSearchable(storageBuilder, prefixInfo)
-                : new PrefixedSearchable(storageBuilder, prefixInfo);
+                ? new AsyncPrefixedSearchable(indexBuilder, prefixInfo)
+                : new PrefixedSearchable(indexBuilder, prefixInfo);
             this.prefixedSearchables.put(prefixInfo, searchable);
             this.combinedSearchables.addSearchable(searchable);
         }
@@ -105,22 +109,24 @@ public class ElementSearch implements IElementSearch {
         for (Map.Entry<PrefixInfo, PrefixedSearchable> entry : this.prefixedSearchables.entrySet()) {
             PrefixInfo prefixInfo = entry.getKey();
             if (prefixInfo.getMode() != Config.SearchMode.DISABLED) {
-                ISearchStorage<IIngredientListElement<?>> storage = entry.getValue()
-                    .getSearchStorage();
-                if (storage == null) {
+                ISearchIndex<IIngredientListElement<?>> index = entry.getValue()
+                    .getSearchIndex();
+                if (index == null) {
                     Log.get()
-                        .info("ElementSearch {} Storage Stats: not built yet", prefixInfo);
+                        .info("ElementSearch {} Index Stats: not built yet", prefixInfo);
                     continue;
                 }
                 Log.get()
-                    .info("ElementSearch {} Storage Stats: {}", prefixInfo, storage.statistics());
-                try {
-                    FileWriter fileWriter = new FileWriter("GeneralizedSuffixTree-" + prefixInfo + ".dot");
-                    try (PrintWriter out = new PrintWriter(fileWriter)) {
-                        storage.printTree(out, false);
+                    .info("ElementSearch {} Index Stats: {}", prefixInfo, index.statistics());
+                if (index instanceof IPrintableSearchIndex) {
+                    try {
+                        FileWriter fileWriter = new FileWriter("GeneralizedSuffixTree-" + prefixInfo + ".dot");
+                        try (PrintWriter out = new PrintWriter(fileWriter)) {
+                            ((IPrintableSearchIndex<?>) index).printTree(out, false);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
         }

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+
 import org.jetbrains.annotations.Nullable;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -15,6 +18,7 @@ import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.bookmarks.DummyBookmarkItem;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
+import ruiseki.jfmuy.gui.overlay.bookmarks.tree.GuiRecipeTree;
 import ruiseki.jfmuy.transfer.RecipeTransferErrorSlots;
 import ruiseki.jfmuy.util.Translator;
 
@@ -42,6 +46,8 @@ public class RecipeBookmarkGroup extends BookmarkGroup {
     private List<BookmarkItem<?>> displayRows;
     @Nullable
     private List<IIngredientListElement<?>> displayElements;
+    @Nullable
+    private List<IIngredientListElement> displayRawInputElements;
     private boolean builtWithRecipeBookmarksEnabled;
 
     public RecipeBookmarkGroup(int id) {
@@ -61,6 +67,7 @@ public class RecipeBookmarkGroup extends BookmarkGroup {
     void onChainChanged() {
         this.displayRows = null;
         this.displayElements = null;
+        this.displayRawInputElements = null;
     }
 
     /**
@@ -255,11 +262,49 @@ public class RecipeBookmarkGroup extends BookmarkGroup {
         return elements;
     }
 
+    public List<IIngredientListElement> getRawInputElements() {
+        if (displayRawInputElements != null) {
+            return displayRawInputElements;
+        }
+
+        ChainSolution solution = chain.solution();
+        RecipeGraph graph = chain.graph();
+        if (solution.isEmpty()) {
+            displayRawInputElements = Collections.emptyList();
+            return displayRawInputElements;
+        }
+
+        List<IIngredientListElement> elements = new ObjectArrayList<>();
+        for (RecipeBookmarkItem<?> node : solution.order()) {
+            if (node == null) continue;
+
+            boolean isRawInput = (node.category == null || node.recipe == null) || graph.successors(node)
+                .isEmpty();
+
+            if (isRawInput) {
+                IIngredientListElement<?> element = getIngredientListElement(
+                    new DummyBookmarkItem<>(node.getIngredient(), this, () -> solution().requiredOf(node)));
+                if (element != null) {
+                    elements.add(element);
+                }
+            }
+        }
+
+        displayRawInputElements = elements;
+        return displayRawInputElements;
+    }
+
     public void autocraft() {
         IAutocraftingHandler handler = Internal.getRuntime()
             .getAutocraftingHandler();
         if (!handler.isActive() && handler instanceof AutocraftingHandler) {
             ((AutocraftingHandler) handler).start(this);
         }
+    }
+
+    public void showRecipeTree() {
+        Minecraft mc = Minecraft.getMinecraft();
+        GuiScreen currentScreen = mc.currentScreen;
+        mc.displayGuiScreen(new GuiRecipeTree(this, currentScreen));
     }
 }

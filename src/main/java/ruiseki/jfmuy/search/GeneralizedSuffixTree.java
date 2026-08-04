@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.util.Substring;
 
-public class GeneralizedSuffixTree<T> implements ISearchStorage<T> {
+public class GeneralizedSuffixTree<T> implements IPrintableSearchIndex<T> {
 
     private static final Logger LOGGER = LogManager.getLogger(GeneralizedSuffixTree.class);
 

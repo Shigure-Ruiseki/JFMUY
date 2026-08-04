@@ -120,6 +120,7 @@ public class InputHandler {
 
     @SubscribeEvent
     public void onGuiMouseEvent(MouseInputEvent.Pre event) {
+        if (!Config.isOverlayEnabled()) return;
         GuiScreen guiScreen = event.gui;
         Minecraft minecraft = guiScreen.mc;
         if (minecraft != null) {
@@ -374,7 +375,6 @@ public class InputHandler {
         switch (pressedKey) {
             case BOOKMARK:
                 return addBookmark(false, false);
-
             case BOOKMARK_TO_TOP:
                 return addBookmark(false, true);
             case BOOKMARK_NEW_GROUP:

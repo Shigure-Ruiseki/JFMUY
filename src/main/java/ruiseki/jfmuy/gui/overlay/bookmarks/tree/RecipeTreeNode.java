@@ -6,7 +6,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import ruiseki.jfmuy.Internal;
-import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IRecipeLayout;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
@@ -16,6 +15,7 @@ import ruiseki.jfmuy.autocrafting.RecipeBookmarkGroup;
 import ruiseki.jfmuy.autocrafting.RecipeBookmarkItem;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.ingredients.Ingredients;
+import ruiseki.jfmuy.runtime.JFMUYRuntime;
 
 public class RecipeTreeNode {
 
@@ -27,13 +27,12 @@ public class RecipeTreeNode {
     public int x;
     public int y;
 
-    public static final int HEADER_WIDTH = 62;
     public static final int HEADER_HEIGHT = 20;
+    public static final int X_PADDING = 8;
+    public static final int Y_PADDING = 16;
 
-    public int width = HEADER_WIDTH;
+    public int width = RecipeTreeRenderer.COL_WIDTH;
     public int height = HEADER_HEIGHT;
-
-    public boolean showRecipePreview = false;
 
     public RecipeTreeNode(RecipeBookmarkItem<?> item) {
         this.item = item;
@@ -58,45 +57,25 @@ public class RecipeTreeNode {
         recalculateSize();
     }
 
+    public boolean hasSecondColumn() {
+        if (item == null || item.category == null) {
+            return false;
+        }
+        if (item.category.getIcon() != null) {
+            return true;
+        }
+        JFMUYRuntime runtime = Internal.getRuntime();
+        if (runtime != null) {
+            List<Object> catalysts = runtime.getRecipeRegistry()
+                .getRecipeCatalysts(item.category);
+            return catalysts != null && !catalysts.isEmpty();
+        }
+        return false;
+    }
+
     public void recalculateSize() {
-        int bgWidth = 0;
-        int bgHeight = 0;
-
-        if (item.category != null && item.category.getBackground() != null) {
-            IDrawable bg = item.category.getBackground();
-            bgWidth = bg.getWidth();
-            bgHeight = bg.getHeight();
-        }
-
-        if (showRecipePreview && recipeLayout != null && item.category != null) {
-            this.width = Math.max(HEADER_WIDTH, bgWidth);
-            this.height = HEADER_HEIGHT + 2 + Math.max(18, bgHeight);
-        } else {
-            this.width = HEADER_WIDTH;
-            this.height = HEADER_HEIGHT;
-        }
-    }
-
-    public void toggleRecipePreview() {
-        this.showRecipePreview = !this.showRecipePreview;
-        recalculateSize();
-    }
-
-    public void setRecipePreview(boolean show) {
-        this.showRecipePreview = show;
-        recalculateSize();
-    }
-
-    public void setRecipePreviewRecursive(boolean show) {
-        if (this.recipeLayout != null && this.item != null && this.item.category != null) {
-            setRecipePreview(show);
-        } else {
-            setRecipePreview(false);
-        }
-
-        for (RecipeTreeNode child : children) {
-            child.setRecipePreviewRecursive(show);
-        }
+        this.width = hasSecondColumn() ? (RecipeTreeRenderer.COL_WIDTH * 2) : RecipeTreeRenderer.COL_WIDTH;
+        this.height = HEADER_HEIGHT;
     }
 
     public static RecipeTreeNode buildTree(RecipeBookmarkItem<?> item, RecipeBookmarkGroup group) {
@@ -159,64 +138,111 @@ public class RecipeTreeNode {
         return Objects.equals(a, b);
     }
 
-    public int getSubtreeHeight(int yPadding) {
-        if (children.isEmpty()) {
-            return this.height;
-        }
-
-        int totalChildrenHeight = 0;
-        for (int i = 0; i < children.size(); i++) {
-            totalChildrenHeight += children.get(i)
-                .getSubtreeHeight(yPadding);
-            if (i < children.size() - 1) {
-                totalChildrenHeight += yPadding;
-            }
-        }
-
-        return Math.max(this.height, totalChildrenHeight);
-    }
-
-    public int layout(int depth, int startY, int xPadding, int yPadding) {
-        if (children.isEmpty()) {
-            this.y = startY;
-            return startY + this.height + yPadding;
-        }
-
-        int currentChildY = startY;
-        int firstChildCenterY = 0;
-        int lastChildCenterY = 0;
-
-        for (int i = 0; i < children.size(); i++) {
-            RecipeTreeNode child = children.get(i);
-            int subTreeHeight = child.getSubtreeHeight(yPadding);
-
-            child.layout(depth + 1, currentChildY, xPadding, yPadding);
-
-            int childCenterY = currentChildY + (subTreeHeight / 2);
-            if (i == 0) {
-                firstChildCenterY = childCenterY;
-            }
-            if (i == children.size() - 1) {
-                lastChildCenterY = childCenterY;
-            }
-
-            currentChildY += subTreeHeight + yPadding;
-        }
-
-        int childrenCenterY = (firstChildCenterY + lastChildCenterY) / 2;
-        this.y = childrenCenterY - (this.height / 2);
-
-        if (this.y < startY) {
-            this.y = startY;
-        }
-
-        return Math.max(this.y + this.height + yPadding, currentChildY);
-    }
-
-    public void updateXPosition(int currentX, int xSpacing) {
-        this.x = currentX;
+    public void shiftX(int deltaX) {
+        if (deltaX == 0) return;
+        this.x += deltaX;
         for (RecipeTreeNode child : children) {
-            child.updateXPosition(currentX + this.width + xSpacing, xSpacing);
+            child.shiftX(deltaX);
         }
+    }
+
+    public void getRightContour(List<Integer> contour, int currentLevel) {
+        int rightEdge = this.x + this.width;
+        if (currentLevel < contour.size()) {
+            contour.set(currentLevel, Math.max(contour.get(currentLevel), rightEdge));
+        } else {
+            contour.add(rightEdge);
+        }
+
+        for (RecipeTreeNode child : children) {
+            child.getRightContour(contour, currentLevel + 1);
+        }
+    }
+
+    public void getLeftContour(List<Integer> contour, int currentLevel) {
+        int leftEdge = this.x;
+        if (currentLevel < contour.size()) {
+            contour.set(currentLevel, Math.min(contour.get(currentLevel), leftEdge));
+        } else {
+            contour.add(leftEdge);
+        }
+
+        for (RecipeTreeNode child : children) {
+            child.getLeftContour(contour, currentLevel + 1);
+        }
+    }
+
+    public void layout(int startX, int xPadding) {
+        int padding = xPadding + X_PADDING;
+
+        if (children.isEmpty()) {
+            this.x = startX;
+            return;
+        }
+
+        RecipeTreeNode firstChild = children.getFirst();
+        firstChild.layout(startX, xPadding);
+
+        List<Integer> leftContour = new ArrayList<>();
+        List<Integer> rightContour = new ArrayList<>();
+
+        for (int i = 1; i < children.size(); i++) {
+            RecipeTreeNode prevChild = children.get(i - 1);
+            RecipeTreeNode currentChild = children.get(i);
+
+            int nextStartX = prevChild.x + prevChild.width + padding;
+            currentChild.layout(nextStartX, xPadding);
+
+            leftContour.clear();
+            rightContour.clear();
+
+            prevChild.getRightContour(leftContour, 0);
+            currentChild.getLeftContour(rightContour, 0);
+
+            int maxOverlap = 0;
+            int minLevels = Math.min(leftContour.size(), rightContour.size());
+
+            for (int level = 0; level < minLevels; level++) {
+                int overlap = (leftContour.get(level) + padding) - rightContour.get(level);
+                if (overlap > maxOverlap) {
+                    maxOverlap = overlap;
+                }
+            }
+
+            if (maxOverlap > 0) {
+                currentChild.shiftX(maxOverlap);
+            }
+        }
+
+        RecipeTreeNode lastChild = children.getLast();
+        int firstChildCenter = firstChild.x + (firstChild.width / 2);
+        int lastChildCenter = lastChild.x + (lastChild.width / 2);
+
+        int desiredX = ((firstChildCenter + lastChildCenter) / 2) - (this.width / 2);
+
+        if (desiredX < startX) {
+            int shift = startX - desiredX;
+            this.x = startX;
+            for (RecipeTreeNode child : children) {
+                child.shiftX(shift);
+            }
+        } else {
+            this.x = desiredX;
+        }
+    }
+
+    public void updateYPosition(int currentY) {
+        this.y = currentY;
+        for (RecipeTreeNode child : children) {
+            child.updateYPosition(currentY + this.height + Y_PADDING);
+        }
+    }
+
+    public int getMaxX() {
+        int maxX = this.x + this.width;
+        for (RecipeTreeNode child : children) {
+            maxX = Math.max(maxX, child.getMaxX());
+        }
+        return maxX;
     }
 }

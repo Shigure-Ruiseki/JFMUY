@@ -14,6 +14,8 @@ import net.minecraftforge.common.MinecraftForge;
 import com.google.common.collect.Lists;
 
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
+import ruiseki.jfmuy.autocrafting.favorites.FavoriteRecipes;
+import ruiseki.jfmuy.gui.recipes.RecipeLayout;
 import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 import ruiseki.okcore.client.renderer.GlStateManager;
 import ruiseki.okcore.event.gui.RenderTooltipEvent;
@@ -69,6 +71,67 @@ public final class TooltipRenderer {
     public static void drawHoveringText(ItemStack itemStack, Minecraft minecraft, List<String> textLines, int x, int y,
         int maxWidth) {
         drawHoveringText(itemStack, minecraft, textLines, x, y, maxWidth, minecraft.fontRenderer);
+    }
+
+    public static void drawHoveringTextWithFavorite(Object ingredient, Minecraft minecraft, List<String> textLines,
+        int x, int y) {
+        drawHoveringTextWithFavorite(ingredient, null, minecraft, textLines, x, y, -1, minecraft.fontRenderer);
+    }
+
+    public static void drawHoveringTextWithFavorite(Object ingredient, ItemStack itemStack, Minecraft minecraft,
+        List<String> textLines, int x, int y, int maxWidth, FontRenderer font) {
+        List<String> lines = new ArrayList<>(textLines);
+        RecipeLayout favoriteEntry = null;
+
+        if (ingredient != null) {
+            favoriteEntry = FavoriteRecipes.getRecipeLayout(ingredient);
+        }
+
+        int extraWidth = 0;
+        int extraHeight = 0;
+
+        if (favoriteEntry != null) {
+            extraWidth = favoriteEntry.getRecipeCategory()
+                .getBackground()
+                .getWidth() + 8;
+            extraHeight = favoriteEntry.getRecipeCategory()
+                .getBackground()
+                .getHeight() + 12;
+        }
+
+        int nextY = drawTooltipBackgroundAndText(
+            itemStack,
+            minecraft,
+            lines,
+            x,
+            y,
+            maxWidth,
+            font,
+            extraWidth,
+            extraHeight,
+            null);
+
+        if (nextY != -1 && favoriteEntry != null) {
+            int tooltipX = x + 12;
+
+            int recipeX = tooltipX + 4;
+            int recipeY = nextY + 4;
+
+            favoriteEntry.setPosition(recipeX, recipeY);
+
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(0.0F, 0.0F, 300.0F);
+
+            favoriteEntry.drawRecipe(minecraft, x, y);
+            favoriteEntry.drawOverlays(minecraft, x, y);
+
+            GlStateManager.popMatrix();
+
+            GlStateManager.enableLighting();
+            GlStateManager.enableDepth();
+            RenderHelper.enableStandardItemLighting();
+            GlStateManager.enableRescaleNormal();
+        }
     }
 
     public static <T> void drawHoveringTextAndExtras(ItemStack itemStack, Minecraft minecraft, List<String> textLines,

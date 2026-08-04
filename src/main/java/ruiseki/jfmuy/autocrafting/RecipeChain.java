@@ -54,6 +54,10 @@ public class RecipeChain {
         return CraftingPlan.compute(graph, solution());
     }
 
+    public RecipeGraph graph() {
+        return graph;
+    }
+
     /** Called whenever the chain changes, in shape or in what the player asked of it. */
     void invalidate() {
         this.solution = null;

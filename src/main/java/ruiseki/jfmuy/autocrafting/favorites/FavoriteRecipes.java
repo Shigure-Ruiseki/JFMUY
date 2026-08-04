@@ -20,6 +20,7 @@ import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.config.Config;
+import ruiseki.jfmuy.gui.recipes.RecipeLayout;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
 import ruiseki.jfmuy.util.Log;
@@ -31,19 +32,20 @@ import ruiseki.jfmuy.util.Log;
  * <p>
  * Favourites are stored as a flat text file, grouped under a {@code #categoryUid} header so
  * a recipe id only has to be resolved against the one category it belongs to:
- * 
+ *
  * <pre>
  * #minecraft.crafting
  * 1234%minecraft:chest
  * </pre>
  */
-public class FavoriteRecipes {
+public final class FavoriteRecipes {
 
     private static final char CATEGORY_MARKER = '#';
     private static final String FIELD_SEPARATOR = "%";
     private static final Map<String, IRecipeWrapper> recipesByIngredient = new Object2ObjectLinkedOpenHashMap<>();
     private static final Map<IRecipeWrapper, IRecipeCategory<?>> recipeCategories = new Object2ObjectLinkedOpenHashMap<>();
     private static final Object2IntOpenHashMap<IRecipeWrapper> favoriteCounts = new Object2IntOpenHashMap<>();
+    private static final Map<String, RecipeLayout> layoutCacheByUniqueId = new Object2ObjectLinkedOpenHashMap<>();
 
     private FavoriteRecipes() {}
 
@@ -184,6 +186,7 @@ public class FavoriteRecipes {
 
     @Nullable
     public static IRecipeWrapper getFavorite(Object ingredient) {
+        if (ingredient == null || recipesByIngredient.isEmpty()) return null;
         return recipesByIngredient.get(uniqueIdOf(ingredient));
     }
 
@@ -193,18 +196,34 @@ public class FavoriteRecipes {
         return recipe == null ? null : recipeCategories.get(recipe);
     }
 
+    @Nullable
+    public static RecipeLayout getRecipeLayout(Object ingredient) {
+        if (ingredient == null || recipesByIngredient.isEmpty()) return null;
+        return layoutCacheByUniqueId.get(uniqueIdOf(ingredient));
+    }
+
+    @Nullable
+    @SuppressWarnings("unchecked")
+    private static RecipeLayout createRecipeLayout(IRecipeWrapper recipe, IRecipeCategory<?> category) {
+        return RecipeLayout.create(-1, (IRecipeCategory<IRecipeWrapper>) category, recipe, null, 0, 0);
+    }
+
     private static void addFavorite(String ingredientUniqueId, IRecipeWrapper recipe, IRecipeCategory<?> category) {
         removeFavorite(ingredientUniqueId);
         recipesByIngredient.put(ingredientUniqueId, recipe);
         recipeCategories.put(recipe, category);
         favoriteCounts.addTo(recipe, 1);
+        RecipeLayout layout = createRecipeLayout(recipe, category);
+        if (layout != null) {
+            layoutCacheByUniqueId.put(ingredientUniqueId, layout);
+        }
     }
 
     private static void removeFavorite(String ingredientUniqueId) {
         IRecipeWrapper previous = recipesByIngredient.remove(ingredientUniqueId);
-        if (previous == null) {
-            return;
-        }
+        if (previous == null) return;
+
+        layoutCacheByUniqueId.remove(ingredientUniqueId);
         int remaining = favoriteCounts.addTo(previous, -1) - 1;
         if (remaining <= 0) {
             favoriteCounts.removeInt(previous);
@@ -216,6 +235,7 @@ public class FavoriteRecipes {
         recipesByIngredient.clear();
         recipeCategories.clear();
         favoriteCounts.clear();
+        layoutCacheByUniqueId.clear();
     }
 
     private static String uniqueIdOf(Object ingredient) {

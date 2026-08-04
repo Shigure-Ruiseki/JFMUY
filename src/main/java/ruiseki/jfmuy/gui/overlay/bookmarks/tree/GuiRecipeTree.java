@@ -21,7 +21,6 @@ import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.config.KeyBindings;
 import ruiseki.jfmuy.gui.Focus;
 import ruiseki.jfmuy.gui.ingredients.GuiIngredient;
-import ruiseki.jfmuy.gui.recipes.RecipeLayout;
 import ruiseki.jfmuy.input.ClickedIngredient;
 import ruiseki.jfmuy.input.IClickedIngredient;
 import ruiseki.jfmuy.runtime.JFMUYRuntime;
@@ -31,7 +30,9 @@ public class GuiRecipeTree extends GuiScreen {
     private final RecipeBookmarkGroup group;
     private final GuiScreen parentScreen;
     private final List<RecipeTreeNode> rootNodes = new ArrayList<>();
-    private final RecipeTreeRenderer renderer;
+    private final RecipeTreeRenderer renderer = new RecipeTreeRenderer(this);
+
+    private static final int TREE_GAP = 32;
 
     private static final float DEFAULT_OFFSET_X = 50.0f;
     private static final float DEFAULT_OFFSET_Y = 50.0f;
@@ -45,8 +46,6 @@ public class GuiRecipeTree extends GuiScreen {
     private int lastMouseY;
     private boolean isDragging = false;
 
-    private static final int X_PADDING = 40;
-    private static final int Y_PADDING = 30;
     private static final float SCROLL_SPEED = 20.0f;
     private static final float ZOOM_SPEED = 0.1f;
     private static final float MIN_ZOOM = 0.2f;
@@ -55,7 +54,6 @@ public class GuiRecipeTree extends GuiScreen {
     public GuiRecipeTree(RecipeBookmarkGroup group, GuiScreen parentScreen) {
         this.group = group;
         this.parentScreen = parentScreen;
-        this.renderer = new RecipeTreeRenderer(this);
     }
 
     public GuiRecipeTree(RecipeBookmarkGroup group) {
@@ -66,12 +64,59 @@ public class GuiRecipeTree extends GuiScreen {
     public void initGui() {
         super.initGui();
         buildTreeLayout();
+        centerView();
+    }
+
+    public void centerView() {
+        if (rootNodes.isEmpty()) {
+            resetView();
+            return;
+        }
+
+        int minX = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int maxY = Integer.MIN_VALUE;
+
+        for (RecipeTreeNode root : rootNodes) {
+            int[] bounds = getTreeBounds(root);
+            minX = Math.min(minX, bounds[0]);
+            maxX = Math.max(maxX, bounds[1]);
+            minY = Math.min(minY, bounds[2]);
+            maxY = Math.max(maxY, bounds[3]);
+        }
+
+        float treeCenterX = (minX + maxX) / 2.0f;
+        float treeCenterY = (minY + maxY) / 2.0f;
+
+        this.offsetX = (this.width / 2.0f) - (treeCenterX * zoomScale);
+        this.offsetY = (this.height / 2.0f) - (treeCenterY * zoomScale);
+    }
+
+    private int[] getTreeBounds(RecipeTreeNode node) {
+        int minX = node.x;
+        int maxX = node.x + node.width;
+        int minY = node.y;
+        int maxY = node.y + node.height;
+
+        for (RecipeTreeNode child : node.children) {
+            int[] childBounds = getTreeBounds(child);
+            minX = Math.min(minX, childBounds[0]);
+            maxX = Math.max(maxX, childBounds[1]);
+            minY = Math.min(minY, childBounds[2]);
+            maxY = Math.max(maxY, childBounds[3]);
+        }
+
+        return new int[] { minX, maxX, minY, maxY };
+    }
+
+    private void resetView() {
+        zoomScale = DEFAULT_ZOOM_SCALE;
+        centerView();
     }
 
     private void buildTreeLayout() {
         rootNodes.clear();
-        int currentY = 0;
-
         Set<RecipeBookmarkItem<?>> childRecipes = new HashSet<>();
 
         for (BookmarkItem<?> item : group.getItems()) {
@@ -82,32 +127,21 @@ public class GuiRecipeTree extends GuiScreen {
             }
         }
 
+        int currentStartX = 0;
         for (BookmarkItem<?> item : group.getItems()) {
             if (item instanceof RecipeBookmarkItem<?>recipeItem) {
                 if (recipeItem.secondaryTo == null && !childRecipes.contains(recipeItem)) {
                     RecipeTreeNode root = RecipeTreeNode.buildTree(recipeItem, group);
-                    currentY = root.layout(0, currentY, X_PADDING, Y_PADDING);
-                    root.updateXPosition(0, X_PADDING);
+
+                    root.layout(currentStartX, 0);
+                    root.updateYPosition(0);
+
                     rootNodes.add(root);
-                    currentY += Y_PADDING;
+
+                    currentStartX = root.getMaxX() + TREE_GAP;
                 }
             }
         }
-    }
-
-    public void recalculateTreeLayout() {
-        int currentY = 0;
-        for (RecipeTreeNode root : rootNodes) {
-            currentY = root.layout(0, currentY, X_PADDING, Y_PADDING);
-            root.updateXPosition(0, X_PADDING);
-            currentY += Y_PADDING;
-        }
-    }
-
-    private void resetView() {
-        this.offsetX = DEFAULT_OFFSET_X;
-        this.offsetY = DEFAULT_OFFSET_Y;
-        this.zoomScale = DEFAULT_ZOOM_SCALE;
     }
 
     @Override
@@ -118,20 +152,35 @@ public class GuiRecipeTree extends GuiScreen {
     }
 
     public RecipeTreeNode getHoveredNode(RecipeTreeNode node, int relX, int relY) {
-        int minX = node.x;
-        int minY = node.y;
-        int maxX = node.x + node.width;
-        int maxY = node.y + node.height;
-
-        if (relX >= minX && relX <= maxX && relY >= minY && relY <= maxY) {
+        if (relX >= node.x && relX <= node.x + node.width && relY >= node.y && relY <= node.y + node.height) {
             return node;
         }
+
         for (RecipeTreeNode child : node.children) {
             RecipeTreeNode found = getHoveredNode(child, relX, relY);
-            if (found != null) return found;
+            if (found != null) {
+                return found;
+            }
         }
         return null;
     }
+
+    private HoverResult getHoveredResultAt(int mouseX, int mouseY) {
+        int scaledMouseX = (int) ((mouseX - offsetX) / zoomScale);
+        int scaledMouseY = (int) ((mouseY - offsetY) / zoomScale);
+
+        for (RecipeTreeNode root : rootNodes) {
+            RecipeTreeNode hovered = getHoveredNode(root, scaledMouseX, scaledMouseY);
+            if (hovered != null) {
+                int nodeRelMouseX = scaledMouseX - hovered.x;
+                int nodeRelMouseY = scaledMouseY - hovered.y;
+                return new HoverResult(hovered, nodeRelMouseX, nodeRelMouseY);
+            }
+        }
+        return null;
+    }
+
+    private record HoverResult(RecipeTreeNode node, int relX, int relY) {}
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
@@ -142,81 +191,59 @@ public class GuiRecipeTree extends GuiScreen {
             return;
         }
 
-        int scaledMouseX = (int) ((mouseX - offsetX) / zoomScale);
-        int scaledMouseY = (int) ((mouseY - offsetY) / zoomScale);
+        Object rawIngredient = renderer.getRawInputIngredientUnderMouse(mc, group, mouseX, mouseY);
+        if (rawIngredient != null) {
+            JFMUYRuntime runtime = Internal.getRuntime();
+            if (runtime != null) {
+                IFocus.Mode mode = (mouseButton == 1) ? IFocus.Mode.INPUT : IFocus.Mode.OUTPUT;
+                runtime.getRecipesGui()
+                    .show(new Focus<>(mode, rawIngredient));
+                return;
+            }
+        }
 
-        for (RecipeTreeNode root : rootNodes) {
-            RecipeTreeNode hovered = getHoveredNode(root, scaledMouseX, scaledMouseY);
-            if (hovered != null) {
-                int nodeRelMouseX = scaledMouseX - hovered.x;
-                int nodeRelMouseY = scaledMouseY - hovered.y;
+        HoverResult result = getHoveredResultAt(mouseX, mouseY);
+        if (result != null) {
+            RecipeTreeNode hovered = result.node();
+            int nodeRelMouseX = result.relX();
+            int nodeRelMouseY = result.relY();
 
-                if (nodeRelMouseY >= 0 && nodeRelMouseY <= RecipeTreeRenderer.ROW1_HEIGHT) {
-
+            if (nodeRelMouseY >= 0 && nodeRelMouseY <= RecipeTreeRenderer.ROW_HEIGHT) {
+                if (hovered.hasSecondColumn()) {
                     if (nodeRelMouseX >= 0 && nodeRelMouseX <= RecipeTreeRenderer.COL_WIDTH) {
-                        if (hovered.item.getIngredient() != null) {
-                            JFMUYRuntime runtime = Internal.getRuntime();
-                            if (runtime != null) {
-                                IFocus.Mode mode = (mouseButton == 1) ? IFocus.Mode.INPUT : IFocus.Mode.OUTPUT;
-                                runtime.getRecipesGui()
-                                    .show(new Focus<>(mode, hovered.item.getIngredient()));
-                                return;
-                            }
-                        }
-                    }
-
-                    if (nodeRelMouseX > RecipeTreeRenderer.COL_WIDTH
-                        && nodeRelMouseX <= RecipeTreeRenderer.COL_WIDTH * 2) {
                         if (hovered.item.category != null) {
                             showCategoryRecipes(hovered.item.category);
                             return;
                         }
+                    } else if (nodeRelMouseX > RecipeTreeRenderer.COL_WIDTH && nodeRelMouseX <= hovered.width) {
+                        openIngredientFocus(hovered, mouseButton);
+                        return;
                     }
-
-                    int col3X = RecipeTreeRenderer.COL_WIDTH * 2;
-                    if (nodeRelMouseX > col3X && nodeRelMouseX <= col3X + RecipeTreeRenderer.BUTTON_WIDTH) {
-                        if (GuiScreen.isShiftKeyDown()) {
-                            boolean targetState = !hovered.showRecipePreview;
-                            hovered.setRecipePreviewRecursive(targetState);
-                        } else {
-                            hovered.toggleRecipePreview();
-                        }
-                        recalculateTreeLayout();
+                } else {
+                    if (nodeRelMouseX >= 0 && nodeRelMouseX <= hovered.width) {
+                        openIngredientFocus(hovered, mouseButton);
                         return;
                     }
                 }
-
-                if (hovered.showRecipePreview && nodeRelMouseY > RecipeTreeRenderer.ROW1_HEIGHT + 2) {
-                    if (hovered.recipeLayout instanceof RecipeLayout layoutDrawable) {
-                        int recipeRelMouseY = nodeRelMouseY - (RecipeTreeRenderer.ROW1_HEIGHT + 2);
-
-                        layoutDrawable.setPosition(0, 0);
-
-                        GuiIngredient<?> guiIngredient = layoutDrawable
-                            .getGuiIngredientUnderMouse(nodeRelMouseX, recipeRelMouseY);
-                        IClickedIngredient<?> clicked = getIngredientUnderMouse(guiIngredient);
-                        JFMUYRuntime runtime = Internal.getRuntime();
-
-                        if (clicked != null && runtime != null) {
-                            IFocus.Mode mode = (mouseButton == 1) ? IFocus.Mode.INPUT : IFocus.Mode.OUTPUT;
-                            runtime.getRecipesGui()
-                                .show(new Focus<>(mode, clicked.getValue()));
-                            return;
-                        }
-
-                        if (layoutDrawable.handleClick(mc, nodeRelMouseX, recipeRelMouseY, mouseButton)) {
-                            return;
-                        }
-                    }
-                }
-                return;
             }
+            return;
         }
 
         if (mouseButton == 0) {
             isDragging = true;
             lastMouseX = mouseX;
             lastMouseY = mouseY;
+        }
+    }
+
+    private void openIngredientFocus(RecipeTreeNode hoveredNode, int mouseButton) {
+        if (hoveredNode.item.getIngredient() != null) {
+            JFMUYRuntime runtime = Internal.getRuntime();
+            if (runtime != null) {
+                IFocus.Mode mode = (mouseButton == 1) ? IFocus.Mode.INPUT : IFocus.Mode.OUTPUT;
+                runtime.getRecipesGui()
+                    .show(new Focus<>(mode, hoveredNode.item.getIngredient()));
+            }
         }
     }
 
@@ -262,73 +289,60 @@ public class GuiRecipeTree extends GuiScreen {
         int mouseX = Mouse.getX() * this.width / this.mc.displayWidth;
         int mouseY = this.height - Mouse.getY() * this.height / this.mc.displayHeight - 1;
 
-        int scaledMouseX = (int) ((mouseX - offsetX) / zoomScale);
-        int scaledMouseY = (int) ((mouseY - offsetY) / zoomScale);
+        Object rawIngredient = renderer.getRawInputIngredientUnderMouse(mc, group, mouseX, mouseY);
+        if (rawIngredient != null) {
+            JFMUYRuntime runtime = Internal.getRuntime();
+            if (runtime != null) {
+                if (KeyBindings.showRecipe.isActiveAndMatches(keyCode)) {
+                    runtime.getRecipesGui()
+                        .show(new Focus<>(IFocus.Mode.OUTPUT, rawIngredient));
+                    return;
+                }
+                if (KeyBindings.showUses.isActiveAndMatches(keyCode)) {
+                    runtime.getRecipesGui()
+                        .show(new Focus<>(IFocus.Mode.INPUT, rawIngredient));
+                    return;
+                }
+            }
+        }
 
-        for (RecipeTreeNode root : rootNodes) {
-            RecipeTreeNode hovered = getHoveredNode(root, scaledMouseX, scaledMouseY);
-            if (hovered != null) {
-                int nodeRelMouseX = scaledMouseX - hovered.x;
-                int nodeRelMouseY = scaledMouseY - hovered.y;
+        HoverResult result = getHoveredResultAt(mouseX, mouseY);
+        if (result != null) {
+            RecipeTreeNode hovered = result.node();
+            int nodeRelMouseX = result.relX();
+            int nodeRelMouseY = result.relY();
 
-                if (nodeRelMouseY >= 0 && nodeRelMouseY <= RecipeTreeRenderer.ROW1_HEIGHT) {
-                    if (nodeRelMouseX >= 0 && nodeRelMouseX <= RecipeTreeRenderer.COL_WIDTH
-                        && hovered.item.getIngredient() != null) {
-                        JFMUYRuntime runtime = Internal.getRuntime();
-                        if (runtime != null) {
-                            if (KeyBindings.showRecipe.isActiveAndMatches(keyCode)) {
-                                runtime.getRecipesGui()
-                                    .show(new Focus<>(IFocus.Mode.OUTPUT, hovered.item.getIngredient()));
-                                return;
-                            }
-                            if (KeyBindings.showUses.isActiveAndMatches(keyCode)) {
-                                runtime.getRecipesGui()
-                                    .show(new Focus<>(IFocus.Mode.INPUT, hovered.item.getIngredient()));
-                                return;
-                            }
-                        }
+            if (nodeRelMouseY >= 0 && nodeRelMouseY <= RecipeTreeRenderer.ROW_HEIGHT) {
+                boolean isCategoryCol = hovered.hasSecondColumn()
+                    ? (nodeRelMouseX >= 0 && nodeRelMouseX <= RecipeTreeRenderer.COL_WIDTH)
+                    : false;
+
+                boolean isIngredientCol = hovered.hasSecondColumn()
+                    ? (nodeRelMouseX > RecipeTreeRenderer.COL_WIDTH && nodeRelMouseX <= hovered.width)
+                    : (nodeRelMouseX >= 0 && nodeRelMouseX <= hovered.width);
+
+                JFMUYRuntime runtime = Internal.getRuntime();
+
+                if (isIngredientCol && hovered.item.getIngredient() != null && runtime != null) {
+                    if (KeyBindings.showRecipe.isActiveAndMatches(keyCode)) {
+                        runtime.getRecipesGui()
+                            .show(new Focus<>(IFocus.Mode.OUTPUT, hovered.item.getIngredient()));
+                        return;
                     }
-
-                    if (nodeRelMouseX > RecipeTreeRenderer.COL_WIDTH
-                        && nodeRelMouseX <= RecipeTreeRenderer.COL_WIDTH * 2
-                        && hovered.item.category != null) {
-                        if (KeyBindings.showRecipe.isActiveAndMatches(keyCode)
-                            || KeyBindings.showUses.isActiveAndMatches(keyCode)) {
-                            showCategoryRecipes(hovered.item.category);
-                            return;
-                        }
+                    if (KeyBindings.showUses.isActiveAndMatches(keyCode)) {
+                        runtime.getRecipesGui()
+                            .show(new Focus<>(IFocus.Mode.INPUT, hovered.item.getIngredient()));
+                        return;
                     }
                 }
 
-                if (hovered.showRecipePreview && nodeRelMouseY > RecipeTreeRenderer.ROW1_HEIGHT + 2) {
-                    if (hovered.recipeLayout instanceof RecipeLayout layoutDrawable) {
-                        int recipeRelMouseY = nodeRelMouseY - (RecipeTreeRenderer.ROW1_HEIGHT + 2);
-
-                        layoutDrawable.setPosition(0, 0);
-
-                        GuiIngredient<?> guiIngredient = layoutDrawable
-                            .getGuiIngredientUnderMouse(nodeRelMouseX, recipeRelMouseY);
-                        IClickedIngredient<?> clicked = getIngredientUnderMouse(guiIngredient);
-
-                        if (clicked != null) {
-                            JFMUYRuntime runtime = Internal.getRuntime();
-                            if (runtime != null) {
-                                if (KeyBindings.showRecipe.isActiveAndMatches(keyCode)) {
-                                    runtime.getRecipesGui()
-                                        .show(new Focus<>(IFocus.Mode.OUTPUT, clicked.getValue()));
-                                    return;
-                                }
-                                if (KeyBindings.showUses.isActiveAndMatches(keyCode)) {
-                                    runtime.getRecipesGui()
-                                        .show(new Focus<>(IFocus.Mode.INPUT, clicked.getValue()));
-                                    return;
-                                }
-                            }
-                        }
+                if (isCategoryCol && hovered.item.category != null) {
+                    if (KeyBindings.showRecipe.isActiveAndMatches(keyCode)
+                        || KeyBindings.showUses.isActiveAndMatches(keyCode)) {
+                        showCategoryRecipes(hovered.item.category);
+                        return;
                     }
                 }
-
-                break;
             }
         }
     }

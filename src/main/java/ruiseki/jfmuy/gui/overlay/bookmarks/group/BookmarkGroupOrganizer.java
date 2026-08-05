@@ -21,6 +21,7 @@ import ruiseki.jfmuy.autocrafting.CraftingPlan;
 import ruiseki.jfmuy.autocrafting.RecipeBookmarkGroup;
 import ruiseki.jfmuy.autocrafting.RecipeBookmarkItem;
 import ruiseki.jfmuy.bookmarks.BookmarkGroup;
+import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.KeyBindings;
@@ -28,6 +29,7 @@ import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.gui.overlay.bookmarks.BookmarkGridWithNavigation;
 import ruiseki.jfmuy.input.MouseHelper;
+import ruiseki.jfmuy.render.BookmarkListBatchRenderer;
 import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 import ruiseki.jfmuy.render.IngredientListSlot;
 import ruiseki.jfmuy.util.Translator;
@@ -40,8 +42,11 @@ public class BookmarkGroupOrganizer {
     private final List<BookmarkGroupDisplay> groups = new ArrayList<>();
     private final IngredientListBatchRenderer missingIngredientRenderer = new IngredientListBatchRenderer(false);
 
+    @Nullable
+    private BookmarkListBatchRenderer bookmarkRenderer;
     private Rectangle area = new Rectangle();
     private int hoveredGroupId = -1;
+    private boolean insertionPreviewActive;
     private int missingIngredients = 0;
     /** Why the hovered group cannot be crafted in the open container, or null if it can. */
     @Nullable
@@ -60,6 +65,7 @@ public class BookmarkGroupOrganizer {
         this.area = new Rectangle();
         this.groups.clear();
         this.hoveredGroupId = -1;
+        this.insertionPreviewActive = false;
         this.missingIngredients = 0;
         this.missingIngredientRenderer.clear();
         this.prevMouseY = 0;
@@ -70,6 +76,7 @@ public class BookmarkGroupOrganizer {
         // The grid was rebuilt, so anything derived from the old chain is no longer trustworthy.
         invalidateMissingIngredients();
         // Find contiguous groups
+        List<BookmarkGroupDisplay> previousGroups = new ArrayList<>(this.groups);
         this.groups.clear();
         if (bookmarkGroupIds.isEmpty()) {
             return;
@@ -81,15 +88,15 @@ public class BookmarkGroupOrganizer {
             if (groupId == contiguousGroupId) {
                 continue;
             }
-            addGroup(startOfSequence, i - 1, contiguousGroupId);
+            addGroup(startOfSequence, i - 1, contiguousGroupId, previousGroups);
 
             startOfSequence = i;
             contiguousGroupId = groupId;
         }
-        addGroup(startOfSequence, bookmarkGroupIds.size() - 1, contiguousGroupId);
+        addGroup(startOfSequence, bookmarkGroupIds.size() - 1, contiguousGroupId, previousGroups);
     }
 
-    private void addGroup(int start, int end, int groupId) {
+    private void addGroup(int start, int end, int groupId, List<BookmarkGroupDisplay> previousGroups) {
         if (groupId == -1) {
             return;
         }
@@ -99,7 +106,16 @@ public class BookmarkGroupOrganizer {
             return;
         }
         Rectangle groupArea = getGroupArea(start, end, area);
-        groups.add(new BookmarkGroupDisplay(groupArea, group));
+        for (int i = 0; i < previousGroups.size(); i++) {
+            BookmarkGroupDisplay display = previousGroups.get(i);
+            if (display.group == group) {
+                previousGroups.remove(i);
+                display.area = groupArea;
+                groups.add(display);
+                return;
+            }
+        }
+        groups.add(new BookmarkGroupDisplay(groupArea, group, this));
     }
 
     private Rectangle getGroupArea(int rowStart, int rowEnd, Rectangle availableArea) {
@@ -144,7 +160,8 @@ public class BookmarkGroupOrganizer {
     }
 
     public void drawTooltips(Minecraft minecraft, int mouseX, int mouseY) {
-        if (!Config.areRecipeBookmarksEnabled()) {
+        if (!Config.areRecipeBookmarksEnabled() || insertionPreviewActive) {
+            hoveredGroupId = -1;
             return;
         }
         if (mouseX > area.x + BookmarkGridWithNavigation.BOOKMARK_TAB_WIDTH) {
@@ -246,13 +263,39 @@ public class BookmarkGroupOrganizer {
 
     public <I> List<IGhostIngredientHandler.Target<I>> getTargets(I ingredient) {
         List<IGhostIngredientHandler.Target<I>> targets = new ArrayList<>();
+        Object groupedIngredient = ingredient instanceof BookmarkItem ? ((BookmarkItem<?>) ingredient).getIngredient()
+            : ingredient;
         for (BookmarkGroupDisplay groupDisplay : groups) {
-            if (groupDisplay.group instanceof RecipeBookmarkGroup ^ ingredient instanceof RecipeBookmarkItem) {
+            if (groupDisplay.group instanceof RecipeBookmarkGroup ^ groupedIngredient instanceof RecipeBookmarkItem) {
                 continue;
             }
             targets.add(groupDisplay);
         }
         return targets;
+    }
+
+    public void setBookmarkRenderer(BookmarkListBatchRenderer bookmarkRenderer) {
+        this.bookmarkRenderer = bookmarkRenderer;
+    }
+
+    public void setInsertionPreview(BookmarkGroup group, int insertionIndex, Object ingredient) {
+        insertionPreviewActive = true;
+        hoveredGroupId = -1;
+        if (bookmarkRenderer != null) {
+            bookmarkRenderer.setInsertionPreview(group, insertionIndex, ingredient);
+        }
+    }
+
+    public void clearInsertionPreview() {
+        insertionPreviewActive = false;
+        hoveredGroupId = -1;
+        if (bookmarkRenderer != null) {
+            bookmarkRenderer.clearInsertionPreview();
+        }
+    }
+
+    public boolean isInsertionPreviewActive() {
+        return insertionPreviewActive;
     }
 
     public boolean onKeyPressed(char typedChar, int eventKey) {

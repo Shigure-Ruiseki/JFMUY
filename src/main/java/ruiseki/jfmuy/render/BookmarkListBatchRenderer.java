@@ -14,10 +14,13 @@ import org.jetbrains.annotations.Nullable;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2LongMap;
 import it.unimi.dsi.fastutil.objects.Reference2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import ruiseki.jfmuy.bookmarks.BookmarkGroup;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
@@ -41,11 +44,41 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
     private List<IIngredientListElement> cachedDisplayElements = Collections.emptyList();
     private IntList cachedDisplayGroupIndices = new IntArrayList();
     private boolean renderingAnimationFrame;
+    private int lastStartIndex;
+    private List<IIngredientListElement> lastCollapsedList = Collections.emptyList();
+    @Nullable
+    private BookmarkGroup insertionPreviewGroup;
+    private int insertionPreviewIndex = -1;
+    @Nullable
+    private BookmarkItem<?> insertionPreviewDraggedItem;
 
     public BookmarkListBatchRenderer(BookmarkGroupOrganizer groupOrganizer, BookmarkList bookmarkList) {
         super();
         this.groupOrganizer = groupOrganizer;
+        groupOrganizer.setBookmarkRenderer(this);
         bookmarkList.addAdditionListener(this::animateBookmarkAddition);
+    }
+
+    public void setInsertionPreview(BookmarkGroup group, int insertionIndex, Object ingredient) {
+        BookmarkItem<?> draggedItem = ingredient instanceof BookmarkItem ? (BookmarkItem<?>) ingredient : null;
+        if (insertionPreviewGroup == group && insertionPreviewIndex == insertionIndex
+            && insertionPreviewDraggedItem == draggedItem) {
+            return;
+        }
+        insertionPreviewGroup = group;
+        insertionPreviewIndex = insertionIndex;
+        insertionPreviewDraggedItem = draggedItem;
+        setCollapsed(lastStartIndex, lastCollapsedList);
+    }
+
+    public void clearInsertionPreview() {
+        if (insertionPreviewGroup == null) {
+            return;
+        }
+        insertionPreviewGroup = null;
+        insertionPreviewIndex = -1;
+        insertionPreviewDraggedItem = null;
+        setCollapsed(lastStartIndex, lastCollapsedList);
     }
 
     public void toggleBookmarkItemExpanded(BookmarkItem item) {
@@ -171,6 +204,8 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
 
     @Override
     public void setCollapsed(int startIndex, List<IIngredientListElement> collapsedList) {
+        lastStartIndex = startIndex;
+        lastCollapsedList = collapsedList;
         ingredientRendererToBookmark.clear();
         collapsedRendererToBookmark.clear();
         expandedElementToBookmark.clear();
@@ -210,10 +245,27 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
         // itemToGroupIndex preserves the bookmark's group index for sub-elements that don't carry it themselves.
         List<IIngredientListElement> displayItems = new ArrayList<>();
         Map<IIngredientListElement, CollapsedGroupIngredient> itemToCollapsed = new HashMap<>();
-        Map<IIngredientListElement, Integer> itemToGroupIndex = new HashMap<>();
+        Object2IntMap<IIngredientListElement> itemToGroupIndex = new Object2IntOpenHashMap<>();
+        boolean previewGapAdded = insertionPreviewGroup == null;
+        int previewItemIndex = 0;
 
         for (IIngredientListElement element : collapsedList) {
             Object ingredient = element.getIngredient();
+            boolean isPreviewGroup = insertionPreviewGroup != null
+                && element.getGroupIndex() == insertionPreviewGroup.id;
+            if (!isPreviewGroup && !previewGapAdded && previewItemIndex > 0) {
+                displayItems.add(null);
+                itemToGroupIndex.put(null, insertionPreviewGroup.id);
+                previewGapAdded = true;
+            }
+            if (isPreviewGroup && !previewGapAdded && previewItemIndex >= insertionPreviewIndex) {
+                displayItems.add(null);
+                itemToGroupIndex.put(null, insertionPreviewGroup.id);
+                previewGapAdded = true;
+            }
+            if (isPreviewGroup && ingredient == insertionPreviewDraggedItem) {
+                continue;
+            }
             if (ingredient instanceof BookmarkItem
                 && ((BookmarkItem<?>) ingredient).getIngredient() instanceof CollapsedGroupIngredient) {
                 BookmarkItem<?> bookmarkItem = (BookmarkItem<?>) ingredient;
@@ -234,13 +286,20 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
                 displayItems.add(element);
                 itemToGroupIndex.put(element, element.getGroupIndex());
             }
+            if (isPreviewGroup) {
+                previewItemIndex++;
+            }
+        }
+        if (!previewGapAdded) {
+            displayItems.add(null);
+            itemToGroupIndex.put(null, insertionPreviewGroup.id);
         }
 
         // Cache for sizePages — must happen before any early return so it's always current.
         this.cachedDisplayElements = displayItems;
         this.cachedDisplayGroupIndices = new IntArrayList(displayItems.size());
         for (IIngredientListElement item : displayItems) {
-            cachedDisplayGroupIndices.add(itemToGroupIndex.getOrDefault(item, item.getGroupIndex()));
+            cachedDisplayGroupIndices.add(getDisplayGroupIndex(item, itemToGroupIndex));
         }
 
         if (startIndex >= displayItems.size()) {
@@ -251,10 +310,7 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
 
         int i = startIndex;
         int slotIndex = 0;
-        int currentGroup = itemToGroupIndex.getOrDefault(
-            displayItems.get(i),
-            displayItems.get(i)
-                .getGroupIndex());
+        int currentGroup = getDisplayGroupIndex(displayItems.get(i), itemToGroupIndex);
         IntList groupIndices = new IntArrayList();
 
         for (List<IngredientListSlot> row : slots) {
@@ -274,8 +330,8 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
                     break;
                 }
                 IIngredientListElement displayItem = displayItems.get(i);
-                int elemGroup = itemToGroupIndex.getOrDefault(displayItem, displayItem.getGroupIndex());
-                if (elemGroup != currentGroup || displayItem.startsNewRow()) {
+                int elemGroup = getDisplayGroupIndex(displayItem, itemToGroupIndex);
+                if (elemGroup != currentGroup || displayItem != null && displayItem.startsNewRow()) {
                     currentGroup = elemGroup;
                     if (column > 0) {
                         break;
@@ -283,6 +339,12 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
                 }
                 if (column == 0) {
                     groupIndices.add(currentGroup);
+                }
+                if (displayItem == null) {
+                    size++;
+                    i++;
+                    slotIndex++;
+                    continue;
                 }
 
                 Object ingredient = displayItem.getIngredient();
@@ -317,6 +379,12 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
 
         groupOrganizer.setBookmarkGroupIds(groupIndices);
         invalidateBuffer();
+    }
+
+    private static int getDisplayGroupIndex(@Nullable IIngredientListElement item,
+        Object2IntMap<IIngredientListElement> itemToGroupIndex) {
+        int groupIndex = itemToGroupIndex.getInt(item);
+        return groupIndex > -1 ? groupIndex : item.getGroupIndex();
     }
 
     @Override
@@ -433,8 +501,8 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
                     hasUsableSlot = true;
 
                     int elemGroup = cachedDisplayGroupIndices.getInt(idx);
-                    if (elemGroup != currentGroup || displayList.get(idx)
-                        .startsNewRow()) {
+                    IIngredientListElement displayItem = displayList.get(idx);
+                    if (elemGroup != currentGroup || displayItem != null && displayItem.startsNewRow()) {
                         currentGroup = elemGroup;
                         if (column > 0) {
                             break;

@@ -89,9 +89,10 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     @Nullable
     private Multimap<CollapsibleGroup, IIngredientListElement<?>> groupToElementsCache = null;
 
-    private boolean afterBlock = false;
     @Nullable
     private List<Runnable> delegatedActions;
+    private boolean afterBlock = false;
+    private boolean refreshRequested = false;
 
     public IngredientFilter(IngredientBlacklistInternal blacklist, NonNullList<IIngredientListElement> ingredients,
         ISearchIndexBuilderFactory searchIndexBuilderFactory) {
@@ -323,6 +324,18 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
     public void updateHidden() {
         for (IIngredientListElement<?> element : this.elementSearch.getAllIngredients()) {
             updateHiddenState(element);
+        }
+    }
+
+    public void requestRefresh() {
+        this.refreshRequested = true;
+    }
+
+    public void refresh() {
+        if (this.refreshRequested) {
+            this.refreshRequested = false;
+            updateHidden();
+            notifyListenersOfChange();
         }
     }
 

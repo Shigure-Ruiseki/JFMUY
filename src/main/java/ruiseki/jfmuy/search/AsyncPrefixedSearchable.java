@@ -8,8 +8,6 @@ import java.util.concurrent.TimeUnit;
 
 import net.minecraft.client.Minecraft;
 
-import org.apache.commons.lang3.concurrent.ConcurrentRuntimeException;
-
 import ruiseki.jfmuy.api.search.ISearchIndexBuilder;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.util.Log;
@@ -61,9 +59,13 @@ public class AsyncPrefixedSearchable extends PrefixedSearchable {
                 for (IIngredientListElement ingredient : ingredients) {
                     try {
                         submit(ingredient);
-                    } catch (ConcurrentRuntimeException e) {
+                    } catch (Throwable t) {
                         Log.get()
-                            .error(prefixInfo + " building failed on ingredient: " + ingredient.getDisplayName(), e);
+                            .error(
+                                "Building {}'s search index failed on ingredient: {}",
+                                prefixInfo,
+                                ingredient.getDisplayName(),
+                                t);
                         if (leftovers == null) {
                             this.leftovers = new ArrayList<>();
                         }

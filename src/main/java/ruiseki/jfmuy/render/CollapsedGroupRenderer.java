@@ -241,7 +241,7 @@ public class CollapsedGroupRenderer implements IIngredientRenderer<CollapsedGrou
         GlStateManager.disableDepth();
         GlStateManager.colorMask(true, true, true, false);
         GuiHelpers
-            .drawGradientRect(0, area.x, area.y, area.x + area.width, area.y + area.height, 0x80FFFFFF, 0x80FFFFFF);
+            .drawGradientRect(area.x, area.y, area.x + area.width, area.y + area.height, 0x80FFFFFF, 0x80FFFFFF, 0);
         GlStateManager.colorMask(true, true, true, true);
         GlStateManager.enableDepth();
     }
@@ -303,15 +303,15 @@ public class CollapsedGroupRenderer implements IIngredientRenderer<CollapsedGrou
         // Draw tooltip background (MC-style dark purple box with gradient border)
         final int z = 300;
         int bg = 0xF0100010, bs = 0x505000FF, be = (bs & 0xFEFEFE) >> 1 | (bs & 0xFF000000);
-        GuiHelpers.drawGradientRect(z, tx - 3, ty - 4, tx + tw + 3, ty - 3, bg, bg);
-        GuiHelpers.drawGradientRect(z, tx - 3, ty + th + 3, tx + tw + 3, ty + th + 4, bg, bg);
-        GuiHelpers.drawGradientRect(z, tx - 3, ty - 3, tx + tw + 3, ty + th + 3, bg, bg);
-        GuiHelpers.drawGradientRect(z, tx - 4, ty - 3, tx - 3, ty + th + 3, bg, bg);
-        GuiHelpers.drawGradientRect(z, tx + tw + 3, ty - 3, tx + tw + 4, ty + th + 3, bg, bg);
-        GuiHelpers.drawGradientRect(z, tx - 3, ty - 2, tx - 2, ty + th + 2, bs, be);
-        GuiHelpers.drawGradientRect(z, tx + tw + 2, ty - 2, tx + tw + 3, ty + th + 2, bs, be);
-        GuiHelpers.drawGradientRect(z, tx - 3, ty - 3, tx + tw + 3, ty - 2, bs, bs);
-        GuiHelpers.drawGradientRect(z, tx - 3, ty + th + 2, tx + tw + 3, ty + th + 3, be, be);
+        GuiHelpers.drawGradientRect(tx - 3, ty - 4, tx + tw + 3, ty - 3, bg, bg, z);
+        GuiHelpers.drawGradientRect(tx - 3, ty + th + 3, tx + tw + 3, ty + th + 4, bg, bg, z);
+        GuiHelpers.drawGradientRect(tx - 3, ty - 3, tx + tw + 3, ty + th + 3, bg, bg, z);
+        GuiHelpers.drawGradientRect(tx - 4, ty - 3, tx - 3, ty + th + 3, bg, bg, z);
+        GuiHelpers.drawGradientRect(tx + tw + 3, ty - 3, tx + tw + 4, ty + th + 3, bg, bg, z);
+        GuiHelpers.drawGradientRect(tx - 3, ty - 2, tx - 2, ty + th + 2, bs, be, z);
+        GuiHelpers.drawGradientRect(tx + tw + 2, ty - 2, tx + tw + 3, ty + th + 2, bs, be, z);
+        GuiHelpers.drawGradientRect(tx - 3, ty - 3, tx + tw + 3, ty - 2, bs, bs, z);
+        GuiHelpers.drawGradientRect(tx - 3, ty + th + 2, tx + tw + 3, ty + th + 3, be, be, z);
 
         // Title
         font.drawStringWithShadow(header, tx, ty, -1);

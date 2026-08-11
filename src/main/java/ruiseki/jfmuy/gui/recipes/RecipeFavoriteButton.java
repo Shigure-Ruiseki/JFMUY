@@ -51,6 +51,8 @@ public class RecipeFavoriteButton extends GuiIconButton {
     }
 
     private void setSupportedIngredients(RecipeLayout layout) {
+        favoriteSlots.clear();
+        selectedSlot = 0;
         Function<Map, Stream<IGuiIngredient<?>>> filter = (map) -> map.values()
             .stream()
             .filter(
@@ -91,16 +93,16 @@ public class RecipeFavoriteButton extends GuiIconButton {
     }
 
     protected boolean onMouseClicked(Minecraft mc, int mouseX, int mouseY) {
+        Object displayedIngredient = getDisplayedIngredient();
+        if (displayedIngredient == null) {
+            return false;
+        }
         if (GuiScreen.isShiftKeyDown() && isIconToggledOn()) {
             FavoriteRecipes.removeFavorite(recipe);
             favoriteSlots.clear();
             return true;
         }
-        FavoriteRecipes.toggleFavorite(
-            supportedIngredients.get(selectedSlot)
-                .getDisplayedIngredient(),
-            recipe,
-            category);
+        FavoriteRecipes.toggleFavorite(displayedIngredient, recipe, category);
         if (favoriteSlots.contains(selectedSlot)) { // We also have to update it in this GUI.
             favoriteSlots.remove(selectedSlot);
         } else {
@@ -112,6 +114,9 @@ public class RecipeFavoriteButton extends GuiIconButton {
     @Override
     public void drawButton(Minecraft mc, int mouseX, int mouseY) {
         super.drawButton(mc, mouseX, mouseY);
+        if (supportedIngredients.isEmpty()) {
+            return;
+        }
         if (!func_146115_a() && (!visible || !layout.getRecipeBookmarkButton()
             .func_146115_a())) {
             return;
@@ -143,7 +148,9 @@ public class RecipeFavoriteButton extends GuiIconButton {
 
     @Nullable
     public Object getDisplayedIngredient() {
-        if (supportedIngredients == null || supportedIngredients.isEmpty()) return null;
+        if (selectedSlot < 0 || selectedSlot >= supportedIngredients.size()) {
+            return null;
+        }
         return supportedIngredients.get(selectedSlot)
             .getDisplayedIngredient();
     }

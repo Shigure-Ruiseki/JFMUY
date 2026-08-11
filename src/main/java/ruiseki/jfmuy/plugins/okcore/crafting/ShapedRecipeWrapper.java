@@ -1,8 +1,8 @@
 package ruiseki.jfmuy.plugins.okcore.crafting;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -12,7 +12,8 @@ import org.jetbrains.annotations.Nullable;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
 import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
-import ruiseki.okcore.json.item.CompoundItemMaterial;
+import ruiseki.okcore.datastructure.NonNullList;
+import ruiseki.okcore.recipe.ingredient.Ingredient;
 import ruiseki.okcore.recipe.type.crafting.shaped.ShapedRecipe;
 
 public class ShapedRecipeWrapper implements IShapedCraftingRecipeWrapper {
@@ -26,21 +27,24 @@ public class ShapedRecipeWrapper implements IShapedCraftingRecipeWrapper {
 
         int width = recipe.getRecipeWidth();
         int height = recipe.getRecipeHeight();
-        String[] pattern = recipe.getPattern();
-        Map<Character, CompoundItemMaterial> keyMap = recipe.getKeyMap();
+        NonNullList<Ingredient> ingredients = recipe.getIngredients();
 
         for (int i = 0; i < 9; i++) {
             inputs.add(new ArrayList<>());
         }
 
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < pattern[i].length(); j++) {
-                char chr = pattern[i].charAt(j);
-                CompoundItemMaterial materials = keyMap.get(chr);
-                if (materials != null && !materials.isEmpty()) {
-                    int slotIndex = j + i * 3;
-                    if (slotIndex < 9) {
-                        inputs.set(slotIndex, materials.toStacks());
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                int ingredientIndex = col + row * width;
+                if (ingredientIndex < ingredients.size()) {
+                    Ingredient ingredient = ingredients.get(ingredientIndex);
+                    int slotIndex = col + row * 3;
+
+                    if (slotIndex < 9 && ingredient != Ingredient.EMPTY) {
+                        ItemStack[] matchingStacks = ingredient.getItems();
+                        if (matchingStacks != null && matchingStacks.length > 0) {
+                            inputs.set(slotIndex, Arrays.asList(matchingStacks));
+                        }
                     }
                 }
             }
@@ -50,7 +54,7 @@ public class ShapedRecipeWrapper implements IShapedCraftingRecipeWrapper {
     @Override
     public void getIngredients(IIngredients ingredients) {
         ingredients.setInputLists(VanillaTypes.ITEM, inputs);
-        ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
+        ingredients.setOutput(VanillaTypes.ITEM, recipe.getResultItem());
     }
 
     @Override

@@ -1,6 +1,7 @@
 package ruiseki.jfmuy.plugins.okcore.crafting;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import net.minecraft.item.ItemStack;
@@ -8,9 +9,10 @@ import net.minecraft.util.ResourceLocation;
 
 import org.jetbrains.annotations.Nullable;
 
+import ruiseki.jfmuy.api.ingredients.IIngredients;
 import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.wrapper.ICraftingRecipeWrapper;
-import ruiseki.okcore.json.item.CompoundItemMaterial;
+import ruiseki.okcore.recipe.ingredient.Ingredient;
 import ruiseki.okcore.recipe.type.crafting.shapless.ShapelessRecipe;
 
 public class ShapelessRecipeWrapper implements ICraftingRecipeWrapper {
@@ -22,9 +24,12 @@ public class ShapelessRecipeWrapper implements ICraftingRecipeWrapper {
         this.recipe = recipe;
         this.inputs = new ArrayList<>();
 
-        for (CompoundItemMaterial ingredient : recipe.getIngredients()) {
-            if (ingredient != null && !ingredient.isEmpty()) {
-                inputs.add(ingredient.toStacks());
+        for (Ingredient ingredient : recipe.getIngredients()) {
+            if (ingredient != null && ingredient != Ingredient.EMPTY) {
+                ItemStack[] matchingStacks = ingredient.getItems();
+                if (matchingStacks != null && matchingStacks.length > 0) {
+                    inputs.add(Arrays.asList(matchingStacks));
+                }
             }
         }
     }
@@ -34,9 +39,9 @@ public class ShapelessRecipeWrapper implements ICraftingRecipeWrapper {
     }
 
     @Override
-    public void getIngredients(ruiseki.jfmuy.api.ingredients.IIngredients ingredients) {
+    public void getIngredients(IIngredients ingredients) {
         ingredients.setInputLists(VanillaTypes.ITEM, inputs);
-        ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
+        ingredients.setOutput(VanillaTypes.ITEM, recipe.getResultItem());
     }
 
     @Override

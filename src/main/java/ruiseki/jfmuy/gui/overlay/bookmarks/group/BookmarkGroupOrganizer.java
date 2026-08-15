@@ -19,9 +19,7 @@ import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
 import ruiseki.jfmuy.autocrafting.CraftingPlan;
 import ruiseki.jfmuy.autocrafting.RecipeBookmarkGroup;
-import ruiseki.jfmuy.autocrafting.RecipeBookmarkItem;
 import ruiseki.jfmuy.bookmarks.BookmarkGroup;
-import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.KeyBindings;
@@ -263,13 +261,10 @@ public class BookmarkGroupOrganizer {
 
     public <I> List<IGhostIngredientHandler.Target<I>> getTargets(I ingredient) {
         List<IGhostIngredientHandler.Target<I>> targets = new ArrayList<>();
-        Object groupedIngredient = ingredient instanceof BookmarkItem ? ((BookmarkItem<?>) ingredient).getIngredient()
-            : ingredient;
         for (BookmarkGroupDisplay groupDisplay : groups) {
-            if (groupDisplay.group instanceof RecipeBookmarkGroup ^ groupedIngredient instanceof RecipeBookmarkItem) {
-                continue;
+            if (groupDisplay.canAccept(ingredient)) {
+                targets.add(groupDisplay);
             }
-            targets.add(groupDisplay);
         }
         return targets;
     }

@@ -204,7 +204,7 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
         for (List outputSlot : ingredients.getOutputs(ingredientType)) {
             long slotAmount = Long.MAX_VALUE;
             for (Object candidate : outputSlot) {
-                if (candidate != null && IngredientUtil.equals(ingredient, candidate)) {
+                if (IngredientUtil.equals(ingredient, candidate)) {
                     long candidateAmount = IngredientUtil.getCount(candidate);
                     slotAmount = Math.min(slotAmount, Math.max(1L, candidateAmount));
                 }
@@ -478,6 +478,7 @@ public class RecipeBookmarkItem<I> extends BookmarkItem<I> {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Nullable
     public IRecipeLayout createLayout() {
         return RecipeLayout.create(-1, (IRecipeCategory) category, recipe, null, 0, 0);
     }

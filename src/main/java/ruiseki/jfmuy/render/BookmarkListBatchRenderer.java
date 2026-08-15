@@ -20,6 +20,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2LongMap;
 import it.unimi.dsi.fastutil.objects.Reference2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import ruiseki.jfmuy.autocrafting.RecipeBookmarkGroup;
 import ruiseki.jfmuy.bookmarks.BookmarkGroup;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
@@ -403,7 +404,18 @@ public class BookmarkListBatchRenderer extends IngredientListBatchRenderer {
     }
 
     private void animateBookmarkAddition(BookmarkItem<?> bookmarkItem) {
-        bookmarkAddAnimations.put(bookmarkItem, Minecraft.getSystemTime());
+        long startTime = Minecraft.getSystemTime();
+        BookmarkGroup group = bookmarkItem.getGroup();
+        if (group instanceof RecipeBookmarkGroup) {
+            for (IIngredientListElement<?> element : group.getIngredientListElements()) {
+                Object ingredient = element.getIngredient();
+                if (ingredient instanceof BookmarkItem) {
+                    bookmarkAddAnimations.put((BookmarkItem<?>) ingredient, startTime);
+                }
+            }
+        } else {
+            bookmarkAddAnimations.put(bookmarkItem, startTime);
+        }
     }
 
     private void trackBookmarkRenderersFromSlots() {

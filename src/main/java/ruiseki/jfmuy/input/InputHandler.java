@@ -80,6 +80,8 @@ public class InputHandler {
     private final IntSet clickHandled = new IntArraySet();
     private final GhostIngredientDragManager ghostIngredientDragManager;
 
+    private boolean deferMouseEventCancellation;
+
     public InputHandler(JFMUYRuntime runtime, IngredientRegistry ingredientRegistry,
         IngredientListOverlay ingredientListOverlay, GuiScreenHelper guiScreenHelper,
         LeftAreaDispatcher leftAreaDispatcher, BookmarkList bookmarkList,
@@ -121,6 +123,7 @@ public class InputHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onGuiMouseEvent(MouseInputEvent.Pre event) {
+        this.deferMouseEventCancellation = false;
         if (!Config.isOverlayEnabled()) return;
         GuiScreen guiScreen = event.gui;
         Minecraft minecraft = guiScreen.mc;
@@ -128,9 +131,23 @@ public class InputHandler {
             int x = Mouse.getEventX() * guiScreen.width / minecraft.displayWidth;
             int y = guiScreen.height - Mouse.getEventY() * guiScreen.height / minecraft.displayHeight - 1;
             if (handleMouseEvent(guiScreen, x, y)) {
-                event.setCanceled(true);
-                while (Mouse.next());
+                if (Mouse.getEventButton() == 0 && Mouse.getEventButtonState()
+                    && ingredientListOverlay.isMouseOverSearchField(x, y)) {
+                    // More Overlays observes uncanceled search-field clicks at the default event priority
+                    this.deferMouseEventCancellation = true;
+                } else {
+                    event.setCanceled(true);
+                    while (Mouse.next());
+                }
             }
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+    public void cancelDeferredGuiMouseEvent(MouseInputEvent.Pre event) {
+        if (this.deferMouseEventCancellation) {
+            event.setCanceled(true);
+            this.deferMouseEventCancellation = false;
         }
     }
 

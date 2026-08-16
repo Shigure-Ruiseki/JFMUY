@@ -1,6 +1,7 @@
 package ruiseki.jfmuy.gui.recipes;
 
 import java.awt.Color;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,23 +18,27 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IGuiIngredient;
+import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.api.recipe.IRecipeCategory;
 import ruiseki.jfmuy.api.recipe.IRecipeWrapper;
 import ruiseki.jfmuy.autocrafting.favorites.FavoriteRecipes;
 import ruiseki.jfmuy.gui.elements.GuiIconButton;
+import ruiseki.jfmuy.ingredients.Ingredients;
 import ruiseki.jfmuy.util.Translator;
 
 public class RecipeFavoriteButton extends GuiIconButton {
 
-    private final IRecipeWrapper recipe;
-    private final IRecipeCategory<?> category;
-    private List<IGuiIngredient<?>> supportedIngredients;
-    private final Set<Integer> favoriteSlots = new IntOpenHashSet();
-    private int selectedSlot = 0;
-    private RecipeLayout layout;
-
     private static final Color selectedColor = new Color(0.0f, 0.0f, 1.0f, 0.3f);
     private static final Color favoritedColor = new Color(0.0f, 1.0f, 0.0f, 0.3f);
+
+    private final IRecipeWrapper recipe;
+    private final IRecipeCategory<?> category;
+    private final Set<Integer> favoriteSlots = new IntOpenHashSet();
+    private List<IGuiIngredient<?>> supportedIngredients = Collections.emptyList();
+    @Nullable
+    private Object declaredOutput;
+    private int selectedSlot = 0;
+    private RecipeLayout layout;
 
     public RecipeFavoriteButton(int index, int width, int height, IDrawable offIcon, IDrawable onIcon,
         IRecipeWrapper recipe, IRecipeCategory<?> category, RecipeLayout layout) {
@@ -47,10 +52,11 @@ public class RecipeFavoriteButton extends GuiIconButton {
         this.width = width;
         this.height = height;
         this.layout = layout;
-        setSupportedIngredients(layout);
     }
 
     private void setSupportedIngredients(RecipeLayout layout) {
+        favoriteSlots.clear();
+        selectedSlot = 0;
         Function<Map, Stream<IGuiIngredient<?>>> filter = (map) -> map.values()
             .stream()
             .filter(
@@ -64,12 +70,35 @@ public class RecipeFavoriteButton extends GuiIconButton {
                     .getGuiIngredients())
             .flatMap(filter)
             .collect(Collectors.toList());
+        declaredOutput = supportedIngredients.isEmpty() ? getFirstDeclaredOutput() : null;
         supportedIngredients.forEach(ing -> {
             if (FavoriteRecipes.isFavoriteFor(recipe, ing.getDisplayedIngredient())) {
                 favoriteSlots.add(supportedIngredients.indexOf(ing));
             }
         });
-        this.enabled = this.visible = !supportedIngredients.isEmpty();
+        this.enabled = this.visible = !supportedIngredients.isEmpty() || declaredOutput != null;
+    }
+
+    /**
+     * Recipe wrappers are the source of truth for recipe outputs. Some categories incorrectly mark their
+     * output GUI slots as inputs, so fall back to the wrapper when there is no selectable output slot.
+     */
+    @Nullable
+    private Object getFirstDeclaredOutput() {
+        Ingredients ingredients = new Ingredients();
+        recipe.getIngredients(ingredients);
+        for (IIngredientType<?> type : Internal.getIngredientRegistry()
+            .getCraftableIngredientTypes()) {
+            for (List<?> outputSlot : ingredients.getOutputs(type)) {
+                for (Object output : outputSlot) {
+                    if (output != null && Internal.getIngredientRegistry()
+                        .isValidIngredient(output)) {
+                        return output;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public void init(RecipeLayout layout) {
@@ -83,7 +112,9 @@ public class RecipeFavoriteButton extends GuiIconButton {
         } else {
             tooltip.add(Translator.translateToLocal("jfmuy.tooltip.favorite"));
         }
-        tooltip.add(Translator.translateToLocal("jfmuy.tooltip.favorite_scroll"));
+        if (supportedIngredients.size() > 1) {
+            tooltip.add(Translator.translateToLocal("jfmuy.tooltip.favorite_scroll"));
+        }
     }
 
     protected boolean isIconToggledOn() {
@@ -91,16 +122,16 @@ public class RecipeFavoriteButton extends GuiIconButton {
     }
 
     protected boolean onMouseClicked(Minecraft mc, int mouseX, int mouseY) {
+        Object displayedIngredient = getDisplayedIngredient();
+        if (displayedIngredient == null) {
+            return false;
+        }
         if (GuiScreen.isShiftKeyDown() && isIconToggledOn()) {
             FavoriteRecipes.removeFavorite(recipe);
             favoriteSlots.clear();
             return true;
         }
-        FavoriteRecipes.toggleFavorite(
-            supportedIngredients.get(selectedSlot)
-                .getDisplayedIngredient(),
-            recipe,
-            category);
+        FavoriteRecipes.toggleFavorite(displayedIngredient, recipe, category);
         if (favoriteSlots.contains(selectedSlot)) { // We also have to update it in this GUI.
             favoriteSlots.remove(selectedSlot);
         } else {
@@ -112,6 +143,9 @@ public class RecipeFavoriteButton extends GuiIconButton {
     @Override
     public void drawButton(Minecraft mc, int mouseX, int mouseY) {
         super.drawButton(mc, mouseX, mouseY);
+        if (supportedIngredients.isEmpty()) {
+            return;
+        }
         if (!func_146115_a() && (!visible || !layout.getRecipeBookmarkButton()
             .func_146115_a())) {
             return;
@@ -128,7 +162,7 @@ public class RecipeFavoriteButton extends GuiIconButton {
     }
 
     public boolean handleMouseScrolled(int mouseX, int mouseY, int scrollDelta) {
-        if (!this.enabled || !this.visible || !func_146115_a()) {
+        if (!this.enabled || !this.visible || !func_146115_a() || supportedIngredients.size() <= 1) {
             return false;
         }
         // Wrapping scroll
@@ -143,7 +177,12 @@ public class RecipeFavoriteButton extends GuiIconButton {
 
     @Nullable
     public Object getDisplayedIngredient() {
-        if (supportedIngredients == null || supportedIngredients.isEmpty()) return null;
+        if (supportedIngredients.isEmpty()) {
+            return declaredOutput;
+        }
+        if (selectedSlot < 0 || selectedSlot >= supportedIngredients.size()) {
+            return null;
+        }
         return supportedIngredients.get(selectedSlot)
             .getDisplayedIngredient();
     }

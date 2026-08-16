@@ -2,6 +2,8 @@ package ruiseki.jfmuy.autocrafting;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -23,9 +25,12 @@ public class IngredientUtil {
         return 0;
     }
 
-    public static <A, B> boolean equals(A o1, B o2) {
+    public static <A, B> boolean equals(@Nullable A o1, @Nullable B o2) {
         // Does not account for the size of the ingredients, which is actually fine if, as usual,
         // we assume that aliasable ingredients are based on OreDictionary.
+        if (o1 == null || o2 == null) {
+            return false;
+        }
         IngredientRegistry ingredientRegistry = Internal.getIngredientRegistry();
         IIngredientType<A> type1 = ingredientRegistry.getIngredientType(o1);
         IIngredientType<B> type2 = ingredientRegistry.getIngredientType(o2);

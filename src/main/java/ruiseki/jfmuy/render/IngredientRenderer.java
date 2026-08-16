@@ -106,7 +106,7 @@ public class IngredientRenderer<T> {
         GlStateManager.disableDepth();
         GlStateManager.colorMask(true, true, true, false);
         GuiHelpers
-            .drawGradientRect(0, area.x, area.y, area.x + area.width, area.y + area.height, 0x80FFFFFF, 0x80FFFFFF);
+            .drawGradientRect(area.x, area.y, area.x + area.width, area.y + area.height, 0x80FFFFFF, 0x80FFFFFF, 0);
         GlStateManager.colorMask(true, true, true, true);
         GlStateManager.enableDepth();
     }

@@ -393,77 +393,77 @@ public final class TooltipRenderer {
         borderColorEnd = colorEvent.getBorderEnd();
 
         GuiHelpers.drawGradientRect(
-            zLevel,
             tooltipX - 3,
             tooltipY - 4,
             tooltipX + tooltipTextWidth + 3,
             tooltipY - 3,
             backgroundColor,
-            backgroundColor);
+            backgroundColor,
+            zLevel);
         GuiHelpers.drawGradientRect(
-            zLevel,
             tooltipX - 3,
             tooltipY + tooltipHeight + 3,
             tooltipX + tooltipTextWidth + 3,
             tooltipY + tooltipHeight + 4,
             backgroundColor,
-            backgroundColor);
+            backgroundColor,
+            zLevel);
         GuiHelpers.drawGradientRect(
-            zLevel,
             tooltipX - 3,
             tooltipY - 3,
             tooltipX + tooltipTextWidth + 3,
             tooltipY + tooltipHeight + 3,
             backgroundColor,
-            backgroundColor);
+            backgroundColor,
+            zLevel);
         GuiHelpers.drawGradientRect(
-            zLevel,
             tooltipX - 4,
             tooltipY - 3,
             tooltipX - 3,
             tooltipY + tooltipHeight + 3,
             backgroundColor,
-            backgroundColor);
+            backgroundColor,
+            zLevel);
         GuiHelpers.drawGradientRect(
-            zLevel,
             tooltipX + tooltipTextWidth + 3,
             tooltipY - 3,
             tooltipX + tooltipTextWidth + 4,
             tooltipY + tooltipHeight + 3,
             backgroundColor,
-            backgroundColor);
+            backgroundColor,
+            zLevel);
         GuiHelpers.drawGradientRect(
-            zLevel,
             tooltipX - 3,
             tooltipY - 3 + 1,
             tooltipX - 3 + 1,
             tooltipY + tooltipHeight + 3 - 1,
             borderColorStart,
-            borderColorEnd);
+            borderColorEnd,
+            zLevel);
         GuiHelpers.drawGradientRect(
-            zLevel,
             tooltipX + tooltipTextWidth + 2,
             tooltipY - 3 + 1,
             tooltipX + tooltipTextWidth + 3,
             tooltipY + tooltipHeight + 3 - 1,
             borderColorStart,
-            borderColorEnd);
+            borderColorEnd,
+            zLevel);
         GuiHelpers.drawGradientRect(
-            zLevel,
             tooltipX - 3,
             tooltipY - 3,
             tooltipX + tooltipTextWidth + 3,
             tooltipY - 3 + 1,
             borderColorStart,
-            borderColorStart);
+            borderColorStart,
+            zLevel);
         GuiHelpers.drawGradientRect(
-            zLevel,
             tooltipX - 3,
             tooltipY + tooltipHeight + 2,
             tooltipX + tooltipTextWidth + 3,
             tooltipY + tooltipHeight + 3,
             borderColorEnd,
-            borderColorEnd);
+            borderColorEnd,
+            zLevel);
 
         MinecraftForge.EVENT_BUS.post(
             new RenderTooltipEvent.PostBackground(

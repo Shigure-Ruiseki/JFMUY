@@ -449,16 +449,24 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
 
     public boolean addToBookmarks(boolean addToFront) {
         RecipeFavoriteButton favoriteButton = getRecipeFavoriteButton();
-        if (favoriteButton == null) return false;
-        Object displayedIngredient = getRecipeFavoriteButton().getDisplayedIngredient();
-        if (displayedIngredient == null) return false;
+        if (favoriteButton == null) {
+            return false;
+        }
+        Object displayedIngredient = favoriteButton.getDisplayedIngredient();
+        if (displayedIngredient == null) {
+            return false;
+        }
         BookmarkList bookmarkList = Internal.getBookmarkList();
         RecipeBookmarkGroup group = new RecipeBookmarkGroup(bookmarkList.nextId());
-        RecipeBookmarkItem<?> recipeBookmarkItem = new RecipeBookmarkItem<>(displayedIngredient);
-        recipeBookmarkItem.setGroup(group);
-        recipeBookmarkItem.populateWith(recipeWrapper, recipeCategory);
-        // Added last so that expanding the chain does not overwrite the recipe chosen above.
-        group.addItem(recipeBookmarkItem);
+        List<RecipeBookmarkItem<?>> recipeOutputs = RecipeBookmarkItem
+            .createRecipeOutputs(displayedIngredient, recipeWrapper, recipeCategory);
+        if (recipeOutputs.isEmpty()) {
+            return false;
+        }
+        for (RecipeBookmarkItem<?> recipeOutput : recipeOutputs) {
+            // Added after population so expanding the chain cannot replace the recipe chosen above.
+            group.addItem(recipeOutput);
+        }
         return bookmarkList.add(group, addToFront);
     }
 }

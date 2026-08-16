@@ -84,17 +84,29 @@ public class RecipeChain {
         // Resolved before anything is changed, since expanding it will add nodes to the graph.
         RecipeBookmarkItem<?> existing = findNodeMatching(recipeOutput.getIngredient());
         if (existing != null) {
+            RecipeBookmarkItem<?> primaryOutput = findPrimaryOutputWithSameRecipe(recipeOutput);
             existing.setIngredient(recipeOutput.getIngredient());
             existing.populateWith(recipeOutput.recipe, recipeOutput.category);
+            existing.selfOutputAmount = Math.max(existing.selfOutputAmount, existing.outputAmount);
             aliasIndex.reindex(existing);
-            expandNode(existing, true);
+            if (primaryOutput == null || primaryOutput == existing) {
+                expandNode(existing, true);
+            } else {
+                attachSecondary(primaryOutput, existing);
+            }
             removeDanglingNodes();
             invalidate();
             return true;
         }
-
         recipeOutput.selfOutputAmount = recipeOutput.outputAmount;
-        expandNode(recipeOutput, true);
+        RecipeBookmarkItem<?> primaryOutput = findPrimaryOutputWithSameRecipe(recipeOutput);
+        if (primaryOutput != null) {
+            graph.addNode(recipeOutput);
+            aliasIndex.index(recipeOutput);
+            attachSecondary(primaryOutput, recipeOutput);
+        } else {
+            expandNode(recipeOutput, true);
+        }
         invalidate();
         return false;
     }
@@ -135,16 +147,15 @@ public class RecipeChain {
                 aliasIndex.index(needed);
                 if (recurse) {
                     needed.populateWithFavorite();
-                    expandNode(needed, true);
                 }
 
                 // This recipe may already be in the chain making something else, in which case this node is
                 // one of its by-products rather than a step in its own right.
-                RecipeBookmarkItem<?> primaryOutput = findOutputWithSameRecipe(needed);
+                RecipeBookmarkItem<?> primaryOutput = findPrimaryOutputWithSameRecipe(needed);
                 if (primaryOutput != null) {
-                    needed.secondaryTo = primaryOutput;
-                    secondaryOutputs.computeIfAbsent(primaryOutput, k -> new ObjectArrayList<>())
-                        .add(needed);
+                    attachSecondary(primaryOutput, needed);
+                } else if (recurse) {
+                    expandNode(needed, true);
                 }
             }
             addDependency(requester, needed, input.inputAmount(), input.reusableInCrafting);
@@ -236,6 +247,32 @@ public class RecipeChain {
         return null;
     }
 
+    @Nullable
+    private RecipeBookmarkItem<?> findPrimaryOutputWithSameRecipe(RecipeBookmarkItem<?> output) {
+        RecipeBookmarkItem<?> primary = findOutputWithSameRecipe(output);
+        while (primary != null && primary.secondaryTo instanceof RecipeBookmarkItem) {
+            primary = (RecipeBookmarkItem<?>) primary.secondaryTo;
+        }
+        return primary;
+    }
+
+    private void attachSecondary(RecipeBookmarkItem<?> primary, RecipeBookmarkItem<?> secondary) {
+        if (secondary.secondaryTo == primary) {
+            return;
+        }
+        detachSecondary(secondary);
+        if (secondary.selfOutputAmount > 0L) {
+            long primaryDemand = ChainSolution.outputNeededFromPrimary(secondary, primary, secondary.selfOutputAmount);
+            primary.selfOutputAmount = Math.max(primary.selfOutputAmount, primaryDemand);
+            secondary.selfOutputAmount = 0L;
+        }
+        secondary.secondaryTo = primary;
+        List<RecipeBookmarkItem<?>> outputs = secondaryOutputs.computeIfAbsent(primary, k -> new ObjectArrayList<>());
+        if (!outputs.contains(secondary)) {
+            outputs.add(secondary);
+        }
+    }
+
     /** The by-products produced alongside {@code primaryOutput}, if any. */
     public List<RecipeBookmarkItem<?>> getSecondaryOutputs(RecipeBookmarkItem<?> primaryOutput) {
         List<RecipeBookmarkItem<?>> outputs = secondaryOutputs.get(primaryOutput);
@@ -268,6 +305,10 @@ public class RecipeChain {
             return;
         }
         RecipeBookmarkItem<?> newPrimary = orphaned.remove(0);
+        if (removed.selfOutputAmount > 0L) {
+            long inheritedDemand = ChainSolution.outputNeededFromPrimary(removed, newPrimary, removed.selfOutputAmount);
+            newPrimary.selfOutputAmount = Math.max(newPrimary.selfOutputAmount, inheritedDemand);
+        }
         newPrimary.secondaryTo = null;
         if (orphaned.isEmpty()) {
             return;
@@ -333,6 +374,16 @@ public class RecipeChain {
             }
             RecipeBookmarkItem<?> requester = (RecipeBookmarkItem<?>) item;
             requester.populateSelf(); // Finds the recipe's inputs again and sets their aliases.
+        }
+        rebuildSecondaryOutputs();
+        for (BookmarkItem<?> item : group.getItemsInternal()) {
+            if (!(item instanceof RecipeBookmarkItem)) {
+                continue;
+            }
+            RecipeBookmarkItem<?> requester = (RecipeBookmarkItem<?>) item;
+            if (requester.secondaryTo != null) {
+                continue;
+            }
             for (RecipeBookmarkItem<?> input : requester.inputs()) {
                 RecipeBookmarkItem<?> needed = findNodeForIngredient(input);
                 if (needed == null) {
@@ -345,7 +396,7 @@ public class RecipeChain {
                 addDependency(requester, needed, input.inputAmount(), input.reusableInCrafting);
             }
         }
-        rebuildSecondaryOutputs();
+
         invalidate();
     }
 
@@ -375,9 +426,8 @@ public class RecipeChain {
                 // Only ever attach to a primary, so by-products never form a chain of their own.
                 if (earlier.secondaryTo == null && earlier.recipe.equals(output.recipe)
                     && !uniqueId.equals(ingredientRegistry.getUniqueId(earlier.getIngredient()))) {
-                    output.secondaryTo = earlier;
-                    secondaryOutputs.computeIfAbsent(earlier, k -> new ObjectArrayList<>())
-                        .add(output);
+                    attachSecondary(earlier, output);
+
                     break;
                 }
             }

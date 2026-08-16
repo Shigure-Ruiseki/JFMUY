@@ -598,7 +598,7 @@ public class GuiCustomGroupEditor extends GuiScreen {
                 RenderHelper.disableStandardItemLighting();
                 GlStateManager.disableDepth();
                 GlStateManager.colorMask(true, true, true, false);
-                GuiHelpers.drawGradientRect(0, x, y, x + ITEM_SIZE, y + ITEM_SIZE, 0x40FF8800, 0x40FF8800);
+                GuiHelpers.drawGradientRect(x, y, x + ITEM_SIZE, y + ITEM_SIZE, 0x40FF8800, 0x40FF8800, 0);
                 GlStateManager.colorMask(true, true, true, true);
                 GlStateManager.enableDepth();
                 RenderHelper.enableGUIStandardItemLighting();
@@ -610,7 +610,7 @@ public class GuiCustomGroupEditor extends GuiScreen {
                 RenderHelper.disableStandardItemLighting();
                 GlStateManager.disableDepth();
                 GlStateManager.colorMask(true, true, true, false);
-                GuiHelpers.drawGradientRect(0, x, y, x + ITEM_SIZE, y + ITEM_SIZE, 0x4000FF00, 0x4000FF00);
+                GuiHelpers.drawGradientRect(x, y, x + ITEM_SIZE, y + ITEM_SIZE, 0x4000FF00, 0x4000FF00, 0);
                 GlStateManager.colorMask(true, true, true, true);
                 // "*" badge for wildcard-matched items (covered by a stored ":*" uid, not exact)
                 if (!selectedUids.contains(uid)) {
@@ -625,7 +625,7 @@ public class GuiCustomGroupEditor extends GuiScreen {
                 RenderHelper.disableStandardItemLighting();
                 GlStateManager.disableDepth();
                 GlStateManager.colorMask(true, true, true, false);
-                GuiHelpers.drawGradientRect(0, x, y, x + ITEM_SIZE, y + ITEM_SIZE, 0x80FFFFFF, 0x80FFFFFF);
+                GuiHelpers.drawGradientRect(x, y, x + ITEM_SIZE, y + ITEM_SIZE, 0x80FFFFFF, 0x80FFFFFF, 0);
                 GlStateManager.colorMask(true, true, true, true);
                 GlStateManager.enableDepth();
                 RenderHelper.enableGUIStandardItemLighting();
@@ -669,7 +669,7 @@ public class GuiCustomGroupEditor extends GuiScreen {
                 RenderHelper.disableStandardItemLighting();
                 GlStateManager.disableDepth();
                 GlStateManager.colorMask(true, true, true, false);
-                GuiHelpers.drawGradientRect(0, x, y, x + ITEM_SIZE, y + ITEM_SIZE, 0x80FF8888, 0x80FF8888);
+                GuiHelpers.drawGradientRect(x, y, x + ITEM_SIZE, y + ITEM_SIZE, 0x80FF8888, 0x80FF8888, 0);
                 GlStateManager.colorMask(true, true, true, true);
                 GlStateManager.enableDepth();
                 RenderHelper.enableGUIStandardItemLighting();

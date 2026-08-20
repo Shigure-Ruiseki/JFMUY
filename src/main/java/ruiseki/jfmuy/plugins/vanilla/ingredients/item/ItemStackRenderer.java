@@ -32,6 +32,7 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
     protected static final int SLOT_SIZE = 20;
     protected static final int MAX_COLUMNS = 11;
     protected static final int MARGIN_TOP = 2;
+    protected static final int MAX_DISPLAY = 10;
 
     private static final RenderItem itemRender = RenderItem.getInstance();
 
@@ -123,8 +124,11 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
         }
 
         int totalItems = allIngredients.size();
-        int columns = Math.min(totalItems, MAX_COLUMNS);
-        int rows = (totalItems + MAX_COLUMNS - 1) / MAX_COLUMNS;
+        // Số lượng thực tế sẽ hiển thị (tối đa là MAX_DISPLAY)
+        int displayCount = Math.min(totalItems, MAX_DISPLAY);
+
+        int columns = Math.min(displayCount, MAX_COLUMNS);
+        int rows = (displayCount + MAX_COLUMNS - 1) / MAX_COLUMNS;
 
         int extraWidth = columns * SLOT_SIZE;
         int extraHeight = rows * SLOT_SIZE + MARGIN_TOP;
@@ -134,7 +138,7 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
             GL11.glEnable(GL12.GL_RESCALE_NORMAL);
             RenderHelper.enableGUIStandardItemLighting();
 
-            for (int i = 0; i < totalItems; i++) {
+            for (int i = 0; i < displayCount; i++) {
                 ItemStack stack = allIngredients.get(i);
                 if (stack == null) continue;
 
@@ -156,15 +160,34 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
                 GL11.glTranslatef(0.0F, 0.0F, 300.0F);
 
                 FontRenderer fontRenderer = getFontRenderer(minecraft, stack);
-                itemRender
-                    .renderItemAndEffectIntoGUI(fontRenderer, minecraft.getTextureManager(), stack, currentX, currentY);
-                itemRender.renderItemOverlayIntoGUI(
-                    fontRenderer,
-                    minecraft.getTextureManager(),
-                    stack,
-                    currentX,
-                    currentY,
-                    null);
+                if (i == MAX_DISPLAY - 1 && totalItems > MAX_DISPLAY) {
+                    itemRender.renderItemAndEffectIntoGUI(
+                        fontRenderer,
+                        minecraft.getTextureManager(),
+                        stack,
+                        currentX,
+                        currentY);
+                    String overflowText = "+" + (totalItems - MAX_DISPLAY + 1);
+                    GL11.glDisable(GL11.GL_LIGHTING);
+                    GL11.glDisable(GL11.GL_DEPTH_TEST);
+                    fontRenderer.drawStringWithShadow(overflowText, currentX + 12, currentY + 12, 0xFFFFFF);
+                    GL11.glEnable(GL11.GL_DEPTH_TEST);
+                    GL11.glEnable(GL11.GL_LIGHTING);
+                } else {
+                    itemRender.renderItemAndEffectIntoGUI(
+                        fontRenderer,
+                        minecraft.getTextureManager(),
+                        stack,
+                        currentX,
+                        currentY);
+                    itemRender.renderItemOverlayIntoGUI(
+                        fontRenderer,
+                        minecraft.getTextureManager(),
+                        stack,
+                        currentX,
+                        currentY,
+                        null);
+                }
 
                 GL11.glPopMatrix();
             }

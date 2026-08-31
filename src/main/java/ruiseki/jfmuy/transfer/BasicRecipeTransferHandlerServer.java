@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.network.PacketCraftUpdate;
-import ruiseki.okcore.helper.ItemStackHelpers;
+import ruiseki.okcore.helper.ItemHelpers;
 
 public final class BasicRecipeTransferHandlerServer {
 
@@ -103,7 +103,7 @@ public final class BasicRecipeTransferHandlerServer {
             int added = addStack(container, inventorySlots, oldCraftingItem);
             if (added < oldCraftingItem.stackSize) {
                 // Only drop the items which were not added to the inventory
-                ItemStackHelpers.shrink(oldCraftingItem, added);
+                ItemHelpers.shrink(oldCraftingItem, added);
                 if (!player.inventory.addItemStackToInventory(oldCraftingItem)) {
                     player.dropPlayerItemWithRandomChoice(oldCraftingItem, false);
                 }
@@ -215,7 +215,7 @@ public final class BasicRecipeTransferHandlerServer {
                     result.put(entry.getKey(), entry.getValue());
 
                 } else {
-                    ItemStackHelpers.grow(resultItemStack, entry.getValue().stackSize);
+                    ItemHelpers.grow(resultItemStack, entry.getValue().stackSize);
                 }
             }
 
@@ -265,7 +265,7 @@ public final class BasicRecipeTransferHandlerServer {
 
                         // Enough space
                         if (space >= remain) {
-                            ItemStackHelpers.grow(inventoryStack, remain);
+                            ItemHelpers.grow(inventoryStack, remain);
                             return stack.stackSize;
                         }
 
@@ -312,7 +312,7 @@ public final class BasicRecipeTransferHandlerServer {
             if (slotNumber >= 0 && slotNumber < container.inventorySlots.size()) {
                 Slot slot = container.getSlot(slotNumber);
                 ItemStack slotStack = slot.getStack();
-                if (ItemStackHelpers.areStacksEqual(itemStack, slotStack)
+                if (ItemHelpers.areItemsEqual(itemStack, slotStack)
                     && ItemStack.areItemStackTagsEqual(itemStack, slotStack)) {
                     return slot;
                 }

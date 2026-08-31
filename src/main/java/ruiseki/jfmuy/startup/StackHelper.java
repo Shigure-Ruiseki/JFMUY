@@ -30,7 +30,7 @@ import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.okcore.datastructure.NonNullList;
 import ruiseki.okcore.helper.Helpers;
-import ruiseki.okcore.helper.ItemStackHelpers;
+import ruiseki.okcore.helper.ItemHelpers;
 
 public class StackHelper implements IStackHelper {
 
@@ -107,7 +107,7 @@ public class StackHelper implements IStackHelper {
                 matchingItemResult.missingItems.add(key);
             } else {
                 ItemStack matchingStack = availableItemStacks.get(matching.slotIndex);
-                ItemStackHelpers.shrink(matchingStack, matching.count);
+                ItemHelpers.shrink(matchingStack, matching.count);
                 if (matchingStack.stackSize == 0) {
                     availableItemStacks.remove(matching.slotIndex);
                 }
@@ -163,7 +163,7 @@ public class StackHelper implements IStackHelper {
                     .max()
                     .orElse(1);
                 int diff = matchingStack.stackSize - count;
-                ItemStackHelpers.shrink(matchingStack, count);
+                ItemHelpers.shrink(matchingStack, count);
                 if (diff < 0) {
                     matchingItemResult.missingItems.add(key);
                     availableItemStacks.remove(matching);

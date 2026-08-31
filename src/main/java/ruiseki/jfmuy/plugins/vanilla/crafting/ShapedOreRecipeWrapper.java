@@ -13,7 +13,7 @@ import ruiseki.jfmuy.api.recipe.IStackHelper;
 import ruiseki.jfmuy.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
 import ruiseki.jfmuy.recipes.BrokenCraftingRecipeException;
 import ruiseki.jfmuy.util.ErrorUtil;
-import ruiseki.okcore.helper.ItemStackHelpers;
+import ruiseki.okcore.helper.ItemHelpers;
 
 public class ShapedOreRecipeWrapper implements IShapedCraftingRecipeWrapper {
 
@@ -46,13 +46,13 @@ public class ShapedOreRecipeWrapper implements IShapedCraftingRecipeWrapper {
         if (inputs != null) {
             for (Object item : inputs) {
                 if (item instanceof ItemStack stack) {
-                    rawInputs.add(ItemStackHelpers.copyWithSize(stack, 1));
+                    rawInputs.add(ItemHelpers.copyWithSize(stack, 1));
                 } else if (item instanceof List<?>oreList) {
                     List<ItemStack> cleanedOreList = new ArrayList<>();
 
                     for (Object oreItem : oreList) {
                         if (oreItem instanceof ItemStack stack) {
-                            cleanedOreList.add(ItemStackHelpers.copyWithSize(stack, 1));
+                            cleanedOreList.add(ItemHelpers.copyWithSize(stack, 1));
                         }
                     }
                     rawInputs.add(cleanedOreList);

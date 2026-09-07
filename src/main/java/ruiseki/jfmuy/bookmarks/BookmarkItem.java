@@ -117,6 +117,9 @@ public class BookmarkItem<I> {
     @Nullable
     public static BookmarkItem<?> deserialize(String ingredientJsonString,
         Collection<IIngredientType> otherIngredientTypes) {
+        if (ingredientJsonString.isEmpty()) {
+            return null;
+        }
         Object ingredient = parseIngredient(ingredientJsonString.substring(1), otherIngredientTypes);
         BookmarkItem<?> item;
 

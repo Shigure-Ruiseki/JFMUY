@@ -24,8 +24,8 @@ import ruiseki.okcore.helper.GuiHelpers;
 import ruiseki.okcore.helper.ItemHelpers;
 
 public final class TooltipRenderer {
-    private TooltipRenderer() {
-    }
+
+    private TooltipRenderer() {}
 
     public static void drawHoveringText(Minecraft minecraft, String textLine, int x, int y) {
         drawHoveringText(ItemHelpers.EMPTY, minecraft, Lists.newArrayList(textLine), x, y, -1, minecraft.fontRenderer);
@@ -43,28 +43,50 @@ public final class TooltipRenderer {
         drawHoveringText(ItemHelpers.EMPTY, minecraft, textLines, x, y, -1, font);
     }
 
-    public static void drawHoveringText(Minecraft minecraft, List<String> textLines, int x, int y, int maxWidth, FontRenderer font) {
+    public static void drawHoveringText(Minecraft minecraft, List<String> textLines, int x, int y, int maxWidth,
+        FontRenderer font) {
         drawHoveringText(ItemHelpers.EMPTY, minecraft, textLines, x, y, maxWidth, font);
     }
 
-    public static void drawHoveringText(ItemStack itemStack, Minecraft minecraft, List<String> textLines, int x, int y, FontRenderer font) {
+    public static void drawHoveringText(ItemStack itemStack, Minecraft minecraft, List<String> textLines, int x, int y,
+        FontRenderer font) {
         drawHoveringText(itemStack, minecraft, textLines, x, y, -1, font);
     }
 
-    public static void drawHoveringText(ItemStack itemStack, Minecraft minecraft, List<String> textLines, int x, int y, int maxWidth, FontRenderer font) {
+    public static void drawHoveringText(ItemStack itemStack, Minecraft minecraft, List<String> textLines, int x, int y,
+        int maxWidth, FontRenderer font) {
         ScaledResolution scaledresolution = new ScaledResolution(
             minecraft,
             minecraft.displayWidth,
             minecraft.displayHeight);
-        GuiHelpers.drawHoveringText(itemStack, textLines, x, y, scaledresolution.getScaledWidth(), scaledresolution.getScaledHeight(), maxWidth, font);
+        GuiHelpers.drawHoveringText(
+            itemStack,
+            textLines,
+            x,
+            y,
+            scaledresolution.getScaledWidth(),
+            scaledresolution.getScaledHeight(),
+            maxWidth,
+            font);
     }
 
-    public static void drawHoveringText(ItemStack itemStack, Minecraft minecraft, List<String> textLines, int x, int y, int maxWidth) {
+    public static void drawHoveringText(ItemStack itemStack, Minecraft minecraft, List<String> textLines, int x, int y,
+        int maxWidth) {
         drawHoveringText(itemStack, minecraft, textLines, x, y, maxWidth, minecraft.fontRenderer);
     }
 
-    public static void drawHoveringTextAndItems(Minecraft minecraft, List<String> textLines, List<IngredientListBatchRenderer> itemLines, int x, int y) {
-        drawHoveringTextAndItems(ItemHelpers.EMPTY, minecraft, textLines, itemLines, x, y, -1, minecraft.fontRenderer, -1);
+    public static void drawHoveringTextAndItems(Minecraft minecraft, List<String> textLines,
+        List<IngredientListBatchRenderer> itemLines, int x, int y) {
+        drawHoveringTextAndItems(
+            ItemHelpers.EMPTY,
+            minecraft,
+            textLines,
+            itemLines,
+            x,
+            y,
+            -1,
+            minecraft.fontRenderer,
+            -1);
     }
 
     /**
@@ -79,24 +101,24 @@ public final class TooltipRenderer {
      *         {@link RenderTooltipEvent.Pre}.
      */
     @Nullable
-    public static Rectangle drawHoveringTextAndItems(
-        ItemStack stack,
-        Minecraft minecraft,
-        List<String> lines,
-        List<IngredientListBatchRenderer> itemLines,
-        int mouseX,
-        int mouseY,
-        int maxTextWidth,
-        FontRenderer font,
-        int itemGridMaxWidth
-    ) {
+    public static Rectangle drawHoveringTextAndItems(ItemStack stack, Minecraft minecraft, List<String> lines,
+        List<IngredientListBatchRenderer> itemLines, int mouseX, int mouseY, int maxTextWidth, FontRenderer font,
+        int itemGridMaxWidth) {
         ScaledResolution scaledresolution = new ScaledResolution(
             minecraft,
             minecraft.displayWidth,
             minecraft.displayHeight);
         int screenWidth = scaledresolution.getScaledWidth();
         int screenHeight = scaledresolution.getScaledHeight();
-        RenderTooltipEvent.Pre event = new RenderTooltipEvent.Pre(stack, lines, mouseX, mouseY, screenWidth, screenHeight, maxTextWidth, font);
+        RenderTooltipEvent.Pre event = new RenderTooltipEvent.Pre(
+            stack,
+            lines,
+            mouseX,
+            mouseY,
+            screenWidth,
+            screenHeight,
+            maxTextWidth,
+            font);
         if (MinecraftForge.EVENT_BUS.post(event)) {
             return null;
         }
@@ -165,8 +187,7 @@ public final class TooltipRenderer {
         }
 
         if (!itemLines.isEmpty()) {
-            int gridMaxWidth = itemGridMaxWidth > 0
-                ? itemGridMaxWidth
+            int gridMaxWidth = itemGridMaxWidth > 0 ? itemGridMaxWidth
                 : (needsWrap ? tooltipTextWidth : screenWidth / 2);
             for (IngredientListBatchRenderer renderer : itemLines) {
                 renderer.moveSlotsToFit(gridMaxWidth);
@@ -214,22 +235,101 @@ public final class TooltipRenderer {
         int backgroundColor = 0xF0100010;
         int borderColorStart = 0x505000FF;
         int borderColorEnd = (borderColorStart & 0xFEFEFE) >> 1 | borderColorStart & 0xFF000000;
-        RenderTooltipEvent.Color colorEvent = new RenderTooltipEvent.Color(stack, lines, tooltipX, tooltipY, font, backgroundColor, borderColorStart, borderColorEnd);
+        RenderTooltipEvent.Color colorEvent = new RenderTooltipEvent.Color(
+            stack,
+            lines,
+            tooltipX,
+            tooltipY,
+            font,
+            backgroundColor,
+            borderColorStart,
+            borderColorEnd);
         MinecraftForge.EVENT_BUS.post(colorEvent);
         backgroundColor = colorEvent.getBackground();
         borderColorStart = colorEvent.getBorderStart();
         borderColorEnd = colorEvent.getBorderEnd();
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY - 4, tooltipX + tooltipTextWidth + 3, tooltipY - 3, backgroundColor, backgroundColor, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY + tooltipHeight + 3, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 4, backgroundColor, backgroundColor, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY - 3, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 4, tooltipY - 3, tooltipX - 3, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX + tooltipTextWidth + 3, tooltipY - 3, tooltipX + tooltipTextWidth + 4, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY - 3 + 1, tooltipX - 3 + 1, tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX + tooltipTextWidth + 2, tooltipY - 3 + 1, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY - 3, tooltipX + tooltipTextWidth + 3, tooltipY - 3 + 1, borderColorStart, borderColorStart, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY + tooltipHeight + 2, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3, borderColorEnd, borderColorEnd, zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY - 4,
+            tooltipX + tooltipTextWidth + 3,
+            tooltipY - 3,
+            backgroundColor,
+            backgroundColor,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY + tooltipHeight + 3,
+            tooltipX + tooltipTextWidth + 3,
+            tooltipY + tooltipHeight + 4,
+            backgroundColor,
+            backgroundColor,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY - 3,
+            tooltipX + tooltipTextWidth + 3,
+            tooltipY + tooltipHeight + 3,
+            backgroundColor,
+            backgroundColor,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 4,
+            tooltipY - 3,
+            tooltipX - 3,
+            tooltipY + tooltipHeight + 3,
+            backgroundColor,
+            backgroundColor,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX + tooltipTextWidth + 3,
+            tooltipY - 3,
+            tooltipX + tooltipTextWidth + 4,
+            tooltipY + tooltipHeight + 3,
+            backgroundColor,
+            backgroundColor,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY - 3 + 1,
+            tooltipX - 3 + 1,
+            tooltipY + tooltipHeight + 3 - 1,
+            borderColorStart,
+            borderColorEnd,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX + tooltipTextWidth + 2,
+            tooltipY - 3 + 1,
+            tooltipX + tooltipTextWidth + 3,
+            tooltipY + tooltipHeight + 3 - 1,
+            borderColorStart,
+            borderColorEnd,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY - 3,
+            tooltipX + tooltipTextWidth + 3,
+            tooltipY - 3 + 1,
+            borderColorStart,
+            borderColorStart,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY + tooltipHeight + 2,
+            tooltipX + tooltipTextWidth + 3,
+            tooltipY + tooltipHeight + 3,
+            borderColorEnd,
+            borderColorEnd,
+            zLevel);
 
-        MinecraftForge.EVENT_BUS.post(new RenderTooltipEvent.PostBackground(stack, lines, tooltipX, tooltipY, font, tooltipTextWidth, tooltipHeight));
+        MinecraftForge.EVENT_BUS.post(
+            new RenderTooltipEvent.PostBackground(
+                stack,
+                lines,
+                tooltipX,
+                tooltipY,
+                font,
+                tooltipTextWidth,
+                tooltipHeight));
         int tooltipTop = tooltipY;
         Rectangle tooltipRect = new Rectangle(tooltipX, tooltipTop, tooltipTextWidth, tooltipHeight);
 
@@ -260,7 +360,8 @@ public final class TooltipRenderer {
             RenderHelper.disableStandardItemLighting();
         }
 
-        MinecraftForge.EVENT_BUS.post(new RenderTooltipEvent.PostText(stack, lines, tooltipX, tooltipTop, font, tooltipTextWidth, tooltipHeight));
+        MinecraftForge.EVENT_BUS.post(
+            new RenderTooltipEvent.PostText(stack, lines, tooltipX, tooltipTop, font, tooltipTextWidth, tooltipHeight));
 
         GlStateManager.enableLighting();
         GlStateManager.enableDepth();
@@ -272,13 +373,13 @@ public final class TooltipRenderer {
 
     @Nullable
     public static Rectangle drawHoveringTextWithFavorite(Object ingredient, Minecraft minecraft, List<String> textLines,
-                                                         int x, int y) {
+        int x, int y) {
         return drawHoveringTextWithFavorite(ingredient, null, minecraft, textLines, x, y, -1, minecraft.fontRenderer);
     }
 
     @Nullable
     public static Rectangle drawHoveringTextWithFavorite(Object ingredient, ItemStack itemStack, Minecraft minecraft,
-                                                         List<String> textLines, int x, int y, int maxWidth, FontRenderer font) {
+        List<String> textLines, int x, int y, int maxWidth, FontRenderer font) {
         List<String> lines = new ArrayList<>(textLines);
         RecipeLayout favoriteEntry = null;
 
@@ -350,17 +451,9 @@ public final class TooltipRenderer {
     }
 
     @Nullable
-    private static int[] drawTooltipBackgroundAndText(
-        @Nullable ItemStack stack,
-        Minecraft minecraft,
-        List<String> lines,
-        int mouseX,
-        int mouseY,
-        int maxTextWidth,
-        FontRenderer font,
-        int extraWidth,
-        int extraHeight
-    ) {
+    private static int[] drawTooltipBackgroundAndText(@Nullable ItemStack stack, Minecraft minecraft,
+        List<String> lines, int mouseX, int mouseY, int maxTextWidth, FontRenderer font, int extraWidth,
+        int extraHeight) {
         ScaledResolution scaledresolution = new ScaledResolution(
             minecraft,
             minecraft.displayWidth,
@@ -368,7 +461,15 @@ public final class TooltipRenderer {
         int screenWidth = scaledresolution.getScaledWidth();
         int screenHeight = scaledresolution.getScaledHeight();
 
-        RenderTooltipEvent.Pre event = new RenderTooltipEvent.Pre(stack, lines, mouseX, mouseY, screenWidth, screenHeight, maxTextWidth, font);
+        RenderTooltipEvent.Pre event = new RenderTooltipEvent.Pre(
+            stack,
+            lines,
+            mouseX,
+            mouseY,
+            screenWidth,
+            screenHeight,
+            maxTextWidth,
+            font);
         if (MinecraftForge.EVENT_BUS.post(event)) {
             return null;
         }
@@ -471,23 +572,95 @@ public final class TooltipRenderer {
         int backgroundColor = 0xF0100010;
         int borderColorStart = 0x505000FF;
         int borderColorEnd = (borderColorStart & 0xFEFEFE) >> 1 | borderColorStart & 0xFF000000;
-        RenderTooltipEvent.Color colorEvent = new RenderTooltipEvent.Color(stack, lines, tooltipX, tooltipY, font, backgroundColor, borderColorStart, borderColorEnd);
+        RenderTooltipEvent.Color colorEvent = new RenderTooltipEvent.Color(
+            stack,
+            lines,
+            tooltipX,
+            tooltipY,
+            font,
+            backgroundColor,
+            borderColorStart,
+            borderColorEnd);
         MinecraftForge.EVENT_BUS.post(colorEvent);
         backgroundColor = colorEvent.getBackground();
         borderColorStart = colorEvent.getBorderStart();
         borderColorEnd = colorEvent.getBorderEnd();
 
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY - 4, tooltipX + tooltipWidth + 3, tooltipY - 3, backgroundColor, backgroundColor, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY + tooltipHeight + 3, tooltipX + tooltipWidth + 3, tooltipY + tooltipHeight + 4, backgroundColor, backgroundColor, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY - 3, tooltipX + tooltipWidth + 3, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 4, tooltipY - 3, tooltipX - 3, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX + tooltipWidth + 3, tooltipY - 3, tooltipX + tooltipWidth + 4, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY - 3 + 1, tooltipX - 3 + 1, tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX + tooltipWidth + 2, tooltipY - 3 + 1, tooltipX + tooltipWidth + 3, tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY - 3, tooltipX + tooltipWidth + 3, tooltipY - 3 + 1, borderColorStart, borderColorStart, zLevel);
-        GuiHelpers.drawGradientRect( tooltipX - 3, tooltipY + tooltipHeight + 2, tooltipX + tooltipWidth + 3, tooltipY + tooltipHeight + 3, borderColorEnd, borderColorEnd, zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY - 4,
+            tooltipX + tooltipWidth + 3,
+            tooltipY - 3,
+            backgroundColor,
+            backgroundColor,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY + tooltipHeight + 3,
+            tooltipX + tooltipWidth + 3,
+            tooltipY + tooltipHeight + 4,
+            backgroundColor,
+            backgroundColor,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY - 3,
+            tooltipX + tooltipWidth + 3,
+            tooltipY + tooltipHeight + 3,
+            backgroundColor,
+            backgroundColor,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 4,
+            tooltipY - 3,
+            tooltipX - 3,
+            tooltipY + tooltipHeight + 3,
+            backgroundColor,
+            backgroundColor,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX + tooltipWidth + 3,
+            tooltipY - 3,
+            tooltipX + tooltipWidth + 4,
+            tooltipY + tooltipHeight + 3,
+            backgroundColor,
+            backgroundColor,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY - 3 + 1,
+            tooltipX - 3 + 1,
+            tooltipY + tooltipHeight + 3 - 1,
+            borderColorStart,
+            borderColorEnd,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX + tooltipWidth + 2,
+            tooltipY - 3 + 1,
+            tooltipX + tooltipWidth + 3,
+            tooltipY + tooltipHeight + 3 - 1,
+            borderColorStart,
+            borderColorEnd,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY - 3,
+            tooltipX + tooltipWidth + 3,
+            tooltipY - 3 + 1,
+            borderColorStart,
+            borderColorStart,
+            zLevel);
+        GuiHelpers.drawGradientRect(
+            tooltipX - 3,
+            tooltipY + tooltipHeight + 2,
+            tooltipX + tooltipWidth + 3,
+            tooltipY + tooltipHeight + 3,
+            borderColorEnd,
+            borderColorEnd,
+            zLevel);
 
-        MinecraftForge.EVENT_BUS.post(new RenderTooltipEvent.PostBackground(stack, lines, tooltipX, tooltipY, font, tooltipWidth, tooltipHeight));
+        MinecraftForge.EVENT_BUS.post(
+            new RenderTooltipEvent.PostBackground(stack, lines, tooltipX, tooltipY, font, tooltipWidth, tooltipHeight));
         int tooltipTop = tooltipY;
 
         for (int lineNumber = 0; lineNumber < lines.size(); ++lineNumber) {
@@ -498,8 +671,9 @@ public final class TooltipRenderer {
             }
         }
 
-        MinecraftForge.EVENT_BUS.post(new RenderTooltipEvent.PostText(stack, lines, tooltipX, tooltipTop, font, tooltipWidth, tooltipHeight));
+        MinecraftForge.EVENT_BUS.post(
+            new RenderTooltipEvent.PostText(stack, lines, tooltipX, tooltipTop, font, tooltipWidth, tooltipHeight));
 
-        return new int[]{tooltipX, tooltipY, tooltipWidth, tooltipHeight};
+        return new int[] { tooltipX, tooltipY, tooltipWidth, tooltipHeight };
     }
 }

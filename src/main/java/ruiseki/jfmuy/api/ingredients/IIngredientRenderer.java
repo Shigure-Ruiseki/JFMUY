@@ -1,6 +1,5 @@
 package ruiseki.jfmuy.api.ingredients;
 
-import java.awt.Rectangle;
 import java.util.Collection;
 import java.util.List;
 
@@ -51,33 +50,5 @@ public interface IIngredientRenderer<T> {
      */
     default FontRenderer getFontRenderer(Minecraft minecraft, T ingredient) {
         return minecraft.fontRenderer;
-    }
-
-    /**
-     * Renders extra visual components below the standard tooltip text box and determines its dimensions.
-     * <p>
-     * <strong>Layout Pipeline Architecture:</strong>
-     * This method is invoked exactly twice per frame during the tooltip rendering pipeline:
-     * <ol>
-     * <li><strong>Pre-pass (Measurement):</strong> Executed with {@code isDrawingPass = false} to calculate and
-     * return the required spatial expansion. Graphical drawing operations should be omitted here.</li>
-     * <li><strong>Render-pass (Drawing):</strong> Executed with {@code isDrawingPass = true} after the main tooltip
-     * background and text lines have been rendered, allowing the component to safely perform actual GL draws.</li>
-     * </ol>
-     *
-     * @param minecraft      The minecraft instance.
-     * @param mouseX         The absolute X position of the mouse on the screen.
-     * @param mouseY         The absolute Y position of the mouse on the screen.
-     * @param allIngredients A list containing all variations of the ingredient (e.g., OreDict equivalents) to cycle
-     *                       through.
-     * @param activeIndex    The currently active index in the {@code allIngredients} list, managed and updated by the
-     *                       parent GUI's cycle timer animation state.
-     * @param isDrawingPass  {@code true} if this call is the actual Render-pass (drawing graphical elements),
-     *                       {@code false} if it is the Pre-pass (measuring required bounds).
-     * @return An {@link Rectangle} object specifying the maximum width and height bounds occupied by this component.
-     */
-    default Rectangle renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, List<T> allIngredients,
-        int activeIndex, boolean isDrawingPass) {
-        return null;
     }
 }

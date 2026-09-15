@@ -34,6 +34,7 @@ import ruiseki.jfmuy.bookmarks.BookmarkItemRender;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.GuiProperties;
+import ruiseki.jfmuy.gui.PinnedTooltipGuiHandler;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredient;
 import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredientHelper;
@@ -96,6 +97,7 @@ public class JFMUYInternalPlugin implements IModPlugin {
         ingredientRegistry = registry.getIngredientRegistry();
         registry.addGuiScreenHandler(GuiContainer.class, GuiProperties::create);
         registry.addGuiScreenHandler(RecipesGui.class, GuiProperties::create);
+        registry.addGlobalGuiHandlers(PinnedTooltipGuiHandler.INSTANCE);
 
         if (Config.isDebugModeEnabled()) {
             registry.addIngredientInfo(

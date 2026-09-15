@@ -1,6 +1,5 @@
 package ruiseki.jfmuy.plugins.vanilla.ingredients.item;
 
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +7,6 @@ import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -28,10 +26,6 @@ import ruiseki.jfmuy.util.Translator;
 import ruiseki.okcore.client.renderer.GlStateManager;
 
 public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
-
-    protected static final int SLOT_SIZE = 20;
-    protected static final int MAX_COLUMNS = 11;
-    protected static final int MARGIN_TOP = 2;
 
     private static final RenderItem itemRender = RenderItem.getInstance();
 
@@ -113,67 +107,6 @@ public class ItemStackRenderer implements IIngredientRenderer<ItemStack> {
         }
 
         return list;
-    }
-
-    @Override
-    public Rectangle renderTooltipExtras(Minecraft minecraft, int mouseX, int mouseY, List<ItemStack> allIngredients,
-        int activeIndex, boolean isDrawingPass) {
-        if (allIngredients == null || allIngredients.isEmpty() || allIngredients.size() == 1) {
-            return null;
-        }
-
-        int totalItems = allIngredients.size();
-        int columns = Math.min(totalItems, MAX_COLUMNS);
-        int rows = (totalItems + MAX_COLUMNS - 1) / MAX_COLUMNS;
-
-        int extraWidth = columns * SLOT_SIZE;
-        int extraHeight = rows * SLOT_SIZE + MARGIN_TOP;
-
-        if (isDrawingPass) {
-            GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
-            GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-            RenderHelper.enableGUIStandardItemLighting();
-
-            for (int i = 0; i < totalItems; i++) {
-                ItemStack stack = allIngredients.get(i);
-                if (stack == null) continue;
-
-                int currentX = (i % MAX_COLUMNS) * SLOT_SIZE;
-                int currentY = MARGIN_TOP + (i / MAX_COLUMNS) * SLOT_SIZE;
-
-                if (i == activeIndex) {
-                    GL11.glDisable(GL11.GL_LIGHTING);
-                    Gui.drawRect(
-                        currentX - 2,
-                        currentY - 2,
-                        currentX + SLOT_SIZE - 2,
-                        currentY + SLOT_SIZE - 2,
-                        0x66555555);
-                    GL11.glEnable(GL11.GL_LIGHTING);
-                }
-
-                GL11.glPushMatrix();
-                GL11.glTranslatef(0.0F, 0.0F, 300.0F);
-
-                FontRenderer fontRenderer = getFontRenderer(minecraft, stack);
-                itemRender
-                    .renderItemAndEffectIntoGUI(fontRenderer, minecraft.getTextureManager(), stack, currentX, currentY);
-                itemRender.renderItemOverlayIntoGUI(
-                    fontRenderer,
-                    minecraft.getTextureManager(),
-                    stack,
-                    currentX,
-                    currentY,
-                    null);
-
-                GL11.glPopMatrix();
-            }
-
-            RenderHelper.disableStandardItemLighting();
-            GL11.glPopAttrib();
-        }
-
-        return new Rectangle(extraWidth, extraHeight);
     }
 
     @Override

@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -17,6 +18,7 @@ import org.lwjgl.input.Keyboard;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.gui.IGhostIngredientHandler;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
+import ruiseki.jfmuy.autocrafting.IngredientUtil;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.bookmarks.DefaultGhostIngredientHandler;
 import ruiseki.jfmuy.config.Config;
@@ -44,6 +46,12 @@ public class GhostIngredientDragManager {
     private IGhostIngredientHandler<?> hoverHandler;
     private int dragMouseButton = -1;
     private boolean dropOnMouseRelease;
+    @Nullable
+    private IClickedIngredient<?> pendingClick;
+    @Nullable
+    private BooleanSupplier pendingDrag;
+    @Nullable
+    private GuiScreen dragScreen;
 
     public GhostIngredientDragManager(GuiScreenHelper guiScreenHelper, IngredientRegistry ingredientRegistry) {
         this.guiScreenHelper = guiScreenHelper;
@@ -51,7 +59,7 @@ public class GhostIngredientDragManager {
     }
 
     public void updateScreen(GuiScreen gui, boolean forceUpdate) {
-        if (gui == null) {
+        if (gui == null || dragScreen != null && gui != dragScreen) {
             this.stopDrag();
         }
     }
@@ -116,6 +124,9 @@ public class GhostIngredientDragManager {
             }
             return completeDrag(mouseX, mouseY);
         }
+        if (pendingClick != null) {
+            return true;
+        }
         EntityPlayerSP player = minecraft.thePlayer;
         if (player != null && clicked != null) {
             ItemStack mouseItem = player.inventory.getItemStack();
@@ -125,6 +136,38 @@ public class GhostIngredientDragManager {
             }
         }
         return false;
+    }
+
+    public boolean handleMouseMoved(GuiScreen screen, @Nullable IClickedIngredient<?> hovered) {
+        updateScreen(screen, false);
+        if (pendingClick == null) {
+            return false;
+        }
+        Object original = pendingClick.getValue();
+        Object current = hovered == null ? null : hovered.getValue();
+        if (original instanceof BookmarkItem) {
+            original = ((BookmarkItem<?>) original).getIngredient();
+        }
+        if (current instanceof BookmarkItem) {
+            current = ((BookmarkItem<?>) current).getIngredient();
+        }
+        if (!IngredientUtil.equals(original, current)) {
+            BooleanSupplier startDrag = pendingDrag;
+            pendingClick = null;
+            pendingDrag = null;
+            startDrag.getAsBoolean();
+        }
+        return true;
+    }
+
+    @Nullable
+    public IClickedIngredient<?> takePendingClick(int mouseButton) {
+        if (pendingClick == null || mouseButton != dragMouseButton) {
+            return null;
+        }
+        IClickedIngredient<?> clicked = pendingClick;
+        stopDrag();
+        return clicked;
     }
 
     public boolean handleMouseReleased(int mouseButton, int mouseX, int mouseY) {
@@ -149,6 +192,9 @@ public class GhostIngredientDragManager {
     }
 
     public void stopDrag() {
+        pendingClick = null;
+        pendingDrag = null;
+        dragScreen = null;
         if (this.ghostIngredientDrag != null) {
             this.ghostIngredientDrag.stop();
             this.ghostIngredientDrag = null;
@@ -192,8 +238,7 @@ public class GhostIngredientDragManager {
 
     public boolean handleKeyDown(int eventKey) {
         if (KeyBindings.isInventoryCloseKey(eventKey) || KeyBindings.isEnterKey(eventKey)) {
-            // Only cancel other handling of inputs if we are currently dragging
-            if (this.ghostIngredientDrag != null) {
+            if (this.ghostIngredientDrag != null || pendingClick != null) {
                 stopDrag();
                 return true;
             }
@@ -230,12 +275,23 @@ public class GhostIngredientDragManager {
                 return true;
             }
         }
-        List<IGhostIngredientHandler.Target<V>> targets = new ArrayList<>(
-            handler.getTargets(currentScreen, ingredient, true));
-        if (includeBookmarkTargets) {
-            addBookmarkTargets(currentScreen, bookmarkIngredient, targets);
+        if (mouseButton >= 0 && handler.getTargets(currentScreen, ingredient, false)
+            .isEmpty()
+            && (!includeBookmarkTargets || defaultHandler.getTargets(currentScreen, bookmarkIngredient, false)
+                .isEmpty())) {
+            return false;
         }
-        if (!targets.isEmpty()) {
+        BooleanSupplier startDrag = () -> {
+            List<IGhostIngredientHandler.Target<V>> targets = new ArrayList<>(
+                handler.getTargets(currentScreen, ingredient, true));
+            if (includeBookmarkTargets) {
+                addBookmarkTargets(currentScreen, bookmarkIngredient, targets);
+            }
+            if (targets.isEmpty()) {
+                handler.onComplete();
+                stopDrag();
+                return false;
+            }
             IIngredientRenderer<V> ingredientRenderer = ingredientRegistry.getIngredientRenderer(ingredient);
             Rectangle clickedArea = clicked.getArea();
             this.ghostIngredientDrag = new GhostIngredientDrag<>(
@@ -248,8 +304,16 @@ public class GhostIngredientDragManager {
             this.dragMouseButton = dropOnMouseRelease ? mouseButton : -1;
             clicked.onClickHandled();
             return true;
+        };
+        dragScreen = currentScreen;
+        if (mouseButton >= 0) {
+            pendingClick = clicked;
+            pendingDrag = startDrag;
+            dragMouseButton = mouseButton;
+        } else {
+            return startDrag.getAsBoolean();
         }
-        return false;
+        return true;
     }
 
     @SuppressWarnings("unchecked")

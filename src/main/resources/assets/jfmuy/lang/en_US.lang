@@ -151,7 +151,7 @@ gui.jfmuy.category.itemInformation=Information
 # DEBUG (for debug mode, do not need translation)
 description.jfmuy.wooden.door.1=Wooden Doors allow you to block monsters from entering your building.\nTesting sentences.
 description.jfmuy.wooden.door.2=Clicking on a door changes its state from open to closed and visa versa.
-description.jfmuy.wooden.door.3=Wooden Doors can be opened/closed via Redstone Circuits.
+description.jfmuy.wooden.door.3=Wooden Doors can be opened/closed via Redstone Circuits. There should also be some extra long text for testing new scroll bar functionality, if there's no text inside or extra text outside recipe area, it's not working properly.
 
 # New JFMUY lang keys
 config.jfmuy.rendering=Rendering
@@ -179,6 +179,9 @@ config.jfmuy.misc.holdToDragGhostIngredients.comment=When enabled, hold the init
 
 config.jfmuy.misc.tooltipShowRecipeBy=Show `Recipe By` in tooltip
 config.jfmuy.misc.tooltipShowRecipeBy.comment=Show when a recipe has been changed by adding it to the item's tooltip
+
+config.jfmuy.misc.recipeIngredientPreviewEnabled=Show All Slot Ingredients in Tooltips
+config.jfmuy.misc.recipeIngredientPreviewEnabled.comment=When hovering a recipe slot that accepts more than one ingredient, list them all as a grid in the tooltip
 
 config.jfmuy.misc.showHiddenIngredientsInCreative=Show Hidden Ingredients in Creative Mode
 config.jfmuy.misc.showHiddenIngredientsInCreative.comment=Show user-hidden ingredients when the player is in creative mode
@@ -237,6 +240,7 @@ jfmuy.tooltip.autocraft.wrong_container=This container cannot craft %s recipes o
 
 jfmuy.tooltip.item_group=§7Item Group
 jfmuy.tooltip.recipe_group=§7Recipe Group
+jfmuy.tooltip.recipe.ingredient_pin=§7Hold §fSHIFT§7 to pin this tooltip
 jfmuy.tooltip.press_alt=§7Press §fALT§7 to see Actions
 jfmuy.tooltip.organizer.1=§6CTRL + LEFT CLICK§7: Move Bookmarks Between Groups
 jfmuy.tooltip.organizer.2=§6%s§r or §6%s§7: Move Group Up or Down

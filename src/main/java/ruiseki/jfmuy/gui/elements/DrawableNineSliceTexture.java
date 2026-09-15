@@ -26,58 +26,69 @@ public class DrawableNineSliceTexture {
         int topHeight = info.getSliceTop();
         int bottomHeight = info.getSliceBottom();
 
+        int trimLeft = info.getTrimLeft();
+        int trimRight = info.getTrimRight();
+        int trimTop = info.getTrimTop();
+        int trimBottom = info.getTrimBottom();
+
         int textureWidth = info.getWidth();
         int textureHeight = info.getHeight();
 
         mc.getTextureManager()
             .bindTexture(location);
 
-        float uMin = 0.0F;
-        float vMin = 0.0F;
-        float uMax = 1.0F;
-        float vMax = 1.0F;
+        // Calculate outer bounds factoring in trim dimensions
+        float uOuterLeft = trimLeft / (float) textureWidth;
+        float uOuterRight = 1.0F - (trimRight / (float) textureWidth);
+        float vOuterTop = trimTop / (float) textureHeight;
+        float vOuterBottom = 1.0F - (trimBottom / (float) textureHeight);
 
-        float uLeft = leftWidth / (float) textureWidth;
-        float uRight = 1.0F - rightWidth / (float) textureWidth;
-
-        float vTop = topHeight / (float) textureHeight;
-        float vBottom = 1.0F - bottomHeight / (float) textureHeight;
+        // Slice positions within the trimmed canvas area
+        float uLeft = uOuterLeft + (leftWidth / (float) textureWidth);
+        float uRight = uOuterRight - (rightWidth / (float) textureWidth);
+        float vTop = vOuterTop + (topHeight / (float) textureHeight);
+        float vBottom = vOuterBottom - (bottomHeight / (float) textureHeight);
 
         Tessellator tess = Tessellator.instance;
         tess.startDrawingQuads();
 
-        // left top
-        draw(tess, 0F, 0F, uLeft, vTop, xOffset, yOffset, leftWidth, topHeight);
-
-        // left bottom
-        draw(tess, 0F, vBottom, uLeft, 1F, xOffset, yOffset + height - bottomHeight, leftWidth, bottomHeight);
-
-        // right top
-        draw(tess, uRight, 0F, 1F, vTop, xOffset + width - rightWidth, yOffset, rightWidth, topHeight);
-
-        // right bottom
+        // 4 Corners
+        draw(tess, uOuterLeft, vOuterTop, uLeft, vTop, xOffset, yOffset, leftWidth, topHeight);
+        draw(
+            tess,
+            uOuterLeft,
+            vBottom,
+            uLeft,
+            vOuterBottom,
+            xOffset,
+            yOffset + height - bottomHeight,
+            leftWidth,
+            bottomHeight);
+        draw(tess, uRight, vOuterTop, uOuterRight, vTop, xOffset + width - rightWidth, yOffset, rightWidth, topHeight);
         draw(
             tess,
             uRight,
             vBottom,
-            1F,
-            1F,
+            uOuterRight,
+            vOuterBottom,
             xOffset + width - rightWidth,
             yOffset + height - bottomHeight,
             rightWidth,
             bottomHeight);
 
-        int middleWidth = textureWidth - leftWidth - rightWidth;
-        int middleHeight = textureHeight - topHeight - bottomHeight;
+        // Inner dimensions inside slices & trims
+        int middleWidth = textureWidth - trimLeft - trimRight - leftWidth - rightWidth;
+        int middleHeight = textureHeight - trimTop - trimBottom - topHeight - bottomHeight;
 
         int tiledMiddleWidth = width - leftWidth - rightWidth;
         int tiledMiddleHeight = height - topHeight - bottomHeight;
 
+        // Top & Bottom Edges
         if (tiledMiddleWidth > 0) {
             drawTiled(
                 tess,
                 uLeft,
-                0F,
+                vOuterTop,
                 uRight,
                 vTop,
                 xOffset + leftWidth,
@@ -86,13 +97,12 @@ public class DrawableNineSliceTexture {
                 topHeight,
                 middleWidth,
                 topHeight);
-
             drawTiled(
                 tess,
                 uLeft,
                 vBottom,
                 uRight,
-                1F,
+                vOuterBottom,
                 xOffset + leftWidth,
                 yOffset + height - bottomHeight,
                 tiledMiddleWidth,
@@ -101,10 +111,11 @@ public class DrawableNineSliceTexture {
                 bottomHeight);
         }
 
+        // Left & Right Edges
         if (tiledMiddleHeight > 0) {
             drawTiled(
                 tess,
-                0F,
+                uOuterLeft,
                 vTop,
                 uLeft,
                 vBottom,
@@ -114,12 +125,11 @@ public class DrawableNineSliceTexture {
                 tiledMiddleHeight,
                 leftWidth,
                 middleHeight);
-
             drawTiled(
                 tess,
                 uRight,
                 vTop,
-                1F,
+                uOuterRight,
                 vBottom,
                 xOffset + width - rightWidth,
                 yOffset + topHeight,
@@ -129,6 +139,7 @@ public class DrawableNineSliceTexture {
                 middleHeight);
         }
 
+        // Center Area
         if (tiledMiddleWidth > 0 && tiledMiddleHeight > 0) {
             drawTiled(
                 tess,
@@ -186,7 +197,7 @@ public class DrawableNineSliceTexture {
         }
     }
 
-    private static void draw(Tessellator tessellator, float minU, double minV, float maxU, float maxV, int xOffset,
+    private static void draw(Tessellator tessellator, float minU, float minV, float maxU, float maxV, int xOffset,
         int yOffset, int width, int height) {
         tessellator.addVertexWithUV(xOffset, yOffset + height, 0.0D, minU, maxV);
         tessellator.addVertexWithUV(xOffset + width, yOffset + height, 0.0D, maxU, maxV);

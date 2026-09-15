@@ -44,8 +44,8 @@ public class Textures {
         catalystTab = registerGuiSprite("catalyst_tab", 28, 28).slice(8, 9, 8, 8);
 
         shapelessIcon = registerGuiSprite("icons/shapeless_icon", 36, 36).trim(1, 2, 1, 1);
-        arrowPrevious = registerGuiSprite("icons/arrow_previous", 9, 9).trim(0, 0, 1, 1);
-        arrowNext = registerGuiSprite("icons/arrow_next", 9, 9).trim(0, 0, 1, 1);
+        arrowPrevious = registerGuiSprite("icons/arrow_previous", 9, 9);
+        arrowNext = registerGuiSprite("icons/arrow_next", 9, 9);
         recipeTransfer = registerGuiSprite("icons/recipe_transfer", 7, 7);
         favoriteDisabled = registerGuiSprite("icons/favorite_disabled", 7, 7);
         favoriteEnabled = registerGuiSprite("icons/favorite_enabled", 7, 7);

@@ -3,6 +3,7 @@ package ruiseki.jfmuy.render;
 import static ruiseki.jfmuy.gui.overlay.IngredientGrid.INGREDIENT_HEIGHT;
 import static ruiseki.jfmuy.gui.overlay.IngredientGrid.INGREDIENT_WIDTH;
 
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,6 +61,12 @@ public class IngredientListBatchRenderer {
     private int width;
     private int maxWidth;
     private int height;
+    /**
+     * Where this renderer was last drawn on screen. Slot areas are relative to it, so it is what
+     * lets a grid rendered inside a tooltip be hit-tested with screen coordinates.
+     */
+    @Nullable
+    private Point renderOrigin;
 
     public IngredientListBatchRenderer() {
         this(true);
@@ -356,6 +363,41 @@ public class IngredientListBatchRenderer {
             yPos += INGREDIENT_HEIGHT;
         }
         this.height = yPos;
+    }
+
+    /**
+     * Records where this renderer is being drawn, so a grid rendered inside a tooltip can later be
+     * hit-tested with screen coordinates. Set by {@link ruiseki.jfmuy.gui.TooltipRenderer} before rendering.
+     */
+    public void setRenderOrigin(int x, int y) {
+        this.renderOrigin = new Point(x, y);
+    }
+
+    @Nullable
+    public Point getRenderOrigin() {
+        return renderOrigin;
+    }
+
+    /**
+     * Returns the slot under the given screen position, or null if this renderer has not been laid
+     * out into a tooltip yet.
+     */
+    @Nullable
+    public IngredientListSlot getSlotAtScreen(int mouseX, int mouseY) {
+        Point origin = this.renderOrigin;
+        if (origin == null) {
+            return null;
+        }
+        int localX = mouseX - origin.x;
+        int localY = mouseY - origin.y;
+        for (List<IngredientListSlot> row : slots) {
+            for (IngredientListSlot slot : row) {
+                if (slot.isMouseOver(localX, localY)) {
+                    return slot;
+                }
+            }
+        }
+        return null;
     }
 
     @Nullable

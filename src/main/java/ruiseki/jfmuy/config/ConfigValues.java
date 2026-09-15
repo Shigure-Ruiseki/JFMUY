@@ -52,6 +52,7 @@ public class ConfigValues {
     public boolean mouseClickToSeeRecipes = true;
     public boolean holdToDragGhostIngredients = false;
     public boolean tooltipShowRecipeBy = true;
+    public boolean recipeIngredientPreviewEnabled = true;
     public boolean showHiddenIngredientsInCreative = false;
     public boolean skipShowingProgressBar = true;
     public boolean hideBottomRightCornerConfigButton = false;

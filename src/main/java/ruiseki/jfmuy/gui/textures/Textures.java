@@ -18,6 +18,8 @@ public class Textures {
     public static final TextureInfo favoriteEnabled;
     public static final TextureInfo recipeBookmarkIcon;
     public static final TextureInfo searchBackground;
+    public static final TextureInfo scrollbarBackground;
+    public static final TextureInfo scrollbarMarker;
     public static final TextureInfo shapelessIcon;
     public static final TextureInfo arrowPrevious;
     public static final TextureInfo arrowNext;
@@ -41,6 +43,10 @@ public class Textures {
         guiBackground = registerGuiSprite("gui_background", 64, 64).slice(16, 16, 16, 16);
         recipeBackground = registerGuiSprite("single_recipe_background", 64, 64).slice(16, 16, 16, 16);
         searchBackground = registerGuiSprite("search_background", 20, 20).slice(4, 4, 4, 4);
+        scrollbarBackground = registerGuiSprite("scrollbar_background", 64, 64).trim(0, 64 - 14, 0, 64 - 50)
+            .slice(1, 1, 1, 1);
+        scrollbarMarker = registerGuiSprite("scrollbar_marker", 16, 16).trim(0, 16 - 12, 0, 16 - 15)
+            .slice(1, 1, 1, 2);
         catalystTab = registerGuiSprite("catalyst_tab", 28, 28).slice(8, 9, 8, 8);
 
         shapelessIcon = registerGuiSprite("icons/shapeless_icon", 36, 36).trim(1, 2, 1, 1);

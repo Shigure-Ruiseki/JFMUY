@@ -49,6 +49,8 @@ public class GuiHelper implements IGuiHelper {
     private final IDrawableStatic infoIcon;
     private final IDrawableStatic flameIcon;
     private final IDrawableStatic searchIcon;
+    private final DrawableNineSliceTexture scrollbarBackground;
+    private final DrawableNineSliceTexture scrollbarMarker;
 
     public GuiHelper(IIngredientRegistry ingredientRegistry) {
         this.ingredientRegistry = ingredientRegistry;
@@ -64,6 +66,8 @@ public class GuiHelper implements IGuiHelper {
         this.guiBackground = createNineSliceDrawable(Textures.guiBackground);
         this.recipeBackground = createNineSliceDrawable(Textures.recipeBackground);
         this.searchBackground = createNineSliceDrawable(Textures.searchBackground);
+        this.scrollbarBackground = createNineSliceDrawable(Textures.scrollbarBackground);
+        this.scrollbarMarker = createNineSliceDrawable(Textures.scrollbarMarker);
         this.catalystTab = createNineSliceDrawable(Textures.catalystTab);
 
         this.shapelessIcon = createDrawable(Textures.shapelessIcon);
@@ -235,5 +239,13 @@ public class GuiHelper implements IGuiHelper {
 
     public IDrawableStatic getSearchIcon() {
         return searchIcon;
+    }
+
+    public DrawableNineSliceTexture getScrollbarBackground() {
+        return scrollbarBackground;
+    }
+
+    public DrawableNineSliceTexture getScrollbarMarker() {
+        return scrollbarMarker;
     }
 }

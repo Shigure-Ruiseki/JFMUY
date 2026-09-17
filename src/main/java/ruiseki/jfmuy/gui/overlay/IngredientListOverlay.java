@@ -390,4 +390,14 @@ public class IngredientListOverlay
     public IIngredientListElement getElementUnderMouse() {
         return this.contents.getElementUnderMouse();
     }
+
+    @Override
+    public GuiIconToggleButton getConfigButton() {
+        return configButton;
+    }
+
+    @Override
+    public GuiScreenHelper getGuiScreenHelper() {
+        return guiScreenHelper;
+    }
 }

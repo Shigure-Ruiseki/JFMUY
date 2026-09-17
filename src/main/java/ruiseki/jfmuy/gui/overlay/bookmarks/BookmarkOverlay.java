@@ -211,4 +211,9 @@ public class BookmarkOverlay implements ILeftAreaContent, IBookmarkOverlay {
         }
         return null;
     }
+
+    @Override
+    public @Nullable GuiIconToggleButton getBookmarkButton() {
+        return bookmarkButton;
+    }
 }

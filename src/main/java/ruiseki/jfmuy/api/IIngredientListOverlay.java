@@ -4,6 +4,9 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableList;
 
+import ruiseki.jfmuy.gui.GuiScreenHelper;
+import ruiseki.jfmuy.gui.elements.GuiIconToggleButton;
+
 /**
  * The IItemListOverlay is JFMUY's gui that displays all the ingredients next to an open container gui.
  * Use this interface to get information from and interact with it.
@@ -26,4 +29,8 @@ public interface IIngredientListOverlay {
      * @return a list containing all currently visible ingredients. If JFMUY is hidden, the list will be empty.
      */
     ImmutableList<Object> getVisibleIngredients();
+
+    GuiIconToggleButton getConfigButton();
+
+    GuiScreenHelper getGuiScreenHelper();
 }

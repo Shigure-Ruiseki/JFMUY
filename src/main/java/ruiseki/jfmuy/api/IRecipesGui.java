@@ -5,6 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.api.recipe.IFocus;
+import ruiseki.jfmuy.gui.recipes.IRecipeGuiLogic;
 
 /**
  * JFMUY's gui for displaying recipes. Use this interface to open recipes.
@@ -56,6 +57,8 @@ public interface IRecipesGui {
      * @return if the search mode was changed as a result
      */
     boolean setSearchMode(RecipeSearchMode searchMode);
+
+    IRecipeGuiLogic getRecipeGuiLogic();
 
     /**
      * What ingredients are being searched by the search filter.

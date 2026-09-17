@@ -2,6 +2,8 @@ package ruiseki.jfmuy.api;
 
 import org.jetbrains.annotations.Nullable;
 
+import ruiseki.jfmuy.gui.elements.GuiIconToggleButton;
+
 /**
  * The {@link IBookmarkOverlay} is JFMUY's gui that displays all the bookmarked ingredients next to an open container
  * gui.
@@ -15,4 +17,7 @@ public interface IBookmarkOverlay {
      */
     @Nullable
     Object getIngredientUnderMouse();
+
+    @Nullable
+    GuiIconToggleButton getBookmarkButton();
 }

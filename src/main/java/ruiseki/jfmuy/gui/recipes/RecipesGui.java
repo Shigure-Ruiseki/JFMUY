@@ -838,4 +838,13 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
 
         return null;
     }
+
+    public List<RecipeLayout> getRecipeLayouts() {
+        return recipeLayouts;
+    }
+
+    @Override
+    public IRecipeGuiLogic getRecipeGuiLogic() {
+        return logic;
+    }
 }

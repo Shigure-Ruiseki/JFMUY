@@ -38,9 +38,6 @@ dependencies {
     implementation("com.github.Shigure-Ruiseki:OKCore:26.09.17.0:dev") { transitive = false }
 
     devOnlyNonPublishable("com.github.GTNewHorizons:ModularUI2:2.3.90-1.7.10:dev")
-    devOnlyNonPublishable(rfg.deobf("curse.maven:retroemi-forge-1309244:8724575")) { transitive = false }
-
-    runtimeOnlyNonPublishable('net.industrial-craft:industrialcraft-2:2.2.828-experimental:dev')
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:waila:1.19.34:dev") { transitive = false }
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:GTNHLib:0.11.48:dev")
@@ -51,6 +48,7 @@ dependencies {
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:Baubles-Expanded:2.2.23-GTNH:dev') { transitive = false }
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:Controlling:2.1.10:dev') { transitive = false }
 
+    compileOnly(rfg.deobf("curse.maven:retroemi-forge-1309244:8724575")) { transitive = false }
     compileOnly('com.github.GTNewHorizons:NotEnoughItems:2.8.142-GTNH:dev')
 
     compileOnlyApi("it.unimi.dsi:fastutil:8.5.18") // Apache 2.0

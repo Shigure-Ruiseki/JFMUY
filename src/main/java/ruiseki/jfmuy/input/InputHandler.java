@@ -124,7 +124,6 @@ public class InputHandler {
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onGuiMouseEvent(MouseInputEvent.Pre event) {
         this.deferMouseEventCancellation = false;
-        if (!Config.isOverlayEnabled()) return;
         GuiScreen guiScreen = event.gui;
         Minecraft minecraft = guiScreen.mc;
         if (minecraft != null) {
@@ -156,10 +155,9 @@ public class InputHandler {
         if (eventButton > -1) {
             if (Mouse.getEventButtonState()) {
                 clickHandled.remove(eventButton);
-                cancelEvent = handleMouseClick(guiScreen, eventButton, mouseX, mouseY);
+                cancelEvent = handleMouseClick(guiScreen, eventButton, mouseX, mouseY, null);
                 if (cancelEvent) {
                     clickHandled.add(eventButton);
-
                 }
             } else {
                 boolean wasClickHandled = clickHandled.remove(eventButton);
@@ -167,12 +165,21 @@ public class InputHandler {
             }
         } else if (Mouse.getEventDWheel() != 0) {
             cancelEvent = handleMouseScroll(Mouse.getEventDWheel(), mouseX, mouseY);
+        } else {
+            cancelEvent = ghostIngredientDragManager
+                .handleMouseMoved(guiScreen, getFocusUnderMouseForClick(mouseX, mouseY));
         }
         return cancelEvent;
     }
 
     private boolean handleMouseRelease(GuiScreen guiScreen, int mouseX, int mouseY) {
         final int eventButton = Mouse.getEventButton();
+        ghostIngredientDragManager.handleMouseMoved(guiScreen, getFocusUnderMouseForClick(mouseX, mouseY));
+        IClickedIngredient<?> pendingClick = ghostIngredientDragManager.takePendingClick(eventButton);
+        if (pendingClick != null) {
+            handleMouseClick(guiScreen, eventButton, mouseX, mouseY, pendingClick);
+            return true;
+        }
         if (ghostIngredientDragManager.handleMouseReleased(eventButton, mouseX, mouseY)) {
             return true;
         }
@@ -197,14 +204,16 @@ public class InputHandler {
         return false;
     }
 
-    private boolean handleMouseClick(GuiScreen guiScreen, int mouseButton, int mouseX, int mouseY) {
-        IClickedIngredient<?> clicked = getFocusUnderMouseForClick(mouseX, mouseY);
+    private boolean handleMouseClick(GuiScreen guiScreen, int mouseButton, int mouseX, int mouseY,
+        @Nullable IClickedIngredient<?> pendingClick) {
+        IClickedIngredient<?> clicked = pendingClick == null ? getFocusUnderMouseForClick(mouseX, mouseY)
+            : pendingClick;
         if (Config.isEditModeEnabled() && clicked != null && handleClickEdit(clicked)) {
             return true;
         }
 
         IIngredientListElement<?> listElement = getElementUnderMouse();
-        if (this.ghostIngredientDragManager
+        if (pendingClick == null && this.ghostIngredientDragManager
             .handleMouseClicked(guiScreen.mc, guiScreen, clicked, listElement, mouseButton, mouseX, mouseY)) {
             return true;
         }
@@ -214,7 +223,6 @@ public class InputHandler {
         }
 
         if (leftAreaDispatcher.handleMouseClicked(mouseX, mouseY, mouseButton)) {
-
             return true;
         }
 
@@ -281,13 +289,17 @@ public class InputHandler {
     }
 
     private <V> boolean handleMouseClickedFocus(int mouseButton, IClickedIngredient<V> clicked) {
+        Object value = clicked.getValue();
+        if (value instanceof BookmarkItem) {
+            value = ((BookmarkItem<?>) value).getIngredient();
+        }
         if (mouseButton == 0) {
-            IFocus<?> focus = new Focus<>(IFocus.Mode.OUTPUT, clicked.getValue());
+            IFocus<?> focus = new Focus<>(IFocus.Mode.OUTPUT, value);
             recipesGui.show(focus);
             clicked.onClickHandled();
             return true;
         } else if (mouseButton == 1) {
-            IFocus<?> focus = new Focus<>(IFocus.Mode.INPUT, clicked.getValue());
+            IFocus<?> focus = new Focus<>(IFocus.Mode.INPUT, value);
             recipesGui.show(focus);
             clicked.onClickHandled();
             return true;
@@ -363,7 +375,6 @@ public class InputHandler {
             if (handleGlobalKeybinds(eventKey)) {
                 return true;
             }
-
             if (KeyBindings.toggleOverlay.isActiveAndMatches(eventKey)) {
                 Config.toggleOverlayEnabled();
                 return true;
@@ -437,7 +448,6 @@ public class InputHandler {
                 Config.toggleBookmarkEnabled();
             }
             return removed;
-
         }
 
         final boolean added;
@@ -453,7 +463,6 @@ public class InputHandler {
         }
         if (added && !Config.isBookmarkOverlayEnabled()) {
             Config.toggleBookmarkEnabled();
-
         }
         return added;
     }

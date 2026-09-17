@@ -137,7 +137,6 @@ public class InputHandler {
                     this.deferMouseEventCancellation = true;
                 } else {
                     event.setCanceled(true);
-                    while (Mouse.next());
                 }
             }
         }

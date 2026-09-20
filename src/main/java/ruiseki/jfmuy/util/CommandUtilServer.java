@@ -28,6 +28,7 @@ import ruiseki.jfmuy.JFMUY;
 import ruiseki.jfmuy.network.PacketCheatPermission;
 import ruiseki.okcore.helper.Helpers;
 import ruiseki.okcore.helper.ItemHandlerHelpers;
+import ruiseki.okcore.helper.ItemHelpers;
 
 /**
  * Server-side-safe utilities for commands.
@@ -134,7 +135,7 @@ public final class CommandUtilServer {
         }
     }
 
-    public static void mousePickupItemStack(EntityPlayer sender, ItemStack itemStack) {
+    static void mousePickupItemStack(EntityPlayer sender, ItemStack itemStack) {
         final int giveCount;
         ItemStack existingStack = sender.inventory.getItemStack();
         if (canStack(existingStack, itemStack)) {
@@ -156,7 +157,7 @@ public final class CommandUtilServer {
     }
 
     public static boolean canStack(ItemStack a, ItemStack b) {
-        return a != null && b != null && ItemHandlerHelpers.canItemStacksStack(a, b);
+        return !ItemHelpers.isEmpty(a) && !ItemHelpers.isEmpty(b) && ItemHandlerHelpers.canItemStacksStack(a, b);
     }
 
     /**

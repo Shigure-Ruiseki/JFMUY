@@ -13,6 +13,7 @@ import ruiseki.jfmuy.gui.elements.GuiIconButtonSmall;
 import ruiseki.jfmuy.transfer.RecipeTransferErrorInternal;
 import ruiseki.jfmuy.transfer.RecipeTransferUtil;
 import ruiseki.jfmuy.util.Translator;
+import ruiseki.okcore.client.renderer.GlStateManager;
 
 public class RecipeTransferButton extends GuiIconButtonSmall {
 
@@ -26,9 +27,11 @@ public class RecipeTransferButton extends GuiIconButtonSmall {
         this.recipeLayout = recipeLayout;
     }
 
-    public void init(@Nullable Container container, EntityPlayer player) {
+    public void update(@Nullable Container container, EntityPlayer player) {
         if (container != null) {
+            GlStateManager.pushMatrix();
             this.recipeTransferError = RecipeTransferUtil.getTransferRecipeError(container, recipeLayout, player);
+            GlStateManager.popMatrix();
         } else {
             this.recipeTransferError = RecipeTransferErrorInternal.INSTANCE;
         }

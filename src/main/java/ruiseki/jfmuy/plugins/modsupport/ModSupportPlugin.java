@@ -19,7 +19,7 @@ public class ModSupportPlugin implements IModPlugin {
 
         Class<? extends Container> toAttachOutput;
 
-        toAttachOutput = findContainerClass("projecte", "moze_intel.projecte.gameObjs.container.PhilosStoneContainer");
+        toAttachOutput = findContainerClass("ProjectE", "moze_intel.projecte.gameObjs.container.PhilosStoneContainer");
         if (toAttachOutput != null) {
             recipeTransferRegistry.overrideOutputSlot(toAttachOutput, VanillaRecipeCategoryUid.CRAFTING, 0);
         }

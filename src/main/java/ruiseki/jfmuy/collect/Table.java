@@ -1,6 +1,7 @@
 package ruiseki.jfmuy.collect;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -47,6 +48,10 @@ public class Table<R, C, V> {
 
     public void clear() {
         table.clear();
+    }
+
+    public Set<R> rowKeySet() {
+        return this.table.keySet();
     }
 
     public ImmutableTable<R, C, V> toImmutable() {

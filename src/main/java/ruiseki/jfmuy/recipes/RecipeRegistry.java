@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -545,6 +546,8 @@ public class RecipeRegistry implements IRecipeRegistry {
         Set<T> hidden = (Set<T>) hiddenRecipes.get(recipeCategory.getUid());
         allRecipeWrappers.removeAll(hidden);
 
+        allRecipeWrappers = new ArrayList<>(new LinkedHashSet<>(allRecipeWrappers));
+
         return allRecipeWrappers;
     }
 
@@ -561,6 +564,8 @@ public class RecipeRegistry implements IRecipeRegistry {
         @SuppressWarnings("unchecked")
         Set<T> hidden = (Set<T>) hiddenRecipes.get(recipeCategory.getUid());
         allRecipeWrappers.removeAll(hidden);
+
+        allRecipeWrappers = new ArrayList<>(new LinkedHashSet<>(allRecipeWrappers));
 
         return allRecipeWrappers;
     }

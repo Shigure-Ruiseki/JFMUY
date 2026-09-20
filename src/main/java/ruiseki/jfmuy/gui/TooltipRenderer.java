@@ -55,13 +55,27 @@ public final class TooltipRenderer {
 
     public static void drawHoveringText(ItemStack itemStack, Minecraft minecraft, List<String> textLines, int x, int y,
         int maxWidth, FontRenderer font) {
+        List<String> safeTextLines = null; // assume that null string almost never happens, so allocate lazily
+        for (int i = 0, textLinesSize = textLines.size(); i < textLinesSize; i++) {
+            String textLine = textLines.get(i);
+            if (textLine == null && safeTextLines == null) {
+                safeTextLines = new ArrayList<>(textLinesSize);
+                safeTextLines.addAll(textLines.subList(0, i));
+            }
+            if (safeTextLines != null) {
+                safeTextLines.add(textLine);
+            }
+        }
+        if (safeTextLines == null) {
+            safeTextLines = textLines;
+        }
         ScaledResolution scaledresolution = new ScaledResolution(
             minecraft,
             minecraft.displayWidth,
             minecraft.displayHeight);
         GuiHelpers.drawHoveringText(
             itemStack,
-            textLines,
+            safeTextLines,
             x,
             y,
             scaledresolution.getScaledWidth(),
@@ -83,7 +97,7 @@ public final class TooltipRenderer {
     /**
      * Draws the standard Minecraft tooltip, but allows extra {@link IngredientListBatchRenderer} lines
      * to be rendered as item grids below the text lines.
-     * 
+     *
      * @return the screen rectangle the tooltip occupies, or null if the tooltip was cancelled by
      *         {@link RenderTooltipEvent.Pre}.
      */

@@ -21,6 +21,7 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import org.jetbrains.annotations.Nullable;
 
+import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.registry.GameData;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -125,29 +126,8 @@ public class ItemStackHelper implements IIngredientHelper<ItemStack> {
     @Override
     public String getModId(ItemStack ingredient) {
         ErrorUtil.checkNotEmpty(ingredient);
-
-        Item item = ingredient.getItem();
-        ResourceLocation itemName = Helpers.getLocation(item);
-        if (itemName == null) {
-            String stackInfo = getErrorInfo(ingredient);
-            throw new IllegalStateException("item.getRegistryName() returned null for: " + stackInfo);
-        }
-
-        return itemName.getResourceDomain();
-    }
-
-    @Override
-    public String getDisplayModId(ItemStack ingredient) {
-        ErrorUtil.checkNotEmpty(ingredient);
-
-        Item item = ingredient.getItem();
-        ResourceLocation itemName = Helpers.getLocation(item);
-        if (itemName == null) {
-            String stackInfo = getErrorInfo(ingredient);
-            throw new IllegalStateException("item.getRegistryName() returned null for: " + stackInfo);
-        }
-
-        return itemName.getResourceDomain();
+        ModContainer mod = GameData.findModOwner(GameData.itemRegistry.getNameForObject(ingredient.getItem()));
+        return mod == null ? "Minecraft" : mod.getName();
     }
 
     @Override

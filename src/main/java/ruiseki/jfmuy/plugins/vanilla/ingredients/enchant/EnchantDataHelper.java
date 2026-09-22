@@ -59,18 +59,6 @@ public class EnchantDataHelper implements IIngredientHelper<EnchantmentData> {
 
     @Override
     public String getModId(EnchantmentData ingredient) {
-        String name = ingredient.enchantmentobj.getName();
-        if (name != null && name.startsWith("enchantment.")) {
-            String subName = name.substring("enchantment.".length());
-            if (subName.contains(".")) {
-                return subName.substring(0, subName.indexOf("."));
-            }
-        }
-        return "minecraft";
-    }
-
-    @Override
-    public String getDisplayModId(EnchantmentData ingredient) {
         ItemStack enchantedBook = cache.getEnchantedBook(ingredient);
         return this.itemStackHelper.getDisplayModId(enchantedBook);
     }

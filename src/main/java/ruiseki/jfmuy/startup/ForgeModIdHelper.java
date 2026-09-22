@@ -118,7 +118,27 @@ public class ForgeModIdHelper extends AbstractModIdHelper {
             // we detected that another mod is adding the mod name already
             return tooltip;
         }
+
+        String modName = getModNameForModId(ingredientHelper.getDisplayModId(ingredient));
+        if (StringUtils.isNotEmpty(modName) && isModNameAlreadyInTooltip(tooltip, modName)) {
+            return tooltip;
+        }
+
         return super.addModNameToIngredientTooltip(tooltip, ingredient, ingredientHelper);
+    }
+
+    private boolean isModNameAlreadyInTooltip(List<String> tooltip, String modName) {
+        if (tooltip == null || tooltip.isEmpty()) {
+            return false;
+        }
+        String cleanModName = removeChatFormatting(modName).trim();
+        for (String line : tooltip) {
+            String cleanLine = removeChatFormatting(line).trim();
+            if (cleanLine.equalsIgnoreCase(cleanModName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private <T> boolean skipAddingModName(T ingredient) {

@@ -3,6 +3,7 @@ package ruiseki.jfmuy.gui;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -91,19 +92,29 @@ public final class TooltipRenderer {
 
     public static void drawHoveringTextAndItems(Minecraft minecraft, List<String> textLines,
         List<IngredientListBatchRenderer> itemLines, int x, int y) {
-        drawHoveringTextAndItems(ItemHelpers.EMPTY, minecraft, textLines, itemLines, x, y, -1, minecraft.fontRenderer);
+        drawHoveringTextAndItems(
+            ItemHelpers.EMPTY,
+            minecraft,
+            textLines,
+            itemLines,
+            x,
+            y,
+            -1,
+            minecraft.fontRenderer,
+            null);
     }
 
     /**
      * Draws the standard Minecraft tooltip, but allows extra {@link IngredientListBatchRenderer} lines
      * to be rendered as item grids below the text lines.
      *
-     * @return the screen rectangle the tooltip occupies, or null if the tooltip was cancelled by
-     *         {@link RenderTooltipEvent.Pre}.
+     * @param postLayoutHook Accept the area tooltip occupies, or null if the tooltip was cancelled by
+     *                       {@link RenderTooltipEvent.Pre}. This callback is called after layout
+     *                       computation, but before rendering the tooltip
      */
-    @Nullable
-    public static Rectangle drawHoveringTextAndItems(ItemStack stack, Minecraft minecraft, List<String> lines,
-        List<IngredientListBatchRenderer> itemLines, int mouseX, int mouseY, int maxTextWidth, FontRenderer font) {
+    public static void drawHoveringTextAndItems(ItemStack stack, Minecraft minecraft, List<String> lines,
+        List<IngredientListBatchRenderer> itemLines, int mouseX, int mouseY, int maxTextWidth, FontRenderer font,
+        @Nullable Consumer<Rectangle> postLayoutHook) {
         ScaledResolution scaledresolution = new ScaledResolution(
             minecraft,
             minecraft.displayWidth,
@@ -120,7 +131,7 @@ public final class TooltipRenderer {
             maxTextWidth,
             font);
         if (MinecraftForge.EVENT_BUS.post(event)) {
-            return null;
+            return;
         }
         mouseX = event.getX();
         mouseY = event.getY();
@@ -225,6 +236,9 @@ public final class TooltipRenderer {
         } else if (tooltipY + tooltipHeight + 4 > screenHeight) {
             tooltipY = screenHeight - tooltipHeight - 4;
         }
+        if (postLayoutHook != null) {
+            postLayoutHook.accept(new Rectangle(tooltipX, tooltipY, tooltipTextWidth, tooltipHeight));
+        }
 
         final int zLevel = 300;
         int backgroundColor = 0xF0100010;
@@ -326,7 +340,6 @@ public final class TooltipRenderer {
                 tooltipTextWidth,
                 tooltipHeight));
         int tooltipTop = tooltipY;
-        Rectangle tooltipRect = new Rectangle(tooltipX, tooltipTop, tooltipTextWidth, tooltipHeight);
 
         for (int lineNumber = 0; lineNumber < lines.size(); ++lineNumber) {
             font.drawStringWithShadow(lines.get(lineNumber), tooltipX, tooltipY, -1);
@@ -362,8 +375,6 @@ public final class TooltipRenderer {
         GlStateManager.enableDepth();
         RenderHelper.enableStandardItemLighting();
         GlStateManager.enableRescaleNormal();
-
-        return tooltipRect;
     }
 
     @Nullable

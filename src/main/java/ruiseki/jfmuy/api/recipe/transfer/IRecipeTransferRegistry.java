@@ -58,7 +58,7 @@ public interface IRecipeTransferRegistry {
      * overrides for specified class and uid.
      * <p>
      * This method exists only for adding autocrafting support for outdated mods that added recipe transfer
-     * support based on JEI instead of HEI. Mods should use {@link
+     * support based on JEI instead of JFMUY. Mods should use {@link
      * #addRecipeTransferHandlerWithOutput(Class, String, int, int, int, int, int)} when possible
      * <p>
      * Will not work if recipe transfer handler for such containerClass+recipeCategoryUid does not exist or

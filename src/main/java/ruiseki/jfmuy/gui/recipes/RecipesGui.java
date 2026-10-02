@@ -36,7 +36,6 @@ import ruiseki.jfmuy.gui.TooltipRenderer;
 import ruiseki.jfmuy.gui.elements.DrawableNineSliceTexture;
 import ruiseki.jfmuy.gui.elements.GuiIconButtonSmall;
 import ruiseki.jfmuy.gui.ingredients.GuiIngredient;
-import ruiseki.jfmuy.gui.ingredients.IngredientListPreview;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.input.ClickedIngredient;
@@ -75,8 +74,6 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
     private final RecipeGuiTabs recipeGuiTabs;
 
     private HoverChecker titleHoverChecker = new HoverChecker(0, 0, 0, 0, 0);
-
-    private final List<RecipeTransferButton> recipeTransferButtons = new ArrayList<>();
 
     private final GuiButton nextRecipeCategory;
     private final GuiButton previousRecipeCategory;
@@ -215,21 +212,6 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         updateLayout();
     }
 
-    @Override
-    public void updateScreen() {
-        super.updateScreen();
-
-        if (mc != null) {
-            EntityPlayerSP player = mc.thePlayer;
-            if (player != null) {
-                Container container = getParentContainer();
-                for (RecipeTransferButton button : this.recipeTransferButtons) {
-                    button.update(container, player);
-                }
-            }
-        }
-    }
-
     private void addButtons() {
         this.buttonList.add(nextRecipeCategory);
         this.buttonList.add(previousRecipeCategory);
@@ -307,29 +289,26 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
 
         recipeGuiTabs.draw(mc, mouseX, mouseY);
 
-        // A pinned tooltip keeps being drawn even once the mouse has left the slot, which is the
-        // whole point: the mouse has to be able to reach the grid inside it.
-        RecipeLayout overlayLayout = pinnedTooltip != null ? pinnedTooltip.getLayout() : hoveredLayout;
-        if (overlayLayout != null) {
-            overlayLayout.drawOverlays(mc, mouseX, mouseY, pinnedTooltip);
-        }
-        if (hoveredRecipeCatalyst != null && pinnedTooltip == null) {
-            hoveredRecipeCatalyst.drawOverlays(mc, 0, 0, mouseX, mouseY);
-        }
-
-        // While a tooltip is pinned it is the only one on screen: stacking another on top of it would
-        // just be noise, and the pinned one is the one the player asked to keep.
-        if (pinnedTooltip == null) {
-            if (this.searchButton.func_146115_a()) {
-                TooltipRenderer.drawHoveringText(mc, searchButtonTooltip(), mouseX, mouseY);
+        if (pinnedTooltip != null) {
+            pinnedTooltip.drawOverlays(mc, mouseX, mouseY);
+        } else {
+            if (hoveredLayout != null) {
+                hoveredLayout.drawOverlays(mc, mouseX, mouseY);
             }
 
-            if (!isSearchEnabled() && titleHoverChecker.checkHover(mouseX, mouseY) && !logic.hasAllCategories()) {
-                String showAllRecipesString = Translator.translateToLocal("jfmuy.tooltip.show.all.recipes");
-                TooltipRenderer.drawHoveringText(mc, showAllRecipesString, mouseX, mouseY);
+            if (hoveredRecipeCatalyst != null) {
+                hoveredRecipeCatalyst.drawOverlays(mc, 0, 0, mouseX, mouseY);
             }
         }
 
+        if (this.searchButton.func_146115_a()) {
+            TooltipRenderer.drawHoveringText(mc, searchButtonTooltip(), mouseX, mouseY);
+        }
+
+        if (!isSearchEnabled() && titleHoverChecker.checkHover(mouseX, mouseY) && !logic.hasAllCategories()) {
+            String showAllRecipesString = Translator.translateToLocal("jfmuy.tooltip.show.all.recipes");
+            TooltipRenderer.drawHoveringText(mc, showAllRecipesString, mouseX, mouseY);
+        }
     }
 
     /**
@@ -337,7 +316,7 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
      * happens on hover; once pinned, the target and position are frozen until Shift is released.
      */
     private void updatePinnedTooltip(int mouseX, int mouseY, @Nullable RecipeLayout hoveredLayout) {
-        if (pinnedTooltip != null && !recipeLayouts.contains(pinnedTooltip.getLayout())) {
+        if (pinnedTooltip != null && !this.recipeLayouts.contains(pinnedTooltip.getLayout())) {
             // The layout was rebuilt, so the pinned slot no longer exists.
             pinnedTooltip = null;
         }
@@ -345,22 +324,12 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
             pinnedTooltip = null;
             return;
         }
-        if (pinnedTooltip != null) {
-            return;
+        if (pinnedTooltip == null) {
+            if (hoveredLayout == null) {
+                return;
+            }
+            pinnedTooltip = PinnedIngredientTooltip.create(hoveredLayout, mouseX, mouseY);
         }
-        if (hoveredLayout == null) {
-            return;
-        }
-        GuiIngredient<?> hoveredSlot = hoveredLayout.getGuiIngredientUnderMouse(mouseX, mouseY);
-        if (hoveredSlot == null) {
-            return;
-        }
-        IngredientListPreview preview = hoveredSlot.getIngredientPreview();
-        if (preview == null) {
-            // Either the slot only accepts one ingredient, or the preview is disabled.
-            return;
-        }
-        pinnedTooltip = new PinnedIngredientTooltip(hoveredLayout, hoveredSlot, preview, mouseX, mouseY);
     }
 
     @Nullable
@@ -800,7 +769,6 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
 
     private void addRecipeSpecificButtons(Minecraft minecraft, List<RecipeLayout> recipeLayouts) {
         buttonList.clear();
-        recipeTransferButtons.clear();
         addButtons();
 
         EntityPlayer player = minecraft.thePlayer;
@@ -810,9 +778,8 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
             for (RecipeLayout recipeLayout : recipeLayouts) {
                 RecipeTransferButton button = recipeLayout.getRecipeTransferButton();
                 if (button != null) {
-                    button.update(container, player);
+                    button.init(container, player);
                     buttonList.add(button);
-                    recipeTransferButtons.add(button);
                 }
                 RecipeFavoriteButton favoriteButton = recipeLayout.getRecipeFavoriteButton();
                 if (favoriteButton != null) {

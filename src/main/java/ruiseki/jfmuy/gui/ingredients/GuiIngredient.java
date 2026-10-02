@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -47,10 +48,10 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
     private final int yPadding;
 
     private final CycleTimer cycleTimer;
-    private final List<T> displayIngredients = new ArrayList<>(); // ingredients, taking focus into account
+    public final List<T> displayIngredients = new ArrayList<>(); // ingredients, taking focus into account
     private final List<T> allIngredients = new ArrayList<>(); // all ingredients, ignoring focus
-    private final IIngredientRenderer<T> ingredientRenderer;
-    private final IIngredientHelper<T> ingredientHelper;
+    public final IIngredientRenderer<T> ingredientRenderer;
+    public final IIngredientHelper<T> ingredientHelper;
     @Nullable
     private ITooltipCallback<T> tooltipCallback;
     @Nullable
@@ -78,6 +79,14 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
 
     public Rectangle getRect() {
         return rect;
+    }
+
+    public int getXPadding() {
+        return xPadding;
+    }
+
+    public int getYPadding() {
+        return yPadding;
     }
 
     public boolean isMouseOver(int xOffset, int yOffset, int mouseX, int mouseY) {
@@ -136,10 +145,7 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
             ingredientPreviewInvalidated = false;
             // A focused slot collapses displayIngredients down to the single match, which leaves
             // fewer than two entries and so yields no preview.
-            ingredientPreview = Config.isRecipeIngredientPreviewEnabled()
-                ? IngredientListPreview
-                    .create(displayIngredients, ingredientHelper, ingredientRenderer, ForgeModIdHelper.getInstance())
-                : null;
+            ingredientPreview = Config.isRecipeIngredientPreviewEnabled() ? IngredientListPreview.create(this) : null;
         }
         return ingredientPreview;
     }
@@ -155,11 +161,8 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
             if (ingredient == null || ingredientRegistry.isIngredientVisible(ingredient, ingredientFilter)) {
                 visible.add(ingredient);
             }
-            if (visible.size() > 100) {
-                return visible;
-            }
         }
-        if (visible.size() > 0) {
+        if (!visible.isEmpty()) {
             return visible;
         }
         return ingredients;
@@ -276,7 +279,7 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
                     TooltipRenderer.drawHoveringText(minecraft, tooltip, tooltipX, tooltipY, fontRenderer);
                 }
             } else {
-                Rectangle bound = TooltipRenderer.drawHoveringTextAndItems(
+                TooltipRenderer.drawHoveringTextAndItems(
                     tooltipStack,
                     minecraft,
                     tooltip,
@@ -284,15 +287,37 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
                     tooltipX,
                     tooltipY,
                     -1,
-                    fontRenderer);
-                // Kept so a pinned tooltip knows which part of the screen it is covering.
-                preview.setTooltipBounds(bound);
+                    fontRenderer,
+                    getPostLayoutHook(minecraft, preview));
             }
 
             GlStateManager.enableDepth();
         } catch (RuntimeException e) {
             Log.get()
                 .error("Exception when rendering tooltip on {}.", value, e);
+        }
+    }
+
+    private static Consumer<Rectangle> getPostLayoutHook(Minecraft minecraft, IngredientListPreview preview) {
+        if (GuiScreen.isShiftKeyDown()) {
+            return bound -> {
+                preview.setTooltipBounds(bound);
+
+                GlStateManager.enableAlpha();
+                int padding = 6; // 4 from tooltip itself, 2 for visible border
+                Internal.getHelpers()
+                    .getGuiHelper()
+                    .getRecipeBackground()
+                    .draw(
+                        minecraft,
+                        bound.x - padding,
+                        bound.y - padding,
+                        bound.width + padding * 2,
+                        bound.height + padding * 2);
+                GlStateManager.disableAlpha();
+            };
+        } else {
+            return preview::setTooltipBounds;
         }
     }
 

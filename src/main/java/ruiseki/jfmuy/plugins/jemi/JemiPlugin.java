@@ -171,7 +171,7 @@ public class JemiPlugin implements IModPlugin, EmiPlugin {
             .map(EmiPluginContainer::id)
             .collect(Collectors.toSet());
 
-        EmiReloadManager.step(EmiPort.literal("Loading information from JEI..."), 5_000);
+        EmiReloadManager.step(EmiPort.literal("Loading information from JFMUY..."), 5_000);
         registry.addGenericExclusionArea((screen, consumer) -> {
             if (runtime != null && runtime.getIngredientListOverlay()
                 .getGuiScreenHelper() != null) {

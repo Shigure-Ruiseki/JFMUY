@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -278,7 +279,7 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
                     TooltipRenderer.drawHoveringText(minecraft, tooltip, tooltipX, tooltipY, fontRenderer);
                 }
             } else {
-                Rectangle bound = TooltipRenderer.drawHoveringTextAndItems(
+                TooltipRenderer.drawHoveringTextAndItems(
                     tooltipStack,
                     minecraft,
                     tooltip,
@@ -286,15 +287,37 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
                     tooltipX,
                     tooltipY,
                     -1,
-                    fontRenderer);
-                // Kept so a pinned tooltip knows which part of the screen it is covering.
-                preview.setTooltipBounds(bound);
+                    fontRenderer,
+                    getPostLayoutHook(minecraft, preview));
             }
 
             GlStateManager.enableDepth();
         } catch (RuntimeException e) {
             Log.get()
                 .error("Exception when rendering tooltip on {}.", value, e);
+        }
+    }
+
+    private static Consumer<Rectangle> getPostLayoutHook(Minecraft minecraft, IngredientListPreview preview) {
+        if (GuiScreen.isShiftKeyDown()) {
+            return bound -> {
+                preview.setTooltipBounds(bound);
+
+                GlStateManager.enableAlpha();
+                int padding = 6; // 4 from tooltip itself, 2 for visible border
+                Internal.getHelpers()
+                    .getGuiHelper()
+                    .getRecipeBackground()
+                    .draw(
+                        minecraft,
+                        bound.x - padding,
+                        bound.y - padding,
+                        bound.width + padding * 2,
+                        bound.height + padding * 2);
+                GlStateManager.disableAlpha();
+            };
+        } else {
+            return preview::setTooltipBounds;
         }
     }
 

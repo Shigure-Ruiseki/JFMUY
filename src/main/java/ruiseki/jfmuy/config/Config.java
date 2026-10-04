@@ -411,8 +411,14 @@ public final class Config {
         return values.skipShowingProgressBar;
     }
 
-    public static boolean hideBottomRightCornerConfigButton() {
-        return values.hideBottomRightCornerConfigButton;
+    public enum ButtonPosition {
+        LEFT,
+        RIGHT,
+        HIDDEN
+    }
+
+    public static ButtonPosition getConfigButtonPosition() {
+        return values.configButtonPosition;
     }
 
     public static boolean hideBottomLeftCornerBookmarkButton() {
@@ -677,10 +683,11 @@ public final class Config {
         values.skipShowingProgressBar = config
             .getBoolean(CATEGORY_MISC, "skipShowingProgressBar", defaultValues.skipShowingProgressBar);
 
-        values.hideBottomRightCornerConfigButton = config.getBoolean(
+        values.configButtonPosition = config.getEnum(
+            "configButtonPosition",
             CATEGORY_MISC,
-            "hideBottomRightCornerConfigButton",
-            defaultValues.hideBottomRightCornerConfigButton);
+            defaultValues.configButtonPosition,
+            ButtonPosition.values());
 
         values.hideBottomLeftCornerBookmarkButton = config.getBoolean(
             CATEGORY_MISC,

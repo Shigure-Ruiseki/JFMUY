@@ -55,7 +55,7 @@ public class ConfigValues {
     public boolean recipeIngredientPreviewEnabled = true;
     public boolean showHiddenIngredientsInCreative = false;
     public boolean skipShowingProgressBar = true;
-    public boolean hideBottomRightCornerConfigButton = false;
+    public Config.ButtonPosition configButtonPosition = Config.ButtonPosition.RIGHT;
     public boolean hideBottomLeftCornerBookmarkButton = false;
     public boolean enableHistoryPanel = true;
     public boolean isHistoryPanelOnLeft = false;

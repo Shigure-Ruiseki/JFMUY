@@ -167,7 +167,7 @@ public class JFMUYModConfigGui extends GuiConfig {
                     0,
                     owningEntryList.controlWidth,
                     18,
-                    Translator.toLowercaseWithLocale("jfmuy.gui.collapsible.title")));
+                    Translator.translateToLocal("jfmuy.gui.collapsible.title")));
         }
 
         @Override

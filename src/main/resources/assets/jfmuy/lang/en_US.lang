@@ -195,8 +195,8 @@ config.jfmuy.rendering.bufferIngredientRenders.comment=Stops extremely frequent 
 config.jfmuy.interface.defaultFluidContainerItem=Default Fluid Container Item
 config.jfmuy.interface.defaultFluidContainerItem.comment=Default item to use to fill up fluids when clicking on a fluid ingredient in the menu, (format: item_name@meta)
 
-config.jfmuy.misc.hideBottomRightCornerConfigButton=Hide Bottom-Right Corner Config Button
-config.jfmuy.misc.hideBottomRightCornerConfigButton.comment=Whether to hide the bottom-right corner config button
+config.jfmuy.misc.configButtonPosition=Config Button Position
+config.jfmuy.misc.configButtonPosition.comment=Where to place the config button. Left, Right, or Hidden.
 
 config.jfmuy.misc.hideBottomLeftCornerBookmarkButton=Hide Bottom-Left Corner Bookmark Button
 config.jfmuy.misc.hideBottomLeftCornerBookmarkButton.comment=Whether to hide the bottom-left corner bookmark button

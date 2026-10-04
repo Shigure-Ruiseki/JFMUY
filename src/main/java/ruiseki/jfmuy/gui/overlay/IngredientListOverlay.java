@@ -93,6 +93,10 @@ public class IngredientListOverlay
         return Config.isOverlayEnabled() && this.guiProperties != null && this.hasRoom;
     }
 
+    private boolean isConfigButtonDisplayed() {
+        return Config.getConfigButtonPosition() != Config.ButtonPosition.HIDDEN && this.guiProperties != null;
+    }
+
     private static Rectangle getDisplayArea(IGuiProperties guiProperties) {
         final int x = guiProperties.getGuiLeft() + guiProperties.getGuiXSize() + BORDER_PADDING;
         final int y = BORDER_PADDING;
@@ -118,6 +122,11 @@ public class IngredientListOverlay
                 final boolean searchBarCentered = isSearchBarCentered(guiProperties);
                 final int searchHeight = searchBarCentered ? 0 : SEARCH_HEIGHT + BORDER_PADDING;
 
+                final Config.ButtonPosition buttonPosition = Config.getConfigButtonPosition();
+                int configButtonX = buttonPosition == Config.ButtonPosition.RIGHT ?
+                    guiProperties.getScreenWidth() - BUTTON_SIZE - BORDER_PADDING : BORDER_PADDING;
+                int configButtonY = guiProperties.getScreenHeight() - BUTTON_SIZE - 2 * BORDER_PADDING;
+
                 Set<Rectangle> guiExclusionAreas = guiScreenHelper.getGuiExclusionAreas();
                 Rectangle availableContentsArea = new Rectangle(
                     displayArea.x,
@@ -127,10 +136,8 @@ public class IngredientListOverlay
 
                 hasRoom = this.contents.updateBounds(availableContentsArea, guiExclusionAreas, 4 * BUTTON_SIZE);
 
-                final int visibleButtonSize = Config.hideBottomRightCornerConfigButton() ? 0 : BUTTON_SIZE;
+                final int visibleButtonSize = buttonPosition == Config.ButtonPosition.HIDDEN ? 0 : BUTTON_SIZE;
                 Rectangle searchArea;
-                int configButtonX;
-                int configButtonY;
                 if (hasRoom) {
                     // update area to match contents size
                     Rectangle contentsArea = this.contents.getArea();
@@ -142,22 +149,21 @@ public class IngredientListOverlay
                     int searchY = centerSearchBar ? guiProperties.getScreenHeight() - SEARCH_HEIGHT - BORDER_PADDING
                         : displayArea.y + displayArea.height - SEARCH_HEIGHT - BORDER_PADDING;
                     int availableSearchWidth = centerSearchBar ? guiProperties.getGuiXSize() : displayArea.width;
+                    if (buttonPosition == Config.ButtonPosition.RIGHT) {
+                        availableSearchWidth = Math.max(0, availableSearchWidth - visibleButtonSize + 1);
+                    }
                     searchArea = new Rectangle(
                         searchX,
                         searchY,
-                        availableSearchWidth - visibleButtonSize + 1,
-                        SEARCH_HEIGHT);
-                    configButtonX = searchArea.x + searchArea.width - 1;
-                    configButtonY = searchArea.y;
+                        availableSearchWidth,
+                        SEARCH_HEIGHT
+                    );
+                    if (buttonPosition == Config.ButtonPosition.RIGHT) {
+                        configButtonX = searchArea.x + searchArea.width - 1;
+                        configButtonY = searchArea.y;
+                    }
                 } else {
                     searchArea = new Rectangle();
-                    if (visibleButtonSize == 0) {
-                        configButtonX = 0;
-                        configButtonY = 0;
-                    } else {
-                        configButtonX = (int) Math.floor(displayArea.getMaxX()) - visibleButtonSize;
-                        configButtonY = (int) Math.floor(displayArea.getMaxY()) - visibleButtonSize - BORDER_PADDING;
-                    }
                 }
                 this.searchField.updateBounds(searchArea);
                 this.configButton
@@ -181,23 +187,19 @@ public class IngredientListOverlay
                 GlStateManager.disableLighting();
                 this.searchField.drawTextBox();
                 this.contents.draw(minecraft, mouseX, mouseY);
-                if (!Config.hideBottomRightCornerConfigButton() || Config.isCenterSearchBarEnabled()) {
-                    this.configButton.draw(minecraft, mouseX, mouseY);
-                }
-            } else if (!Config.hideBottomRightCornerConfigButton() || Config.isCenterSearchBarEnabled()) {
+            }
+            if (isConfigButtonDisplayed()) {
                 this.configButton.draw(minecraft, mouseX, mouseY);
             }
         }
     }
 
     public void drawTooltips(Minecraft minecraft, int mouseX, int mouseY) {
-        if (isListDisplayed()) {
-            if (!Config.hideBottomRightCornerConfigButton() || Config.isCenterSearchBarEnabled()) {
-                this.configButton.drawTooltips(minecraft, mouseX, mouseY);
-            }
-            this.contents.drawTooltips(minecraft, mouseX, mouseY);
-        } else if (this.guiProperties != null) {
+        if (isConfigButtonDisplayed()) {
             this.configButton.drawTooltips(minecraft, mouseX, mouseY);
+        }
+        if (isListDisplayed()) {
+            this.contents.drawTooltips(minecraft, mouseX, mouseY);
         }
     }
 
@@ -216,13 +218,14 @@ public class IngredientListOverlay
         if (guiScreenHelper.isInGuiExclusionArea(mouseX, mouseY)) {
             return false;
         }
+        if (isConfigButtonDisplayed() && this.configButton.isMouseOver(mouseX, mouseY)) {
+            return true;
+        }
         if (isListDisplayed()) {
             if (Config.isCenterSearchBarEnabled() && searchField.isMouseOver(mouseX, mouseY)) {
                 return true;
             }
             return displayArea.contains(mouseX, mouseY);
-        } else if (this.guiProperties != null) {
-            return this.configButton.isMouseOver(mouseX, mouseY);
         }
         return false;
     }
@@ -251,13 +254,10 @@ public class IngredientListOverlay
 
     @Override
     public boolean handleMouseClicked(int mouseX, int mouseY, int mouseButton) {
+        if (isConfigButtonDisplayed() && this.configButton.handleMouseClick(mouseX, mouseY)) {
+            return true;
+        }
         if (isListDisplayed()) {
-            if (!Config.hideBottomRightCornerConfigButton() || Config.isCenterSearchBarEnabled()) {
-                if (this.configButton.handleMouseClick(mouseX, mouseY)) {
-                    return true;
-                }
-            }
-
             if (!isMouseOver(mouseX, mouseY)) {
                 setKeyboardFocus(false);
                 return false;
@@ -299,10 +299,7 @@ public class IngredientListOverlay
                     }
                 }
             }
-        } else if (this.guiProperties != null
-            && (!Config.hideBottomRightCornerConfigButton() || Config.isCenterSearchBarEnabled())) {
-                return this.configButton.handleMouseClick(mouseX, mouseY);
-            }
+        }
         return false;
     }
 

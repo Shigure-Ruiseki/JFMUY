@@ -23,6 +23,7 @@ import ruiseki.jfmuy.gui.GuiEventHandler;
 import ruiseki.jfmuy.gui.GuiHelper;
 import ruiseki.jfmuy.gui.GuiScreenHelper;
 import ruiseki.jfmuy.gui.ghost.GhostIngredientDragManager;
+import ruiseki.jfmuy.gui.overlay.IngredientGridHistoryProvider;
 import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.BookmarkOverlay;
 import ruiseki.jfmuy.gui.overlay.bookmarks.LeftAreaDispatcher;
@@ -122,6 +123,7 @@ public class JFMUYStarter {
 
         BookmarkList bookmarkList = new BookmarkList(ingredientRegistry);
         Internal.setBookmarkList(bookmarkList);
+        Internal.setIngredientHistory(new IngredientGridHistoryProvider(ingredientRegistry));
 
         timer.start("Building runtime");
         List<IAdvancedGuiHandler<?>> advancedGuiHandlers = modRegistry.getAdvancedGuiHandlers();

@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.Nullable;
 
+import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.IBookmarkOverlay;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
@@ -50,7 +51,14 @@ public class BookmarkOverlay implements ILeftAreaContent, IBookmarkOverlay {
     }
 
     public boolean isListDisplayed() {
-        return Config.isBookmarkOverlayEnabled() && hasRoom && !bookmarkList.isEmpty();
+        if (!hasRoom) {
+            return false;
+        }
+        if (bookmarkList.isEmpty()) {
+            return Config.getHistoryPosition() == Config.HistoryPosition.LEFT && !Internal.getIngredientHistory()
+                .isEmpty();
+        }
+        return Config.isBookmarkOverlayEnabled();
     }
 
     public boolean hasRoom() {

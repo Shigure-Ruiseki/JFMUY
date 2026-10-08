@@ -123,8 +123,9 @@ public class IngredientListOverlay
                 final int searchHeight = searchBarCentered ? 0 : SEARCH_HEIGHT + BORDER_PADDING;
 
                 final Config.ButtonPosition buttonPosition = Config.getConfigButtonPosition();
-                int configButtonX = buttonPosition == Config.ButtonPosition.RIGHT ?
-                    guiProperties.getScreenWidth() - BUTTON_SIZE - BORDER_PADDING : BORDER_PADDING;
+                int configButtonX = buttonPosition == Config.ButtonPosition.RIGHT
+                    ? guiProperties.getScreenWidth() - BUTTON_SIZE - BORDER_PADDING
+                    : BORDER_PADDING;
                 int configButtonY = guiProperties.getScreenHeight() - BUTTON_SIZE - 2 * BORDER_PADDING;
 
                 Set<Rectangle> guiExclusionAreas = guiScreenHelper.getGuiExclusionAreas();
@@ -152,12 +153,7 @@ public class IngredientListOverlay
                     if (buttonPosition == Config.ButtonPosition.RIGHT) {
                         availableSearchWidth = Math.max(0, availableSearchWidth - visibleButtonSize + 1);
                     }
-                    searchArea = new Rectangle(
-                        searchX,
-                        searchY,
-                        availableSearchWidth,
-                        SEARCH_HEIGHT
-                    );
+                    searchArea = new Rectangle(searchX, searchY, availableSearchWidth, SEARCH_HEIGHT);
                     if (buttonPosition == Config.ButtonPosition.RIGHT) {
                         configButtonX = searchArea.x + searchArea.width - 1;
                         configButtonY = searchArea.y;

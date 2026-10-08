@@ -201,11 +201,14 @@ config.jfmuy.misc.configButtonPosition.comment=Where to place the config button.
 config.jfmuy.misc.hideBottomLeftCornerBookmarkButton=Hide Bottom-Left Corner Bookmark Button
 config.jfmuy.misc.hideBottomLeftCornerBookmarkButton.comment=Whether to hide the bottom-left corner bookmark button
 
-config.jfmuy.misc.enableHistoryPanel=Enable History Panel
-config.jfmuy.misc.enableHistoryPanel.comment=Whether to enable the history panel
+config.jfmuy.misc.historyPosition=History Position
+config.jfmuy.misc.historyPosition.comment=Where to show the ingredients you last looked up. Left is under the bookmarks, Right is under the ingredient list, or Hidden.
 
-config.jfmuy.misc.isHistoryPanelOnLeft=Is History Panel On Left
-config.jfmuy.misc.isHistoryPanelOnLeft.comment=The history panel can be on either the left or the right (true=left, false=right)
+config.jfmuy.misc.historyRows=History Rows
+config.jfmuy.misc.historyRows.comment=How many rows the history takes from the bottom of its list.
+
+config.jfmuy.misc.historyMatchNbt=History Matches NBT
+config.jfmuy.misc.historyMatchNbt.comment=Keep ingredients that only differ by NBT as separate history entries.
 
 config.jfmuy.misc.versionChecker=Mod Version Checker
 config.jfmuy.misc.versionChecker.comment=Announcement when mod updated

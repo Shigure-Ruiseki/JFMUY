@@ -443,10 +443,6 @@ public final class Config {
         return values.historyMatchNbt;
     }
 
-    public static boolean isHistoryPanelOnLeft() {
-        return values.historyOnLeft;
-    }
-
     public static boolean isVersionChecker() {
         return values.versionChecker;
     }

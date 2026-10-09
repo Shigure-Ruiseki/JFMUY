@@ -90,6 +90,9 @@ public class RecipeGuiLogic implements IRecipeGuiLogic {
             recipeIndex);
         setState(state);
 
+        Internal.getIngredientHistory()
+            .add(translatedFocus.getValue());
+
         return true;
     }
 

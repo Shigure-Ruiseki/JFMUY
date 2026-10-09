@@ -111,7 +111,7 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
             return false;
         }
 
-        int maximumNavigationWidth = this.bookmarkGrid.getArea().width;
+        int maximumNavigationWidth = bookmarkTabWidth + this.bookmarkGrid.getArea().width;
         NavigationLayout.Result layout = NavigationLayout.calculate(
             availableArea,
             guiExclusionAreas,
@@ -156,7 +156,7 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
 
     public void draw(Minecraft minecraft, int mouseX, int mouseY) {
         this.bookmarkGrid.draw(minecraft, mouseX, mouseY);
-        if (this.pageDelegate.getPageCount() > 1) {
+        if (this.bookmarkCount > 0) {
             this.navigation.draw(minecraft, mouseX, mouseY);
         }
         this.groupOrganizer.draw(minecraft, mouseX, mouseY);
@@ -180,7 +180,7 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
         return !guiScreenHelper.isInGuiExclusionArea(mouseX, mouseY)
             && (this.groupOrganizer.handleMouseClicked(mouseX, mouseY, mouseButton)
                 || this.bookmarkGrid.handleMouseClicked(mouseX, mouseY)
-                || this.navigation.handleMouseClickedButtons(mouseX, mouseY));
+                || this.bookmarkCount > 0 && this.navigation.handleMouseClickedButtons(mouseX, mouseY));
 
     }
 
@@ -191,8 +191,8 @@ public class BookmarkGridWithNavigation implements IShowsRecipeFocuses, IMouseHa
     @Override
     public boolean handleMouseScrolled(int mouseX, int mouseY, int scrollDelta) {
         IIngredientListElement<?> element = this.getElementUnderMouse();
-        if ((Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))
-            && element != null) {
+        if ((Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL)) && element != null
+            && element.getIngredient() instanceof BookmarkItem) {
             BookmarkItem<?> item = (BookmarkItem<?>) element.getIngredient();
             if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
                 if (item.getIngredient() instanceof ItemStack) {

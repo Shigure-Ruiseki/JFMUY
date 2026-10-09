@@ -16,7 +16,7 @@ import ruiseki.okcore.datastructure.NonNullList;
 
 public final class IngredientListElementFactory {
 
-    public static final IngredientOrderTracker ORDER_TRACKER = new IngredientOrderTracker();
+    private static final IngredientOrderTracker ORDER_TRACKER = new IngredientOrderTracker();
 
     private IngredientListElementFactory() {}
 

@@ -411,20 +411,36 @@ public final class Config {
         return values.skipShowingProgressBar;
     }
 
-    public static boolean hideBottomRightCornerConfigButton() {
-        return values.hideBottomRightCornerConfigButton;
+    public enum ButtonPosition {
+        LEFT,
+        RIGHT,
+        HIDDEN
+    }
+
+    public static ButtonPosition getConfigButtonPosition() {
+        return values.configButtonPosition;
     }
 
     public static boolean hideBottomLeftCornerBookmarkButton() {
         return values.hideBottomLeftCornerBookmarkButton;
     }
 
-    public static boolean enableHistoryPanel() {
-        return values.enableHistoryPanel;
+    public enum HistoryPosition {
+        LEFT,
+        RIGHT,
+        HIDDEN
     }
 
-    public static boolean isHistoryPanelOnLeft() {
-        return values.isHistoryPanelOnLeft;
+    public static HistoryPosition getHistoryPosition() {
+        return values.historyPosition;
+    }
+
+    public static int getHistoryRows() {
+        return values.historyRows;
+    }
+
+    public static boolean isHistoryMatchingNbt() {
+        return values.historyMatchNbt;
     }
 
     public static boolean isVersionChecker() {
@@ -677,21 +693,35 @@ public final class Config {
         values.skipShowingProgressBar = config
             .getBoolean(CATEGORY_MISC, "skipShowingProgressBar", defaultValues.skipShowingProgressBar);
 
-        values.hideBottomRightCornerConfigButton = config.getBoolean(
+        values.configButtonPosition = config.getEnum(
+            "configButtonPosition",
             CATEGORY_MISC,
-            "hideBottomRightCornerConfigButton",
-            defaultValues.hideBottomRightCornerConfigButton);
+            defaultValues.configButtonPosition,
+            ButtonPosition.values());
 
         values.hideBottomLeftCornerBookmarkButton = config.getBoolean(
             CATEGORY_MISC,
             "hideBottomLeftCornerBookmarkButton",
             defaultValues.hideBottomLeftCornerBookmarkButton);
 
-        values.enableHistoryPanel = config
-            .getBoolean(CATEGORY_MISC, "enableHistoryPanel", defaultValues.enableHistoryPanel);
+        values.historyPosition = config
+            .getEnum("historyPosition", CATEGORY_MISC, defaultValues.historyPosition, HistoryPosition.values());
 
-        values.isHistoryPanelOnLeft = config
-            .getBoolean(CATEGORY_MISC, "isHistoryPanelOnLeft", defaultValues.isHistoryPanelOnLeft);
+        values.historyRows = config.getInt(
+            "historyRows",
+            CATEGORY_MISC,
+            defaultValues.historyRows,
+            1,
+            6,
+            Translator.translateToLocal("config.jfmuy.misc.historyRows.comment"),
+            "config.jfmuy.misc.historyRows");
+
+        values.historyMatchNbt = config.getBoolean(
+            "historyMatchNbt",
+            CATEGORY_MISC,
+            defaultValues.historyMatchNbt,
+            Translator.translateToLocal("config.jfmuy.misc.historyMatchNbt.comment"),
+            "config.jfmuy.misc.historyMatchNbt");
 
         values.versionChecker = config.getBoolean(CATEGORY_MISC, "versionChecker", defaultValues.versionChecker);
 

@@ -10,6 +10,7 @@ import ruiseki.jfmuy.api.ISubtypeRegistry;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.color.ColorNamer;
 import ruiseki.jfmuy.gui.GuiEventHandler;
+import ruiseki.jfmuy.gui.overlay.IngredientGridHistoryProvider;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.ingredients.group.CollapsibleGroupRegistry;
@@ -44,6 +45,8 @@ public final class Internal {
     private static BookmarkList bookmarkList;
     @Nullable
     private static CollapsibleGroupRegistry collapsedGroupRegistry;
+    @Nullable
+    private static IngredientGridHistoryProvider ingredientHistory;
 
     private Internal() {
 
@@ -163,5 +166,14 @@ public final class Internal {
 
     public static void setCollapsedGroupRegistry(CollapsibleGroupRegistry registry) {
         Internal.collapsedGroupRegistry = registry;
+    }
+
+    public static IngredientGridHistoryProvider getIngredientHistory() {
+        Preconditions.checkState(ingredientHistory != null, "Ingredient History has not been created yet.");
+        return ingredientHistory;
+    }
+
+    public static void setIngredientHistory(IngredientGridHistoryProvider ingredientHistory) {
+        Internal.ingredientHistory = ingredientHistory;
     }
 }

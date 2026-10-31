@@ -8,7 +8,7 @@ public class Reference {
     public static final String MOD_ID = Tags.MOD_ID;
     public static final String MOD_NAME = Tags.MOD_NAME;
     public static final String MOD_VERSION = Tags.VERSION;
-    public static final String MOD_DEPENDENCIES = "required-after:okcore;";
+    public static final String MOD_DEPENDENCIES = "required-after:okcore@[26.10.31.1,);";
     public static final String VERSION_URL = "https://raw.githubusercontent.com/Shigure-Ruiseki/JFMUY/master/version/version.json";
 
     public static final String PROXY_COMMON = Tags.MOD_GROUP + ".proxy.CommonProxy";

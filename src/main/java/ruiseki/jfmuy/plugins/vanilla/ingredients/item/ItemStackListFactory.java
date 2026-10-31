@@ -9,7 +9,6 @@ import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
 
@@ -25,7 +24,6 @@ import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 import ruiseki.okcore.datastructure.NonNullList;
 import ruiseki.okcore.fluid.capability.CapabilityFluidHandler;
-import ruiseki.okcore.fluid.handler.IFluidTankProperties;
 import ruiseki.okcore.helper.CapabilityHelpers;
 
 public final class ItemStackListFactory {
@@ -176,48 +174,40 @@ public final class ItemStackListFactory {
 
         public static final FluidSubtypeInterpreter INSTANCE = new FluidSubtypeInterpreter();
 
-        private FluidSubtypeInterpreter() {
-
-        }
+        private FluidSubtypeInterpreter() {}
 
         @Override
         public String apply(ItemStack itemStack) {
             return CapabilityHelpers.getCapability(itemStack, CapabilityFluidHandler.FLUID_HANDLER_ITEM)
                 .map(handler -> {
-                    IFluidTankProperties[] tankPropertiesList = handler.getTankProperties();
                     List<String> contentsNames = new ArrayList<>();
-                    String contentsName = null;
-                    for (IFluidTankProperties tankProperties : tankPropertiesList) {
-                        contentsName = getContentsName(tankProperties);
-                        if (contentsName != null) {
-                            contentsNames.add(contentsName);
+
+                    for (int i = 0; i < handler.getTanks(); i++) {
+                        FluidStack contents = handler.getFluidInTank(i);
+
+                        if (contents != null && contents.getFluid() != null) {
+                            contentsNames.add(
+                                contents.getFluid()
+                                    .getName());
                         } else {
                             contentsNames.add("empty");
                         }
                     }
-                    if (!contentsNames.isEmpty()) {
-                        String info = Joiner.on(';')
-                            .join(contentsNames);
-                        if (itemStack.getHasSubtypes()) {
-                            info += ";m=" + itemStack.getItemDamage();
-                        }
-                        return info;
+
+                    if (contentsNames.isEmpty()) {
+                        return ISubtypeRegistry.ISubtypeInterpreter.NONE;
                     }
-                    return ISubtypeRegistry.ISubtypeInterpreter.NONE;
+
+                    String info = Joiner.on(';')
+                        .join(contentsNames);
+
+                    if (itemStack.getHasSubtypes()) {
+                        info += ";m=" + itemStack.getItemDamage();
+                    }
+
+                    return info;
                 })
                 .orElse(ISubtypeRegistry.ISubtypeInterpreter.NONE);
-        }
-
-        @Nullable
-        private static String getContentsName(IFluidTankProperties fluidTankProperties) {
-            FluidStack contents = fluidTankProperties.getContents();
-            if (contents != null) {
-                Fluid fluid = contents.getFluid();
-                if (fluid != null) {
-                    return fluid.getName();
-                }
-            }
-            return null;
         }
     }
 }

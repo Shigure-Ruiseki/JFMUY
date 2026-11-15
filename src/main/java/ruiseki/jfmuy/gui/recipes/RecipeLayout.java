@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
@@ -18,7 +19,9 @@ import ruiseki.jfmuy.api.gui.IDrawable;
 import ruiseki.jfmuy.api.gui.IGuiFluidStackGroup;
 import ruiseki.jfmuy.api.gui.IGuiIngredientGroup;
 import ruiseki.jfmuy.api.gui.IRecipeLayoutDrawable;
+import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredients;
+import ruiseki.jfmuy.api.ingredients.RecipeIdTooltipCallback;
 import ruiseki.jfmuy.api.ingredients.VanillaTypes;
 import ruiseki.jfmuy.api.recipe.IFocus;
 import ruiseki.jfmuy.api.recipe.IIngredientType;
@@ -67,6 +70,10 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
     @Nullable
     private ShapelessIcon shapelessIcon;
     private final DrawableNineSliceTexture recipeBorder;
+    @Nullable
+    private String recipeCategoryModId;
+    @Nullable
+    private ResourceLocation recipeId;
 
     private int posX;
     private int posY;
@@ -79,6 +86,7 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
             IIngredients ingredients = new Ingredients();
             recipeWrapper.getIngredients(ingredients);
             recipeCategory.setRecipe(recipeLayout, recipeWrapper, ingredients);
+            recipeLayout.addRecipeIdTooltip();
             return recipeLayout;
         } catch (RuntimeException | LinkageError e) {
             Log.get()
@@ -214,11 +222,7 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
             int height = categoryBackground.getHeight() + (2 * RECIPE_BORDER_PADDING);
             recipeBorder.draw(minecraft, -RECIPE_BORDER_PADDING, -RECIPE_BORDER_PADDING, width, height);
             background.draw(minecraft);
-            recipeCategory.drawExtras(minecraft);
-            recipeWrapper
-                .drawInfo(minecraft, background.getWidth(), background.getHeight(), recipeMouseX, recipeMouseY);
-            // drawExtras and drawInfo often render text which messes with the color, this clears it
-            GlStateManager.color(1, 1, 1, 1);
+            drawCategoryInfo(minecraft, background, recipeMouseX, recipeMouseY);
             if (shapelessIcon != null) {
                 shapelessIcon.draw(minecraft, background.getWidth());
             }
@@ -240,6 +244,23 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
         GlStateManager.disableBlend();
         GlStateManager.disableLighting();
         GlStateManager.disableAlpha();
+    }
+
+    // Modular Machinery CE redirects every translation and pop in drawRecipe
+    // Expecting one pop per translate, therefore this pair must stay out
+    // or that mixin crashes on an empty stack
+    private void drawCategoryInfo(Minecraft minecraft, IDrawable background, int recipeMouseX, int recipeMouseY) {
+        // Defensive push/pop to protect against recipe categories changing the last matrix
+        GlStateManager.pushMatrix();
+        {
+            recipeCategory.drawExtras(minecraft);
+            recipeWrapper
+                .drawInfo(minecraft, background.getWidth(), background.getHeight(), recipeMouseX, recipeMouseY);
+
+            // drawExtras and drawInfo often render text which messes with the color, this clears it
+            GlStateManager.color(1, 1, 1, 1);
+        }
+        GlStateManager.popMatrix();
     }
 
     @Override
@@ -480,5 +501,27 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
 
     public boolean mouseReleased(int mouseX, int mouseY, int state) {
         return recipeWrapper.handleMouseReleased(mouseX, mouseY, state);
+    }
+
+    @Override
+    public void setRecipeId(String recipeCategoryModId, @Nullable ResourceLocation recipeId) {
+        this.recipeCategoryModId = recipeCategoryModId;
+        this.recipeId = recipeId;
+    }
+
+    private void addRecipeIdTooltip() {
+        if (recipeId != null) {
+            String recipeModId = recipeId.getResourceDomain();
+            boolean recipeCategoryIdDifferent = !recipeModId.equals(recipeCategoryModId);
+
+            for (GuiIngredientGroup guiIngredientGroup : guiIngredientGroups.values()) {
+                IIngredientHelper ingredientHelper = guiIngredientGroup.getIngredientHelper();
+                RecipeIdTooltipCallback tooltipCallback = new RecipeIdTooltipCallback(
+                    recipeId,
+                    recipeCategoryIdDifferent,
+                    ingredientHelper);
+                guiIngredientGroup.addTooltipCallbackAfter(tooltipCallback);
+            }
+        }
     }
 }

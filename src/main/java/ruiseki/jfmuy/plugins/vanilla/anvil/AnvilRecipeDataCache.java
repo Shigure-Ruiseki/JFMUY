@@ -9,6 +9,7 @@ public class AnvilRecipeDataCache {
     private static final LoadingCache<AnvilRecipeWrapper, AnvilRecipeDisplayData> cachedDisplayData = CacheBuilder
         .newBuilder()
         .maximumSize(25)
+        .weakKeys()
         .build(new CacheLoader<AnvilRecipeWrapper, AnvilRecipeDisplayData>() {
 
             @Override

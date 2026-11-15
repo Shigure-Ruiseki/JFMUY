@@ -1,5 +1,7 @@
 package ruiseki.jfmuy.api.gui;
 
+import net.minecraft.util.ResourceLocation;
+
 import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.api.ingredients.IIngredients;
@@ -65,6 +67,18 @@ public interface IRecipeLayout {
      * Adds a shapeless icon to the top right of the recipe, that shows a tooltip saying "shapeless" when hovered over.
      */
     void setShapeless();
+
+    /**
+     * Adds recipe id and "recipe by" text to all output ingredients of the recipe, as seen in crafting table recipes.
+     * <p>
+     * Should be used by recipe categories whose recipes have an id.
+     *
+     * @param recipeCategoryModId mod id of the recipe category
+     * @param recipeId            registry id of the recipe
+     */
+    default void setRecipeId(String recipeCategoryModId, @Nullable ResourceLocation recipeId) {
+
+    }
 
     /**
      * Moves the recipe transfer button's position relative to the recipe layout.

@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.IBookmarkOverlay;
+import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.bookmarks.BookmarkList;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.GuiHelper;
@@ -209,7 +210,7 @@ public class BookmarkOverlay implements ILeftAreaContent, IBookmarkOverlay {
         if (isListDisplayed()) {
             IIngredientListElement elementUnderMouse = this.contents.getElementUnderMouse();
             if (elementUnderMouse != null) {
-                return elementUnderMouse.getIngredient();
+                return BookmarkItem.unwrap(elementUnderMouse.getIngredient());
             }
         }
         return null;

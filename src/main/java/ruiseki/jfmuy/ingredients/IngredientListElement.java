@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableSet;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
 import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.config.Config;
@@ -31,8 +32,8 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
 
     private final V ingredient;
     private final int orderIndex;
-    private final IIngredientHelper<V> ingredientHelper;
-    private final IIngredientRenderer<V> ingredientRenderer;
+    private IIngredientHelper<V> ingredientHelper;
+    private IIngredientRenderer<V> ingredientRenderer;
     private final Object modIds; // Can be String or String[]
     private final Object modNames; // Can be String or String[]
 
@@ -59,6 +60,11 @@ public class IngredientListElement<V> implements IIngredientListElement<V> {
             }
             return null;
         }
+    }
+
+    public void rebind(IIngredientRegistry ingredientRegistry) {
+        this.ingredientHelper = ingredientRegistry.getIngredientHelper(ingredient);
+        this.ingredientRenderer = ingredientRegistry.getIngredientRenderer(ingredient);
     }
 
     protected IngredientListElement(V ingredient, int orderIndex, IIngredientHelper<V> ingredientHelper,

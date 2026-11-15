@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.IIngredientFilter;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.api.ingredients.IIngredientRegistry;
 import ruiseki.jfmuy.api.search.ISearchIndexBuilderFactory;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.config.EditModeToggleEvent;
@@ -35,6 +36,7 @@ import ruiseki.jfmuy.gui.overlay.IIngredientGridSource;
 import ruiseki.jfmuy.ingredients.group.CollapsedGroupIngredient;
 import ruiseki.jfmuy.ingredients.group.CollapsibleGroup;
 import ruiseki.jfmuy.ingredients.group.CollapsibleGroupRegistry;
+import ruiseki.jfmuy.search.AsyncPrefixedSearchable;
 import ruiseki.jfmuy.search.ElementSearch;
 import ruiseki.jfmuy.search.ElementSearchLowMem;
 import ruiseki.jfmuy.search.IElementSearch;
@@ -98,6 +100,7 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         ISearchIndexBuilderFactory searchIndexBuilderFactory) {
         this.blacklist = blacklist;
         this.searchIndexBuilderFactory = searchIndexBuilderFactory;
+        firstBuild = true;
         this.elementSearch = Config.isUltraLowMemoryMode() ? new ElementSearchLowMem()
             : new ElementSearch(searchIndexBuilderFactory);
         this.elementSearch.addAll(ingredients);
@@ -137,6 +140,19 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
             }
             this.delegatedActions.add(runnable);
         }
+    }
+
+    /**
+     * Does what {@link #block()} does once the asynchronous build is done, without waiting for it.
+     */
+    public void blockWhenBuilt() {
+        AsyncPrefixedSearchable.afterBuild(
+            () -> Minecraft.getMinecraft()
+                .func_152344_a(() -> {
+                    if (Internal.getIngredientFilter() == this) {
+                        block();
+                    }
+                }));
     }
 
     public void block() {
@@ -623,10 +639,23 @@ public class IngredientFilter implements IIngredientFilter, IIngredientGridSourc
         collapsedStateListeners.add(listener);
     }
 
+    public void clearListeners() {
+        listeners.clear();
+        collapsedStateListeners.clear();
+    }
+
     public void notifyCollapsedStateChanged() {
         // Do NOT null filterCached here. Creates client lag spikes.
         for (Runnable listener : collapsedStateListeners) {
             listener.run();
+        }
+    }
+
+    public void rebindElements(IIngredientRegistry ingredientRegistry) {
+        for (IIngredientListElement<?> element : this.elementSearch.getAllIngredients()) {
+            if (element instanceof IngredientListElement) {
+                ((IngredientListElement<?>) element).rebind(ingredientRegistry);
+            }
         }
     }
 

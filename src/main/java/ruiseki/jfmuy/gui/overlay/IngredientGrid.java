@@ -242,7 +242,7 @@ public class IngredientGrid implements IShowsRecipeFocuses {
         return area.contains(mouseX, mouseY);
     }
 
-    public boolean handleMouseClicked(int mouseX, int mouseY) {
+    public boolean handleMouseClicked(int mouseX, int mouseY, int mouseButton) {
         if (isMouseOver(mouseX, mouseY)) {
             Minecraft minecraft = Minecraft.getMinecraft();
             if (shouldDeleteItemOnClick(minecraft, mouseX, mouseY)) {
@@ -258,14 +258,14 @@ public class IngredientGrid implements IShowsRecipeFocuses {
                     }
                 }
             }
-            return handleCollapsedGroupClicked(mouseX, mouseY);
+            return handleCollapsedGroupClicked(mouseX, mouseY, mouseButton);
         }
         return false;
     }
 
-    protected boolean handleCollapsedGroupClicked(int mouseX, int mouseY) {
+    protected boolean handleCollapsedGroupClicked(int mouseX, int mouseY, int mouseButton) {
         return Internal.getCollapsedGroupRegistry()
-            .handleMouseClicked(guiIngredientSlots, mouseX, mouseY);
+            .handleMouseClicked(guiIngredientSlots, mouseX, mouseY, mouseButton);
     }
 
     @Nullable

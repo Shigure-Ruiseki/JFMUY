@@ -1,6 +1,9 @@
 package ruiseki.jfmuy.api;
 
 import java.util.List;
+import java.util.Optional;
+
+import net.minecraft.client.gui.GuiScreen;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -68,5 +71,17 @@ public interface IRecipesGui {
         INPUT,
         OUTPUT,
         BOTH;
+    }
+
+    /**
+     * Get the screen that this {@link IRecipesGui} was opened from.
+     * When this {@link IRecipesGui} is closed, it will re-open the parent screen.
+     *
+     * If this {@link IRecipesGui} is not open, this will return {@link Optional#empty()}.
+     *
+     * @since HEI 4.37.0
+     */
+    default Optional<GuiScreen> maybeGetParentScreen() {
+        return Optional.empty();
     }
 }

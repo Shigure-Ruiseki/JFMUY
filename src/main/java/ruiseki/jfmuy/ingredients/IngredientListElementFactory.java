@@ -12,6 +12,7 @@ import ruiseki.jfmuy.api.recipe.IIngredientType;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.ingredients.IIngredientListElement;
 import ruiseki.jfmuy.startup.IModIdHelper;
+import ruiseki.jfmuy.util.StringUtil;
 import ruiseki.okcore.datastructure.NonNullList;
 
 public final class IngredientListElementFactory {
@@ -22,6 +23,8 @@ public final class IngredientListElementFactory {
 
     public static NonNullList<IIngredientListElement> createBaseList(IIngredientRegistry ingredientRegistry,
         IModIdHelper modIdHelper) {
+        ORDER_TRACKER.clear();
+        StringUtil.clearInterner();
         NonNullList<IIngredientListElement> ingredientListElements = NonNullList.create();
 
         for (IIngredientType<?> ingredientType : ingredientRegistry.getRegisteredIngredientTypes()) {

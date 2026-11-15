@@ -30,7 +30,9 @@ import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 
-public class GuiIngredientGroup<T> implements IGuiIngredientGroup<T> {
+public class
+
+GuiIngredientGroup<T> implements IGuiIngredientGroup<T> {
 
     private final Int2ObjectMap<GuiIngredient<T>> guiIngredients = new Int2ObjectArrayMap<>();
     private final IntSet inputSlots = new IntArraySet();
@@ -187,5 +189,20 @@ public class GuiIngredientGroup<T> implements IGuiIngredientGroup<T> {
         } else {
             this.focus = Focus.check(focus);
         }
+    }
+
+    public IIngredientHelper<T> getIngredientHelper() {
+        return ingredientHelper;
+    }
+
+    /**
+     * Adds the tooltip callback after any existing tooltip callback
+     */
+    public void addTooltipCallbackAfter(ITooltipCallback<T> tooltipCallback) {
+        ITooltipCallback<T> before = this.tooltipCallback;
+        this.tooltipCallback = before == null ? tooltipCallback : (slotIndex, input, ingredient, tooltip) -> {
+            before.onTooltip(slotIndex, input, ingredient, tooltip);
+            tooltipCallback.onTooltip(slotIndex, input, ingredient, tooltip);
+        };
     }
 }

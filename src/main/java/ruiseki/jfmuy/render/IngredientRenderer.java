@@ -6,11 +6,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.enchantment.EnchantmentData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IIcon;
+import net.minecraftforge.fluids.FluidStack;
 
 import com.google.common.base.Joiner;
 
@@ -18,6 +23,7 @@ import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
 import ruiseki.jfmuy.api.ingredients.IIngredientRenderer;
+import ruiseki.jfmuy.bookmarks.BookmarkItem;
 import ruiseki.jfmuy.color.ColorNamer;
 import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.TooltipRenderer;
@@ -34,13 +40,51 @@ public class IngredientRenderer<T> {
     private static final int BLACKLIST_COLOR = Color.red.getRGB();
     private static final Rectangle DEFAULT_AREA = new Rectangle(0, 0, 16, 16);
 
+    static boolean isAnimated(Object ingredient) {
+        ingredient = BookmarkItem.unwrap(ingredient);
+
+        if (ingredient instanceof EnchantmentData) {
+            return true;
+        }
+
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (ingredient instanceof ItemStack itemStack) {
+            if (itemStack.hasEffect()) return true;
+            IIcon icon = itemStack.getIconIndex();
+            if (icon == null) return false;
+            return minecraft.getTextureMapBlocks()
+                .getAtlasSprite(icon.getIconName())
+                .getFrameCount() > 1;
+        }
+
+        // Fluids tend to be animated
+        if (ingredient instanceof FluidStack fluidStack) {
+            IIcon still = fluidStack.getFluid()
+                .getStillIcon();
+            return still != null && minecraft.getTextureMapBlocks()
+                .getAtlasSprite(still.getIconName())
+                .getFrameCount() > 1;
+        }
+
+        return false;
+    }
+
     protected final IIngredientListElement<T> element;
     protected Rectangle area = DEFAULT_AREA;
     protected int padding;
     private float renderScale = 1.0F;
+    @Nullable
+    private Boolean animated;
 
     public IngredientRenderer(IIngredientListElement<T> element) {
         this.element = element;
+    }
+
+    public boolean isAnimated() {
+        if (animated == null) {
+            animated = isAnimated(element.getIngredient());
+        }
+        return animated;
     }
 
     public void setArea(Rectangle area) {

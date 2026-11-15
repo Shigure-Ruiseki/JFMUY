@@ -11,14 +11,13 @@ import ruiseki.jfmuy.config.Config;
 import ruiseki.jfmuy.gui.overlay.GridAlignment;
 import ruiseki.jfmuy.gui.overlay.IngredientGrid;
 import ruiseki.jfmuy.gui.overlay.bookmarks.group.BookmarkGroupOrganizer;
+import ruiseki.jfmuy.ingredients.group.CollapsibleGroupRegistry;
 import ruiseki.jfmuy.render.BookmarkListBatchRenderer;
 import ruiseki.jfmuy.render.CollapsedGroupRenderer;
 import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 import ruiseki.jfmuy.render.IngredientListSlot;
 import ruiseki.jfmuy.render.IngredientRenderer;
-import ruiseki.jfmuy.util.CollapsedClickAction;
 import ruiseki.jfmuy.util.MathUtil;
-import ruiseki.okcore.helper.KeyBoardHelpers;
 
 public class BookmarkGrid extends IngredientGrid {
 
@@ -114,12 +113,9 @@ public class BookmarkGrid extends IngredientGrid {
     }
 
     @Override
-    protected boolean handleCollapsedGroupClicked(int mouseX, int mouseY) {
+    protected boolean handleCollapsedGroupClicked(int mouseX, int mouseY, int mouseButton) {
         BookmarkListBatchRenderer renderer = (BookmarkListBatchRenderer) guiIngredientSlots;
-        boolean firstItemMode = Config.getCollapsedClickAction() == CollapsedClickAction.FIRST_ITEM;
-        boolean altDown = KeyBoardHelpers.isAltKeyDown();
-        boolean expandKeyDown = firstItemMode == altDown;
-        if (expandKeyDown) {
+        if (CollapsibleGroupRegistry.isExpandClick(mouseButton)) {
             CollapsedGroupRenderer collapsedHovered = renderer.getHoveredCollapsed(mouseX, mouseY);
             if (collapsedHovered != null) {
                 BookmarkItem item = renderer.getBookmarkItemForRenderer(collapsedHovered);
@@ -129,7 +125,7 @@ public class BookmarkGrid extends IngredientGrid {
                 }
             }
         }
-        if (altDown) {
+        if (CollapsibleGroupRegistry.isCollapseClick(mouseButton)) {
             IngredientRenderer<?> hovered = renderer.getHovered(mouseX, mouseY);
             if (hovered != null) {
                 BookmarkItem item = renderer.getBookmarkItemForExpandedElement(hovered.getElement());

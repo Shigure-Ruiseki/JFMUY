@@ -19,18 +19,18 @@ public class GuiProperties implements IGuiProperties {
     private final int screenHeight;
 
     @Nullable
-    public static GuiProperties create(GuiContainer guiContainer) {
-        if (guiContainer.width == 0 || guiContainer.height == 0) {
+    public static GuiProperties create(GuiContainer recipesGui) {
+        if (recipesGui.width == 0 || recipesGui.height == 0) {
             return null;
         }
         return create(
-            guiContainer.getClass(),
-            guiContainer.guiLeft,
-            guiContainer.guiTop,
-            guiContainer.xSize,
-            guiContainer.ySize,
-            guiContainer.width,
-            guiContainer.height);
+            recipesGui.getClass(),
+            recipesGui.guiLeft,
+            recipesGui.guiTop,
+            recipesGui.xSize,
+            recipesGui.ySize,
+            recipesGui.width,
+            recipesGui.height);
     }
 
     @Nullable

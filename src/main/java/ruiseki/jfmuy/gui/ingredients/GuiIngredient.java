@@ -50,6 +50,12 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
     private final CycleTimer cycleTimer;
     public final List<T> displayIngredients = new ArrayList<>(); // ingredients, taking focus into account
     private final List<T> allIngredients = new ArrayList<>(); // all ingredients, ignoring focus
+    /**
+     * For {@link #getDisplayedIngredient()}. Not stored in {@link #displayIngredients} because it's
+     * reserved for tooltip rendering.
+     */
+    @Nullable
+    private T focusedMatch;
     public final IIngredientRenderer<T> ingredientRenderer;
     public final IIngredientHelper<T> ingredientHelper;
     @Nullable
@@ -99,6 +105,9 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
     @Nullable
     @Override
     public T getDisplayedIngredient() {
+        if (focusedMatch != null) {
+            return focusedMatch;
+        }
         return cycleTimer.getCycledItem(displayIngredients);
     }
 
@@ -117,12 +126,11 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
             displayIngredients = this.ingredientHelper.expandSubtypes(ingredients);
         }
 
-        T match = getMatch(displayIngredients, focus);
-        if (match != null) {
-            this.displayIngredients.add(match);
+        this.focusedMatch = getMatch(displayIngredients, focus);
+        if (!Config.isRecipeIngredientPreviewEnabled() && focusedMatch != null) {
+            this.displayIngredients.add(focusedMatch);
         } else {
-            displayIngredients = filterOutHidden(displayIngredients);
-            this.displayIngredients.addAll(displayIngredients);
+            this.displayIngredients.addAll(filterOutHidden(displayIngredients));
         }
 
         if (ingredients != null) {
@@ -143,8 +151,6 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
     public IngredientListPreview getIngredientPreview() {
         if (ingredientPreviewInvalidated) {
             ingredientPreviewInvalidated = false;
-            // A focused slot collapses displayIngredients down to the single match, which leaves
-            // fewer than two entries and so yields no preview.
             ingredientPreview = Config.isRecipeIngredientPreviewEnabled() ? IngredientListPreview.create(this) : null;
         }
         return ingredientPreview;
@@ -200,6 +206,21 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
                 throw ErrorUtil.createRenderIngredientException(e, value);
             }
             throw e;
+        }
+
+        if (displayIngredients.size() > 1 && Config.isRecipeIngredientPreviewEnabled()) {
+            GlStateManager.enableAlpha();
+            GlStateManager.disableDepth();
+            Internal.getHelpers()
+                .getGuiHelper()
+                .getRecipeTransfer()
+                .draw(
+                    minecraft,
+                    xOffset + rect.x + rect.width - 8, // right
+                    yOffset + rect.y + yPadding // top
+                );
+            GlStateManager.enableDepth();
+            GlStateManager.disableAlpha();
         }
     }
 

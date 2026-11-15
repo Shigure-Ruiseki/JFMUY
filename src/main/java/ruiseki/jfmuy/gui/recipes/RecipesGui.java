@@ -5,6 +5,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -548,11 +549,11 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
         if (this instanceof IGuiInputHandle handle) {
             if (hasKeyboardFocus() && searchField.textboxKeyTyped(typedChar, keyCode)) {
                 setSearchFilter(searchField.getText());
-                handle.setKeyHandled(true);
+                handle.okcore$setKeyHandled(true);
                 return;
             }
             if (handleKeybinds(keyCode)) {
-                handle.setKeyHandled(true);
+                handle.okcore$setKeyHandled(true);
             }
         }
     }
@@ -793,6 +794,11 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
                 }
             }
         }
+    }
+
+    @Override
+    public Optional<GuiScreen> maybeGetParentScreen() {
+        return Optional.ofNullable(parentScreen);
     }
 
     @Nullable

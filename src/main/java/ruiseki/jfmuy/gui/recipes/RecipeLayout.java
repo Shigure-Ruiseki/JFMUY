@@ -222,11 +222,7 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
             int height = categoryBackground.getHeight() + (2 * RECIPE_BORDER_PADDING);
             recipeBorder.draw(minecraft, -RECIPE_BORDER_PADDING, -RECIPE_BORDER_PADDING, width, height);
             background.draw(minecraft);
-            recipeCategory.drawExtras(minecraft);
-            recipeWrapper
-                .drawInfo(minecraft, background.getWidth(), background.getHeight(), recipeMouseX, recipeMouseY);
-            // drawExtras and drawInfo often render text which messes with the color, this clears it
-            GlStateManager.color(1, 1, 1, 1);
+            drawCategoryInfo(minecraft, background, recipeMouseX, recipeMouseY);
             if (shapelessIcon != null) {
                 shapelessIcon.draw(minecraft, background.getWidth());
             }
@@ -248,6 +244,23 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
         GlStateManager.disableBlend();
         GlStateManager.disableLighting();
         GlStateManager.disableAlpha();
+    }
+
+    // Modular Machinery CE redirects every translation and pop in drawRecipe
+    // Expecting one pop per translate, therefore this pair must stay out
+    // or that mixin crashes on an empty stack
+    private void drawCategoryInfo(Minecraft minecraft, IDrawable background, int recipeMouseX, int recipeMouseY) {
+        // Defensive push/pop to protect against recipe categories changing the last matrix
+        GlStateManager.pushMatrix();
+        {
+            recipeCategory.drawExtras(minecraft);
+            recipeWrapper
+                .drawInfo(minecraft, background.getWidth(), background.getHeight(), recipeMouseX, recipeMouseY);
+
+            // drawExtras and drawInfo often render text which messes with the color, this clears it
+            GlStateManager.color(1, 1, 1, 1);
+        }
+        GlStateManager.popMatrix();
     }
 
     @Override

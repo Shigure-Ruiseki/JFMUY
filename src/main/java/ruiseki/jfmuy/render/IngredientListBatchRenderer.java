@@ -5,6 +5,7 @@ import static ruiseki.jfmuy.gui.overlay.IngredientGrid.INGREDIENT_WIDTH;
 
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +22,6 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
@@ -31,7 +31,9 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import ruiseki.jfmuy.config.Config;
@@ -55,6 +57,7 @@ public class IngredientListBatchRenderer {
     // Per-group list of individual slot rectangles (used for per-slot fill + edge-detection border).
     protected final Map<CollapsedGroupIngredient, List<Rectangle>> expandedGroupSlots = new HashMap<>();
 
+    private static final IntBuffer VIEWPORT = BufferUtils.createIntBuffer(16);
     private static final Set<IngredientListBatchRenderer> BUFFERED_INSTANCES = Collections
         .newSetFromMap(new WeakHashMap<>());
 
@@ -62,6 +65,8 @@ public class IngredientListBatchRenderer {
     private Framebuffer framebuffer = null;
     private boolean allowBuffering;
     private boolean refreshBuffer = true;
+    private int bufferScale;
+    private Rectangle bufferArea = new Rectangle();
     protected int size = 0;
     protected int maxSize = 0;
     private int width;
@@ -105,28 +110,6 @@ public class IngredientListBatchRenderer {
 
     public int size() {
         return size;
-    }
-
-    public int getHeight() {
-        if (height > 0) {
-            return height;
-        }
-        int rows = slots.size();
-        return rows * INGREDIENT_HEIGHT;
-    }
-
-    public int getWidth() {
-        if (width > 0) {
-            return width;
-        }
-        if (maxWidth > 0) {
-            return maxWidth;
-        }
-        int maxW = 0;
-        for (List<IngredientListSlot> row : slots) {
-            maxW = Math.max(maxW, row.size() * INGREDIENT_WIDTH);
-        }
-        return maxW;
     }
 
     public void add(List<IngredientListSlot> ingredientListSlot) {
@@ -543,70 +526,107 @@ public class IngredientListBatchRenderer {
     }
 
     public void render(Minecraft minecraft) {
-        if (allowBuffering && !Config.isEditModeEnabled()
-            && Config.bufferIngredientRenders()
-            && OpenGlHelper.framebufferSupported) {
-            if (framebuffer == null) {
-                framebuffer = new Framebuffer(minecraft.displayWidth, minecraft.displayHeight, true);
-                framebuffer.framebufferColor[0] = 0.0F;
-                framebuffer.framebufferColor[1] = 0.0F;
-                framebuffer.framebufferColor[2] = 0.0F;
+        if (canBuffer()) {
+            int scale = new ScaledResolution(minecraft, minecraft.displayWidth, minecraft.displayHeight)
+                .getScaleFactor();
+            if (refreshBuffer || scale != bufferScale) {
+                refreshBuffer(minecraft, scale);
             }
-            if (refreshBuffer) {
-                framebuffer.createBindFramebuffer(minecraft.displayWidth, minecraft.displayHeight);
-                framebuffer.framebufferClear();
-                framebuffer.bindFramebuffer(false);
-                GlStateManager.disableBlend();
-                GlStateManager.tryBlendFuncSeparate(
-                    GL11.GL_SRC_ALPHA,
-                    GL11.GL_ONE_MINUS_SRC_ALPHA,
-                    GL11.GL_ONE,
-                    GL11.GL_ONE_MINUS_SRC_ALPHA);
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            } else {
-                GlStateManager.enableBlend();
-                GlStateManager.tryBlendFuncSeparate(
-                    GL11.GL_ONE,
-                    GL11.GL_ONE_MINUS_SRC_ALPHA,
-                    GL11.GL_ONE,
-                    GL11.GL_ONE_MINUS_SRC_ALPHA);
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-                framebuffer.bindFramebufferTexture();
-                GlStateManager.enableTexture2D();
-                ScaledResolution res = new ScaledResolution(minecraft, minecraft.displayWidth, minecraft.displayHeight);
-                double width = res.getScaledWidth();
-                double height = res.getScaledHeight();
-                Tessellator tessellator = Tessellator.instance;
-                tessellator.startDrawingQuads();
-                tessellator.addVertexWithUV(0, height, 0.0, 0, 0);
-                tessellator.addVertexWithUV(width, height, 0.0, 1, 0);
-                tessellator.addVertexWithUV(width, 0, 0.0, 1, 1);
-                tessellator.addVertexWithUV(0, 0, 0.0, 0, 1);
-                tessellator.draw();
-                GlStateManager
-                    .tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+            if (!bufferArea.isEmpty()) {
+                drawBuffer();
+                renderImpl(minecraft, Pass.ANIMATED);
                 return;
             }
         }
-
-        renderImpl(minecraft);
-
-        if (allowBuffering && refreshBuffer
-            && !Config.isEditModeEnabled()
-            && Config.bufferIngredientRenders()
-            && OpenGlHelper.isFramebufferEnabled()) {
-            refreshBuffer = false;
-            minecraft.getFramebuffer()
-                .bindFramebuffer(false);
-            // ensure that we actually render the new items
-            render(minecraft);
-        }
+        renderImpl(minecraft, Pass.ALL);
     }
 
-    /**
-     * renders all ItemStacks
-     */
-    private void renderImpl(Minecraft minecraft) {
+    protected boolean canBuffer() {
+        return allowBuffering && !Config.isEditModeEnabled()
+            && Config.bufferIngredientRenders()
+            && OpenGlHelper.isFramebufferEnabled();
+    }
+
+    private void refreshBuffer(Minecraft minecraft, int scale) {
+        refreshBuffer = false;
+        bufferScale = scale;
+        bufferArea = new Rectangle(0, 0, -1, -1);
+        for (List<IngredientListSlot> row : slots) {
+            for (IngredientListSlot slot : row) {
+                bufferArea.add(slot.getArea());
+            }
+        }
+        if (bufferArea.isEmpty()) {
+            return;
+        }
+
+        int previousFramebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
+
+        int width = bufferArea.width * scale;
+        int height = bufferArea.height * scale;
+        if (framebuffer == null) {
+            framebuffer = new Framebuffer(width, height, true);
+        } else if (framebuffer.framebufferWidth != width || framebuffer.framebufferHeight != height) {
+            framebuffer.createBindFramebuffer(width, height);
+        }
+        framebuffer.bindFramebuffer(true);
+        GlStateManager.clearColor(0.0F, 0.0F, 0.0F, 0.0F);
+        GlStateManager.clearDepth(1.0);
+        GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+
+        GlStateManager.matrixMode(GL11.GL_PROJECTION);
+        GlStateManager.pushMatrix();
+        GlStateManager.loadIdentity();
+        GlStateManager.ortho(bufferArea.x, bufferArea.getMaxX(), bufferArea.getMaxY(), bufferArea.y, 1000.0, 3000.0);
+        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+
+        renderImpl(minecraft, Pass.STATIC);
+
+        GlStateManager.matrixMode(GL11.GL_PROJECTION);
+        GlStateManager.popMatrix();
+        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+
+        OpenGlHelper.func_153157_c(GL30.GL_FRAMEBUFFER, previousFramebuffer);
+        GlStateManager.viewport(VIEWPORT.get(0), VIEWPORT.get(1), VIEWPORT.get(2), VIEWPORT.get(3));
+    }
+
+    private void drawBuffer() {
+        GlStateManager.disableDepth();
+        GlStateManager.disableAlpha();
+        GlStateManager.disableLighting();
+        GlStateManager.enableTexture2D();
+        GlStateManager.enableBlend();
+
+        GlStateManager
+            .tryBlendFuncSeparate(GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        framebuffer.bindFramebufferTexture();
+
+        double minX = bufferArea.x;
+        double minY = bufferArea.y;
+        double maxX = bufferArea.getMaxX();
+        double maxY = bufferArea.getMaxY();
+
+        GL11.glBegin(GL11.GL_QUADS);
+
+        GL11.glTexCoord2d(0, 0);
+        GL11.glVertex3d(minX, maxY, 0.0);
+
+        GL11.glTexCoord2d(1, 0);
+        GL11.glVertex3d(maxX, maxY, 0.0);
+
+        GL11.glTexCoord2d(1, 1);
+        GL11.glVertex3d(maxX, minY, 0.0);
+
+        GL11.glTexCoord2d(0, 1);
+        GL11.glVertex3d(minX, minY, 0.0);
+
+        GL11.glEnd();
+    }
+
+    private void renderImpl(Minecraft minecraft, Pass pass) {
         RenderHelper.enableGUIStandardItemLighting();
 
         RenderItem renderItem = RenderItem.getInstance();
@@ -614,55 +634,88 @@ public class IngredientListBatchRenderer {
         renderItem.zLevel += 50.0F;
 
         textureManager.bindTexture(TextureMap.locationBlocksTexture);
-
         GlStateManager.enableRescaleNormal();
         GlStateManager.enableAlpha();
-        GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
+        GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
         GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+        GlStateManager.tryBlendFuncSeparate(
+            GL11.GL_SRC_ALPHA,
+            GL11.GL_ONE_MINUS_SRC_ALPHA,
+            GL11.GL_ONE,
+            GL11.GL_ONE_MINUS_SRC_ALPHA);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
+        GlStateManager.enableDepth();
         GlStateManager.enableLighting();
         for (ItemStackFastRenderer slot : renderItems3d) {
-            slot.renderItemAndEffectIntoGUI();
+            if (pass.includes(slot.isAnimated())) {
+                slot.renderItemAndEffectIntoGUI();
+            }
         }
-
         GlStateManager.disableLighting();
         for (ItemStackFastRenderer slot : renderItems2d) {
-            slot.renderItemAndEffectIntoGUI();
+            if (pass.includes(slot.isAnimated())) {
+                slot.renderItemAndEffectIntoGUI();
+            }
         }
+        GlStateManager.disableDepth();
 
         GlStateManager.disableAlpha();
         GlStateManager.disableBlend();
         GlStateManager.disableRescaleNormal();
-        GlStateManager.disableLighting();
 
         textureManager.bindTexture(TextureMap.locationBlocksTexture);
 
         renderItem.zLevel -= 50.0F;
 
         for (ItemStackFastRenderer slot : renderItems3d) {
-            slot.renderOverlay();
+            if (pass.includes(slot.isAnimated())) {
+                slot.renderOverlay();
+            }
         }
-
         for (ItemStackFastRenderer slot : renderItems2d) {
-            slot.renderOverlay();
+            if (pass.includes(slot.isAnimated())) {
+                slot.renderOverlay();
+            }
         }
 
         GlStateManager.disableLighting();
 
         for (IngredientRenderer slot : renderOther) {
-            slot.renderSlow();
+            if (pass.includes(slot.isAnimated())) {
+                slot.renderSlow();
+            }
         }
 
-        // collapsed group rendering — lighting enabled once for all groups; each renderer
-        // assumes it is on and does not toggle it per item.
+        // Each collapsed renderer assumes lighting is already on
         RenderHelper.enableGUIStandardItemLighting();
         GlStateManager.enableDepth();
         for (CollapsedGroupRenderer collapsed : renderCollapsed) {
-            collapsed.render(minecraft);
+            if (pass.includes(collapsed.isAnimated())) {
+                collapsed.render(minecraft);
+            }
         }
 
         RenderHelper.disableStandardItemLighting();
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    private enum Pass {
+
+        ALL,
+        STATIC,
+        ANIMATED;
+
+        boolean includes(boolean animated) {
+            return this == ALL || animated == (this == ANIMATED);
+        }
     }
 }

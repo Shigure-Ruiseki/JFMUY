@@ -120,6 +120,12 @@ public class GuiScreenHelper {
     }
 
     @Nullable
+    public <T extends GuiContainer> IClickedIngredient<?> getPluginsIngredientUnderMouse(T guiContainer, int mouseX,
+        int mouseY) {
+        return getPluginsIngredientUnderMouse((GuiScreen) guiContainer, mouseX, mouseY);
+    }
+
+    @Nullable
     public <T extends GuiScreen> IClickedIngredient<?> getPluginsIngredientUnderMouse(T guiScreen, int mouseX,
         int mouseY) {
         GuiContainer guiContainer = guiScreen instanceof GuiContainer ? (GuiContainer) guiScreen : null;

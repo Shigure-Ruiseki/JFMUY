@@ -69,7 +69,7 @@ public class JemiScreenSwitch {
             return false;
         }
         rg.close();
-        Optional.ofNullable(rg.getParentScreen())
+        rg.maybeGetParentScreen()
             .filter(GuiContainer.class::isInstance)
             .map(GuiContainer.class::cast)
             .ifPresent(Minecraft.getMinecraft()::displayGuiScreen);

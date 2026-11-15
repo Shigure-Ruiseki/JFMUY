@@ -1,5 +1,6 @@
 package ruiseki.jfmuy.startup;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,9 @@ public class JFMUYStarter {
     }
 
     public void load(List<IModPlugin> plugins, boolean recipesOnly) {
+        // A plugin that fails is dropped for this load only, the next reload tries it again.
+        plugins = new ArrayList<>(plugins);
+
         LoggedTimer totalTime = new LoggedTimer();
         totalTime.start("Starting JFMUY");
 

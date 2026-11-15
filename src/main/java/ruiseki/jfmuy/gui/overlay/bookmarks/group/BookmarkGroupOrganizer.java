@@ -192,7 +192,10 @@ public class BookmarkGroupOrganizer {
                 tooltips.add(Translator.translateToLocal("jfmuy.tooltip.item_group"));
             }
             if (isRemovalPending(group.group)) {
-                tooltips.add(Translator.translateToLocalFormatted("jfmuy.tooltip.organizer.confirm_delete", KeyBindings.bookmark.getDisplayName()));
+                tooltips.add(
+                    Translator.translateToLocalFormatted(
+                        "jfmuy.tooltip.organizer.confirm_delete",
+                        KeyBindings.bookmark.getDisplayName()));
             }
 
             // Detect if the user is holding either ALT key.
@@ -353,7 +356,8 @@ public class BookmarkGroupOrganizer {
     }
 
     private boolean isRemovalPending(BookmarkGroup group) {
-        return group.id == pendingRemovalGroupId && Minecraft.getSystemTime() - pendingRemovalTime <= REMOVAL_CONFIRM_MILLIS;
+        return group.id == pendingRemovalGroupId
+            && Minecraft.getSystemTime() - pendingRemovalTime <= REMOVAL_CONFIRM_MILLIS;
     }
 
     public boolean handleMouseClicked(int mouseX, int mouseY, int mouseButton) {

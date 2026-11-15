@@ -24,7 +24,8 @@ public class Reference {
 
     public static final String UNIVERSAL_RECIPE_TRANSFER_UID = "universal recipe transfer handler";
 
-    public static final String MINECRAFT_NAME = "minecraft";
+    public static final String MINECRAFT_ID = "minecraft";
+    public static final String MINECRAFT_NAME = "Minecraft";
 
     public static final boolean DEOBFUSCATED = (boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
 }

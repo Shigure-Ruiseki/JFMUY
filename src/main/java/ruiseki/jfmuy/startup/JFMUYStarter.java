@@ -5,8 +5,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.util.ChatComponentTranslation;
+
 import cpw.mods.fml.common.ProgressManager;
 import ruiseki.jfmuy.Internal;
+import ruiseki.jfmuy.Reference;
 import ruiseki.jfmuy.api.ICollapsibleGroupRegistry;
 import ruiseki.jfmuy.api.IJFMUYRuntime;
 import ruiseki.jfmuy.api.IModPlugin;
@@ -59,7 +64,18 @@ public class JFMUYStarter {
         plugins = new ArrayList<>(plugins);
 
         LoggedTimer totalTime = new LoggedTimer();
-        totalTime.start("Starting JFMUY");
+        totalTime.start("Starting " + Reference.MOD_NAME);
+
+        if (started) {
+            Log.get()
+                .warn(
+                    "Reloading {}. Third-party plugins may leak memory when they are loaded again.",
+                    Reference.MOD_NAME);
+            EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+            if (player != null) {
+                player.addChatComponentMessage(new ChatComponentTranslation("jfmuy.chat.warning.reload"));
+            }
+        }
 
         IModIdHelper modIdHelper = ForgeModIdHelper.getInstance();
         ErrorUtil.setModIdHelper(modIdHelper);
@@ -101,6 +117,9 @@ public class JFMUYStarter {
         ISearchIndexBuilderFactory searchIndexBuilderFactory;
         if (recipesOnly && Internal.hasIngredientFilter()) {
             ingredientFilter = Internal.getIngredientFilter();
+            // The overlay built below registers itself again.
+            ingredientFilter.clearListeners();
+            ingredientFilter.rebindElements(ingredientRegistry);
             ingredientFilter.replaceBlacklist(blacklist);
             searchIndexBuilderFactory = ingredientFilter.getSearchIndexBuilderFactory();
         } else {
@@ -117,6 +136,10 @@ public class JFMUYStarter {
                 IngredientListElementFactory.createBaseList(ingredientRegistry, modIdHelper),
                 searchIndexBuilderFactory);
             Internal.setIngredientFilter(ingredientFilter);
+            if (started) {
+                // No server join follows a reload, so the search service has to end here.
+                ingredientFilter.blockWhenBuilt();
+            }
             timer.stop();
         }
 
@@ -124,6 +147,8 @@ public class JFMUYStarter {
         Internal.setCollapsedGroupRegistry(collapsibleGroupRegistry);
         registerCollapsibleGroups(plugins, collapsibleGroupRegistry);
         collapsibleGroupRegistry.loadCustomGroups();
+        // A reused filter still caches the previous blacklist and groups.
+        ingredientFilter.invalidateCache();
 
         BookmarkList bookmarkList = new BookmarkList(ingredientRegistry);
         Internal.setBookmarkList(bookmarkList);

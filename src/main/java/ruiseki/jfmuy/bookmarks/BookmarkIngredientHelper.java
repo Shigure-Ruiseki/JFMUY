@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import ruiseki.jfmuy.Internal;
 import ruiseki.jfmuy.api.ingredients.IIngredientHelper;
+import ruiseki.jfmuy.api.recipe.IFocus;
 
 @SuppressWarnings("rawtypes")
 public class BookmarkIngredientHelper implements IIngredientHelper<BookmarkItem> {
@@ -17,6 +18,14 @@ public class BookmarkIngredientHelper implements IIngredientHelper<BookmarkItem>
     @Override
     public BookmarkItem getMatch(Iterable<BookmarkItem> ingredients, BookmarkItem ingredientToMatch) {
         return null;
+    }
+
+    @Override
+    public IFocus<?> translateFocus(IFocus<BookmarkItem> focus, IFocusFactory focusFactory) {
+        Object ingredient = focus.getValue()
+            .getIngredient();
+        return getIngredientHelper(ingredient)
+            .translateFocus(focusFactory.createFocus(focus.getMode(), ingredient), focusFactory);
     }
 
     @Override

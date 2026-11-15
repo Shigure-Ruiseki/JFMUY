@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nonnegative;
@@ -43,11 +45,17 @@ public class RecipeGuiLogic implements IRecipeGuiLogic {
     private final IngredientRegistry ingredientRegistry;
     private final Stack<IngredientLookupState> history = new Stack<>();
     private final AtomicInteger searchCount = new AtomicInteger(0);
-    private final ExecutorService searchExecutor = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, Reference.MOD_ID + "-RecipeSearch");
-        t.setDaemon(true);
-        return t;
-    });
+    private final ExecutorService searchExecutor = new ThreadPoolExecutor(
+        0,
+        1,
+        30L,
+        TimeUnit.SECONDS,
+        new LinkedBlockingQueue<>(),
+        r -> {
+            Thread t = new Thread(r, Reference.MOD_ID + "-RecipeSearch");
+            t.setDaemon(true);
+            return t;
+        });
 
     private boolean initialState = true;
     private IngredientLookupState state;

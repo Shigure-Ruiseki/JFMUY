@@ -9,6 +9,7 @@ import ruiseki.jfmuy.gui.overlay.IngredientListOverlay;
 import ruiseki.jfmuy.gui.recipes.RecipesGui;
 import ruiseki.jfmuy.ingredients.IngredientFilter;
 import ruiseki.jfmuy.recipes.RecipeRegistry;
+import ruiseki.jfmuy.render.IngredientListBatchRenderer;
 
 public class JFMUYRuntime implements IJFMUYRuntime {
 
@@ -34,6 +35,7 @@ public class JFMUYRuntime implements IJFMUYRuntime {
 
     public void close() {
         this.recipesGui.close();
+        IngredientListBatchRenderer.deleteFramebuffers();
     }
 
     @Override

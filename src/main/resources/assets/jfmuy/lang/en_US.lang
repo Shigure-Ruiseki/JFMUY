@@ -40,6 +40,7 @@ jfmuy.tooltip.error.crash=Tooltip error, see log
 jfmuy.chat.error.command.too.long=JFMUY must be on the server to handle this Chat Command, it is too long for Minecraft to send.
 jfmuy.chat.error.no.cheat.permission.1=You do not have permission to use JFMUY's Cheat Mode.
 jfmuy.chat.error.no.cheat.permission.2=Permission is given to players who can /give items or are in Creative Mode.
+jfmuy.chat.warning.reload=JFMUY was reloaded. Third-party plugins may leak memory on reload, restart the game if memory use keeps growing.
 
 # Key Bindings
 key.jfmuy.toggleOverlay=Show/Hide JFMUY

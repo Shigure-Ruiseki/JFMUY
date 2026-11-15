@@ -6,9 +6,12 @@ import static ruiseki.jfmuy.gui.overlay.IngredientGrid.INGREDIENT_WIDTH;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 import net.minecraft.block.Block;
@@ -52,6 +55,9 @@ public class IngredientListBatchRenderer {
     // Per-group list of individual slot rectangles (used for per-slot fill + edge-detection border).
     protected final Map<CollapsedGroupIngredient, List<Rectangle>> expandedGroupSlots = new HashMap<>();
 
+    private static final Set<IngredientListBatchRenderer> BUFFERED_INSTANCES = Collections
+        .newSetFromMap(new WeakHashMap<>());
+
     @Nullable
     private Framebuffer framebuffer = null;
     private boolean allowBuffering;
@@ -74,6 +80,9 @@ public class IngredientListBatchRenderer {
 
     public IngredientListBatchRenderer(boolean allowBuffering) {
         this.allowBuffering = allowBuffering;
+        if (allowBuffering) {
+            BUFFERED_INSTANCES.add(this);
+        }
     }
 
     public void clear() {
@@ -281,6 +290,16 @@ public class IngredientListBatchRenderer {
 
     public void invalidateBuffer() {
         refreshBuffer = true;
+    }
+
+    public static void deleteFramebuffers() {
+        for (IngredientListBatchRenderer renderer : BUFFERED_INSTANCES) {
+            if (renderer.framebuffer != null) {
+                renderer.framebuffer.deleteFramebuffer();
+                renderer.framebuffer = null;
+                renderer.refreshBuffer = true;
+            }
+        }
     }
 
     protected <V> void set(IngredientListSlot ingredientListSlot, IIngredientListElement<V> element) {

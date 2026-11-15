@@ -48,21 +48,21 @@ public class IngredientRenderer<T> {
         }
 
         Minecraft minecraft = Minecraft.getMinecraft();
-        if (ingredient instanceof ItemStack) {
-            ItemStack itemStack = (ItemStack) ingredient;
-            if (itemStack.hasEffect()) {
-                return true;
-            }
-            return false;
+        if (ingredient instanceof ItemStack itemStack) {
+            if (itemStack.hasEffect()) return true;
+            IIcon icon = itemStack.getIconIndex();
+            if (icon == null) return false;
+            return minecraft.getTextureMapBlocks()
+                .getAtlasSprite(icon.getIconName())
+                .getFrameCount() > 1;
         }
 
         // Fluids tend to be animated
-        if (ingredient instanceof FluidStack) {
-            FluidStack fluidStack = (FluidStack) ingredient;
+        if (ingredient instanceof FluidStack fluidStack) {
             IIcon still = fluidStack.getFluid()
                 .getStillIcon();
             return still != null && minecraft.getTextureMapBlocks()
-                .getAtlasSprite(still.toString())
+                .getAtlasSprite(still.getIconName())
                 .getFrameCount() > 1;
         }
 

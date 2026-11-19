@@ -171,8 +171,7 @@ public class IngredientRenderer<T> {
 
         IIngredientHelper<T> ingredientHelper = element.getIngredientHelper();
         ItemStack itemStack = ingredientHelper.getCheatItemStack(ingredient);
-        TooltipRenderer
-            .drawHoveringTextWithFavorite(ingredient, itemStack, minecraft, tooltip, mouseX, mouseY, -1, fontRenderer);
+        TooltipRenderer.drawHoveringText(ingredient, itemStack, minecraft, tooltip, mouseX, mouseY, fontRenderer);
     }
 
     protected static <V> void renderEditMode(IIngredientListElement<V> element, Rectangle area, int padding) {

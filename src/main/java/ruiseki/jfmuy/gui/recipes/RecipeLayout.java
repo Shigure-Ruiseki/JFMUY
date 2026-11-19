@@ -9,7 +9,10 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -74,6 +77,7 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
     private String recipeCategoryModId;
     @Nullable
     private ResourceLocation recipeId;
+    private boolean evaluatingTransfer;
 
     private int posX;
     private int posY;
@@ -294,23 +298,35 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
         if (hoveredIngredient != null) {
             hoveredIngredient.drawOverlays(minecraft, posX, posY, recipeMouseX, recipeMouseY);
         } else if (isMouseOver(mouseX, mouseY)) {
-            List<String> categoryTooltipStrings = LegacyUtil
-                .getTooltipStrings(recipeCategory, recipeMouseX, recipeMouseY);
-            List<String> tooltipStrings = new ArrayList<>(categoryTooltipStrings);
-            List<String> wrapperTooltips = recipeWrapper.getTooltipStrings(recipeMouseX, recipeMouseY);
-            // noinspection ConstantConditions
-            if (wrapperTooltips != null) {
-                tooltipStrings.addAll(wrapperTooltips);
+            List<String> tooltipStrings = getTooltipStrings(recipeMouseX, recipeMouseY);
+            if (recipeTransferButton != null) {
+                recipeTransferButton.drawRecipeError(minecraft, mouseX, mouseY);
+                recipeTransferButton.drawRecipeError(minecraft, mouseX, mouseY);
+                recipeTransferButton.addShortcutTooltips(tooltipStrings);
             }
-            if (tooltipStrings.isEmpty() && shapelessIcon != null) {
-                tooltipStrings = shapelessIcon.getTooltipStrings(recipeMouseX, recipeMouseY);
-            }
-            if (tooltipStrings != null && !tooltipStrings.isEmpty()) {
+            if (!tooltipStrings.isEmpty()) {
                 TooltipRenderer.drawHoveringText(minecraft, tooltipStrings, mouseX, mouseY);
             }
         }
 
         GlStateManager.disableAlpha();
+    }
+
+    List<String> getTooltipStrings(int recipeMouseX, int recipeMouseY) {
+        List<String> categoryTooltipStrings = LegacyUtil.getTooltipStrings(recipeCategory, recipeMouseX, recipeMouseY);
+        List<String> tooltipStrings = new ArrayList<>(categoryTooltipStrings);
+        List<String> wrapperTooltips = recipeWrapper.getTooltipStrings(recipeMouseX, recipeMouseY);
+        // noinspection ConstantConditions
+        if (wrapperTooltips != null) {
+            tooltipStrings.addAll(wrapperTooltips);
+        }
+        if (tooltipStrings.isEmpty() && shapelessIcon != null) {
+            List<String> shapelessTooltips = shapelessIcon.getTooltipStrings(recipeMouseX, recipeMouseY);
+            if (shapelessTooltips != null) {
+                tooltipStrings.addAll(shapelessTooltips);
+            }
+        }
+        return tooltipStrings;
     }
 
     @Override
@@ -345,8 +361,40 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
         return null;
     }
 
+    public void beginTransferEvaluation() {
+        evaluatingTransfer = true;
+        for (GuiIngredientGroup<?> guiIngredientGroup : guiIngredientGroups.values()) {
+            guiIngredientGroup.beginTransferCallbacks();
+        }
+    }
+
+    public void endTransferEvaluation() {
+        evaluatingTransfer = false;
+        for (GuiIngredientGroup<?> guiIngredientGroup : guiIngredientGroups.values()) {
+            guiIngredientGroup.endTransferCallbacks();
+        }
+    }
+
     public boolean handleClick(Minecraft minecraft, int mouseX, int mouseY, int mouseButton) {
         return recipeWrapper.handleClick(minecraft, mouseX - posX, mouseY - posY, mouseButton);
+    }
+
+    public boolean handleCopyRecipeId() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        EntityPlayerSP player = minecraft.thePlayer;
+        if (recipeId == null) {
+            if (player != null) {
+                player.addChatComponentMessage(new ChatComponentTranslation("jfmuy.message.copy.recipe.id.failure"));
+            }
+            return false;
+        }
+        String recipeIdString = recipeId.toString();
+        GuiScreen.setClipboardString(recipeIdString);
+        if (player != null) {
+            player.addChatComponentMessage(
+                new ChatComponentTranslation("jfmuy.message.copy.recipe.id.success", recipeIdString));
+        }
+        return true;
     }
 
     public boolean handleMouseScroll(int mouseX, int mouseY, int scrollAmount) {
@@ -389,6 +437,9 @@ public class RecipeLayout implements IRecipeLayoutDrawable {
                 }
             }
             guiIngredientGroup = new GuiIngredientGroup<>(ingredientType, focus, ingredientCycleOffset);
+            if (evaluatingTransfer) {
+                guiIngredientGroup.beginTransferCallbacks();
+            }
             guiIngredientGroups.put(ingredientType, guiIngredientGroup);
         }
         return guiIngredientGroup;

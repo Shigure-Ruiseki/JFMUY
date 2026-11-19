@@ -58,8 +58,7 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
     private T focusedMatch;
     public final IIngredientRenderer<T> ingredientRenderer;
     public final IIngredientHelper<T> ingredientHelper;
-    @Nullable
-    private ITooltipCallback<T> tooltipCallback;
+    private List<ITooltipCallback<T>> tooltipCallbacks = Collections.emptyList();
     @Nullable
     private IDrawable background;
     @Nullable
@@ -187,8 +186,8 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
         return null;
     }
 
-    public void setTooltipCallback(@Nullable ITooltipCallback<T> tooltipCallback) {
-        this.tooltipCallback = tooltipCallback;
+    public void setTooltipCallbacks(List<ITooltipCallback<T>> tooltipCallbacks) {
+        this.tooltipCallbacks = tooltipCallbacks;
     }
 
     public void draw(Minecraft minecraft, int xOffset, int yOffset) {
@@ -259,16 +258,8 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
             tooltip = ForgeModIdHelper.getInstance()
                 .addModNameToIngredientTooltip(tooltip, value, ingredientHelper);
 
-            if (tooltipCallback != null) {
+            for (ITooltipCallback<T> tooltipCallback : this.tooltipCallbacks) {
                 tooltipCallback.onTooltip(slotIndex, input, value, tooltip);
-            }
-
-            int activeIndex = 0;
-            if (!this.displayIngredients.isEmpty()) {
-                activeIndex = this.displayIngredients.indexOf(value);
-                if (activeIndex == -1) {
-                    activeIndex = 0;
-                }
             }
 
             FontRenderer fontRenderer = ingredientRenderer.getFontRenderer(minecraft, value);
@@ -293,12 +284,8 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
                 tooltip.add(Translator.translateToLocal("jfmuy.tooltip.recipe.ingredient_pin"));
             }
             if (preview == null) {
-                if (value instanceof ItemStack) {
-                    TooltipRenderer
-                        .drawHoveringText(tooltipStack, minecraft, tooltip, tooltipX, tooltipY, fontRenderer);
-                } else {
-                    TooltipRenderer.drawHoveringText(minecraft, tooltip, tooltipX, tooltipY, fontRenderer);
-                }
+                TooltipRenderer
+                    .drawHoveringText(value, tooltipStack, minecraft, tooltip, tooltipX, tooltipY, fontRenderer);
             } else {
                 TooltipRenderer.drawHoveringTextAndItems(
                     tooltipStack,
@@ -313,7 +300,7 @@ public class GuiIngredient<T> extends Gui implements IGuiIngredient<T> {
             }
 
             GlStateManager.enableDepth();
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | LinkageError e) {
             Log.get()
                 .error("Exception when rendering tooltip on {}.", value, e);
         }

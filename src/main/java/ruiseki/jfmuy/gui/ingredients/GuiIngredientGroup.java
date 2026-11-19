@@ -2,6 +2,7 @@ package ruiseki.jfmuy.gui.ingredients;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,9 +31,7 @@ import ruiseki.jfmuy.ingredients.IngredientRegistry;
 import ruiseki.jfmuy.util.ErrorUtil;
 import ruiseki.jfmuy.util.Log;
 
-public class
-
-GuiIngredientGroup<T> implements IGuiIngredientGroup<T> {
+public class GuiIngredientGroup<T> implements IGuiIngredientGroup<T> {
 
     private final Int2ObjectMap<GuiIngredient<T>> guiIngredients = new Int2ObjectArrayMap<>();
     private final IntSet inputSlots = new IntArraySet();
@@ -47,8 +46,14 @@ GuiIngredientGroup<T> implements IGuiIngredientGroup<T> {
     @Nullable
     private IFocus<T> focus;
 
-    @Nullable
-    private ITooltipCallback<T> tooltipCallback;
+    private final List<ITooltipCallback<T>> tooltipCallbacks = new ArrayList<>();
+
+    // Transfer handlers (e.g. AE2) add a callback on every evaluation, each evaluation replaces the previous one's.
+    private final List<ITooltipCallback<T>> transferTooltipCallbacks = new ArrayList<>();
+    private final List<ITooltipCallback<T>> afterTooltipCallbacks = new ArrayList<>();
+    private List<ITooltipCallback<T>> allTooltipCallbacks = Collections.emptyList();
+    private boolean collectingTransferCallbacks;
+    private boolean transferCallbacksStale;
 
     public GuiIngredientGroup(IIngredientType<T> ingredientType, @Nullable IFocus<T> focus, int cycleOffset) {
         ErrorUtil.checkNotNull(ingredientType, "ingredientType");
@@ -154,7 +159,35 @@ GuiIngredientGroup<T> implements IGuiIngredientGroup<T> {
 
     @Override
     public void addTooltipCallback(ITooltipCallback<T> tooltipCallback) {
-        this.tooltipCallback = tooltipCallback;
+        ErrorUtil.checkNotNull(tooltipCallback, "tooltipCallback");
+        if (collectingTransferCallbacks) {
+            if (transferCallbacksStale) {
+                transferTooltipCallbacks.clear();
+                transferCallbacksStale = false;
+            }
+            transferTooltipCallbacks.add(tooltipCallback);
+        } else {
+            tooltipCallbacks.add(tooltipCallback);
+        }
+        updateAllTooltipCallbacks();
+    }
+
+    public void beginTransferCallbacks() {
+        collectingTransferCallbacks = true;
+        transferCallbacksStale = true;
+    }
+
+    public void endTransferCallbacks() {
+        collectingTransferCallbacks = false;
+    }
+
+    private void updateAllTooltipCallbacks() {
+        List<ITooltipCallback<T>> all = new ArrayList<>(
+            tooltipCallbacks.size() + transferTooltipCallbacks.size() + afterTooltipCallbacks.size());
+        all.addAll(tooltipCallbacks);
+        all.addAll(transferTooltipCallbacks);
+        all.addAll(afterTooltipCallbacks);
+        allTooltipCallbacks = all;
     }
 
     @Override
@@ -176,7 +209,7 @@ GuiIngredientGroup<T> implements IGuiIngredientGroup<T> {
         for (GuiIngredient<T> ingredient : guiIngredients.values()) {
             ingredient.draw(minecraft, xOffset, yOffset);
             if (ingredient.isMouseOver(xOffset, yOffset, mouseX, mouseY)) {
-                ingredient.setTooltipCallback(tooltipCallback);
+                ingredient.setTooltipCallbacks(allTooltipCallbacks);
                 ingredient.drawHighlight(minecraft, highlightColor, xOffset, yOffset);
             }
         }
@@ -199,10 +232,8 @@ GuiIngredientGroup<T> implements IGuiIngredientGroup<T> {
      * Adds the tooltip callback after any existing tooltip callback
      */
     public void addTooltipCallbackAfter(ITooltipCallback<T> tooltipCallback) {
-        ITooltipCallback<T> before = this.tooltipCallback;
-        this.tooltipCallback = before == null ? tooltipCallback : (slotIndex, input, ingredient, tooltip) -> {
-            before.onTooltip(slotIndex, input, ingredient, tooltip);
-            tooltipCallback.onTooltip(slotIndex, input, ingredient, tooltip);
-        };
+        ErrorUtil.checkNotNull(tooltipCallback, "tooltipCallback");
+        afterTooltipCallbacks.add(tooltipCallback);
+        updateAllTooltipCallbacks();
     }
 }

@@ -6,6 +6,8 @@ jfmuy.tooltip.delete.item=Click to Delete
 jfmuy.tooltip.liquid.amount.with.capacity=%,d / %,d mB
 jfmuy.tooltip.liquid.amount=%,d mB
 jfmuy.tooltip.transfer=Move Items
+jfmuy.tooltip.transfer.key=[%s to craft one]
+jfmuy.tooltip.transfer.max.key=[%s to craft many]
 jfmuy.tooltip.recipe.ore.dict=Accepts any: %s
 jfmuy.tooltip.item.colors=Colors: %s
 jfmuy.tooltip.shapeless.recipe=Shapeless Recipe
@@ -63,6 +65,15 @@ key.jfmuy.toggleBookmarkOverlay=Show/Hide Bookmarked Ingredients
 key.jfmuy.crafting=Autocraft Bookmarked Recipe
 key.jfmuy.moveGroupUp=Move Bookmark Group Up
 key.jfmuy.moveGroupDown=Move Bookmark Group Down
+key.jfmuy.transferRecipeGui=Craft Hovered Recipe (One)
+key.jfmuy.maxTransferRecipeGui=Craft Hovered Recipe (Many)
+key.jfmuy.closeRecipeGui=Close Recipes GUI
+key.jfmuy.copy.recipe.id=Copy Recipe ID to Clipboard
+key.jfmuy.pauseRecipeCycling=Pause Recipe Cycling
+
+# Messages
+jfmuy.message.copy.recipe.id.success=The following recipe ID was copied to the clipboard: %s
+jfmuy.message.copy.recipe.id.failure=Failed to copy the recipe ID to the clipboard because the ID is unknown
 
 # Config
 config.jfmuy.default=Default

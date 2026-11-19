@@ -419,8 +419,7 @@ public class RecipeTreeRenderer {
         if (tooltip != null && !tooltip.isEmpty()) {
             FontRenderer fontRenderer = renderer.getFontRenderer(mc, ingredient);
             RenderHelper.enableGUIStandardItemLighting();
-            TooltipRenderer
-                .drawHoveringTextWithFavorite(ingredient, null, mc, tooltip, mouseX, mouseY, -1, fontRenderer);
+            TooltipRenderer.drawHoveringText(mc, tooltip, mouseX, mouseY, -1, fontRenderer);
             RenderHelper.disableStandardItemLighting();
         }
     }

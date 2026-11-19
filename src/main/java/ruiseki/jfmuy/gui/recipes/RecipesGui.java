@@ -559,12 +559,32 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
     }
 
     private boolean handleKeybinds(int eventKey) {
-        if (KeyBindings.isInventoryCloseKey(eventKey) || KeyBindings.isInventoryToggleKey(eventKey)) {
+        boolean transferOnce = KeyBindings.transferRecipeGui.isActiveAndMatches(eventKey);
+        boolean transferMax = KeyBindings.maxTransferRecipeGui.isActiveAndMatches(eventKey);
+        if (transferOnce || transferMax) {
+            int mouseX = MouseHelper.getX();
+            int mouseY = MouseHelper.getY();
+            for (RecipeLayout recipeLayout : recipeLayouts) {
+                if (recipeLayout.isMouseOver(mouseX, mouseY)
+                    && recipeLayout.getIngredientUnderMouse(mouseX, mouseY) == null) {
+                    return transferRecipe(recipeLayout, transferMax);
+                }
+            }
+        }
+        if (KeyBindings.closeRecipeGui.isActiveAndMatches(eventKey) || KeyBindings.isInventoryToggleKey(eventKey)) {
             close();
             return true;
         } else if (KeyBindings.recipeBack.isActiveAndMatches(eventKey)) {
             back();
             return true;
+        } else if (KeyBindings.copyRecipeId.isActiveAndMatches(eventKey)) {
+            int mouseX = MouseHelper.getX();
+            int mouseY = MouseHelper.getY();
+            for (RecipeLayout recipeLayout : recipeLayouts) {
+                if (recipeLayout.isMouseOver(mouseX, mouseY)) {
+                    return recipeLayout.handleCopyRecipeId();
+                }
+            }
         } else {
             JFMUYRuntime runtime = Internal.getRuntime();
             if (runtime != null) {
@@ -701,13 +721,19 @@ public class RecipesGui extends GuiScreen implements IRecipesGui, IShowsRecipeFo
             int recipeIndex = guibutton.id - RecipeLayout.recipeTransferButtonIndex;
             RecipeLayout recipeLayout = recipeLayouts.get(recipeIndex);
             boolean maxTransfer = GuiScreen.isShiftKeyDown();
-            Container container = getParentContainer();
-            EntityPlayerSP player = mc.thePlayer;
-            if (container != null && player != null
-                && RecipeTransferUtil.transferRecipe(container, recipeLayout, player, maxTransfer)) {
-                close();
-            }
+            transferRecipe(recipeLayout, maxTransfer);
         }
+    }
+
+    private boolean transferRecipe(RecipeLayout recipeLayout, boolean maxTransfer) {
+        Container container = getParentContainer();
+        EntityPlayerSP player = mc == null ? null : mc.thePlayer;
+        if (container != null && player != null
+            && RecipeTransferUtil.transferRecipe(container, recipeLayout, player, maxTransfer)) {
+            close();
+            return true;
+        }
+        return false;
     }
 
     private void updateLayout() {

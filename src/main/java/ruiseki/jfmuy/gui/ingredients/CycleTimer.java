@@ -2,9 +2,9 @@ package ruiseki.jfmuy.gui.ingredients;
 
 import java.util.List;
 
-import net.minecraft.client.gui.GuiScreen;
-
 import org.jetbrains.annotations.Nullable;
+
+import ruiseki.jfmuy.config.KeyBindings;
 
 public class CycleTimer {
 
@@ -30,7 +30,7 @@ public class CycleTimer {
     }
 
     public void onDraw() {
-        if (!GuiScreen.isShiftKeyDown()) {
+        if (!KeyBindings.pauseRecipeCycling.isPressed()) {
             if (pausedDuration > 0) {
                 startTime += pausedDuration;
                 pausedDuration = 0;

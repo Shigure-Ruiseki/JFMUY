@@ -30,6 +30,11 @@ public class KeyBindings {
     public static final KeyBindingOK nextPage;
     public static final KeyBindingOK previousCategory;
     public static final KeyBindingOK nextCategory;
+    public static final KeyBindingOK transferRecipeGui;
+    public static final KeyBindingOK maxTransferRecipeGui;
+    public static final KeyBindingOK closeRecipeGui;
+    public static final KeyBindingOK copyRecipeId;
+    public static final KeyBindingOK pauseRecipeCycling;
     public static final KeyBindingOK bookmark;
     public static final KeyBindingOK bookmarkToTop;
     public static final KeyBindingOK bookmarkNewGroup;
@@ -90,6 +95,31 @@ public class KeyBindings {
                 "key.jfmuy.nextCategory",
                 KeyConflictContext.GUI,
                 Keyboard.KEY_NEXT,
+                categoryName),
+            transferRecipeGui = new KeyBindingOK(
+                "key.jfmuy.transferRecipeGui",
+                KeyConflictContext.GUI,
+                Keyboard.KEY_NONE,
+                categoryName),
+            maxTransferRecipeGui = new KeyBindingOK(
+                "key.jfmuy.maxTransferRecipeGui",
+                KeyConflictContext.GUI,
+                Keyboard.KEY_NONE,
+                categoryName),
+            closeRecipeGui = new KeyBindingOK(
+                "key.jfmuy.closeRecipeGui",
+                KeyConflictContext.GUI,
+                Keyboard.KEY_ESCAPE,
+                categoryName),
+            copyRecipeId = new KeyBindingOK(
+                "key.jfmuy.copy.recipe.id",
+                KeyConflictContext.GUI,
+                Keyboard.KEY_NONE,
+                categoryName),
+            pauseRecipeCycling = new KeyBindingOK(
+                "key.jfmuy.pauseRecipeCycling",
+                KeyConflictContext.GUI,
+                Keyboard.KEY_LSHIFT,
                 categoryName),
             bookmark = new KeyBindingOK("key.jfmuy.bookmark", KeyConflictContext.GUI, Keyboard.KEY_A, categoryName),
             bookmarkToTop = new KeyBindingOK(

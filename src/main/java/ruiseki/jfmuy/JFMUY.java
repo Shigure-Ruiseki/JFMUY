@@ -8,6 +8,8 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.server.MinecraftServer;
 
+import org.apache.logging.log4j.Level;
+
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import cpw.mods.fml.common.Mod;
@@ -120,5 +122,35 @@ public class JFMUY extends ModBaseVersionable {
     @Override
     public ICommonProxy getProxy() {
         return proxy;
+    }
+
+    /**
+     * Log a new info message for this mod.
+     *
+     * @param message The message to show.
+     */
+    public static void okLog(String message) {
+        JFMUY._instance.log(Level.INFO, message);
+    }
+
+    /**
+     * Log a new message of the given level for this mod.
+     *
+     * @param level   The level in which the message must be shown.
+     * @param message The message to show.
+     */
+    public static void okLog(Level level, String message) {
+        JFMUY._instance.log(level, message);
+    }
+
+    /**
+     * Log a new message of the given level for this mod.
+     *
+     * @param level   The level in which the message must be shown.
+     * @param message The message to show.
+     * @param params  Parameters to replace in the message.
+     */
+    public static void okLog(Level level, String message, Object... params) {
+        JFMUY._instance.log(level, message, params);
     }
 }
